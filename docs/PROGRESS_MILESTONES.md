@@ -273,7 +273,7 @@ On 2026-11-25, the user generated a fresh export from the Android app and inspec
 - `export_status.overall_status`: **complete**
 - All seven reported section statuses: **success**
 - Field scan found: 774 `effect` keys, 1,823 URL/image-related keys, 3,580 `property_type` keys, 3,580 `stat_name` keys, 430 `skill_affix` keys, and 165 explicit null values.
-- The scan found zero `description` and zero `property_map` keys. Their preservation could not be assessed from this account export because those fields were not present in the inspected payload.
+- The scan found zero `description` and zero `property_map` keys. Whether descriptions were returned by the source is unknown. The current retrieval code reads `data.property_map` from character-detail responses into an in-memory lookup used to add `stat_name`, but does not include that raw map object in the exported character section. Therefore, raw `property_map` preservation is not confirmed by this device export and is a specific item for the export-coverage review.
 - The user did not provide the previous export's file size, so a before/after file-size comparison was not performed.
 - This inspection confirms the generated export's structure and the presence of the listed fields. It is not a byte-for-byte comparison against raw HoYoLAB responses and does not establish complete account-data coverage.
 
