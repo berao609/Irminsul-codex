@@ -12,8 +12,18 @@ VERSION_NAME=1.0.0
 ```
 
 - `VERSION_NAME` is the human-readable Semantic Versioning value: `MAJOR.MINOR.PATCH`.
-- `VERSION_CODE` is Android's monotonically increasing integer. Increase it for every official release. Never reuse or decrease a published version code.
+- `VERSION_CODE` is the Android integer reserved for official Release APKs. Increase it for every official release. Never reuse or decrease a published release version code.
 - Keep the version name and version code in the same change.
+
+The Debug CI workflow automatically assigns a separate development version to every new workflow run:
+- Debug version name: `VERSION_NAME-dev.GITHUB_RUN_NUMBER` (for example, `1.0.0-dev.80`).
+- Debug version code: `VERSION_CODE + GITHUB_RUN_NUMBER`.
+- GitHub Actions run numbers increase for each new run of the Debug workflow, whether triggered by a push to `main` or manually.
+- Re-running an existing workflow run keeps the same run number and version code. Start a new workflow run to produce a newer installable Debug APK.
+- The CI values are injected through environment variables and do not modify `version.properties`.
+- Official Release builds ignore these CI overrides and use the exact values in `version.properties` and the matching version tag.
+
+Debug and Release APKs use different signing certificates. Moving between them requires a one-time uninstall/reinstall regardless of version code. Within the Debug channel, consecutive CI builds use the same persistent Debug certificate and increasing version codes, so they can update in place.
 
 Version number guidance:
 
