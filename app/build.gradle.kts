@@ -29,6 +29,13 @@ val releaseKeystorePassword = providers.environmentVariable("RELEASE_KEYSTORE_PA
 val releaseKeyAlias = providers.environmentVariable("RELEASE_KEY_ALIAS").orNull
 val releaseKeyPassword = providers.environmentVariable("RELEASE_KEY_PASSWORD").orNull
 
+// CI supplies a dedicated persistent Debug keystore. Local development keeps
+// Android's normal local Debug signing behavior when this path is absent.
+val debugKeystorePath = providers.environmentVariable("DEBUG_KEYSTORE_PATH").orNull
+val debugKeystorePassword = providers.environmentVariable("DEBUG_KEYSTORE_PASSWORD").orNull
+val debugKeyAlias = providers.environmentVariable("DEBUG_KEY_ALIAS").orNull
+val debugKeyPassword = providers.environmentVariable("DEBUG_KEY_PASSWORD").orNull
+
 android {
     namespace = "com.irminsul.codex"
     compileSdk = 34
@@ -50,9 +57,26 @@ android {
             keyAlias = releaseKeyAlias.orEmpty()
             keyPassword = releaseKeyPassword.orEmpty()
         }
+
+        if (debugKeystorePath != null) {
+            create("persistentDebug") {
+                storeFile = file(debugKeystorePath)
+                storePassword = debugKeystorePassword.orEmpty()
+                keyAlias = debugKeyAlias.orEmpty()
+                keyPassword = debugKeyPassword.orEmpty()
+            }
+        }
     }
 
     buildTypes {
+        debug {
+            // GitHub Actions uses one persistent certificate across all Debug
+            // artifacts. Local builds retain the standard local debug key.
+            if (debugKeystorePath != null) {
+                signingConfig = signingConfigs.getByName("persistentDebug")
+            }
+        }
+
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")
