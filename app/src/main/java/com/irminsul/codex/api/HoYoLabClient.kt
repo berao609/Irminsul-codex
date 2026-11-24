@@ -246,35 +246,62 @@ object HoYoLabClient {
             val ltuid = extractCookieValue(cookie, "ltuid_v2") ?: extractCookieValue(cookie, "ltuid")
             val propertyMap = mutableMapOf<Int, String>()
 
-            fun unwrap(json: JSONObject): Any {
-                return if (json.optInt("retcode", -1) == 0) {
-                    stripBloat(json.opt("data"), propertyMap) ?: JSONObject()
-                } else {
+            suspend fun requestSafely(request: suspend () -> JSONObject): JSONObject {
+                return try {
+                    request()
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
+                } catch (error: Exception) {
                     JSONObject()
-                        .put("retcode", json.optInt("retcode", -1))
-                        .put("message", json.optString("message", "Request failed"))
+                        .put("retcode", -1)
+                        .put("message", "Request failed (${error.javaClass.simpleName})")
+                }
+            }
+
+            fun sectionFromResponse(response: JSONObject, map: Map<Int, String>): ExportSectionResult {
+                val retcode = response.optInt("retcode", -1)
+                return if (retcode == 0) {
+                    ExportSectionResult.success(
+                        stripBloat(response.opt("data"), map) ?: JSONObject()
+                    )
+                } else {
+                    val message = response.optString("message", "Request failed")
+                    ExportSectionResult.failed(
+                        JSONObject()
+                            .put("retcode", retcode)
+                            .put("message", message),
+                        message
+                    )
                 }
             }
 
             onProgress("Fetching chronicle, exploration & endgame...")
             val results = coroutineScope {
                 val cardDeferred = async {
-                    if (ltuid != null) fetchRawGet("$RECORD_CARD_URL?uid=$ltuid", cookie) else null
+                    if (ltuid != null) {
+                        requestSafely { fetchRawGet("$RECORD_CARD_URL?uid=$ltuid", cookie) }
+                    } else null
                 }
-                val indexDeferred = async { fetchRawGet("$API_BASE/index?server=$server&role_id=$cleanUid", cookie) }
-                val dailyDeferred = async { fetchRawGet("$API_BASE/dailyNote?server=$server&role_id=$cleanUid", cookie) }
+                val indexDeferred = async {
+                    requestSafely { fetchRawGet("$API_BASE/index?server=$server&role_id=$cleanUid", cookie) }
+                }
+                val dailyDeferred = async {
+                    requestSafely { fetchRawGet("$API_BASE/dailyNote?server=$server&role_id=$cleanUid", cookie) }
+                }
                 val listDeferred = async {
-                    val payload = JSONObject().put("role_id", cleanUid).put("server", server)
-                    fetchRawPost("$API_BASE/character/list", payload, cookie)
+                    requestSafely {
+                        val payload = JSONObject().put("role_id", cleanUid).put("server", server)
+                        fetchRawPost("$API_BASE/character/list", payload, cookie)
+                    }
                 }
                 val abyssCurDeferred = async {
-                    fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=1", cookie)
+                    requestSafely { fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=1", cookie) }
                 }
                 val abyssPrevDeferred = async {
-                    fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=2", cookie)
+                    requestSafely { fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=2", cookie) }
                 }
                 val theaterDeferred = async {
-                    fetchRawGet("$API_BASE/role_combat?server=$server&role_id=$cleanUid&need_detail=true", cookie)
+                    requestSafely { fetchRawGet("$API_BASE/role_combat?server=$server&role_id=$cleanUid&need_detail=true", cookie) }
                 }
 
                 listOf(
@@ -289,15 +316,45 @@ object HoYoLabClient {
             }
 
             val recordCardRaw = results[0]
-            val indexRaw = results[1]
-            val dailyRaw = results[2]
-            val charListRaw = results[3]
-            val abyssCurrentRaw = results[4]
-            val abyssPrevRaw = results[5]
-            val theaterRaw = results[6]
+            val indexRaw = results[1]!!
+            val dailyRaw = results[2]!!
+            val charListRaw = results[3]!!
+            val abyssCurrentRaw = results[4]!!
+            val abyssPrevRaw = results[5]!!
+            val theaterRaw = results[6]!!
+
+            val sectionResults = linkedMapOf<String, ExportSectionResult>()
+
+            if (recordCardRaw == null) {
+                sectionResults["account_card"] = ExportSectionResult.skipped(
+                    "HoYoLAB account ID cookie was unavailable."
+                )
+            } else if (recordCardRaw.optInt("retcode", -1) != 0) {
+                sectionResults["account_card"] = sectionFromResponse(recordCardRaw, propertyMap)
+            } else {
+                val cards = recordCardRaw.optJSONObject("data")?.optJSONArray("list")
+                var accountCard: Any? = null
+                if (cards != null) {
+                    for (i in 0 until cards.length()) {
+                        val card = cards.optJSONObject(i)
+                        if (card?.optInt("game_id") == 2) {
+                            accountCard = stripBloat(card, propertyMap)
+                            break
+                        }
+                    }
+                }
+                sectionResults["account_card"] = if (accountCard != null) {
+                    ExportSectionResult.success(accountCard)
+                } else {
+                    ExportSectionResult.failed(
+                        JSONObject().put("retcode", -1).put("message", "No Genshin Impact account card was returned."),
+                        "No Genshin Impact account card was returned."
+                    )
+                }
+            }
 
             val charIds = mutableListOf<Int>()
-            if (charListRaw != null && charListRaw.optInt("retcode", -1) == 0) {
+            if (charListRaw.optInt("retcode", -1) == 0) {
                 val listArr = charListRaw.optJSONObject("data")?.optJSONArray("list")
                 if (listArr != null) {
                     for (i in 0 until listArr.length()) {
@@ -308,7 +365,8 @@ object HoYoLabClient {
             }
 
             val detailedChars = JSONArray()
-            if (charIds.isNotEmpty()) {
+            val detailFailures = mutableListOf<String>()
+            if (charListRaw.optInt("retcode", -1) == 0 && charIds.isNotEmpty()) {
                 val chunks = charIds.chunked(8)
                 chunks.forEachIndexed { idx, chunk ->
                     onProgress("Fetching character builds (${idx + 1}/${chunks.size})...")
@@ -318,7 +376,9 @@ object HoYoLabClient {
                         .put("role_id", cleanUid)
                         .put("server", server)
                         .put("character_ids", idsArray)
-                    val detailJson = fetchRawPost("$API_BASE/character/detail", detailPayload, cookie)
+                    val detailJson = requestSafely {
+                        fetchRawPost("$API_BASE/character/detail", detailPayload, cookie)
+                    }
                     if (detailJson.optInt("retcode", -1) == 0) {
                         val dataObj = detailJson.optJSONObject("data")
                         extractPropertyMap(dataObj, propertyMap)
@@ -328,49 +388,53 @@ object HoYoLabClient {
                                 val cleanedChar = stripBloat(items.opt(i), propertyMap)
                                 if (cleanedChar != null) detailedChars.put(cleanedChar)
                             }
+                        } else {
+                            detailFailures.add("Character detail batch ${idx + 1} returned no character list.")
                         }
+                    } else {
+                        detailFailures.add(
+                            "Character detail batch ${idx + 1}: ${detailJson.optString("message", "Request failed")}"
+                        )
                     }
                     if (idx < chunks.lastIndex) delay(200)
                 }
             }
 
-            val root = JSONObject()
+            val profileResult = sectionFromResponse(indexRaw, propertyMap)
+            if (profileResult.status == "success" && profileResult.data is JSONObject && detailedChars.length() > 0) {
+                profileResult.data.remove("avatars")
+            }
+            sectionResults["profile_and_exploration"] = profileResult
+            sectionResults["daily_note"] = sectionFromResponse(dailyRaw, propertyMap)
+
+            sectionResults["characters"] = when {
+                charListRaw.optInt("retcode", -1) != 0 ->
+                    sectionFromResponse(charListRaw, propertyMap)
+                detailFailures.isNotEmpty() -> {
+                    val fallback = if (detailedChars.length() > 0) {
+                        detailedChars
+                    } else {
+                        sectionFromResponse(charListRaw, propertyMap).data ?: JSONObject()
+                    }
+                    ExportSectionResult.partial(fallback, detailFailures.joinToString(" "))
+                }
+                detailedChars.length() > 0 -> ExportSectionResult.success(detailedChars)
+                else -> sectionFromResponse(charListRaw, propertyMap)
+            }
+
+            sectionResults["spiral_abyss_current"] = sectionFromResponse(abyssCurrentRaw, propertyMap)
+            sectionResults["spiral_abyss_previous"] = sectionFromResponse(abyssPrevRaw, propertyMap)
+            sectionResults["imaginarium_theater"] = sectionFromResponse(theaterRaw, propertyMap)
+
             val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
                 timeZone = TimeZone.getTimeZone("UTC")
             }
-            root.put("exported_at", isoFormat.format(Date()))
-            root.put("uid", cleanUid)
-            root.put("server", server)
-
-            if (recordCardRaw != null && recordCardRaw.optInt("retcode", -1) == 0) {
-                val cards = recordCardRaw.optJSONObject("data")?.optJSONArray("list")
-                if (cards != null) {
-                    for (i in 0 until cards.length()) {
-                        val card = cards.optJSONObject(i)
-                        if (card?.optInt("game_id") == 2) {
-                            root.put("account_card", stripBloat(card, propertyMap))
-                            break
-                        }
-                    }
-                }
-            }
-
-            val profileClean = unwrap(indexRaw ?: JSONObject())
-            if (profileClean is JSONObject && detailedChars.length() > 0) {
-                profileClean.remove("avatars")
-            }
-            root.put("profile_and_exploration", profileClean)
-            root.put("daily_note", unwrap(dailyRaw ?: JSONObject()))
-
-            if (detailedChars.length() > 0) {
-                root.put("characters", detailedChars)
-            } else {
-                root.put("characters", unwrap(charListRaw ?: JSONObject()))
-            }
-
-            root.put("spiral_abyss_current", unwrap(abyssCurrentRaw ?: JSONObject()))
-            root.put("spiral_abyss_previous", unwrap(abyssPrevRaw ?: JSONObject()))
-            root.put("imaginarium_theater", unwrap(theaterRaw ?: JSONObject()))
+            val root = AccountExportAssembler.assemble(
+                uid = cleanUid,
+                server = server,
+                exportedAt = isoFormat.format(Date()),
+                sections = sectionResults
+            )
 
             Result.success(root.toString(2))
         } catch (e: Exception) {
