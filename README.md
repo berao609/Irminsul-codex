@@ -2,325 +2,416 @@ Irminsul Codex
 
 An AI-powered Genshin Impact Account Intelligence System
 
-Irminsul Codex is an Android application designed to help Genshin Impact players understand, analyze, and improve their accounts.
+Irminsul Codex is an Android application designed to help Genshin Impact players understand their accounts, make better investment decisions, and plan their progression more efficiently.
 
-Rather than simply displaying account statistics, the long-term vision is to turn account data into actionable intelligence: identifying investment opportunities, finding account weaknesses, prioritizing farming objectives, evaluating potential pulls, and helping players make better resource-allocation decisions.
+The project aims to go beyond displaying account statistics. Its long-term goal is to transform account data into actionable intelligence: identifying development priorities, analyzing account weaknesses, optimizing farming, evaluating potential pulls, and recommending what players should focus on next.
 
-The project is currently in its early development stage. Its existing foundation focuses on HoYoLAB connectivity, account data retrieval, and JSON export. Advanced analytics, AI integration, and the interactive dashboard are planned development goals, not currently implemented features.
-
----
-
-1. Project Vision
-
-Irminsul Codex aims to answer practical account-development questions:
-
-- What should I invest in next?
-- Which characters should I prioritize building?
-- What important resources or materials am I missing?
-- What should I farm first?
-- Which upgrades provide the greatest value for my account?
-- Is a character or weapon worth pulling for my current roster?
-- How should I allocate my Resin and other resources efficiently?
-
-The goal is to provide account-specific recommendations based on actual account data, game mechanics, resource requirements, and player priorities.
-
-2. Current Features
-
-The application currently provides the following functionality:
-
-HoYoLAB Integration
-
-- Embedded HoYoLAB login using an Android WebView.
-- Manual UID and cookie input.
-- Capture of required HoYoLAB authentication cookies.
-- Genshin Impact UID and server detection.
-
-Daily Account Information
-
-- Current Original Resin and maximum capacity.
-- Estimated Resin recovery time.
-- Daily commission progress.
-- Extra daily-task reward status.
-- Realm Currency.
-- Weekly discounted Resin usage.
-- Expedition counters.
-
-Account Data Retrieval
-
-The current data retrieval and export implementation includes support for:
-
-- Account card information.
-- Profile and exploration information.
-- Daily Note information.
-- Character information.
-- Current Spiral Abyss information.
-- Previous Spiral Abyss information.
-- Imaginarium Theater information.
-
-Character detail requests are processed in batches.
-
-JSON Export
-
-- Export account data as a JSON file.
-- Copy exported JSON to the clipboard.
-- Preserve the available information returned by the current data retrieval implementation.
-
-Data limitation: The current exporter filters certain response fields. It is not a complete raw API archive or a verified inventory of every account resource. Successful export does not guarantee that every section contains complete data.
+Project status: Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, and JSON export. Advanced analytics, AI integration, and the interactive dashboard are planned features.
 
 ---
 
-3. Technology Stack
+Table of Contents
+
+- "Features" (#features)
+- "Screenshots" (#screenshots)
+- "Technology Stack" (#technology-stack)
+- "Getting Started" (#getting-started)
+- "How It Works" (#how-it-works)
+- "Project Structure" (#project-structure)
+- "Account Data Export" (#account-data-export)
+- "Planned Features" (#planned-features)
+- "Development Roadmap" (#development-roadmap)
+- "Security and Privacy" (#security-and-privacy)
+- "Current Limitations" (#current-limitations)
+- "Contributing" (#contributing)
+- "Disclaimer" (#disclaimer)
+
+---
+
+Features
+
+Currently Implemented
+
+Feature| Description
+HoYoLAB Login| Embedded WebView login and authentication cookie capture.
+Manual Credentials| Option to enter a Genshin UID and HoYoLAB cookie manually.
+Account Detection| Detects the Genshin Impact server from the account UID.
+Daily Note| Retrieves daily account activity information.
+Resin Tracking| Displays current Resin, maximum capacity, and estimated recovery time.
+Daily Commissions| Displays commission progress and extra-task reward status.
+Realm Currency| Displays current and maximum Realm Currency.
+Weekly Resin Discounts| Displays remaining discounted Resin usage.
+Expeditions| Displays current and maximum expedition counts.
+Account Data Export| Retrieves selected account information and exports it as JSON.
+Clipboard Export| Copies exported JSON to the clipboard.
+
+Planned
+
+- Account analytics and progression tracking.
+- Character investment recommendations.
+- Account gap analysis.
+- Farming and Resin optimization.
+- Character and weapon pull evaluation.
+- AI-powered account assistant.
+- Interactive Account Command Center.
+- Account relationship explorer.
+- Historical account snapshots.
+
+See "Planned Features" (#planned-features) and "Development Roadmap" (#development-roadmap) for details.
+
+---
+
+Screenshots
+
+Screenshots will be added as the application interface develops.
+
+---
+
+Technology Stack
 
 Component| Technology
 Platform| Android
-Programming Language| Kotlin
+Language| Kotlin
 UI Framework| Jetpack Compose
 Design System| Material 3
 Networking| OkHttp
-Asynchronous Operations| Kotlin Coroutines
-Account Authentication| Android WebView
+Asynchronous Processing| Kotlin Coroutines
+Authentication| Android WebView
 Data Format| JSON
-Local Credential Storage| SharedPreferences
+Local Storage| SharedPreferences
 Build System| Gradle
-CI| GitHub Actions
+Continuous Integration| GitHub Actions
 
-Project Configuration
+Development Configuration
 
-- Kotlin: 2.0.0
-- Android Gradle Plugin: 8.5.0
-- Compile SDK: 34
-- Target SDK: 34
-- Minimum SDK: 26
-- OkHttp: 4.12.0
-- Kotlin Coroutines: 1.8.1
-- CI Java version: 17
+Component| Version
+Android Gradle Plugin| 8.5.0
+Kotlin| 2.0.0
+Compile SDK| 34
+Target SDK| 34
+Minimum SDK| 26
+OkHttp| 4.12.0
+Kotlin Coroutines| 1.8.1
+Java for CI| 17
+Gradle in CI| 8.14.8
 
 ---
 
-4. Project Architecture
+Getting Started
 
-The current application is organized around the following components:
+Requirements
+
+To build the project locally, you need:
+
+- Android Studio.
+- Android SDK 34.
+- JDK 17.
+- Gradle 8.14.8.
+- An Android device or emulator running Android 8.0 (API 26) or later.
+
+Note: The repository currently does not include a Gradle Wrapper. The build instructions below use an installed Gradle distribution.
+
+Clone the Repository
+
+git clone https://github.com/berao609/Irminsul-codex.git
+cd Irminsul-codex
+
+Open the Project
+
+1. Open Android Studio.
+2. Select Open.
+3. Choose the cloned "Irminsul-codex" directory.
+4. Allow Android Studio to synchronize the Gradle project.
+5. Ensure that the required Android SDK and JDK are installed.
+
+Build the Debug APK
+
+From the repository root, run:
+
+gradle assembleDebug
+
+The generated APK should be located at:
+
+app/build/outputs/apk/debug/app-debug.apk
+
+Run the Application
+
+Connect an Android device with USB debugging enabled or start an emulator, then run the "app" configuration through Android Studio.
+
+Build verification: These are the project's intended build instructions. A successful local build has not been verified as part of this README preparation.
+
+---
+
+How It Works
+
+The current application follows a relatively simple data retrieval workflow:
+
+1. The user authenticates through HoYoLAB or supplies their credentials manually.
+2. The application obtains the required authentication information.
+3. The user provides or confirms their Genshin Impact UID.
+4. The application communicates with the relevant HoYoLAB services.
+5. Retrieved account information is processed by the application.
+6. Daily Note information is displayed, and selected account data can be exported as JSON.
+
+The current implementation is focused on retrieving and presenting data. It does not yet include the planned account intelligence or AI recommendation systems.
+
+---
+
+Project Structure
+
+The main application code is organized into the following components:
+
+Irminsul-codex/
+│
+├── app/
+│   ├── src/
+│   │   └── main/
+│   │       ├── java/
+│   │       │   └── com/irminsul/codex/
+│   │       │       ├── MainActivity.kt
+│   │       │       │
+│   │       │       ├── api/
+│   │       │       │   └── HoYoLabClient.kt
+│   │       │       │
+│   │       │       └── ui/
+│   │       │           └── HoYoLabLoginDialog.kt
+│   │       │
+│   │       └── AndroidManifest.xml
+│   │
+│   └── build.gradle.kts
+│
+├── gradle/
+│   └── libs.versions.toml
+│
+├── .github/
+│   └── workflows/
+│       └── build.yml
+│
+├── build.gradle.kts
+├── settings.gradle.kts
+├── gradle.properties
+└── README.md
+
+Main Components
 
 "MainActivity.kt"
 
-Responsible for:
-
-- Main application interface.
-- Application state.
-- Credential handling.
-- Synchronization actions.
-- JSON export actions.
-- Displaying retrieved account information.
+Handles the main application interface, application state, credential handling, synchronization actions, and JSON export interactions.
 
 "api/HoYoLabClient.kt"
 
-Responsible for:
-
-- HoYoLAB API communication.
-- HTTP requests and headers.
-- DS signature generation.
-- UID and server handling.
-- Daily Note retrieval.
-- Account information retrieval.
-- Character data retrieval.
-- JSON response processing and export.
+Handles HoYoLAB communication, HTTP requests, request signatures, UID and server handling, Daily Note retrieval, account data retrieval, character detail requests, and JSON processing.
 
 "ui/HoYoLabLoginDialog.kt"
 
-Responsible for:
+Handles embedded HoYoLAB authentication through WebView, cookie capture, and WebView browsing-data cleanup.
 
-- Embedded HoYoLAB login.
-- WebView authentication.
-- Authentication cookie capture.
-- WebView browsing-data cleanup.
+".github/workflows/build.yml"
 
-The architecture is expected to evolve as the application develops more advanced data management, analytics, and AI capabilities.
+Defines the GitHub Actions workflow for building and uploading the debug APK artifact.
 
 ---
 
-5. Long-Term Intelligence Systems
+Account Data Export
 
-The following systems define the intended direction of the project.
+The current JSON exporter retrieves selected account information and organizes the available results into a structured JSON document.
 
-5.1 Account Analytics
+The current export structure includes:
+
+JSON Field| Description
+"exported_at"| Export timestamp.
+"uid"| Genshin Impact account UID.
+"server"| Detected account server.
+"account_card"| Available account card information.
+"profile_and_exploration"| Profile and exploration information.
+"daily_note"| Daily Note information.
+"characters"| Retrieved character information.
+"spiral_abyss_current"| Current Spiral Abyss information.
+"spiral_abyss_previous"| Previous Spiral Abyss information.
+"imaginarium_theater"| Imaginarium Theater information.
+
+Character detail requests are processed in batches of up to eight character IDs.
+
+Important Data Limitations
+
+The current exporter processes and filters certain response fields. It is not a complete raw API archive.
+
+In particular:
+
+- Not every account resource is currently retrieved.
+- Some API sections may be unavailable or incomplete.
+- A successful export does not guarantee that every section contains usable information.
+- The current export should not be treated as a complete inventory of Primogems, Mora, materials, artifacts, or every other account asset.
+
+Improving data coverage and establishing a reliable unified account model are important future development priorities.
+
+---
+
+Planned Features
+
+The long-term vision is to develop Irminsul Codex into an account intelligence platform rather than simply another account statistics viewer.
+
+1. Account Analytics
 
 Analyze account progression, roster composition, character development, exploration, and available resources.
 
-5.2 Investment Intelligence
+2. Investment Intelligence
 
-Evaluate character development opportunities, upgrade costs, expected benefits, and investment priorities.
+Evaluate character development opportunities using:
 
-5.3 Account Gap Intelligence
+- Current character progression.
+- Upgrade requirements.
+- Material availability.
+- Mora and Resin costs.
+- Expected improvements.
+- Investment priorities.
 
-Identify weaknesses, missing capabilities, incomplete character builds, and development opportunities.
+The goal is to answer:
 
-5.4 Farming Intelligence
+"What should I invest in next?"
 
-Determine material requirements, farming dependencies, Resin costs, overlapping farming objectives, and efficient farming priorities.
+3. Account Gap Intelligence
 
-5.5 Pull Intelligence
+Identify account weaknesses, missing capabilities, incomplete builds, and opportunities for improvement.
 
-Evaluate potential character and weapon pulls using roster compatibility, account needs, redundancy, resource opportunity costs, and player preferences.
+4. Farming Intelligence
 
-5.6 Resource Optimization
+Determine material requirements, farming dependencies, Resin costs, overlapping objectives, and efficient farming priorities.
+
+The goal is to answer:
+
+"What should I farm first?"
+
+5. Pull Intelligence
+
+Evaluate potential character and weapon pulls based on:
+
+- Existing roster compatibility.
+- Missing team capabilities.
+- Character and weapon redundancy.
+- Potential new team compositions.
+- Primogem opportunity costs.
+- Player preferences.
+
+The goal is to answer:
+
+"Is this character or weapon worth pulling for my account?"
+
+6. Resource Optimization
 
 Help players allocate available resources efficiently, including Resin, Mora, Primogems, and character-development materials where reliable data is available.
 
-5.7 Next-Step Intelligence
+7. Next-Step Intelligence
 
 Combine account analytics and investment priorities to recommend practical next actions.
 
-5.8 Proactive Intelligence
+8. AI-Powered Account Assistant
 
-Eventually identify upcoming account needs and notify players about useful development opportunities.
+Introduce a conversational assistant that can understand account information, explain recommendations, compare options, and answer account-specific questions.
 
-These systems are planned capabilities. Their recommendations will depend on the completeness and reliability of available account data.
+9. Interactive Account Command Center
 
----
+Build an interactive dashboard that connects account information, analytics, investments, farming objectives, and AI assistance.
 
-6. AI Integration Strategy
-
-Irminsul Codex is intended to use existing AI models rather than train or maintain its own foundation model.
-
-The proposed approach is Bring Your Own AI (BYOAI).
-
-Users will be able to configure their own supported AI provider and API credentials.
-
-Potential providers include:
-
-- OpenAI
-- Google Gemini
-- Anthropic
-
-Provider availability and supported models will depend on implementation and API compatibility.
-
-Intended AI Capabilities
-
-The AI assistant should be able to:
-
-- Understand the user's account data.
-- Answer account-specific questions.
-- Explain investment recommendations.
-- Identify missing or incomplete information.
-- Compare development options.
-- Explain farming priorities.
-- Evaluate potential pulls.
-- Interpret account analytics.
-- Provide context-aware guidance.
-
-AI Reliability Principles
-
-The intelligence engine should follow several important rules:
-
-1. Recommendations must be grounded in available account data.
-2. Missing information must be identified rather than invented.
-3. Numerical calculations and resource costs should be handled by deterministic application logic whenever possible.
-4. AI should interpret, explain, compare, and reason using calculated results.
-5. HoYoLAB authentication cookies must never be sent to AI providers.
-6. API credentials must not be hardcoded, committed, logged, or exposed.
-7. AI provider credentials should be stored securely using Android Keystore-backed protection.
-
-The application should also provide clear privacy controls and make external AI data transmission understandable to users.
-
----
-
-7. Interactive Account Command Center
-
-A major planned feature is an interactive dashboard that serves as the central workspace for exploring and improving a Genshin Impact account.
-
-The goal is not to create a static statistics page. It should be an interactive environment where account information connects to useful actions and recommendations.
-
-Account Overview
-
-A unified view of:
-
-- Account progression.
-- Character roster.
-- Character development.
-- Weapons and equipment.
-- Exploration.
-- Available resources.
-- Daily activities.
-- Important account insights.
-
-Interactive Analytics
-
-Charts, statistics, and categories should be selectable.
-
-Users should be able to explore specific data, filter results, and open detailed information instead of simply viewing static graphs.
+Rather than presenting disconnected statistics, the dashboard should allow users to explore their accounts and take action.
 
 Account Relationship Explorer
 
 An interactive graph-style exploration system inspired by the discoverability of Obsidian's Graph View.
 
-Potential relationships include:
+Example relationship:
 
-- Characters and weapons.
-- Characters and artifacts.
-- Characters and teams.
-- Character upgrades and required materials.
-- Farming materials and their sources.
-- Account weaknesses and possible solutions.
-- Investments and their expected benefits.
+Character
+    │
+    ▼
+Talent Upgrade
+    │
+    ▼
+Required Materials
+    │
+    ▼
+Farming Domain
+    │
+    ▼
+Farming Priority
 
-For example:
+Selecting an element should reveal its related information, dependencies, and possible actions.
 
-Character → Talent Upgrade → Required Materials → Domain → Farming Priority
+Other planned dashboard workspaces include:
 
-Selecting an element should reveal its relationships, details, and relevant actions.
+- Account Overview.
+- Interactive Analytics.
+- Investment Command Center.
+- Farming Command Center.
+- Pull Evaluation Workspace.
+- Context-Aware AI Assistant.
 
-Investment Command Center
+10. Account History
 
-A workspace for examining:
-
-- Character development status.
-- Upgrade requirements.
-- Material shortages.
-- Mora requirements.
-- Resin costs.
-- Investment benefits.
-- Upgrade priorities.
-- Dependencies between upgrades.
-
-Farming Command Center
-
-A workspace for:
-
-- Selecting farming objectives.
-- Identifying required materials.
-- Comparing overlapping farming needs.
-- Estimating Resin requirements.
-- Identifying farming locations and schedules.
-- Prioritizing objectives.
-
-Pull Evaluation Workspace
-
-An account-specific environment for evaluating:
-
-- Roster compatibility.
-- New team possibilities.
-- Missing capabilities.
-- Character and weapon redundancy.
-- Resource opportunity costs.
-- Long-term account value.
-
-Context-Aware AI
-
-The AI assistant should work alongside the dashboard.
-
-Users should be able to select a character, resource, chart, or investment and ask questions about that specific context.
-
-For example:
-
-"What should I improve here first?"
-
-The dashboard and AI should operate on a unified account model rather than function as disconnected features.
+Store historical account snapshots to track progression, compare changes, and analyze development over time.
 
 ---
 
-8. Development Roadmap
+AI Integration Strategy
 
-Development should proceed incrementally, with reliable account data and deterministic calculations established before advanced AI recommendations.
+Irminsul Codex does not need to train or maintain its own foundation model.
+
+The proposed approach is Bring Your Own AI (BYOAI).
+
+Users will eventually be able to configure their preferred supported AI provider and supply their own API credentials.
+
+Potential providers include:
+
+- OpenAI.
+- Google Gemini.
+- Anthropic.
+
+Provider support will depend on implementation and API compatibility.
+
+Intended AI Responsibilities
+
+The AI assistant should:
+
+- Interpret available account data.
+- Answer account-specific questions.
+- Explain investment recommendations.
+- Identify missing information.
+- Compare development options.
+- Explain farming priorities.
+- Evaluate potential pulls.
+- Provide context-aware guidance.
+
+Intelligence Architecture
+
+The application should handle numerical calculations and resource requirements through deterministic code wherever possible.
+
+AI should operate as the reasoning and interpretation layer.
+
+For example:
+
+Account Data
+     │
+     ▼
+Unified Account Model
+     │
+     ▼
+Calculation and Analysis Engine
+     │
+     ▼
+AI Intelligence Layer
+     │
+     ▼
+Recommendations and Explanations
+
+Recommendations must be grounded in available data. Missing information must be identified instead of invented.
+
+HoYoLAB authentication cookies must never be transmitted to AI providers.
+
+---
+
+Development Roadmap
+
+Development will proceed incrementally. Reliable account data and deterministic calculations should be established before advanced AI recommendations.
 
 Phase| Focus| Intended Outcome
 0| Data Feasibility| Identify available data, missing endpoints, and limitations.
@@ -334,44 +425,46 @@ Phase| Focus| Intended Outcome
 8| Account History| Add historical snapshots, progression tracking, and comparisons.
 9| Refinement| Improve reliability, security, usability, performance, and testing.
 
-The roadmap is a development direction, not a claim that these phases have already been implemented.
+This roadmap describes the intended development direction. It does not mean that these phases have already been implemented.
 
 ---
 
-9. Security and Privacy
+Security and Privacy
 
-Account authentication and AI provider credentials require careful handling.
+Account authentication and API credentials require careful handling.
 
-Current implementation considerations:
+Current Implementation
 
-- HoYoLAB authentication cookies are stored using ordinary SharedPreferences.
+- HoYoLAB authentication cookies are stored using ordinary Android SharedPreferences.
 - Masking credentials in the interface does not encrypt their stored values.
-- The login WebView clears its browsing data after authentication capture or dismissal.
-- The application manifest currently sets "allowBackup=false".
+- The login WebView clears its cookies, cache, history, and form data after authentication capture or dismissal.
+- The Android manifest sets "allowBackup" to "false".
 
-Planned improvements:
+Planned Improvements
 
 - Android Keystore-backed credential protection.
 - Secure AI API key storage.
 - Explicit AI data-sharing controls.
 - Minimized transmission of personal account information.
-- No transmission of HoYoLAB authentication cookies to AI providers.
-- Clear handling of authentication failures and expired credentials.
+- Clear handling of expired authentication credentials.
+- Separation of HoYoLAB credentials and AI provider credentials.
 
-Security improvements must be verified through implementation and testing before being considered complete.
+Important: The current credential storage should not be considered encrypted or production-grade secure storage.
+
+Users should never share their HoYoLAB authentication cookies or AI API keys.
 
 ---
 
-10. Current Limitations
+Current Limitations
 
-Irminsul Codex is an early-stage project.
+Irminsul Codex is an early-stage application.
 
-The following capabilities are not yet implemented or verified:
+The following capabilities are not currently implemented or verified:
 
 - AI provider integration.
 - BYOAI configuration.
 - AI account conversations.
-- Account investment scoring.
+- Investment scoring and recommendations.
 - Automated account gap analysis.
 - Farming optimization.
 - Pull evaluation.
@@ -381,60 +474,42 @@ The following capabilities are not yet implemented or verified:
 - Historical account snapshots.
 - Automated test coverage.
 
-The application's current data retrieval capabilities should not be confused with a complete representation of every Genshin Impact account asset.
+The application currently provides a foundation for future development, not the complete intelligence system described in the project vision.
 
 ---
 
-11. Development Principles
+Contributing
 
-The project should follow these principles as it evolves:
+Irminsul Codex is an evolving project.
 
-Account-specific intelligence
+Contributions, suggestions, bug reports, and feature ideas are welcome.
 
-Recommendations should reflect the actual account rather than generic character-building advice.
+Before proposing major architectural changes, consider the project's long-term direction:
 
-Data before intelligence
+- Reliable account data should come before advanced recommendations.
+- Numerical calculations should be deterministic and verifiable.
+- AI should interpret account information rather than invent missing data.
+- Features should integrate with a unified account model.
+- Security and privacy should remain core design considerations.
 
-The quality of recommendations depends on reliable, structured, and sufficiently complete data.
-
-Deterministic calculations
-
-Resource costs, upgrade requirements, and numerical comparisons should use application logic rather than relying on AI-generated arithmetic.
-
-AI as an intelligence layer
-
-AI should interpret and explain account information, not replace the underlying data and calculation systems.
-
-Interactive by design
-
-The interface should encourage exploration, filtering, comparison, and action.
-
-Modular architecture
-
-Data retrieval, account modeling, calculations, AI providers, and presentation should remain separable and maintainable.
-
-Privacy and security
-
-Credentials and personal account information must be handled carefully.
-
-Incremental development
-
-New capabilities should be built on verified foundations rather than implemented as disconnected features.
+For significant changes, opening an issue to discuss the proposed approach before implementation is recommended.
 
 ---
 
-12. Project Status
+Disclaimer
 
-Irminsul Codex currently has an Android application foundation with HoYoLAB authentication, Daily Note synchronization, selected account data retrieval, and JSON export.
+Irminsul Codex is an independent, community-oriented project.
 
-The next major development priority is to establish a reliable unified account data model and determine which additional account information can be retrieved accurately.
+It is not affiliated with, endorsed by, or officially connected to HoYoverse or HoYoLAB.
 
-This foundation will support the eventual intelligence engine, interactive Account Command Center, and AI-powered account assistant.
+Genshin Impact and related assets are properties of their respective owners.
+
+Use the application responsibly and comply with the applicable service terms and policies. Authentication and data retrieval functionality may change if the underlying services or endpoints change.
 
 ---
 
-13. Repository
+Repository
 
-GitHub: https://github.com/berao609/Irminsul-codex
+GitHub: "berao609/Irminsul-codex" (https://github.com/berao609/Irminsul-codex)
 
-Irminsul Codex is an evolving project. Features described under the long-term vision and roadmap are planned capabilities unless explicitly identified as current functionality.
+Project Goal: Turn Genshin Impact account data into useful, interactive, and AI-powered account intelligence.
