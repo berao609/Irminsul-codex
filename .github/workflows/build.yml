@@ -1,9 +1,12 @@
-name: Build APK
+name: Build Debug APK
 
 on:
   push:
     branches: [ "main" ]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -23,11 +26,20 @@ jobs:
         with:
           gradle-version: '8.14.8'
 
-      - name: Build Debug APK
-        run: gradle assembleDebug
+      - name: Read application version
+        id: app_version
+        shell: bash
+        run: |
+          source version.properties
+          echo "artifact_name=irminsul-codex-debug-v${VERSION_NAME}-build${VERSION_CODE}" >> "$GITHUB_OUTPUT"
 
-      - name: Upload APK
+      - name: Build Debug APK
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v7
         with:
-          name: irminsul-codex-debug
+          name: ${{ steps.app_version.outputs.artifact_name }}
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
