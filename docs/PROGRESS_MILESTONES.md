@@ -16,7 +16,7 @@ For each milestone, distinguish:
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 0 - Stabilize the Existing Application  
 **Milestone scope:** First reliability increment for Daily Note parsing and presentation  
-**Status:** <badge>Implemented and CI-verified</badge> Device operation also reported working by the user.
+**Status:** Implemented and CI-verified; the user also reported that the app still works on-device.
 
 ### Objective
 
