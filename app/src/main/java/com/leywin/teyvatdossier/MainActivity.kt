@@ -1,4 +1,5 @@
-package com.leywin.teyvatdossier
+package com.irminsul.codex
+
 
 import android.content.Context
 import android.os.Bundle
