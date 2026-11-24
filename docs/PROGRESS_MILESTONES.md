@@ -295,7 +295,7 @@ After device verification, proceed to the next Phase 0 reliability task. Reasses
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 0 - Stabilize the Existing Application  
 **Milestone scope:** Give every new CI Debug build a higher Android version code while keeping official Release versioning independent  
-**Status:** Implemented; CI verification pending.
+**Status:** Implemented and CI-verified; physical-device update verification pending.
 
 ### Objective
 
@@ -319,6 +319,36 @@ Prevent Android from rejecting consecutive CI Debug APKs because they reuse the 
 
 ### Verification
 
-- Source changes committed to `main`.
-- CI workflow execution and APK version metadata verification: pending.
-- Device update test using two consecutive Debug artifacts: pending.
+**Repository and implementation**
+- Branch: `main`
+- Gradle override support commit: `6349a79daa009952cdbd46271d100125a6b11d2d`
+- Debug workflow versioning commit: `9c1f5a172ba656ed87f6ab0da36703e33d77c88b`
+- Documentation and milestone commits are recorded in the repository history.
+
+**GitHub Actions**
+- Workflow: Build Debug APK
+- Run: [#84 - Record automatic Debug versioning milestone](https://github.com/berao609/Irminsul-codex/actions/runs/45458818484)
+- Run ID: `45458818484`
+- Run result: **Success**
+- Persistent Debug signing configuration: **Success**
+- Unique Debug version calculation: **Success**
+- Unit tests: **Success**
+- Debug APK build: **Success**
+- APK signature verification: **Success**
+- Artifact upload: **Success**
+- Temporary keystore cleanup: **Success**
+- CI run commit: `df182c7770012be1cd58094f0f5ac2fd7ba85124`
+
+**Generated Debug artifact**
+- Artifact: `irminsul-codex-debug-v1.0.0-dev.84-vc86`
+- Artifact ID: `14951772344`
+- Android version name: `1.0.0-dev.84`
+- Android version code: `86`
+- Size: `8,179,215` bytes
+- SHA-256: `6232bab2f3028b70b1b9d3607e199b38dceeda8812f9992ddb94e6409ec77e18`
+- Expiry: 2026-12-08 18:23:48 UTC
+
+**Physical-device verification**
+- The owner reports that the persistent-signing Debug APK migration was installed successfully before this milestone.
+- Installing a second, higher-version Debug APK over that installation has not yet been tested.
+- Verify the next Debug artifact installs as an in-place update without uninstalling and that app data remains available.
