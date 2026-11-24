@@ -152,7 +152,7 @@ Connect an Android device with USB debugging enabled or start an emulator, then 
 
 Build verification: These are the intended build instructions. A successful local build has not been verified as part of this README preparation.
 
-### How It Works
+## How It Works
 
 The current application follows a data retrieval workflow:
 
@@ -170,7 +170,7 @@ The current application follows a data retrieval workflow:
 
 The current implementation focuses on retrieving and presenting account data. It does not yet include the planned intelligence engine or AI recommendation systems.
 
-### Project Structure
+## Project Structure
 
 The main application code is organized into the following components:
 
@@ -261,7 +261,7 @@ Responsible for:
 
 Defines the GitHub Actions workflow for building and uploading the debug APK artifact.
 
-### Account Data Export
+## Account Data Export
 
 The current JSON exporter retrieves selected account information and organizes the available results into a structured JSON document.
 
@@ -298,7 +298,7 @@ In particular:
 
 Improving data coverage and establishing a reliable unified account model are important development priorities.
 
-### AI Integration
+## AI Integration
 
 Irminsul Codex is intended to use existing AI models rather than train or maintain its own foundation model.
 
@@ -362,7 +362,7 @@ Recommendations must be grounded in available account data. Missing information 
 
 HoYoLAB authentication cookies must never be transmitted to AI providers.
 
-### Planned Features
+## Planned Features
 
 The long-term goal is to develop Irminsul Codex into an account intelligence platform rather than simply another account statistics viewer.
 
@@ -486,7 +486,7 @@ The dashboard and AI assistant should operate on a unified account model rather 
 
 Store historical account snapshots to track progression, compare changes, and analyze development over time.
 
-### Development Roadmap
+## Development Roadmap
 
 Development should proceed incrementally, with reliable account data and deterministic calculations established before advanced AI recommendations.
 
@@ -505,7 +505,7 @@ Development should proceed incrementally, with reliable account data and determi
 
 This roadmap describes the intended development direction. It does not mean that these phases have already been implemented.
 
-### Security and Privacy
+## Security and Privacy
 
 Account authentication and API credentials require careful handling.
 
@@ -537,7 +537,7 @@ Account authentication and API credentials require careful handling.
 
 Users should never share their HoYoLAB authentication cookies or AI API keys.
 
-### Current Limitations
+## Current Limitations
 
 Irminsul Codex is an early-stage application.
 
@@ -569,7 +569,7 @@ The following capabilities are not currently implemented or verified:
 
 The application currently provides a foundation for future development, not the complete intelligence system described in the project vision.
 
-### Contributing
+## Contributing
 
 Irminsul Codex is an evolving project.
 
@@ -589,7 +589,7 @@ Before proposing major architectural changes, consider the project's long-term d
 
 For significant changes, opening an issue to discuss the proposed approach before implementation is recommended.
 
-### Disclaimer
+## Disclaimer
 
 Irminsul Codex is an independent, community-oriented project.
 
@@ -599,7 +599,7 @@ Genshin Impact and related assets are properties of their respective owners.
 
 Use the application responsibly and comply with applicable service terms and policies. Authentication and data retrieval functionality may change if the underlying services or endpoints change.
 
-### Repository
+## Repository
 
 GitHub: [berao609/Irminsul-codex](https://github.com/berao609/Irminsul-codex?utm_source=chatgpt.com)
 
