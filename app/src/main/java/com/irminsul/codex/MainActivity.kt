@@ -361,7 +361,9 @@ fun CodexScreen() {
         }
 
         dailyNote?.let { note ->
-            val resinProgress = (note.currentResin.toFloat() / note.maxResin.coerceAtLeast(1)).coerceIn(0f, 1f)
+            val resinProgress = if (note.currentResin != null && note.maxResin != null && note.maxResin > 0) {
+                (note.currentResin.toFloat() / note.maxResin).coerceIn(0f, 1f)
+            } else null
 
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -383,14 +385,14 @@ fun CodexScreen() {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "${note.currentResin} / ${note.maxResin}",
+                            text = "${note.currentResin ?: "—"} / ${note.maxResin ?: "—"}",
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                     LinearProgressIndicator(
-                        progress = { resinProgress },
+                        progress = { resinProgress ?: 0f },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(6.dp),
@@ -398,10 +400,11 @@ fun CodexScreen() {
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                     Text(
-                        text = if (note.resinRecoveryTime > 0) {
-                            "Full in ${formatDuration(note.resinRecoveryTime)}"
-                        } else {
-                            "Resin is full"
+                        text = when {
+                            note.resinRecoveryTime == null -> "Recovery time unavailable"
+                            note.resinRecoveryTime > 0L -> "Full in ${formatDuration(note.resinRecoveryTime)}"
+                            note.currentResin != null && note.maxResin != null && note.currentResin >= note.maxResin -> "Resin is full"
+                            else -> "Recovery status unavailable"
                         },
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -415,14 +418,14 @@ fun CodexScreen() {
             ) {
                 MetricTile(
                     label = "Commissions",
-                    value = "${note.finishedTaskNum} / ${note.totalTaskNum}",
-                    subtext = if (note.isExtraTaskRewardReceived) "Bonus claimed" else "Bonus unclaimed",
+                    value = "${note.finishedTaskNum ?: "—"} / ${note.totalTaskNum ?: "—"}",
+                    subtext = when (note.isExtraTaskRewardReceived) { true -> "Bonus claimed"; false -> "Bonus unclaimed"; null -> "Bonus status unavailable" },
                     modifier = Modifier.weight(1f)
                 )
                 MetricTile(
                     label = "Realm Currency",
-                    value = "${note.currentHomeCoin}",
-                    subtext = "Max ${note.maxHomeCoin}",
+                    value = "${note.currentHomeCoin ?: "—"}",
+                    subtext = "Max ${note.maxHomeCoin ?: "—"}",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -433,13 +436,13 @@ fun CodexScreen() {
             ) {
                 MetricTile(
                     label = "Weekly Discounts",
-                    value = "${note.remainResinDiscountNum} / ${note.resinDiscountNumLimit}",
+                    value = "${note.remainResinDiscountNum ?: "—"} / ${note.resinDiscountNumLimit ?: "—"}",
                     subtext = "Remaining",
                     modifier = Modifier.weight(1f)
                 )
                 MetricTile(
                     label = "Expeditions",
-                    value = "${note.currentExpeditionNum} / ${note.maxExpeditionNum}",
+                    value = "${note.currentExpeditionNum ?: "—"} / ${note.maxExpeditionNum ?: "—"}",
                     subtext = "Dispatched",
                     modifier = Modifier.weight(1f)
                 )
