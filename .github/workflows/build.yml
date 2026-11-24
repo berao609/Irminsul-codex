@@ -56,12 +56,37 @@ jobs:
             echo "DEBUG_KEY_PASSWORD=$DEBUG_KEY_PASSWORD"
           } >> "$GITHUB_ENV"
 
-      - name: Read application version
+      - name: Calculate unique Debug build version
         id: app_version
         shell: bash
         run: |
+          set -euo pipefail
           source version.properties
-          echo "artifact_name=irminsul-codex-debug-v${VERSION_NAME}-build${VERSION_CODE}" >> "$GITHUB_OUTPUT"
+
+          if [[ ! "${VERSION_CODE}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::VERSION_CODE must be a positive integer."
+            exit 1
+          fi
+
+          if [[ ! "${GITHUB_RUN_NUMBER}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::GitHub Actions run number is invalid."
+            exit 1
+          fi
+
+          debug_version_code=$((VERSION_CODE + GITHUB_RUN_NUMBER))
+          if (( debug_version_code > 2100000000 )); then
+            echo "::error::Calculated Debug versionCode exceeds Android's maximum."
+            exit 1
+          fi
+
+          debug_version_name="${VERSION_NAME}-dev.${GITHUB_RUN_NUMBER}"
+          {
+            echo "APP_VERSION_CODE=${debug_version_code}"
+            echo "APP_VERSION_NAME=${debug_version_name}"
+          } >> "$GITHUB_ENV"
+
+          echo "artifact_name=irminsul-codex-debug-v${debug_version_name}-vc${debug_version_code}" >> "$GITHUB_OUTPUT"
+          echo "Debug version: ${debug_version_name} (${debug_version_code})"
 
       - name: Run unit tests
         run: gradle testDebugUnitTest --no-daemon
