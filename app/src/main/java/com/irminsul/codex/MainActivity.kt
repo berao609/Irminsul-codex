@@ -1,9 +1,13 @@
 package com.irminsul.codex
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,6 +69,28 @@ fun CodexScreen() {
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    var isExporting by remember { mutableStateOf(false) }
+    var exportProgress by remember { mutableStateOf<String?>(null) }
+    var exportedJson by remember { mutableStateOf<String?>(null) }
+    var exportStatus by remember { mutableStateOf<String?>(null) }
+
+    val saveFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        val content = exportedJson
+        if (uri != null && content != null) {
+            try {
+                context.contentResolver.openOutputStream(uri)?.use { out ->
+                    out.write(content.toByteArray(Charsets.UTF_8))
+                }
+                val kb = (content.toByteArray(Charsets.UTF_8).size / 1024).coerceAtLeast(1)
+                exportStatus = "Saved JSON file ($kb KB)."
+            } catch (e: Exception) {
+                errorMessage = "Could not save file: ${e.message}"
+            }
+        }
+    }
+
     fun refreshData(targetUid: String = uid, targetCookie: String = cookie) {
         if (targetUid.isBlank() || targetCookie.isBlank()) {
             errorMessage = "Enter both your UID and HoYoLAB cookie."
@@ -87,6 +113,39 @@ fun CodexScreen() {
                     errorMessage = err.message ?: "Request failed."
                 }
             isLoading = false
+        }
+    }
+
+    fun extractAccountJson(saveImmediately: Boolean) {
+        if (uid.isBlank() || cookie.isBlank()) {
+            errorMessage = "Sign in with HoYoLAB first."
+            return
+        }
+        scope.launch {
+            isExporting = true
+            errorMessage = null
+            exportStatus = null
+            exportProgress = "Starting extraction..."
+
+            HoYoLabClient.exportFullAccountJson(uid, cookie) { step ->
+                scope.launch { exportProgress = step }
+            }.onSuccess { json ->
+                exportedJson = json
+                val kb = (json.toByteArray(Charsets.UTF_8).size / 1024).coerceAtLeast(1)
+                exportProgress = null
+                if (saveImmediately) {
+                    exportStatus = "Extracted $kb KB. Choose where to save."
+                    saveFileLauncher.launch("genshin_${uid.trim()}.json")
+                } else {
+                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText("Irminsul Codex JSON", json))
+                    exportStatus = "Copied full JSON ($kb KB) to clipboard."
+                }
+            }.onFailure { err ->
+                exportProgress = null
+                errorMessage = err.message ?: "JSON extraction failed."
+            }
+            isExporting = false
         }
     }
 
@@ -130,6 +189,7 @@ fun CodexScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .systemBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -170,7 +230,7 @@ fun CodexScreen() {
                 ) {
                     Button(
                         onClick = { showWebLogin = true },
-                        enabled = !isLoading,
+                        enabled = !isLoading && !isExporting,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
                     ) {
@@ -196,11 +256,80 @@ fun CodexScreen() {
                     )
                     OutlinedButton(
                         onClick = { refreshData() },
-                        enabled = !isLoading,
+                        enabled = !isLoading && !isExporting,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Text(if (isLoading) "Syncing..." else "Save & Sync")
+                    }
+                }
+            }
+        }
+
+        if (uid.isNotBlank() && cookie.isNotBlank()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Account Data Export",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Extracts profile, exploration, all character builds (weapons, artifacts, talents), Spiral Abyss, and Imaginarium Theater.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (exportProgress != null) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = exportProgress!!,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    if (exportStatus != null) {
+                        Text(
+                            text = exportStatus!!,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            onClick = { extractAccountJson(saveImmediately = true) },
+                            enabled = !isExporting,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text(if (isExporting) "Extracting..." else "Save JSON")
+                        }
+                        OutlinedButton(
+                            onClick = { extractAccountJson(saveImmediately = false) },
+                            enabled = !isExporting,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text("Copy JSON")
+                        }
                     }
                 }
             }
@@ -318,7 +447,7 @@ fun CodexScreen() {
 
             OutlinedButton(
                 onClick = { refreshData() },
-                enabled = !isLoading,
+                enabled = !isLoading && !isExporting,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
             ) {
