@@ -88,4 +88,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.coroutines.android)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.json)
 }
