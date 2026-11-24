@@ -23,6 +23,7 @@ class AccountExportAssemblerTest {
             )
         )
 
+        assertEquals(1, export.optInt("export_format_version"))
         val status = export.getJSONObject("export_status")
         assertEquals("complete", status.optString("overall_status"))
         assertEquals(60, export.getJSONObject("profile_and_exploration").optInt("level"))
@@ -49,6 +50,7 @@ class AccountExportAssemblerTest {
             )
         )
 
+        assertEquals(1, export.optInt("export_format_version"))
         assertEquals("partial", export.getJSONObject("export_status").optString("overall_status"))
         assertEquals(60, export.getJSONObject("profile_and_exploration").optInt("level"))
         assertEquals(12, export.getJSONObject("spiral_abyss_current").optInt("total_battles"))
