@@ -1,4 +1,4 @@
-package package com.irminsul.codex.api
+package com.irminsul.codex.api
 
 
 import kotlinx.coroutines.Dispatchers
