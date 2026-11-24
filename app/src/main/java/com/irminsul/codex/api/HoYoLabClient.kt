@@ -239,7 +239,35 @@ object HoYoLabClient {
                     maxHomeCoin = data.optInt("max_home_coin", 2400),
                     currentExpeditionNum = data.optInt("current_expedition_num", 0),
                     maxExpeditionNum = data.optInt("max_expedition_num", 5)
-                            onProgress("Fetching chronicle, exploration & endgame...")
+                )
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun exportFullAccountJson(
+        uid: String,
+        cookie: String,
+        onProgress: (String) -> Unit = {}
+    ): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val cleanUid = uid.trim()
+            val server = detectServer(cleanUid)
+            val ltuid = extractCookieValue(cookie, "ltuid_v2") ?: extractCookieValue(cookie, "ltuid")
+            val propertyMap = mutableMapOf<Int, String>()
+
+            fun unwrap(json: JSONObject): Any {
+                return if (json.optInt("retcode", -1) == 0) {
+                    stripBloat(json.opt("data"), propertyMap) ?: JSONObject()
+                } else {
+                    JSONObject()
+                        .put("retcode", json.optInt("retcode", -1))
+                        .put("message", json.optString("message", "Request failed"))
+                }
+            }
+
+            onProgress("Fetching chronicle, exploration & endgame...")
             val results = coroutineScope {
                 val cardDeferred = async {
                     if (ltuid != null) fetchRawGet("$RECORD_CARD_URL?uid=$ltuid", cookie) else null
@@ -270,6 +298,7 @@ object HoYoLabClient {
                     theaterDeferred.await()
                 )
             }
+
             val recordCardRaw = results[0]
             val indexRaw = results[1]
             val dailyRaw = results[2]
@@ -278,45 +307,6 @@ object HoYoLabClient {
             val abyssPrevRaw = results[5]
             val theaterRaw = results[6]
 
-            onProgress("Fetching chronicle, exploration & endgame...")
-            val (recordCardRaw, indexRaw, dailyRaw, charListRaw, abyssCurrentRaw, abyssPrevRaw, theaterRaw) = coroutineScope {
-                val cardDeferred = async {
-                    if (ltuid != null) fetchRawGet("$RECORD_CARD_URL?uid=$ltuid", cookie) else null
-                }
-                val indexDeferred = async { fetchRawGet("$API_BASE/index?server=$server&role_id=$cleanUid", cookie) }
-                val dailyDeferred = async { fetchRawGet("$API_BASE/dailyNote?server=$server&role_id=$cleanUid", cookie) }
-                val listDeferred = async {
-                    val payload = JSONObject().put("role_id", cleanUid).put("server", server)
-                    fetchRawPost("$API_BASE/character/list", payload, cookie)
-                }
-                val abyssCurDeferred = async {
-                    fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=1", cookie)
-                }
-                val abyssPrevDeferred = async {
-                    fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=2", cookie)
-                }
-                val theaterDeferred = async {
-                    fetchRawGet("$API_BASE/role_combat?server=$server&role_id=$cleanUid&need_detail=true", cookie)
-                }
-
-                listOf(
-                    cardDeferred.await(),
-                    indexDeferred.await(),
-                    dailyDeferred.await(),
-                    listDeferred.await(),
-                    abyssCurDeferred.await(),
-                    abyssPrevDeferred.await(),
-                    theaterDeferred.await()
-                )
-            }
-val recordCardRaw = results[0]
-val indexRaw = results[1]
-val dailyRaw = results[2]
-val charListRaw = results[3]
-val abyssCurrentRaw = results[4]
-val abyssPrevRaw = results[5]
-val theaterRaw = results[6]
-                    
             val charIds = mutableListOf<Int>()
             if (charListRaw != null && charListRaw.optInt("retcode", -1) == 0) {
                 val listArr = charListRaw.optJSONObject("data")?.optJSONArray("list")
