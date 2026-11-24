@@ -213,6 +213,74 @@ The export process now treats account sections independently. An unsuccessful en
 
 After device verification, continue Phase 0 with a focused review of export data integrity and filtering. In particular, determine which fields removed by `stripBloat()` are truly disposable versus potentially useful to account intelligence, and define a deliberate export schema before expanding the data model.
 
+## Milestone 004 - Account Export Data Integrity and Field Preservation
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 0 - Stabilize the Existing Application  
+**Milestone scope:** Preserve useful source fields in selected account-data exports and identify the export format version  
+**Status:** Implemented and CI-verified; device verification remains pending.
+
+### Objective
+
+Prevent the account exporter from silently discarding potentially useful source information. Preserve the fields returned by the selected HoYoLAB account-data sections so future account analytics and intelligence features can use data that the current UI does not display.
+
+### Work implemented
+
+1. Replaced the broad `stripBloat()` filtering behavior with `AccountExportDataPreserver`.
+2. Preserved nested source fields, descriptions, effects, media URLs, property maps, skill-affix data, explicit nulls, and array ordering.
+3. Retained the existing readable `stat_name` enhancement when a `property_type` can be mapped, without removing the original `property_type`.
+4. Added `export_format_version: 1` to every assembled account export.
+5. Added automated tests for source-field preservation, explicit nulls, nested arrays, stat-name enrichment, and export format versioning.
+6. Updated the README to describe the versioned export and clarify that it remains a selected-section export, not a complete raw API archive or complete account inventory.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/api/AccountExportDataPreserver.kt` (new)
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
+- `app/src/main/java/com/irminsul/codex/api/AccountExportAssembler.kt`
+- `app/src/test/java/com/irminsul/codex/api/AccountExportDataPreserverTest.kt` (new)
+- `app/src/test/java/com/irminsul/codex/api/AccountExportAssemblerTest.kt`
+- `README.md`
+
+### Verification evidence
+
+**Repository and commit**
+- Branch: `main`
+- Final implementation/test commit: `19c229aa964cf4a6384696066a8172fc88c0771a`
+- README clarification commit: `f9228cadc0400c331a9a98ebf924f3bc48699ffd`
+- [Implementation/test commit](https://github.com/berao609/Irminsul-codex/commit/19c229aa964cf4a6384696066a8172fc88c0771a)
+- [README update](https://github.com/berao609/Irminsul-codex/commit/f9228cadc0400c331a9a98ebf924f3bc48699ffd)
+
+**GitHub Actions**
+- Workflow: Build Debug APK
+- Run: [#73 - test: assert account export format version](https://github.com/berao609/Irminsul-codex/actions/runs/45452746428)
+- Run result: **Success**
+- Unit-test step: **Success**
+- Debug APK build step: **Success**
+- Debug APK artifact upload step: **Success**
+- Artifact: `irminsul-codex-debug-v1.0.0-build2`
+- Artifact ID: `14946929273`
+- SHA-256: `cf652bfa7f7d7b8a91f2db6bb2661889db850fcac00cc49f4aba68d9a5aa63db`
+- Artifact expiry: 2026-12-08 17:50 UTC
+
+### Outcome
+
+The selected account sections are no longer aggressively filtered by a denylist of field names and URL patterns. The exporter retains the source fields it receives and adds an explicit format version. This improves the export's usefulness for future parsing and intelligence work without claiming that all possible HoYoLAB data is retrieved.
+
+### Remaining work
+
+- Install the latest Debug APK and generate a fresh account export on the device.
+- Confirm that `export_format_version` is present in the generated JSON.
+- Confirm that useful fields previously removed by `stripBloat()`, such as descriptions, URLs, property maps, and skill-affix data, are retained when present in the API response.
+- Compare the new export with the previous export and check the resulting file size.
+- Continue to treat the export as selected account sections, not a complete raw API archive or complete account inventory.
+- Consider a deliberate retention policy before introducing raw-response archival or long-term local storage.
+
+### Next development checkpoint
+
+After device verification, proceed to the next Phase 0 reliability task. Reassess the account export schema and retrieval coverage against the actual account data before adding new endpoints or beginning account intelligence calculations.
+
+---
 ---
 ## Milestone record rules
 
