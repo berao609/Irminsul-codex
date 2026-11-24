@@ -155,14 +155,16 @@ Build verification: These are the intended build instructions. A successful loca
 
 ## Application Versioning and Releases
 
-The application version is maintained in the repository-root `version.properties` file:
+The official application version is maintained in the repository-root `version.properties` file:
 
 - `VERSION_NAME` is the user-facing semantic version (for example, `1.0.0`).
-- `VERSION_CODE` is Android's increasing integer version. It must increase for every official release.
+- `VERSION_CODE` is Android's increasing integer version for official releases. Increase it for every official release.
 
-Pushes to `main` produce version-labeled Debug APK artifacts. Official signed APK releases are triggered by pushing a matching version tag, such as `v1.0.0`. Official releases require a persistent Android signing keystore configured through GitHub Actions secrets.
+The Debug CI workflow automatically assigns each new workflow run a unique development version name and a higher Android version code. Consecutive Debug APKs use the persistent Debug signing key and can update the installed Debug app in place. Re-running the same workflow run produces the same version; start a new run for a newer installable build.
 
-See [RELEASE_PROCESS.md](RELEASE_PROCESS.md) for signing-key setup, required secrets, version updates, and the release procedure. Do not create a release tag until signing credentials are configured and backed up.
+Official signed APK releases are triggered by pushing a matching version tag, such as `v1.0.0`. Release builds use the exact version values in `version.properties` and a separate persistent Release signing key. Switching between Debug and Release requires a one-time uninstall/reinstall because their signing certificates differ.
+
+See [RELEASE_PROCESS.md](RELEASE_PROCESS.md) for signing-key setup, required secrets, automatic Debug numbering, version updates, and the release procedure. Do not create a release tag until signing credentials are configured and backed up.
 
 ## How It Works
 
