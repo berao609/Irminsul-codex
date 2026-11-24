@@ -288,6 +288,7 @@ The current export structure includes:
 
 | JSON Field              | Description                          |
 | ----------------------- | ------------------------------------ |
+| export_format_version   | Integer identifying the export schema version. |
 | exported_at             | Export timestamp.                    |
 | uid                     | Genshin Impact account UID.          |
 | server                  | Detected account server.             |
@@ -301,9 +302,13 @@ The current export structure includes:
 
 Character detail requests are processed in batches of up to eight character IDs.
 
-### Data Limitations
+### Data Preservation and Limitations
 
-The current exporter processes and filters certain response fields. It is not a complete raw API archive.
+The exporter preserves the fields returned in the selected account-data sections, including nested values, descriptions, effects, media URLs, property maps, and explicit nulls. It also adds a readable `stat_name` when a source `property_type` can be mapped, while retaining the original property type.
+
+The export includes `export_format_version` so future schema changes can be identified. Authentication cookies and credentials are not part of the exported account sections.
+
+This is still a selected-section account export, not a complete raw API archive or a complete account inventory.
 
 In particular:
 
