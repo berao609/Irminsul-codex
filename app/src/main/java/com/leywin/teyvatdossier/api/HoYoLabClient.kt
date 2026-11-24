@@ -1,4 +1,5 @@
-package com.leywin.teyvatdossier.api
+package package com.irminsul.codex.api
+
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
