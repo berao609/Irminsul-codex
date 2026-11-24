@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.leywin.teyvatdossier"
+    namespace = "com.irminsul.codex"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.leywin.teyvatdossier"
+        applicationId = "com.irminsul.codex"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
