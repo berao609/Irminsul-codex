@@ -26,6 +26,7 @@ import com.irminsul.codex.api.DailyNote
 import com.irminsul.codex.api.HoYoLabClient
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 private val CodexColors = darkColorScheme(
     primary = Color(0xFF80CBC4),
@@ -132,14 +133,23 @@ fun CodexScreen() {
             }.onSuccess { json ->
                 exportedJson = json
                 val kb = (json.toByteArray(Charsets.UTF_8).size / 1024).coerceAtLeast(1)
+                val overallExportStatus = JSONObject(json)
+                    .optJSONObject("export_status")
+                    ?.optString("overall_status", "unknown")
+                val exportLabel = when (overallExportStatus) {
+                    "complete" -> "Complete export"
+                    "partial" -> "Partial export. Some sections are unavailable."
+                    "failed" -> "Export contains no successfully retrieved account sections."
+                    else -> "Export status unavailable. Check export_status in the JSON."
+                }
                 exportProgress = null
                 if (saveImmediately) {
-                    exportStatus = "Extracted $kb KB. Choose where to save."
+                    exportStatus = "$exportLabel ($kb KB). Choose where to save."
                     saveFileLauncher.launch("genshin_${uid.trim()}.json")
                 } else {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     clipboard.setPrimaryClip(ClipData.newPlainText("Irminsul Codex JSON", json))
-                    exportStatus = "Copied full JSON ($kb KB) to clipboard."
+                    exportStatus = "Copied $exportLabel ($kb KB) to clipboard."
                 }
             }.onFailure { err ->
                 exportProgress = null
