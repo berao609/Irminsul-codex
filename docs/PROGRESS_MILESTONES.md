@@ -283,7 +283,7 @@ The selected account sections are no longer aggressively filtered by a denylist 
 
 ### Remaining work
 
-- The inspected account payload did not contain `description` or `property_map` keys, so preservation of those specific fields remains unverified on this account. Existing automated tests cover preservation behavior for supplied source fields.
+- No `description` keys appeared in the exported JSON; whether the source responses contained descriptions is unknown. The raw character-detail `property_map` is currently consumed for `stat_name` enrichment rather than exported as a raw map. Existing automated tests cover preservation behavior for supplied source fields, but this device export does not verify raw-map retention.
 - A before/after file-size comparison was not performed because the previous export size was not supplied.
 - Continue to treat the export as selected account sections, not a complete raw API archive or complete account inventory.
 - Consider a deliberate retention policy before introducing raw-response archival or long-term local storage.
