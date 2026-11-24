@@ -79,7 +79,7 @@ base64 -w 0 irminsul-release.jks
 
 macOS:
 ```bash
-base64 < irminsul-release.jks | tr -d '\\n'
+base64 < irminsul-release.jks | tr -d '\n'
 ```
 
 PowerShell:
