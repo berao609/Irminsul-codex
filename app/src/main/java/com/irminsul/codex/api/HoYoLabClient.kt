@@ -104,9 +104,10 @@ object HoYoLabClient {
     private fun fetchRawGet(url: String, cookie: String): JSONObject {
         val request = baseRequestBuilder(url, cookie).get().build()
         client.newCall(request).execute().use { response ->
-            val body = response.body?.string()
-                ?: return JSONObject().put("retcode", -1).put("message", "Empty response (HTTP ${response.code})")
-            return JSONObject(body)
+            return HoYoLabResponseParser.parse(
+                body = response.body?.string(),
+                httpStatus = response.code
+            )
         }
     }
 
@@ -114,9 +115,10 @@ object HoYoLabClient {
         val body = payload.toString().toRequestBody(JSON_MEDIA_TYPE)
         val request = baseRequestBuilder(url, cookie).post(body).build()
         client.newCall(request).execute().use { response ->
-            val respBody = response.body?.string()
-                ?: return JSONObject().put("retcode", -1).put("message", "Empty response (HTTP ${response.code})")
-            return JSONObject(respBody)
+            return HoYoLabResponseParser.parse(
+                body = response.body?.string(),
+                httpStatus = response.code
+            )
         }
     }
 
