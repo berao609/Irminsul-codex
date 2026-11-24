@@ -115,7 +115,7 @@ fun CodexScreen() {
                 )
                 if (uid.isNotBlank()) {
                     Text(
-                        text = "UID ${uid.trim()} •${HoYoLabClient.detectServer(uid)}",
+                        text = "UID ${uid.trim()} • ${HoYoLabClient.detectServer(uid)}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -188,4 +188,141 @@ fun CodexScreen() {
         }
 
         dailyNote?.let { note ->
-            
+            val resinProgress = (note.currentResin.toFloat() / note.maxResin.coerceAtLeast(1)).coerceIn(0f, 1f)
+
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            text = "Original Resin",
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${note.currentResin} / ${note.maxResin}",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { resinProgress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    Text(
+                        text = if (note.resinRecoveryTime > 0) {
+                            "Full in ${formatDuration(note.resinRecoveryTime)}"
+                        } else {
+                            "Resin is full"
+                        },
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                MetricTile(
+                    label = "Commissions",
+                    value = "${note.finishedTaskNum} / ${note.totalTaskNum}",
+                    subtext = if (note.isExtraTaskRewardReceived) "Bonus claimed" else "Bonus unclaimed",
+                    modifier = Modifier.weight(1f)
+                )
+                MetricTile(
+                    label = "Realm Currency",
+                    value = "${note.currentHomeCoin}",
+                    subtext = "Max ${note.maxHomeCoin}",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                MetricTile(
+                    label = "Weekly Discounts",
+                    value = "${note.remainResinDiscountNum} / ${note.resinDiscountNumLimit}",
+                    subtext = "Remaining",
+                    modifier = Modifier.weight(1f)
+                )
+                MetricTile(
+                    label = "Expeditions",
+                    value = "${note.currentExpeditionNum} / ${note.maxExpeditionNum}",
+                    subtext = "Dispatched",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            OutlinedButton(
+                onClick = { refreshData() },
+                enabled = !isLoading,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text(if (isLoading) "Refreshing..." else "Refresh")
+            }
+        }
+    }
+}
+
+@Composable
+private fun MetricTile(
+    label: String,
+    value: String,
+    subtext: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(14.dp),
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = subtext,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+private fun formatDuration(totalSeconds: Long): String {
+    if (totalSeconds <= 0L) return "Full"
+    val hours = totalSeconds / 3600
+    val minutes = (totalSeconds % 3600) / 60
+    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+}
