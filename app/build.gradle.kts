@@ -1,5 +1,11 @@
 import java.util.Properties
 
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.compose.compiler)
+}
+
 val appVersionProperties = Properties().apply {
     val versionFile = rootProject.file("version.properties")
     require(versionFile.isFile) {
@@ -22,12 +28,6 @@ val releaseKeystorePath = providers.environmentVariable("RELEASE_KEYSTORE_PATH")
 val releaseKeystorePassword = providers.environmentVariable("RELEASE_KEYSTORE_PASSWORD").orNull
 val releaseKeyAlias = providers.environmentVariable("RELEASE_KEY_ALIAS").orNull
 val releaseKeyPassword = providers.environmentVariable("RELEASE_KEY_PASSWORD").orNull
-
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.compose.compiler)
-}
 
 android {
     namespace = "com.irminsul.codex"
