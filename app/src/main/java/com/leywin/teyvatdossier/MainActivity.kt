@@ -19,8 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.leywin.teyvatdossier.api.DailyNote
-import com.leywin.teyvatdossier.api.HoYoLabClient
+import com.irminsul.codex.api.DailyNote
+import com.irminsul.codex.api.HoYoLabClient
 import kotlinx.coroutines.launch
 
 private val CodexColors = darkColorScheme(
