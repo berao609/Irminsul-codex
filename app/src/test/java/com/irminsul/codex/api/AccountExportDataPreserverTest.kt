@@ -26,9 +26,7 @@ class AccountExportDataPreserverTest {
         assertTrue(preserved.isNull("optional_value"))
         assertEquals(
             "Effect text",
-            preserved.getJSONArray("skill_affix_list")
-                .getJSONObject(0)
-                .optString("effect")
+            preserved.getJSONArray("skill_affix_list").getJSONObject(0).optString("effect")
         )
     }
 
@@ -37,7 +35,6 @@ class AccountExportDataPreserverTest {
         val source = JSONArray()
             .put(JSONObject().put("level", 90))
             .put(JSONObject().put("level", 80))
-
         val preserved = AccountExportDataPreserver.preserve(source) as JSONArray
 
         assertEquals(2, preserved.length())
@@ -48,7 +45,6 @@ class AccountExportDataPreserverTest {
     @Test
     fun addsReadableStatNameWithoutRemovingOriginalPropertyType() {
         val source = JSONObject().put("property_type", 2001).put("value", "100")
-
         val preserved = AccountExportDataPreserver.preserve(
             source,
             mapOf(2001 to "HP")
@@ -57,5 +53,17 @@ class AccountExportDataPreserverTest {
         assertEquals(2001, preserved.optInt("property_type"))
         assertEquals("HP", preserved.optString("stat_name"))
         assertEquals("100", preserved.optString("value"))
+    }
+
+    @Test
+    fun retainsRawPropertyMapAndUnrecognizedDetailFields() {
+        val source = JSONObject()
+            .put("property_map", JSONObject().put("2001", JSONObject().put("name", "HP")))
+            .put("future_field", JSONObject().put("nested", true))
+        val preserved = AccountExportDataPreserver.preserve(source) as JSONObject
+
+        assertEquals("HP", preserved.getJSONObject("property_map")
+            .getJSONObject("2001").optString("name"))
+        assertTrue(preserved.getJSONObject("future_field").optBoolean("nested"))
     }
 }

@@ -1,5 +1,6 @@
 package com.irminsul.codex.api
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -31,6 +32,12 @@ data class DailyNote(
     val maxHomeCoin: Int?,
     val currentExpeditionNum: Int?,
     val maxExpeditionNum: Int?
+)
+
+private data class FetchedExportResponse(
+    val response: JSONObject,
+    val source: String,
+    val retrievedAt: String
 )
 
 object HoYoLabClient {
@@ -125,6 +132,61 @@ object HoYoLabClient {
         }
     }
 
+    private fun nowUtc(): String = SimpleDateFormat(
+        "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        Locale.US
+    ).apply {
+        timeZone = TimeZone.getTimeZone("UTC")
+    }.format(Date())
+
+    private suspend fun requestSafely(
+        source: String,
+        request: suspend () -> JSONObject
+    ): FetchedExportResponse {
+        val response = try {
+            request()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            JSONObject()
+                .put("retcode", -1)
+                .put("message", "Request failed (${error.javaClass.simpleName})")
+        }
+        return FetchedExportResponse(response, source, nowUtc())
+    }
+
+    private fun sectionFromResponse(
+        fetched: FetchedExportResponse,
+        sectionName: String,
+        requiredArrayField: String? = null,
+        propertyMap: Map<Int, String> = emptyMap()
+    ): ExportSectionResult {
+        val validationError = HoYoLabExportResponseValidator.validationError(
+            fetched.response,
+            sectionName,
+            requiredArrayField
+        )
+        if (validationError != null) {
+            val retcode = fetched.response.optInt("retcode", -1)
+            val errorData = JSONObject()
+                .put("retcode", retcode)
+                .put("message", validationError)
+            return ExportSectionResult.failed(
+                errorData,
+                validationError,
+                fetched.source,
+                fetched.retrievedAt
+            )
+        }
+
+        val data = fetched.response.getJSONObject("data")
+        return ExportSectionResult.success(
+            AccountExportDataPreserver.preserve(data, propertyMap) ?: JSONObject(),
+            fetched.source,
+            fetched.retrievedAt
+        )
+    }
+
     suspend fun fetchGenshinUid(cookie: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             val ltuid = extractCookieValue(cookie, "ltuid_v2")
@@ -147,6 +209,8 @@ object HoYoLabClient {
                 }
             }
             Result.failure(Exception("No Genshin Impact profile linked to this HoYoLAB account."))
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -158,16 +222,17 @@ object HoYoLabClient {
             val server = detectServer(cleanUid)
             val json = fetchRawGet("$API_BASE/dailyNote?server=$server&role_id=$cleanUid", cookie)
 
-            val retcode = json.optInt("retcode", -1)
-            if (retcode != 0) {
-                val message = json.optString("message", "Unknown API error")
-                return@withContext Result.failure(Exception("Error $retcode: $message"))
+            val validationError = HoYoLabExportResponseValidator.validationError(
+                json,
+                "Daily Note"
+            )
+            if (validationError != null) {
+                return@withContext Result.failure(Exception(validationError))
             }
 
-            val data = json.optJSONObject("data")
-                ?: return@withContext Result.failure(Exception("Daily Note response did not contain account data."))
-
-            Result.success(DailyNoteParser.parse(data))
+            Result.success(DailyNoteParser.parse(json.getJSONObject("data")))
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -184,62 +249,45 @@ object HoYoLabClient {
             val ltuid = extractCookieValue(cookie, "ltuid_v2") ?: extractCookieValue(cookie, "ltuid")
             val propertyMap = mutableMapOf<Int, String>()
 
-            suspend fun requestSafely(request: suspend () -> JSONObject): JSONObject {
-                return try {
-                    request()
-                } catch (cancelled: kotlinx.coroutines.CancellationException) {
-                    throw cancelled
-                } catch (error: Exception) {
-                    JSONObject()
-                        .put("retcode", -1)
-                        .put("message", "Request failed (${error.javaClass.simpleName})")
-                }
-            }
-
-            fun sectionFromResponse(response: JSONObject, map: Map<Int, String>): ExportSectionResult {
-                val retcode = response.optInt("retcode", -1)
-                return if (retcode == 0) {
-                    ExportSectionResult.success(
-                        AccountExportDataPreserver.preserve(response.opt("data"), map) ?: JSONObject()
-                    )
-                } else {
-                    val message = response.optString("message", "Request failed")
-                    ExportSectionResult.failed(
-                        JSONObject()
-                            .put("retcode", retcode)
-                            .put("message", message),
-                        message
-                    )
-                }
-            }
-
             onProgress("Fetching chronicle, exploration & endgame...")
-            val results = coroutineScope {
+            val fetched = coroutineScope {
                 val cardDeferred = async {
                     if (ltuid != null) {
-                        requestSafely { fetchRawGet("$RECORD_CARD_URL?uid=$ltuid", cookie) }
+                        requestSafely("HoYoLAB game record card") {
+                            fetchRawGet("$RECORD_CARD_URL?uid=$ltuid", cookie)
+                        }
                     } else null
                 }
                 val indexDeferred = async {
-                    requestSafely { fetchRawGet("$API_BASE/index?server=$server&role_id=$cleanUid", cookie) }
+                    requestSafely("HoYoLAB index") {
+                        fetchRawGet("$API_BASE/index?server=$server&role_id=$cleanUid", cookie)
+                    }
                 }
                 val dailyDeferred = async {
-                    requestSafely { fetchRawGet("$API_BASE/dailyNote?server=$server&role_id=$cleanUid", cookie) }
+                    requestSafely("HoYoLAB dailyNote") {
+                        fetchRawGet("$API_BASE/dailyNote?server=$server&role_id=$cleanUid", cookie)
+                    }
                 }
                 val listDeferred = async {
-                    requestSafely {
+                    requestSafely("HoYoLAB character/list") {
                         val payload = JSONObject().put("role_id", cleanUid).put("server", server)
                         fetchRawPost("$API_BASE/character/list", payload, cookie)
                     }
                 }
                 val abyssCurDeferred = async {
-                    requestSafely { fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=1", cookie) }
+                    requestSafely("HoYoLAB spiralAbyss schedule 1") {
+                        fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=1", cookie)
+                    }
                 }
                 val abyssPrevDeferred = async {
-                    requestSafely { fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=2", cookie) }
+                    requestSafely("HoYoLAB spiralAbyss schedule 2") {
+                        fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=2", cookie)
+                    }
                 }
                 val theaterDeferred = async {
-                    requestSafely { fetchRawGet("$API_BASE/role_combat?server=$server&role_id=$cleanUid&need_detail=true", cookie) }
+                    requestSafely("HoYoLAB role_combat") {
+                        fetchRawGet("$API_BASE/role_combat?server=$server&role_id=$cleanUid&need_detail=true", cookie)
+                    }
                 }
 
                 listOf(
@@ -253,26 +301,39 @@ object HoYoLabClient {
                 )
             }
 
-            val recordCardRaw = results[0]
-            val indexRaw = results[1]!!
-            val dailyRaw = results[2]!!
-            val charListRaw = results[3]!!
-            val abyssCurrentRaw = results[4]!!
-            val abyssPrevRaw = results[5]!!
-            val theaterRaw = results[6]!!
+            val cardFetched = fetched[0]
+            val indexFetched = fetched[1]!!
+            val dailyFetched = fetched[2]!!
+            val rosterFetched = fetched[3]!!
+            val abyssCurrentFetched = fetched[4]!!
+            val abyssPreviousFetched = fetched[5]!!
+            val theaterFetched = fetched[6]!!
 
             val sectionResults = linkedMapOf<String, ExportSectionResult>()
 
-            if (recordCardRaw == null) {
+            if (cardFetched == null) {
                 sectionResults["account_card"] = ExportSectionResult.skipped(
-                    "HoYoLAB account ID cookie was unavailable."
+                    "HoYoLAB account ID cookie was unavailable.",
+                    "HoYoLAB game record card"
                 )
-            } else if (recordCardRaw.optInt("retcode", -1) != 0) {
-                sectionResults["account_card"] = sectionFromResponse(recordCardRaw, propertyMap)
             } else {
-                val cards = recordCardRaw.optJSONObject("data")?.optJSONArray("list")
-                var accountCard: Any? = null
-                if (cards != null) {
+                val cardError = HoYoLabExportResponseValidator.validationError(
+                    cardFetched.response,
+                    "Account card",
+                    "list"
+                )
+                if (cardError != null) {
+                    sectionResults["account_card"] = ExportSectionResult.failed(
+                        JSONObject()
+                            .put("retcode", cardFetched.response.optInt("retcode", -1))
+                            .put("message", cardError),
+                        cardError,
+                        cardFetched.source,
+                        cardFetched.retrievedAt
+                    )
+                } else {
+                    val cards = cardFetched.response.getJSONObject("data").getJSONArray("list")
+                    var accountCard: Any? = null
                     for (i in 0 until cards.length()) {
                         val card = cards.optJSONObject(i)
                         if (card?.optInt("game_id") == 2) {
@@ -280,31 +341,46 @@ object HoYoLabClient {
                             break
                         }
                     }
-                }
-                sectionResults["account_card"] = if (accountCard != null) {
-                    ExportSectionResult.success(accountCard)
-                } else {
-                    ExportSectionResult.failed(
-                        JSONObject().put("retcode", -1).put("message", "No Genshin Impact account card was returned."),
-                        "No Genshin Impact account card was returned."
-                    )
-                }
-            }
-
-            val charIds = mutableListOf<Int>()
-            if (charListRaw.optInt("retcode", -1) == 0) {
-                val listArr = charListRaw.optJSONObject("data")?.optJSONArray("list")
-                if (listArr != null) {
-                    for (i in 0 until listArr.length()) {
-                        val id = listArr.optJSONObject(i)?.optInt("id", 0) ?: 0
-                        if (id != 0) charIds.add(id)
+                    sectionResults["account_card"] = if (accountCard != null) {
+                        ExportSectionResult.success(
+                            accountCard,
+                            cardFetched.source,
+                            cardFetched.retrievedAt
+                        )
+                    } else {
+                        ExportSectionResult.failed(
+                            JSONObject().put("retcode", -1)
+                                .put("message", "No Genshin Impact account card was returned."),
+                            "No Genshin Impact account card was returned.",
+                            cardFetched.source,
+                            cardFetched.retrievedAt
+                        )
                     }
                 }
             }
 
+            val rosterResult = sectionFromResponse(
+                rosterFetched,
+                "Character list",
+                requiredArrayField = "list"
+            )
+            sectionResults["character_roster_source"] = rosterResult
+
+            val charList = if (rosterResult.status == "success") {
+                rosterFetched.response.getJSONObject("data").getJSONArray("list")
+            } else JSONArray()
+            val charIds = mutableListOf<Int>()
+            for (i in 0 until charList.length()) {
+                val id = charList.optJSONObject(i)?.optInt("id", 0) ?: 0
+                if (id != 0) charIds.add(id)
+            }
+
             val detailedChars = JSONArray()
+            val rawDetailBatches = JSONArray()
             val detailFailures = mutableListOf<String>()
-            if (charListRaw.optInt("retcode", -1) == 0 && charIds.isNotEmpty()) {
+            var lastDetailFetched: FetchedExportResponse? = null
+
+            if (rosterResult.status == "success" && charIds.isNotEmpty()) {
                 val chunks = charIds.chunked(8)
                 chunks.forEachIndexed { idx, chunk ->
                     onProgress("Fetching character builds (${idx + 1}/${chunks.size})...")
@@ -314,67 +390,112 @@ object HoYoLabClient {
                         .put("role_id", cleanUid)
                         .put("server", server)
                         .put("character_ids", idsArray)
-                    val detailJson = requestSafely {
+                    val detailFetched = requestSafely("HoYoLAB character/detail batch ${idx + 1}") {
                         fetchRawPost("$API_BASE/character/detail", detailPayload, cookie)
                     }
-                    if (detailJson.optInt("retcode", -1) == 0) {
-                        val dataObj = detailJson.optJSONObject("data")
+                    lastDetailFetched = detailFetched
+                    val detailError = HoYoLabExportResponseValidator.validationError(
+                        detailFetched.response,
+                        "Character detail batch ${idx + 1}",
+                        "list"
+                    )
+                    if (detailError == null) {
+                        val dataObj = detailFetched.response.getJSONObject("data")
+                        rawDetailBatches.put(AccountExportDataPreserver.preserve(dataObj) ?: JSONObject())
                         extractPropertyMap(dataObj, propertyMap)
-                        val items = dataObj?.optJSONArray("list")
-                        if (items != null) {
-                            for (i in 0 until items.length()) {
-                                val cleanedChar = AccountExportDataPreserver.preserve(items.opt(i), propertyMap)
-                                if (cleanedChar != null) detailedChars.put(cleanedChar)
-                            }
-                        } else {
-                            detailFailures.add("Character detail batch ${idx + 1} returned no character list.")
+                        val items = dataObj.getJSONArray("list")
+                        for (i in 0 until items.length()) {
+                            val cleanedChar = AccountExportDataPreserver.preserve(items.opt(i), propertyMap)
+                            if (cleanedChar != null) detailedChars.put(cleanedChar)
                         }
                     } else {
-                        detailFailures.add(
-                            "Character detail batch ${idx + 1}: ${detailJson.optString("message", "Request failed")}"
-                        )
+                        detailFailures.add(detailError)
                     }
                     if (idx < chunks.lastIndex) delay(200)
                 }
             }
 
-            val profileResult = sectionFromResponse(indexRaw, propertyMap)
-            if (profileResult.status == "success" && profileResult.data is JSONObject && detailedChars.length() > 0) {
-                profileResult.data.remove("avatars")
+            sectionResults["character_detail_source"] = when {
+                rawDetailBatches.length() > 0 -> ExportSectionResult.success(
+                    JSONObject().put("batches", rawDetailBatches),
+                    "HoYoLAB character/detail raw data",
+                    lastDetailFetched?.retrievedAt
+                )
+                lastDetailFetched != null -> ExportSectionResult.failed(
+                    JSONObject().put("message", detailFailures.joinToString(" ")),
+                    detailFailures.joinToString(" "),
+                    "HoYoLAB character/detail raw data",
+                    lastDetailFetched.retrievedAt
+                )
+                rosterResult.status != "success" -> ExportSectionResult.skipped(
+                    "Character detail requests were skipped because the character roster was unavailable.",
+                    "HoYoLAB character/detail"
+                )
+                else -> ExportSectionResult.skipped(
+                    "The account returned no character IDs, so no detail batches were requested.",
+                    "HoYoLAB character/detail"
+                )
             }
+
+            val profileResult = sectionFromResponse(
+                indexFetched,
+                "Profile and exploration",
+                propertyMap = propertyMap
+            )
             sectionResults["profile_and_exploration"] = profileResult
-            sectionResults["daily_note"] = sectionFromResponse(dailyRaw, propertyMap)
+            sectionResults["daily_note"] = sectionFromResponse(
+                dailyFetched,
+                "Daily Note",
+                propertyMap = propertyMap
+            )
 
             sectionResults["characters"] = when {
-                charListRaw.optInt("retcode", -1) != 0 ->
-                    sectionFromResponse(charListRaw, propertyMap)
-                detailFailures.isNotEmpty() -> {
-                    val fallback = if (detailedChars.length() > 0) {
-                        detailedChars
-                    } else {
-                        sectionFromResponse(charListRaw, propertyMap).data ?: JSONObject()
-                    }
-                    ExportSectionResult.partial(fallback, detailFailures.joinToString(" "))
-                }
-                detailedChars.length() > 0 -> ExportSectionResult.success(detailedChars)
-                else -> sectionFromResponse(charListRaw, propertyMap)
+                rosterResult.status != "success" -> ExportSectionResult.failed(
+                    JSONObject().put("message", "Character roster retrieval failed."),
+                    "Character roster retrieval failed.",
+                    rosterFetched.source,
+                    rosterFetched.retrievedAt
+                )
+                detailFailures.isNotEmpty() -> ExportSectionResult.partial(
+                    detailedChars,
+                    detailFailures.joinToString(" "),
+                    "HoYoLAB character/detail",
+                    lastDetailFetched?.retrievedAt ?: rosterFetched.retrievedAt
+                )
+                else -> ExportSectionResult.success(
+                    detailedChars,
+                    "HoYoLAB character/detail",
+                    lastDetailFetched?.retrievedAt ?: rosterFetched.retrievedAt
+                )
             }
 
-            sectionResults["spiral_abyss_current"] = sectionFromResponse(abyssCurrentRaw, propertyMap)
-            sectionResults["spiral_abyss_previous"] = sectionFromResponse(abyssPrevRaw, propertyMap)
-            sectionResults["imaginarium_theater"] = sectionFromResponse(theaterRaw, propertyMap)
+            sectionResults["spiral_abyss_current"] = sectionFromResponse(
+                abyssCurrentFetched,
+                "Current Spiral Abyss",
+                propertyMap = propertyMap
+            )
+            sectionResults["spiral_abyss_previous"] = sectionFromResponse(
+                abyssPreviousFetched,
+                "Previous Spiral Abyss",
+                propertyMap = propertyMap
+            )
+            sectionResults["imaginarium_theater"] = sectionFromResponse(
+                theaterFetched,
+                "Imaginarium Theater",
+                propertyMap = propertyMap
+            )
 
-            val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
-                timeZone = TimeZone.getTimeZone("UTC")
-            }
+            val exportTimestamp = nowUtc()
             val root = AccountExportAssembler.assemble(
                 uid = cleanUid,
                 server = server,
-                exportedAt = isoFormat.format(Date()),
+                exportedAt = exportTimestamp,
                 sections = sectionResults
             )
 
             Result.success(root.toString(2))
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
             Result.failure(e)
         }
