@@ -33,6 +33,9 @@ jobs:
           source version.properties
           echo "artifact_name=irminsul-codex-debug-v${VERSION_NAME}-build${VERSION_CODE}" >> "$GITHUB_OUTPUT"
 
+      - name: Run unit tests
+        run: gradle testDebugUnitTest --no-daemon
+
       - name: Build Debug APK
         run: gradle assembleDebug --no-daemon
 
