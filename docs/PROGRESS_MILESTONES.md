@@ -289,3 +289,36 @@ After device verification, proceed to the next Phase 0 reliability task. Reasses
 3. Separate automated CI results from physical-device observations.
 4. State what was not tested or remains uncertain.
 5. Update a milestone's status only when new evidence supports the change.
+
+## Milestone 005 - Automatic Debug Build Versioning
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 0 - Stabilize the Existing Application  
+**Milestone scope:** Give every new CI Debug build a higher Android version code while keeping official Release versioning independent  
+**Status:** Implemented; CI verification pending.
+
+### Objective
+
+Prevent Android from rejecting consecutive CI Debug APKs because they reuse the same Android `versionCode`.
+
+### Work implemented
+
+1. Updated `app/build.gradle.kts` to accept optional `APP_VERSION_CODE` and `APP_VERSION_NAME` environment overrides. When absent, Gradle continues to use the values in `version.properties`.
+2. Updated `.github/workflows/build.yml` to calculate each Debug build's version code as `VERSION_CODE + GITHUB_RUN_NUMBER`.
+3. Assigned each Debug build a semantic prerelease version name in the form `VERSION_NAME-dev.GITHUB_RUN_NUMBER`.
+4. Added validation for positive run numbers and Android's maximum supported version code.
+5. Kept official Release builds on the exact `VERSION_CODE` and `VERSION_NAME` values in `version.properties`.
+6. Updated `README.md`, `RELEASE_PROCESS.md`, and `version.properties` comments to explain the separate Debug and Release version channels.
+
+### Expected behavior
+
+- Each new Debug workflow run receives a higher version code and can update an installation signed with the persistent Debug key.
+- Re-running the same workflow run retains its version code. A new workflow run is required for a higher one.
+- Debug and Release use different signing certificates, so switching between those channels still requires a one-time uninstall/reinstall.
+- Official Release version codes remain manually controlled and increase only when preparing an official release.
+
+### Verification
+
+- Source changes committed to `main`.
+- CI workflow execution and APK version metadata verification: pending.
+- Device update test using two consecutive Debug artifacts: pending.
