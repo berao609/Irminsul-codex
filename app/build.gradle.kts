@@ -14,15 +14,25 @@ val appVersionProperties = Properties().apply {
     versionFile.inputStream().use { load(it) }
 }
 
-val appVersionCode = appVersionProperties.getProperty("VERSION_CODE")
+// CI may override these values for uniquely numbered Debug builds. Official
+// Release builds continue to use the values stored in version.properties.
+val appVersionCode = providers.environmentVariable("APP_VERSION_CODE")
+    .orNull
     ?.toIntOrNull()
-    ?: error("VERSION_CODE must be a positive integer in version.properties")
+    ?: appVersionProperties.getProperty("VERSION_CODE")
+        ?.toIntOrNull()
+        ?: error("VERSION_CODE must be a positive integer in version.properties")
 
-val appVersionName = appVersionProperties.getProperty("VERSION_NAME")
+val appVersionName = providers.environmentVariable("APP_VERSION_NAME")
+    .orNull
     ?.takeIf { it.isNotBlank() }
-    ?: error("VERSION_NAME must be set in version.properties")
+    ?: appVersionProperties.getProperty("VERSION_NAME")
+        ?.takeIf { it.isNotBlank() }
+        ?: error("VERSION_NAME must be set in version.properties")
 
-require(appVersionCode > 0) { "VERSION_CODE must be greater than zero" }
+require(appVersionCode in 1..2_100_000_000) {
+    "VERSION_CODE must be between 1 and 2,100,000,000"
+}
 
 val releaseKeystorePath = providers.environmentVariable("RELEASE_KEYSTORE_PATH").orNull
 val releaseKeystorePassword = providers.environmentVariable("RELEASE_KEYSTORE_PASSWORD").orNull
