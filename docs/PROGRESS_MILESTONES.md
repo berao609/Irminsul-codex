@@ -295,7 +295,7 @@ After device verification, proceed to the next Phase 0 reliability task. Reasses
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 0 - Stabilize the Existing Application  
 **Milestone scope:** Give every new CI Debug build a higher Android version code while keeping official Release versioning independent  
-**Status:** Implemented and CI-verified; physical-device update verification pending.
+**Status:** Implemented, CI-verified, and physical-device update verified.
 
 ### Objective
 
@@ -350,5 +350,7 @@ Prevent Android from rejecting consecutive CI Debug APKs because they reuse the 
 
 **Physical-device verification**
 - The owner reports that the persistent-signing Debug APK migration was installed successfully before this milestone.
-- Installing a second, higher-version Debug APK over that installation has not yet been tested.
-- Verify the next Debug artifact installs as an in-place update without uninstalling and that app data remains available.
+- On 2026-11-25, the owner confirmed that a subsequent higher-version Debug APK installed over the existing app using Android's normal update flow.
+- The owner confirmed that the update function works. No uninstall/reinstall was needed for this update.
+- This confirms the practical in-place update path for consecutive CI Debug builds signed with the persistent Debug key and assigned increasing version codes.
+- The conversation did not separately record a detailed audit of every stored app-data field after the update; do not overstate that as a complete data-integrity test.
