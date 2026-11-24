@@ -1,6 +1,5 @@
 package com.irminsul.codex.api
 
-
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -26,6 +25,7 @@ data class DailyNote(
 
 object HoYoLabClient {
     private const val API_BASE = "https://sg-public-api.hoyolab.com/event/game_record/genshin/api"
+    private const val RECORD_CARD_URL = "https://bbs-api-os.hoyolab.com/game_record/card/wapi/getGameRecordCard"
     private const val DS_SALT = "6s25p5ox5y14umn1p61aqyyvbvvl3lrt"
 
     private val client = OkHttpClient.Builder()
@@ -45,6 +45,15 @@ object HoYoLabClient {
         }
     }
 
+    private fun extractCookieValue(cookie: String, key: String): String? {
+        return cookie.split(";")
+            .map { it.trim() }
+            .firstOrNull { it.startsWith("$key=") }
+            ?.substringAfter("=")
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+    }
+
     private fun generateDs(): String {
         val t = System.currentTimeMillis() / 1000
         val chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -56,6 +65,50 @@ object HoYoLabClient {
     private fun md5(input: String): String {
         val bytes = MessageDigest.getInstance("MD5").digest(input.toByteArray())
         return bytes.joinToString("") { "%02x".format(it) }
+    }
+
+    suspend fun fetchGenshinUid(cookie: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val ltuid = extractCookieValue(cookie, "ltuid_v2")
+                ?: extractCookieValue(cookie, "ltuid")
+                ?: return@withContext Result.failure(Exception("Missing ltuid_v2 in cookie."))
+
+            val request = Request.Builder()
+                .url("$RECORD_CARD_URL?uid=$ltuid")
+                .get()
+                .addHeader("DS", generateDs())
+                .addHeader("x-rpc-app_version", "1.5.0")
+                .addHeader("x-rpc-client_type", "5")
+                .addHeader("x-rpc-language", "en-us")
+                .addHeader("Referer", "https://act.hoyolab.com/")
+                .addHeader("Origin", "https://act.hoyolab.com")
+                .addHeader("Cookie", cookie.trim())
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                val body = response.body?.string()
+                    ?: return@withContext Result.failure(Exception("Empty response"))
+
+                val json = JSONObject(body)
+                if (json.optInt("retcode", -1) != 0) {
+                    return@withContext Result.failure(Exception(json.optString("message", "Could not fetch UID")))
+                }
+
+                val list = json.getJSONObject("data").getJSONArray("list")
+                for (i in 0 until list.length()) {
+                    val card = list.getJSONObject(i)
+                    if (card.optInt("game_id") == 2) {
+                        val roleId = card.optString("game_role_id", "")
+                        if (roleId.isNotEmpty()) {
+                            return@withContext Result.success(roleId)
+                        }
+                    }
+                }
+                Result.failure(Exception("No Genshin Impact profile linked to this HoYoLAB account."))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     suspend fun fetchDailyNote(uid: String, cookie: String): Result<DailyNote> = withContext(Dispatchers.IO) {
