@@ -87,6 +87,66 @@ Continue with the next smallest Phase 0 reliability task after confirming the in
 
 ---
 
+
+## Milestone 002 - HoYoLAB HTTP Response Handling
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 0 - Stabilize the Existing Application  
+**Milestone scope:** Normalize HTTP response handling for HoYoLAB GET and POST requests  
+**Status:** Implemented and CI-verified; device verification remains pending.
+
+### Objective
+
+Make HTTP-level failures, empty responses, and malformed JSON explicit and consistent without confusing them with successful API responses. Preserve HoYoLAB API-level error codes and messages for existing endpoint handlers.
+
+### Work implemented
+
+1. Added `HoYoLabResponseParser.kt` as a pure response-normalization component.
+2. Updated both GET and POST request paths to use the same parser.
+3. Converted empty response bodies and malformed JSON into explicit error response envelopes.
+4. Ensured non-2xx HTTP responses cannot be treated as successful solely because their JSON body contains `retcode: 0`.
+5. Preserved nonzero HoYoLAB API error codes and useful server messages, while adding the HTTP status.
+6. Limited server-provided error message length to avoid excessively large error text.
+7. Added unit tests for successful responses, API-level errors, HTTP failures, empty bodies, malformed JSON, and long messages.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabResponseParser.kt` (new)
+- `app/src/test/java/com/irminsul/codex/api/HoYoLabResponseParserTest.kt` (new)
+
+### Verification evidence
+
+**Repository and commit**
+- Branch: `main`
+- Source and test commit: `a9687fa0054730d8275faf38722c366d7ea7564f`
+- Commit message: `test: cover HoYoLAB response errors`
+- [Commit on GitHub](https://github.com/berao609/Irminsul-codex/commit/a9687fa0054730d8275faf38722c366d7ea7564f)
+
+**GitHub Actions**
+- Workflow: Build Debug APK
+- Run: [#59 - test: cover HoYoLAB response errors](https://github.com/berao609/Irminsul-codex/actions/runs/45446200587)
+- Unit-test step: **Success**
+- Debug APK build step: **Success**
+- Debug APK artifact upload step: **Success**
+- The job's cleanup steps were still running when this record was written; all substantive test/build/artifact steps had succeeded.
+
+### Outcome
+
+HTTP status failures are now represented as explicit error envelopes. Empty and malformed responses no longer cause an uncontextualized JSON parsing failure at the response boundary. Existing endpoint handlers can continue to interpret HoYoLAB API-level `retcode` values, and export sections can retain normalized HTTP error details.
+
+### Remaining work
+
+- Install the latest Debug APK and confirm login, Daily Note synchronization, and JSON export still behave correctly.
+- Verify error messages for expired/invalid credentials and network/server failures when safe test conditions are available.
+- This milestone does not yet isolate every export section from transport exceptions. Partial-export resilience remains a separate task.
+- This milestone does not implement typed domain-wide error states or a repository layer.
+
+### Next development checkpoint
+
+After device verification, proceed to the next Phase 0 task: make account JSON export resilient to individual section failures so one failed request does not discard successful data from unrelated sections.
+
+---
 ## Milestone record rules
 
 1. Add a new numbered section for each meaningful milestone; do not silently rewrite historical results.
