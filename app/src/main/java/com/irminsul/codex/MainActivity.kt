@@ -1,6 +1,5 @@
 package com.irminsul.codex
 
-
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.irminsul.codex.api.DailyNote
 import com.irminsul.codex.api.HoYoLabClient
+import com.irminsul.codex.ui.HoYoLabLoginDialog
 import kotlinx.coroutines.launch
 
 private val CodexColors = darkColorScheme(
@@ -59,25 +59,26 @@ fun CodexScreen() {
     var uid by remember { mutableStateOf(prefs.getString("uid", "") ?: "") }
     var cookie by remember { mutableStateOf(prefs.getString("cookie", "") ?: "") }
     var showCredentials by remember { mutableStateOf(uid.isBlank() || cookie.isBlank()) }
+    var showWebLogin by remember { mutableStateOf(false) }
 
     var dailyNote by remember { mutableStateOf<DailyNote?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    fun refreshData() {
-        if (uid.isBlank() || cookie.isBlank()) {
+    fun refreshData(targetUid: String = uid, targetCookie: String = cookie) {
+        if (targetUid.isBlank() || targetCookie.isBlank()) {
             errorMessage = "Enter both your UID and HoYoLAB cookie."
             return
         }
         prefs.edit()
-            .putString("uid", uid.trim())
-            .putString("cookie", cookie.trim())
+            .putString("uid", targetUid.trim())
+            .putString("cookie", targetCookie.trim())
             .apply()
 
         scope.launch {
             isLoading = true
             errorMessage = null
-            HoYoLabClient.fetchDailyNote(uid, cookie)
+            HoYoLabClient.fetchDailyNote(targetUid, targetCookie)
                 .onSuccess { note ->
                     dailyNote = note
                     showCredentials = false
@@ -89,10 +90,41 @@ fun CodexScreen() {
         }
     }
 
+    fun handleWebLoginSuccess(capturedCookie: String) {
+        showWebLogin = false
+        cookie = capturedCookie
+        prefs.edit().putString("cookie", capturedCookie).apply()
+
+        scope.launch {
+            isLoading = true
+            errorMessage = null
+            HoYoLabClient.fetchGenshinUid(capturedCookie)
+                .onSuccess { detectedUid ->
+                    uid = detectedUid
+                    refreshData(detectedUid, capturedCookie)
+                }
+                .onFailure {
+                    isLoading = false
+                    if (uid.isNotBlank()) {
+                        refreshData(uid, capturedCookie)
+                    } else {
+                        errorMessage = "Signed in! Enter your Genshin UID below and tap Save & Sync."
+                    }
+                }
+        }
+    }
+
     LaunchedEffect(Unit) {
         if (uid.isNotBlank() && cookie.isNotBlank()) {
             refreshData()
         }
+    }
+
+    if (showWebLogin) {
+        HoYoLabLoginDialog(
+            onCookieCaptured = { handleWebLoginSuccess(it) },
+            onDismiss = { showWebLogin = false }
+        )
     }
 
     Column(
@@ -136,10 +168,21 @@ fun CodexScreen() {
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    Button(
+                        onClick = { showWebLogin = true },
+                        enabled = !isLoading,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Sign in with HoYoLAB")
+                    }
+
+                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+
                     OutlinedTextField(
                         value = uid,
                         onValueChange = { uid = it },
-                        label = { Text("Genshin UID") },
+                        label = { Text("Genshin UID (auto-filled on login)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -151,7 +194,7 @@ fun CodexScreen() {
                         maxLines = 3,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    Button(
+                    OutlinedButton(
                         onClick = { refreshData() },
                         enabled = !isLoading,
                         modifier = Modifier.fillMaxWidth(),
