@@ -379,6 +379,7 @@ object HoYoLabClient {
             val rawDetailBatches = JSONArray()
             val detailFailures = mutableListOf<String>()
             var lastDetailFetched: FetchedExportResponse? = null
+            var lastSuccessfulDetailFetchedAt: String? = null
 
             if (rosterResult.status == "success" && charIds.isNotEmpty()) {
                 val chunks = charIds.chunked(8)
@@ -402,6 +403,7 @@ object HoYoLabClient {
                     if (detailError == null) {
                         val dataObj = detailFetched.response.getJSONObject("data")
                         rawDetailBatches.put(AccountExportDataPreserver.preserve(dataObj) ?: JSONObject())
+                        lastSuccessfulDetailFetchedAt = detailFetched.retrievedAt
                         extractPropertyMap(dataObj, propertyMap)
                         val items = dataObj.getJSONArray("list")
                         for (i in 0 until items.length()) {
@@ -416,6 +418,13 @@ object HoYoLabClient {
             }
 
             sectionResults["character_detail_source"] = when {
+                rawDetailBatches.length() > 0 && detailFailures.isNotEmpty() -> ExportSectionResult.partial(
+                    JSONObject().put("batches", rawDetailBatches),
+                    detailFailures.joinToString(" "),
+                    "HoYoLAB character/detail raw data",
+                    lastDetailFetched?.retrievedAt,
+                    lastSuccessfulDetailFetchedAt
+                )
                 rawDetailBatches.length() > 0 -> ExportSectionResult.success(
                     JSONObject().put("batches", rawDetailBatches),
                     "HoYoLAB character/detail raw data",
@@ -460,7 +469,8 @@ object HoYoLabClient {
                     detailedChars,
                     detailFailures.joinToString(" "),
                     "HoYoLAB character/detail",
-                    lastDetailFetched?.retrievedAt ?: rosterFetched.retrievedAt
+                    lastDetailFetched?.retrievedAt ?: rosterFetched.retrievedAt,
+                    lastSuccessfulDetailFetchedAt
                 )
                 else -> ExportSectionResult.success(
                     detailedChars,

@@ -298,6 +298,8 @@ The current export structure includes:
 | profile_and_exploration | Profile and exploration information. |
 | daily_note              | Daily Note information.              |
 | characters              | Retrieved character information.     |
+| character_roster_source | Preserved source character roster data. |
+| character_detail_source | Preserved raw character-detail response batches. |
 | spiral_abyss_current    | Current Spiral Abyss information.    |
 | spiral_abyss_previous   | Previous Spiral Abyss information.   |
 | imaginarium_theater     | Imaginarium Theater information.     |
@@ -306,9 +308,11 @@ Character detail requests are processed in batches of up to eight character IDs.
 
 ### Data Preservation and Limitations
 
-The exporter preserves the fields returned in the selected account-data sections, including nested values, descriptions, effects, media URLs, property maps, and explicit nulls. It also adds a readable `stat_name` when a source `property_type` can be mapped, while retaining the original property type.
+The exporter preserves the fields returned in the selected account-data sections, including nested values, descriptions, effects, media URLs, raw character roster data, raw character-detail batches (including property maps), and explicit nulls. The `characters` section also adds a readable `stat_name` when a source `property_type` can be mapped, while retaining the original property type. The raw source sections are retained separately so the enriched character data does not replace the original response fields.
 
-The export includes `export_format_version` so future schema changes can be identified. Authentication cookies and credentials are not part of the exported account sections.
+The export includes `export_format_version` so future schema changes can be identified. Each section status records its source and retrieval timestamp; successful sections also record the last successful retrieval timestamp available in this one-time export. Historical last-success timestamps are not persisted between exports. Authentication cookies and credentials are not part of the exported account sections.
+
+The overall status is `complete` only when all required sections succeed. A skipped optional section, such as the account card when the HoYoLAB account-ID cookie is unavailable, does not by itself make the export partial. Failed or partial sections, or missing required sections, make the export `partial` when some usable data remains. The status is `failed` when no section contains usable retrieved data.
 
 This is still a selected-section account export, not a complete raw API archive or a complete account inventory.
 

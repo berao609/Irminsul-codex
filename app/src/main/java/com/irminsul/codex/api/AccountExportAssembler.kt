@@ -27,14 +27,15 @@ internal data class ExportSectionResult(
             data: Any,
             message: String,
             source: String? = null,
-            retrievedAt: String? = null
+            retrievedAt: String? = null,
+            lastSuccessfulRetrievalAt: String? = retrievedAt
         ) = ExportSectionResult(
             data = data,
             status = "partial",
             message = message,
             source = source,
             retrievedAt = retrievedAt,
-            lastSuccessfulRetrievalAt = retrievedAt
+            lastSuccessfulRetrievalAt = lastSuccessfulRetrievalAt
         )
 
         fun failed(

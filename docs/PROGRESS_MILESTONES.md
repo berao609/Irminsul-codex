@@ -366,3 +366,48 @@ Prevent Android from rejecting consecutive CI Debug APKs because they reuse the 
 - The owner confirmed that the update function works. No uninstall/reinstall was needed for this update.
 - This confirms the practical in-place update path for consecutive CI Debug builds signed with the persistent Debug key and assigned increasing version codes.
 - The conversation did not separately record a detailed audit of every stored app-data field after the update; do not overstate that as a complete data-integrity test.
+
+
+## Milestone 006 - Account Export Retrieval Reliability and Provenance
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 0 - Stabilize the Existing Application  
+**Milestone scope:** Implement Orders 1-5 from the account-data export reliability audit  
+**Status:** Implemented in source and tests; CI verification pending.
+
+### Objective
+
+Make the existing selected-section account export more reliable and auditable without claiming complete account inventory coverage.
+
+### Work implemented
+
+1. Preserve coroutine cancellation through outer result-handling boundaries in UID lookup, Daily Note retrieval, and account export.
+2. Validate response envelopes and endpoint-specific container shapes before marking export sections successful. Empty objects and empty arrays remain valid when the expected container shape is present.
+3. Define required sections explicitly. A skipped optional section does not invalidate completeness; failed/partial sections or missing required sections produce a partial export when usable data remains. An export with no usable section data is failed.
+4. Preserve the original character roster and raw character-detail response batches, including raw property maps, alongside the enriched character list. Stop removing the profile's source avatar list.
+5. Add per-section source, retrieval timestamp, and last-successful-retrieval timestamp where this single export can establish one. A failed section does not invent a historical last-success timestamp.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
+- `app/src/main/java/com/irminsul/codex/api/AccountExportAssembler.kt`
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabExportResponseValidator.kt` (new)
+- `app/src/test/java/com/irminsul/codex/api/AccountExportAssemblerTest.kt`
+- `app/src/test/java/com/irminsul/codex/api/AccountExportDataPreserverTest.kt`
+- `app/src/test/java/com/irminsul/codex/api/HoYoLabExportResponseValidatorTest.kt` (new)
+- `README.md`
+
+### Verification evidence
+
+- Implementation commit: `d82ef3e068797707dd77bf1c8594aef91b751278`
+- Unit tests and Debug build: **Pending CI result**
+- Physical-device export inspection: **Pending**
+- Export-size impact from preserving raw character data: **Not yet measured**
+- Live API shape compatibility for every endpoint: **Not yet re-verified against the user's account**
+
+### Remaining work
+
+- Verify the CI unit-test and Debug build results for this commit.
+- Inspect a fresh on-device export. Confirm the new raw source sections and per-section metadata, validate JSON parsing, and compare file size with the previous 2,098,772-byte M4 export.
+- Confirm that the actual HoYoLAB responses satisfy the new endpoint-specific response-shape checks.
+- Do not treat this selected-section export as a complete raw API archive or complete account inventory.
