@@ -39,17 +39,6 @@ object HoYoLabClient {
     private const val DS_SALT = "6s25p5ox5y14umn1p61aqyyvbvvl3lrt"
     private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
-    private val BLOAT_KEYS = setOf(
-        "icon", "image", "img", "url", "banner", "bg", "cover",
-        "desc", "description", "effect", "strategy", "wiki",
-        "relic_wiki", "weapon_wiki", "avatar_wiki", "property_map",
-        "recommend_relic_property", "skill_affix_list"
-    )
-
-    private val BLOAT_SUFFIXES = listOf(
-        "_icon", "_image", "_url", "_img", "_banner", "_cover", "_bg", "_wiki"
-    )
-
     private val client = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
@@ -119,57 +108,6 @@ object HoYoLabClient {
                 body = response.body?.string(),
                 httpStatus = response.code
             )
-        }
-    }
-
-    private fun isBloatKey(key: String): Boolean {
-        val lower = key.lowercase(Locale.US)
-        if (lower in BLOAT_KEYS) return true
-        return BLOAT_SUFFIXES.any { lower.endsWith(it) }
-    }
-
-    private fun stripBloat(node: Any?, propertyMap: Map<Int, String>): Any? {
-        return when (node) {
-            null, JSONObject.NULL -> null
-            is JSONObject -> {
-                val clean = JSONObject()
-                val propType = node.optInt("property_type", -1)
-                if (propType != -1 && !node.has("stat_name")) {
-                    propertyMap[propType]?.let { clean.put("stat_name", it) }
-                }
-
-                val keys = node.keys()
-                while (keys.hasNext()) {
-                    val key = keys.next()
-                    if (isBloatKey(key)) continue
-                    val value = node.opt(key)
-                    if (value == null || value === JSONObject.NULL) continue
-                    if (value is String && (value.startsWith("http://") || value.startsWith("https://"))) {
-                        continue
-                    }
-                    val cleanedValue = stripBloat(value, propertyMap)
-                    if (cleanedValue != null) {
-                        clean.put(key, cleanedValue)
-                    }
-                }
-                clean
-            }
-            is JSONArray -> {
-                val clean = JSONArray()
-                for (i in 0 until node.length()) {
-                    val item = node.opt(i)
-                    if (item == null || item === JSONObject.NULL) continue
-                    if (item is String && (item.startsWith("http://") || item.startsWith("https://"))) {
-                        continue
-                    }
-                    val cleanedItem = stripBloat(item, propertyMap)
-                    if (cleanedItem != null) {
-                        clean.put(cleanedItem)
-                    }
-                }
-                clean
-            }
-            else -> node
         }
     }
 
@@ -262,7 +200,7 @@ object HoYoLabClient {
                 val retcode = response.optInt("retcode", -1)
                 return if (retcode == 0) {
                     ExportSectionResult.success(
-                        stripBloat(response.opt("data"), map) ?: JSONObject()
+                        AccountExportDataPreserver.preserve(response.opt("data"), map) ?: JSONObject()
                     )
                 } else {
                     val message = response.optString("message", "Request failed")
@@ -338,7 +276,7 @@ object HoYoLabClient {
                     for (i in 0 until cards.length()) {
                         val card = cards.optJSONObject(i)
                         if (card?.optInt("game_id") == 2) {
-                            accountCard = stripBloat(card, propertyMap)
+                            accountCard = AccountExportDataPreserver.preserve(card, propertyMap)
                             break
                         }
                     }
@@ -385,7 +323,7 @@ object HoYoLabClient {
                         val items = dataObj?.optJSONArray("list")
                         if (items != null) {
                             for (i in 0 until items.length()) {
-                                val cleanedChar = stripBloat(items.opt(i), propertyMap)
+                                val cleanedChar = AccountExportDataPreserver.preserve(items.opt(i), propertyMap)
                                 if (cleanedChar != null) detailedChars.put(cleanedChar)
                             }
                         } else {
