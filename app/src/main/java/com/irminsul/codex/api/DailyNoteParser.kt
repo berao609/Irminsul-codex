@@ -27,7 +27,7 @@ internal object DailyNoteParser {
         if (!has(key) || isNull(key)) return null
         return when (val value = opt(key)) {
             is Int -> value
-            is Long -> value.takeIf { it in Int.MIN_VALUE..Int.MAX_VALUE }?.toInt()
+            is Long -> value.takeIf { it >= Int.MIN_VALUE.toLong() && it <= Int.MAX_VALUE.toLong() }?.toInt()
             is Number -> value.toInt().takeIf { value.toDouble() == it.toDouble() }
             else -> null
         }
