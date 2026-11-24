@@ -93,7 +93,7 @@ Continue with the next smallest Phase 0 reliability task after confirming the in
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 0 - Stabilize the Existing Application  
 **Milestone scope:** Normalize HTTP response handling for HoYoLAB GET and POST requests  
-**Status:** Implemented and CI-verified; device verification remains pending.
+**Status:** Implemented, CI-verified, and device-verified with field-availability qualifications.
 
 ### Objective
 
@@ -263,22 +263,34 @@ Prevent the account exporter from silently discarding potentially useful source 
 - SHA-256: `cf652bfa7f7d7b8a91f2db6bb2661889db850fcac00cc49f4aba68d9a5aa63db`
 - Artifact expiry: 2026-12-08 17:50 UTC
 
+### Physical-device export inspection
+
+On 2026-11-25, the user generated a fresh export from the Android app and inspected `irminsul-m4-check.json` locally in Termux.
+
+- JSON parsing: **Success**
+- File size: **2,098,772 bytes**
+- `export_format_version`: **1**
+- `export_status.overall_status`: **complete**
+- All seven reported section statuses: **success**
+- Field scan found: 774 `effect` keys, 1,823 URL/image-related keys, 3,580 `property_type` keys, 3,580 `stat_name` keys, 430 `skill_affix` keys, and 165 explicit null values.
+- The scan found zero `description` and zero `property_map` keys. Their preservation could not be assessed from this account export because those fields were not present in the inspected payload.
+- The user did not provide the previous export's file size, so a before/after file-size comparison was not performed.
+- This inspection confirms the generated export's structure and the presence of the listed fields. It is not a byte-for-byte comparison against raw HoYoLAB responses and does not establish complete account-data coverage.
+
 ### Outcome
 
 The selected account sections are no longer aggressively filtered by a denylist of field names and URL patterns. The exporter retains the source fields it receives and adds an explicit format version. This improves the export's usefulness for future parsing and intelligence work without claiming that all possible HoYoLAB data is retrieved.
 
 ### Remaining work
 
-- Install the latest Debug APK and generate a fresh account export on the device.
-- Confirm that `export_format_version` is present in the generated JSON.
-- Confirm that useful fields previously removed by `stripBloat()`, such as descriptions, URLs, property maps, and skill-affix data, are retained when present in the API response.
-- Compare the new export with the previous export and check the resulting file size.
+- The inspected account payload did not contain `description` or `property_map` keys, so preservation of those specific fields remains unverified on this account. Existing automated tests cover preservation behavior for supplied source fields.
+- A before/after file-size comparison was not performed because the previous export size was not supplied.
 - Continue to treat the export as selected account sections, not a complete raw API archive or complete account inventory.
 - Consider a deliberate retention policy before introducing raw-response archival or long-term local storage.
 
 ### Next development checkpoint
 
-After device verification, proceed to the next Phase 0 reliability task. Reassess the account export schema and retrieval coverage against the actual account data before adding new endpoints or beginning account intelligence calculations.
+Reassess the export schema and retrieval coverage against the actual account data before adding new endpoints or beginning account intelligence calculations. Identify which useful account domains are already represented, which are absent, and which require additional retrieval sources.
 
 ---
 ---
