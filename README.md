@@ -1,4 +1,4 @@
-# Irminsul-codex
+Irminsul Codex
 
 An AI-powered Genshin Impact Account Intelligence System
 
