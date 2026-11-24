@@ -391,14 +391,22 @@ fun CodexScreen() {
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    LinearProgressIndicator(
-                        progress = { resinProgress ?: 0f },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                    if (resinProgress != null) {
+                        LinearProgressIndicator(
+                            progress = { resinProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    } else {
+                        Text(
+                            text = "Resin progress unavailable",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Text(
                         text = when {
                             note.resinRecoveryTime == null -> "Recovery time unavailable"
