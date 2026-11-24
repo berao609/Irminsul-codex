@@ -148,6 +148,71 @@ After device verification, proceed to the next Phase 0 task: make account JSON e
 
 ---
 
+## Milestone 003 - Partial Account Export Resilience
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 0 - Stabilize the Existing Application  
+**Milestone scope:** Preserve successful account sections when other export requests fail  
+**Status:** Implemented and CI-verified; device verification remains pending.
+
+### Objective
+
+Prevent one failed HoYoLAB endpoint or character-detail batch from discarding unrelated successful account data. Make incomplete exports clearly identifiable to both the user and downstream data consumers.
+
+### Work implemented
+
+1. Added `AccountExportAssembler.kt` to assemble export metadata, section payloads, and per-section status information.
+2. Wrapped each independent account-data request so transport exceptions become section-level error responses instead of cancelling the other concurrent requests.
+3. Kept coroutine cancellation distinct from ordinary request failures inside the request wrapper.
+4. Preserved successful sections even when profile, Daily Note, character list, Abyss, Theater, or account-card retrieval fails.
+5. Added an `export_status` object to the JSON export containing:
+   - An overall status: `complete`, `partial`, or `failed`.
+   - A status for each exported section: `success`, `partial`, `failed`, or `skipped`.
+   - A useful message for failed, partial, or skipped sections.
+6. Isolated character-detail batch failures. Available character details remain in the export, while missing batches are identified in the character section's status message.
+7. Preserved the existing account section names and payload shapes where data is available.
+8. Updated the UI to report complete, partial, or unsuccessful export status instead of always describing the result as a full export.
+9. Added unit tests for complete exports, skipped optional sections, isolated section failures, partial character-detail results, and fully failed exports.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
+- `app/src/main/java/com/irminsul/codex/api/AccountExportAssembler.kt` (new)
+- `app/src/test/java/com/irminsul/codex/api/AccountExportAssemblerTest.kt` (new)
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+
+### Verification evidence
+
+**Repository and commit**
+- Branch: `main`
+- Final CI-triggering commit: `ab45853b9660494e3a399d6121a87311632f6009`
+- Commit message: `feat: show partial export status to users`
+- [Commit on GitHub](https://github.com/berao609/Irminsul-codex/commit/ab45853b9660494e3a399d6121a87311632f6009)
+
+**GitHub Actions**
+- Workflow: Build Debug APK
+- Run: [#63 - feat: show partial export status to users](https://github.com/berao609/Irminsul-codex/actions/runs/45447616109)
+- Run result: **Success**
+- Unit-test step: **Success**
+- Debug APK build step: **Success**
+- Debug APK artifact upload step: **Success**
+- Workflow cleanup: **Success**
+
+### Outcome
+
+The export process now treats account sections independently. An unsuccessful endpoint is represented in its own section and in `export_status`, while unrelated successful data remains available. Character-detail batch failures are surfaced rather than silently ignored. The UI distinguishes complete and partial exports.
+
+### Remaining work
+
+- Install the latest Debug APK and perform a real account export on-device.
+- Inspect the resulting JSON and confirm `export_status` and the per-section results are understandable and correctly match the retrieved data.
+- Do not deliberately invalidate credentials or disrupt the account merely to force a failure. A safe network interruption or controlled test can be used later if needed.
+- Verify whether downstream consumers of the export need a schema/version field before the format is relied upon by future intelligence features.
+
+### Next development checkpoint
+
+After device verification, continue Phase 0 with a focused review of export data integrity and filtering. In particular, determine which fields removed by `stripBloat()` are truly disposable versus potentially useful to account intelligence, and define a deliberate export schema before expanding the data model.
+
 ## Milestone 004 - Account Export Data Integrity and Field Preservation
 
 **Date recorded:** 2026-11-25  
