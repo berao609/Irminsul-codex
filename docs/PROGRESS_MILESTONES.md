@@ -129,7 +129,7 @@ Make HTTP-level failures, empty responses, and malformed JSON explicit and consi
 - Unit-test step: **Success**
 - Debug APK build step: **Success**
 - Debug APK artifact upload step: **Success**
-- The job's cleanup steps were still running when this record was written; all substantive test/build/artifact steps had succeeded.
+- Run result: **Success**, including all job cleanup steps.
 
 ### Outcome
 
