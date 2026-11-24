@@ -16,6 +16,7 @@ The long-term vision is to transform account data into actionable intelligence. 
 - [Screenshots](#screenshots)
 - [Technology Stack](#technology-stack)
 - [Getting Started](#getting-started)
+- [Application Versioning and Releases](#application-versioning-and-releases)
 - [How It Works](#how-it-works)
 - [Project Structure](#project-structure)
 - [Account Data Export](#account-data-export)
@@ -152,6 +153,17 @@ Connect an Android device with USB debugging enabled or start an emulator, then 
 
 Build verification: These are the intended build instructions. A successful local build has not been verified as part of this README preparation.
 
+## Application Versioning and Releases
+
+The application version is maintained in the repository-root `version.properties` file:
+
+- `VERSION_NAME` is the user-facing semantic version (for example, `1.0.0`).
+- `VERSION_CODE` is Android's increasing integer version. It must increase for every official release.
+
+Pushes to `main` produce version-labeled Debug APK artifacts. Official signed APK releases are triggered by pushing a matching version tag, such as `v1.0.0`. Official releases require a persistent Android signing keystore configured through GitHub Actions secrets.
+
+See [RELEASE_PROCESS.md](RELEASE_PROCESS.md) for signing-key setup, required secrets, version updates, and the release procedure. Do not create a release tag until signing credentials are configured and backed up.
+
 ## How It Works
 
 The current application follows a data retrieval workflow:
@@ -199,11 +211,14 @@ Irminsul-codex/
 │
 ├── .github/
 │   └── workflows/
-│       └── build.yml
+│       ├── build.yml
+│       └── release.yml
 │
 ├── build.gradle.kts
 ├── settings.gradle.kts
 ├── gradle.properties
+├── version.properties
+├── RELEASE_PROCESS.md
 └── README.md
 ```
 
@@ -259,7 +274,11 @@ Responsible for:
 
 ### `.github/workflows/build.yml`
 
-Defines the GitHub Actions workflow for building and uploading the debug APK artifact.
+Defines the GitHub Actions workflow for building and uploading version-labeled Debug APK artifacts.
+
+### `.github/workflows/release.yml`
+
+Builds, verifies, and publishes a signed APK when a matching version tag is pushed.
 
 ## Account Data Export
 
