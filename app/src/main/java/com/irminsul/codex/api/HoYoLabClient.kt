@@ -309,7 +309,14 @@ object HoYoLabClient {
                     theaterDeferred.await()
                 )
             }
-
+val recordCardRaw = results[0]
+val indexRaw = results[1]
+val dailyRaw = results[2]
+val charListRaw = results[3]
+val abyssCurrentRaw = results[4]
+val abyssPrevRaw = results[5]
+val theaterRaw = results[6]
+                    
             val charIds = mutableListOf<Int>()
             if (charListRaw != null && charListRaw.optInt("retcode", -1) == 0) {
                 val listArr = charListRaw.optJSONObject("data")?.optJSONArray("list")
