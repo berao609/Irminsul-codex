@@ -1,5 +1,3 @@
-
-```kotlin
 // MainActivity.kt
 package com.leywin.teyvatdossier
 
