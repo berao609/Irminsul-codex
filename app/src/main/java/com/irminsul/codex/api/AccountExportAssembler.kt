@@ -25,6 +25,7 @@ internal object AccountExportAssembler {
         sections: Map<String, ExportSectionResult>
     ): JSONObject {
         val root = JSONObject()
+            .put("export_format_version", 1)
             .put("exported_at", exportedAt)
             .put("uid", uid)
             .put("server", server)
