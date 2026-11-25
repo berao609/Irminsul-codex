@@ -8,7 +8,6 @@ import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.model.AccountIntelligenceOverview
 import com.irminsul.codex.domain.model.AccountSnapshot
 import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
-import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
 import com.irminsul.codex.domain.repository.AccountRepository
 import com.irminsul.codex.domain.repository.AccountSnapshotStore
 import kotlinx.coroutines.CancellationException
@@ -24,7 +23,6 @@ data class AccountExportUiState(
     val errorMessage: String? = null,
     val snapshot: AccountSnapshot? = null,
     val pendingExport: AccountExport? = null,
-    val selectedDevelopmentGoal: CharacterDevelopmentGoal = CharacterDevelopmentGoal.BALANCED_DEVELOPMENT,
     val isAnalyzingIntelligence: Boolean = false,
     val intelligenceOverview: AccountIntelligenceOverview? = null,
     val intelligenceErrorMessage: String? = null,
@@ -87,7 +85,6 @@ class AccountViewModel(
                         } catch (error: Exception) {
                             persistenceError = "Account retrieved, but local saving failed: ${error.message ?: "unknown storage error"}"
                         }
-                        val goal = _uiState.value.selectedDevelopmentGoal
                         _uiState.update {
                             it.copy(
                                 isExporting = false,
@@ -97,7 +94,7 @@ class AccountViewModel(
                                 pendingExport = if (prepareJsonExport) export else null
                             )
                         }
-                        analyzeSnapshot(export.snapshot, goal)
+                        analyzeSnapshot(export.snapshot)
                     },
                     onFailure = { error ->
                         _uiState.update {
@@ -123,27 +120,16 @@ class AccountViewModel(
         }
     }
 
-    /**
-     * Changes only the ordering objective. The engine and its source analyzers keep
-     * all findings and base priorities unchanged.
-     */
-    fun selectDevelopmentGoal(goal: CharacterDevelopmentGoal) {
-        val snapshot = _uiState.value.snapshot
-        _uiState.update { it.copy(selectedDevelopmentGoal = goal) }
-        if (snapshot != null) analyzeSnapshot(snapshot, goal)
-    }
-
-    private fun analyzeSnapshot(snapshot: AccountSnapshot, goal: CharacterDevelopmentGoal) {
+    private fun analyzeSnapshot(snapshot: AccountSnapshot) {
         _uiState.update {
             it.copy(
-                selectedDevelopmentGoal = goal,
                 isAnalyzingIntelligence = true,
                 intelligenceOverview = null,
                 intelligenceErrorMessage = null
             )
         }
         try {
-            val overview = AccountIntelligenceEngine.analyze(snapshot, goal)
+            val overview = AccountIntelligenceEngine.analyze(snapshot, CharacterDevelopmentGoal.BALANCED_DEVELOPMENT)
             _uiState.update {
                 it.copy(
                     isAnalyzingIntelligence = false,
