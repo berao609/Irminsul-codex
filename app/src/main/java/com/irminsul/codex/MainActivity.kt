@@ -44,7 +44,6 @@ private val CodexColors = darkColorScheme(
 
 private enum class CodexTab(val label: String, val symbol: String) {
     HOME("Home", "⌂"),
-    INTELLIGENCE("Intel", "◈"),
     VISUALS("Visuals", "▥"),
     AI_CHAT("AI Chat", "✧"),
     INFO("Info", "ⓘ")
@@ -355,7 +354,7 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
             }
         }
 
-        if (selectedTab == CodexTab.INTELLIGENCE && uid.isNotBlank() && cookie.isNotBlank()) {
+        if (selectedTab == CodexTab.VISUALS && uid.isNotBlank() && cookie.isNotBlank()) {
             val overview = accountExportState.intelligenceOverview
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -367,7 +366,7 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "Account Intelligence",
+                        text = "Account Analysis",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -552,9 +551,9 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
         }
 
         if (selectedTab == CodexTab.VISUALS) {
-            Text("Account visuals", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Text("Visual Dashboard", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
             Text(
-                "A visual overview of the latest deterministic account analysis.",
+                "Account analysis, evidence-backed recommendations, and visual summaries in one place.",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -604,9 +603,6 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
                             Text("No reported coverage or freshness concerns.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                }
-                OutlinedButton(onClick = { selectedTab = CodexTab.INTELLIGENCE }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Open detailed intelligence")
                 }
             }
         }
@@ -727,7 +723,7 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        TextButton(onClick = { selectedTab = CodexTab.INTELLIGENCE }) {
+                        TextButton(onClick = { selectedTab = CodexTab.VISUALS }) {
                             Text("Analysis")
                         }
                     }
