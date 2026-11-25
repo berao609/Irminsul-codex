@@ -115,11 +115,17 @@ jobs:
 
           while IFS= read -r path; do
             case "$path" in
-              app/src/androidTest/*|              app/src/main/java/com/irminsul/codex/data/local/*|              app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt|              app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt|              app/src/main/java/com/irminsul/codex/domain/repository/AccountSnapshotStore.kt|              app/build.gradle.kts|              gradle/libs.versions.toml|              build.gradle.kts|              settings.gradle.kts|              gradle.properties|              .github/workflows/build.yml)
-                run_room_tests=true
-                break
-                ;;
+              app/src/androidTest/*) run_room_tests=true ;;
+              app/src/main/java/com/irminsul/codex/data/local/*) run_room_tests=true ;;
+              app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt) run_room_tests=true ;;
+              app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt) run_room_tests=true ;;
+              app/src/main/java/com/irminsul/codex/domain/repository/AccountSnapshotStore.kt) run_room_tests=true ;;
+              app/build.gradle.kts|gradle/libs.versions.toml|build.gradle.kts|settings.gradle.kts|gradle.properties) run_room_tests=true ;;
+              .github/workflows/build.yml) run_room_tests=true ;;
             esac
+            if [[ "$run_room_tests" == "true" ]]; then
+              break
+            fi
           done <<< "$changed_files"
 
           echo "run=$run_room_tests" >> "$GITHUB_OUTPUT"
