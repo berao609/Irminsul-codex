@@ -2,8 +2,10 @@ package com.irminsul.codex.data.local.repository
 
 import androidx.room.withTransaction
 import com.irminsul.codex.data.local.IrminsulDatabase
+import com.irminsul.codex.data.local.SnapshotJsonChunks
 import com.irminsul.codex.data.local.entity.AccountEntity
 import com.irminsul.codex.data.local.entity.AccountSnapshotEntity
+import com.irminsul.codex.data.local.entity.AccountSnapshotJsonChunkEntity
 import com.irminsul.codex.data.mapper.AccountExportMapper
 import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.model.AccountSnapshot
@@ -24,6 +26,14 @@ class RoomAccountSnapshotStore(
         val server = snapshot.identity.server
         val exportedAt = snapshot.metadata.exportedAt
         val timestamp = exportedAt.toEpochMilli()
+        val snapshotId = snapshotIdProvider()
+        val chunks = SnapshotJsonChunks.split(export.rawJson).mapIndexed { index, content ->
+            AccountSnapshotJsonChunkEntity(
+                snapshotId = snapshotId,
+                chunkIndex = index,
+                content = content
+            )
+        }
 
         database.withTransaction {
             val dao = database.accountSnapshotDao()
@@ -33,7 +43,7 @@ class RoomAccountSnapshotStore(
             dao.updateLastUpdatedAt(uid, server, timestamp)
             dao.insertSnapshot(
                 AccountSnapshotEntity(
-                    snapshotId = snapshotIdProvider(),
+                    snapshotId = snapshotId,
                     uid = uid,
                     server = server,
                     exportedAt = exportedAt.toString(),
@@ -41,19 +51,35 @@ class RoomAccountSnapshotStore(
                     exportFormatVersion = snapshot.metadata.exportFormatVersion,
                     overallStatus = snapshot.overallStatus.name,
                     origin = snapshot.metadata.origin,
-                    rawJson = export.rawJson
+                    // Large JSON is stored in bounded rows in account_snapshot_json_chunks.
+                    rawJson = ""
                 )
             )
+            if (chunks.isNotEmpty()) {
+                dao.insertJsonChunks(chunks)
+            }
         }
     }
 
     override suspend fun getLatest(uid: String): AccountExport? =
         database.accountSnapshotDao().getLatestSnapshot(uid)?.let { record ->
-            AccountExport(mapExport(record.rawJson), record.rawJson)
+            val rawJson = readRawJson(record.snapshotId, record.rawJson)
+            AccountExport(mapExport(rawJson), rawJson)
         }
 
     override suspend fun getHistory(uid: String, server: String): List<AccountExport> =
         database.accountSnapshotDao().getSnapshotHistory(uid, server).map { record ->
-            AccountExport(mapExport(record.rawJson), record.rawJson)
+            val rawJson = readRawJson(record.snapshotId, record.rawJson)
+            AccountExport(mapExport(rawJson), rawJson)
         }
+
+    private suspend fun readRawJson(snapshotId: String, legacyRawJson: String): String {
+        val chunks = database.accountSnapshotDao().getJsonChunks(snapshotId)
+        return if (chunks.isNotEmpty()) {
+            SnapshotJsonChunks.join(chunks)
+        } else {
+            // Compatibility fallback for a database created before the chunk migration.
+            legacyRawJson
+        }
+    }
 }
