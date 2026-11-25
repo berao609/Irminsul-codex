@@ -47,7 +47,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Expeditions | Displays current and maximum expedition counts. |
 | Account Data Retrieval | Retrieves selected account information for the existing app workflow. |
 | Optional JSON Export | Exports selected account data for third-party readers and backups. |
-| Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |
+| Local Snapshot Persistence | Saves each successful account export in Room and restores the latest saved snapshot and deterministic analysis on app startup without downloading the account JSON again. |
 | Account Intelligence | Provides a dedicated Analyze Account action and displays character assessment, recommendations, account gaps, and data coverage independently of JSON export, within the Visuals page. |
 | Artifact Equipment State | Unequipped or partially equipped artifact slots are valid player choices and do not generate completeness recommendations by themselves; unavailable artifact data remains distinguishable. |
 | Recommendation Prioritization | Presents evidence-backed findings in one consistent balanced order; the current analysis does not offer selectable analysis modes. |
@@ -202,7 +202,7 @@ The current application follows a data retrieval workflow:
 
 * Daily Note information is displayed, and selected account data can be exported as JSON.
 
-The application retrieves selected account data through the dedicated Analyze Account action, saves the resulting snapshot in Room, and runs the deterministic account-intelligence pipeline from the normalized snapshot. This flow does not require or launch JSON export. The ViewModel exposes the unified overview and the Visuals page displays an analysis summary with a five-item recommendation preview alongside visual account metrics. Users can expand the list to inspect every available recommendation, including its reason, supporting evidence, and stale-data indicator. Recommendations use one consistent balanced order; there are no selectable analysis objectives. User-facing account history, integrated BYOAI assistance, expanded analysis, and the complete Account Command Center remain planned.
+The application retrieves selected account data through the dedicated Analyze Account action, saves the resulting snapshot in Room, and runs the deterministic account-intelligence pipeline from the normalized snapshot. On later launches, it restores the latest saved snapshot for the signed-in UID and rebuilds the overview locally without fetching the account JSON again. Daily Note synchronization remains a separate lightweight request, and account retrieval remains an explicit refresh action. This flow does not require or launch JSON export. The ViewModel exposes the unified overview and the Visuals page displays an analysis summary with a five-item recommendation preview alongside visual account metrics. Users can expand the list to inspect every available recommendation, including its reason, supporting evidence, and stale-data indicator. Recommendations use one consistent balanced order; there are no selectable analysis objectives. User-facing account history, integrated BYOAI assistance, expanded analysis, and the complete Account Command Center remain planned.
 
 ## Project Structure
 
