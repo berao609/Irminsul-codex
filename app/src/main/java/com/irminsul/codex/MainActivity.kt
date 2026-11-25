@@ -30,6 +30,9 @@ import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import kotlinx.coroutines.launch
 
+// Leave headroom below Android Binder's shared transaction buffer limit.
+private const val MAX_CLIPBOARD_JSON_BYTES = 512 * 1024
+
 private val CodexColors = darkColorScheme(
     primary = Color(0xFF80CBC4),
     background = Color(0xFF0F1115),
@@ -138,7 +141,8 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
         val completedExport = accountExportState.pendingExport ?: return@LaunchedEffect
         val json = completedExport.rawJson
         exportedJson = json
-        val kb = (json.toByteArray(Charsets.UTF_8).size / 1024).coerceAtLeast(1)
+        val jsonByteCount = json.toByteArray(Charsets.UTF_8).size
+        val kb = (jsonByteCount / 1024).coerceAtLeast(1)
         val exportLabel = when (completedExport.snapshot.overallStatus.name) {
             "SUCCESS" -> "Complete export"
             "PARTIAL" -> "Partial export. Some sections are unavailable."
@@ -148,10 +152,18 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
         if (accountExportState.saveImmediately) {
             exportStatus = "$exportLabel ($kb KB). Choose where to save."
             saveFileLauncher.launch("genshin_${uid.trim()}.json")
+        } else if (jsonByteCount > MAX_CLIPBOARD_JSON_BYTES) {
+            exportStatus = null
+            errorMessage = "This JSON is too large to copy safely to the clipboard ($kb KB). Use Save JSON instead."
         } else {
-            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("Irminsul Codex JSON", json))
-            exportStatus = "Copied $exportLabel ($kb KB) to clipboard."
+            try {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("Irminsul Codex JSON", json))
+                exportStatus = "Copied $exportLabel ($kb KB) to clipboard."
+            } catch (error: Exception) {
+                exportStatus = null
+                errorMessage = "Could not copy JSON to clipboard. Use Save JSON instead. ${error.message ?: ""}".trim()
+            }
         }
         accountViewModel.acknowledgeExport()
     }

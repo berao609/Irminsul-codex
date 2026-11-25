@@ -999,7 +999,9 @@ Move full account export orchestration and normalized snapshot state out of the 
 - Artifact size: 8,280,431 bytes.
 - SHA-256: `610ef60be02b64c79e0ca678a27ae1baa4ce4ea163813854c068c49d14d31d10`.
 - Artifact expiry: 2026-12-09 02:09:15 UTC.
-- Physical-device verification: pending. Verify both Save JSON and Copy JSON actions, export progress/status feedback, and that Daily Note sync/login still work.
+- Physical-device verification: partially tested. User confirmed Save JSON succeeds. Copy JSON crashes the app after retrieval reaches 9/9.
+- Diagnosis: the current code passes the entire JSON document as one `ClipData.newPlainText` payload. The previously inspected device export was approximately 4.26 MB, which is larger than Android's Binder transaction budget and is a strong suspected cause; the exact device stack trace has not yet been captured.
+- Mitigation added: reject clipboard text payloads larger than 512 KiB before calling `setPrimaryClip`, and catch clipboard exceptions so the app reports a fallback instruction to use Save JSON. Physical-device retest is pending.
 
 ### Qualifications
 
