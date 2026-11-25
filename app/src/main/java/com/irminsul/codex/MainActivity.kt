@@ -1,6 +1,7 @@
 package com.irminsul.codex
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -26,6 +27,7 @@ import com.irminsul.codex.domain.model.CharacterDevelopmentRecommendationType
 import com.irminsul.codex.domain.model.DataValue
 import com.irminsul.codex.domain.model.GoalAwareCharacterRecommendation
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.irminsul.codex.api.DailyNote
@@ -44,6 +47,11 @@ import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.UUID
+import com.irminsul.codex.domain.analysis.ManualMaterialPlanCalculator
+import com.irminsul.codex.domain.analysis.ManualPlanCalculationStatus
 
 private val CodexDarkColors = darkColorScheme(
     primary = Color(0xFF80CBC4),
@@ -82,6 +90,7 @@ private enum class ThemeMode(val label: String, val preferenceValue: String) {
 private enum class CodexTab(val label: String, val symbol: String) {
     HOME("Home", "⌂"),
     VISUALS("Visuals", "▥"),
+    MATERIALS("Materials", "▤"),
     AI_CHAT("AI Chat", "✧"),
     INFO("Info", "ⓘ")
 }
@@ -678,6 +687,19 @@ private fun CodexScreen(
             }
         }
 
+
+        if (selectedTab == CodexTab.MATERIALS) {
+            val materialCharacters = when (val value = accountExportState.snapshot?.characters) {
+                is DataValue.Available -> value.value
+                is DataValue.Stale -> value.value
+                else -> emptyList()
+            }
+            MaterialsPlannerSection(
+                characters = materialCharacters,
+                preferences = prefs
+            )
+        }
+
         if (selectedTab == CodexTab.AI_CHAT) {
             Text("AI Assistant", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
@@ -952,6 +974,347 @@ private fun CodexScreen(
 }
 
 @Composable
+
+private data class ManualMaterialPlanRow(
+    val id: String,
+    val materialName: String = "",
+    val requiredQuantity: String = "",
+    val ownedQuantity: String = ""
+)
+
+private data class MaterialTargetOption(
+    val id: String,
+    val label: String,
+    val currentLevel: Int?
+)
+
+@Composable
+private fun MaterialsPlannerSection(
+    characters: List<CharacterSnapshot>,
+    preferences: SharedPreferences
+) {
+    val rows = remember {
+        mutableStateListOf<ManualMaterialPlanRow>().apply {
+            addAll(loadManualMaterialPlanRows(preferences))
+        }
+    }
+    var selectedTargetId by remember {
+        mutableStateOf(preferences.getString("material_target_id", "custom") ?: "custom")
+    }
+    var customTargetName by remember {
+        mutableStateOf(preferences.getString("material_custom_target", "") ?: "")
+    }
+    var currentLevel by remember {
+        mutableStateOf(preferences.getString("material_current_level", "") ?: "")
+    }
+    var targetLevel by remember {
+        mutableStateOf(preferences.getString("material_target_level", "") ?: "")
+    }
+    var targetMenuExpanded by remember { mutableStateOf(false) }
+
+    val targetOptions = buildList {
+        characters.forEach { character ->
+            add(
+                MaterialTargetOption(
+                    id = "character:" + character.id,
+                    label = "Character · " + (character.name ?: "Character #" + character.id),
+                    currentLevel = character.level
+                )
+            )
+        }
+        characters.forEach { character ->
+            val weapon = when (val value = character.weapon) {
+                is DataValue.Available -> value.value
+                is DataValue.Stale -> value.value
+                else -> null
+            }
+            if (weapon != null) {
+                add(
+                    MaterialTargetOption(
+                        id = "weapon:" + character.id + ":" + weapon.id,
+                        label = "Weapon · " + (weapon.name ?: "Weapon #" + weapon.id) + " (" + (character.name ?: "Equipped") + ")",
+                        currentLevel = weapon.level
+                    )
+                )
+            }
+        }
+    }
+    val selectedTarget = targetOptions.firstOrNull { it.id == selectedTargetId }
+
+    LaunchedEffect(rows.toList()) {
+        preferences.edit().putString("manual_material_plan_rows", saveManualMaterialPlanRows(rows)).apply()
+    }
+    LaunchedEffect(selectedTargetId, customTargetName, currentLevel, targetLevel) {
+        preferences.edit()
+            .putString("material_target_id", selectedTargetId)
+            .putString("material_custom_target", customTargetName)
+            .putString("material_current_level", currentLevel)
+            .putString("material_target_level", targetLevel)
+            .apply()
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Materials Planner", fontSize = 23.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "Plan an upgrade and track the materials you still need.",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text("Upgrade target", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Box {
+                    OutlinedButton(
+                        onClick = { targetMenuExpanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            selectedTarget?.label ?: if (selectedTargetId == "custom") "Custom target" else "Choose target",
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text("⌄")
+                    }
+                    DropdownMenu(
+                        expanded = targetMenuExpanded,
+                        onDismissRequest = { targetMenuExpanded = false }
+                    ) {
+                        targetOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.label) },
+                                onClick = {
+                                    selectedTargetId = option.id
+                                    currentLevel = option.currentLevel?.toString() ?: ""
+                                    targetMenuExpanded = false
+                                }
+                            )
+                        }
+                        DropdownMenuItem(
+                            text = { Text("Custom target") },
+                            onClick = {
+                                selectedTargetId = "custom"
+                                currentLevel = ""
+                                targetMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+                if (selectedTargetId == "custom") {
+                    OutlinedTextField(
+                        value = customTargetName,
+                        onValueChange = { customTargetName = it },
+                        label = { Text("Character or weapon name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = currentLevel,
+                        onValueChange = { currentLevel = it.filter(Char::isDigit).take(3) },
+                        label = { Text("Current level") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = targetLevel,
+                        onValueChange = { targetLevel = it.filter(Char::isDigit).take(3) },
+                        label = { Text("Target level") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Text(
+                    "Current levels are prefilled when available. You can adjust both values.",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("Manual planning mode", fontWeight = FontWeight.SemiBold)
+                Text(
+                    "A redistribution-approved material-cost catalogue is not connected yet. For now, enter the required quantities from a source you trust. These requirements are manual, not game-verified.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Material requirements", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+            TextButton(onClick = {
+                rows.add(ManualMaterialPlanRow(id = UUID.randomUUID().toString()))
+            }) {
+                Text("+ Add material")
+            }
+        }
+
+        if (rows.isEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("No materials added", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Add a material to enter its required amount and how many you already own.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Button(onClick = {
+                        rows.add(ManualMaterialPlanRow(id = UUID.randomUUID().toString()))
+                    }) {
+                        Text("Add first material")
+                    }
+                }
+            }
+        }
+
+        rows.forEachIndexed { index, row ->
+            val calculation = ManualMaterialPlanCalculator.calculate(
+                row.requiredQuantity,
+                row.ownedQuantity
+            )
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Material " + (index + 1), fontWeight = FontWeight.SemiBold)
+                        TextButton(onClick = { rows.removeAt(index) }) {
+                            Text("Remove")
+                        }
+                    }
+                    OutlinedTextField(
+                        value = row.materialName,
+                        onValueChange = { value -> rows[index] = row.copy(materialName = value) },
+                        label = { Text("Material name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedTextField(
+                            value = row.requiredQuantity,
+                            onValueChange = { value ->
+                                rows[index] = row.copy(requiredQuantity = value.filter(Char::isDigit))
+                            },
+                            label = { Text("Required") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = row.ownedQuantity,
+                            onValueChange = { value ->
+                                rows[index] = row.copy(ownedQuantity = value.filter(Char::isDigit))
+                            },
+                            label = { Text("Owned") },
+                            placeholder = { Text("Not entered") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    when (calculation.status) {
+                        ManualPlanCalculationStatus.COMPLETE -> {
+                            Text(
+                                "Remaining: " + calculation.remainingQuantity + "  •  Required: " + calculation.requiredQuantity + "  •  Owned: " + calculation.ownedQuantity,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        ManualPlanCalculationStatus.INVENTORY_NOT_ENTERED -> {
+                            Text(
+                                "Required: " + calculation.requiredQuantity + "  •  Enter owned quantity to calculate what remains.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        ManualPlanCalculationStatus.REQUIRED_NOT_ENTERED -> {
+                            Text("Enter the required quantity.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        ManualPlanCalculationStatus.INVALID_QUANTITY -> {
+                            Text("Enter valid non-negative whole numbers.", fontSize = 12.sp, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+        }
+
+        Text(
+            "Your plan is saved locally on this device. Blank owned quantities remain unknown; entering 0 means you have none.",
+            fontSize = 11.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+private fun loadManualMaterialPlanRows(preferences: SharedPreferences): List<ManualMaterialPlanRow> {
+    val raw = preferences.getString("manual_material_plan_rows", null) ?: return emptyList()
+    return runCatching {
+        val array = JSONArray(raw)
+        buildList {
+            for (index in 0 until array.length()) {
+                val item = array.getJSONObject(index)
+                add(
+                    ManualMaterialPlanRow(
+                        id = item.optString("id").ifBlank { UUID.randomUUID().toString() },
+                        materialName = item.optString("materialName"),
+                        requiredQuantity = item.optString("requiredQuantity"),
+                        ownedQuantity = item.optString("ownedQuantity")
+                    )
+                )
+            }
+        }
+    }.getOrDefault(emptyList())
+}
+
+private fun saveManualMaterialPlanRows(rows: List<ManualMaterialPlanRow>): String {
+    val array = JSONArray()
+    rows.forEach { row ->
+        array.put(
+            JSONObject()
+                .put("id", row.id)
+                .put("materialName", row.materialName)
+                .put("requiredQuantity", row.requiredQuantity)
+                .put("ownedQuantity", row.ownedQuantity)
+        )
+    }
+    return array.toString()
+}
+
 private fun CharacterShowcaseSection(
     characters: List<CharacterSnapshot>,
     selectedCharacterId: Int?,
