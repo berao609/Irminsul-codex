@@ -46,7 +46,7 @@ class AccountViewModel(
      */
     fun restoreLatestSnapshot(uid: String) {
         val normalizedUid = uid.trim()
-        if (normalizedUid.isBlank() || _uiState.value.isRestoringSnapshot) return
+        if (normalizedUid.isBlank() || _uiState.value.isRestoringSnapshot || _uiState.value.isExporting) return
         if (_uiState.value.snapshot?.identity?.uid == normalizedUid &&
             _uiState.value.intelligenceOverview != null
         ) return
@@ -67,7 +67,7 @@ class AccountViewModel(
             }
             try {
                 val cached = snapshotStore.getLatest(normalizedUid)
-                if (cached != null) {
+                if (cached != null && cached.snapshot.identity.uid == normalizedUid) {
                     _uiState.update {
                         it.copy(
                             snapshot = cached.snapshot,
@@ -78,6 +78,9 @@ class AccountViewModel(
                     }
                     analyzeSnapshot(cached.snapshot)
                 } else {
+                    if (cached != null) {
+                        throw IllegalStateException("Saved snapshot UID does not match the signed-in account.")
+                    }
                     _uiState.update {
                         it.copy(
                             snapshot = null,
@@ -117,7 +120,7 @@ class AccountViewModel(
             _uiState.update { it.copy(errorMessage = "Sign in with HoYoLAB first.") }
             return
         }
-        if (_uiState.value.isExporting) return
+        if (_uiState.value.isExporting || _uiState.value.isRestoringSnapshot) return
 
         viewModelScope.launch {
             _uiState.update {
