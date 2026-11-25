@@ -47,7 +47,9 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Expeditions | Displays current and maximum expedition counts. |
 | Account Data Retrieval | Retrieves selected account information for the existing app workflow. |
 | Optional JSON Export | Exports selected account data for third-party readers and backups. |
-| Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |\n| Initial Account Intelligence | Runs deterministic analysis after retrieval and displays character assessment, recommendations, account gaps, and data coverage. |\n| Development Goal Selection | Lets the user choose one of four explicit objectives for recommendation ordering. |
+| Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |
+| Initial Account Intelligence | Runs deterministic analysis after retrieval and displays character assessment, recommendations, account gaps, and data coverage. |
+| Development Goal Selection | Lets the user choose one of four explicit objectives for recommendation ordering. |
 
 ### Planned Core Experience
 
