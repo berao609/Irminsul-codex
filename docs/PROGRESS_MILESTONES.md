@@ -456,7 +456,7 @@ Make the existing selected-section account export more reliable and auditable wi
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Extend the export mapper to include profile/exploration, both Spiral Abyss periods, and Imaginarium Theater without coupling the domain model to Android JSON classes.  
-**Status:** Implemented in source and tests; CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Work implemented
 
@@ -475,6 +475,7 @@ Make the existing selected-section account export more reliable and auditable wi
 ### Verification
 
 - Source commits: `ec700ec0918b48176f8aea4dd5fa24f6d1112091`, `def8842229d8230d09fb752c7fcc841ca6b02d80`, `f41299e36b6b1331caeaf51bbd99ef6e6887c4ac`.
-- Unit tests and Debug build: pending GitHub Actions.
+- Unit tests and Debug build: **Success**, GitHub Actions [Run #104](https://github.com/berao609/Irminsul-codex/actions/runs/45518956906), run ID `45518956906`, commit `c7866f9f5556074b9a85c9a1420f7ba0aa0c6cc6`.
+- Unit tests, Debug APK build, persistent Debug signature verification, artifact upload, and temporary keystore cleanup: **Success**.
 - Device verification: not yet required for this mapper expansion.
 - No raw export schema change, Room persistence, UI integration, or release was included.
