@@ -3523,6 +3523,7 @@ The existing `UpgradeCostCalculator` and `UpgradeCostRecordValidator` remain the
 #### Material metadata and calculation connection
 
 - Added `MaterialCatalogue.kt` with a typed material category, stable item-ID lookup, display metadata (name, rarity, HTTPS icon URL), duplicate-ID rejection, and explicit unknown-material fallback.
+- Catalogue entries require matching source-registry provenance, an approved `material_cost_curation` permission, HTTPS registry/reference URLs, and explicit human verification notes/timestamps. Unapproved or incomplete metadata is rejected.
 - Added `CatalogueUpgradeCostCalculator` as a presentation adapter. It delegates all arithmetic, source validation, game-version matching, contiguous-segment checks, inventory handling, and overflow handling to the existing `UpgradeCostCalculator`. It only enriches the resulting requirements with catalogue metadata.
 - Added tests for metadata resolution, unknown IDs, duplicate IDs, unapproved sources, missing-cost status, and a complete verified-record path through the existing calculator into named/quantified material output.
 - The catalogue currently has no bundled game-data entries. This is intentional: M51/SPECS §3.18 still approves no external source for automated bulk ingestion or cost-data redistribution. Parsed genshin-db records remain candidates only. No automatic costs are claimed or displayed as verified until reviewed records and metadata are supplied by an approved source.
@@ -3552,6 +3553,7 @@ The existing `UpgradeCostCalculator` and `UpgradeCostRecordValidator` remain the
 - `d445602da8ff6ab5ff05c3604058333466f8427f` and `31bba2f7cedb88811e5378593ece449a07a6fefb` - enforce material catalogue provenance and source permission.
 - `027172563b48a1ea838c9916d7286af3066bf2df` - test approved-source enforcement for material metadata.
 - `7f5487eefee81c9ac90234749c547d66c4fd138a` - test a reviewed cost record flowing through the existing calculator and catalogue metadata.
+- `04060f4d92cc7a7d3ffcc4d392dbc586800c97bd` - require HTTPS source-registry URLs for catalogue metadata.
 
 #### Verification and remaining work
 
