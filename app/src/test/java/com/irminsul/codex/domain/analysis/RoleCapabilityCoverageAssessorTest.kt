@@ -140,6 +140,17 @@ class RoleCapabilityCoverageAssessorTest {
         assertTrue(result.rosterIsPartial)
     }
 
+
+    @Test fun staleRosterWithoutPositiveEvidenceIsIncomplete() {
+        val result = RoleCapabilityCoverageAssessor.assess(
+            knowledge(rosterState = InvestmentFactState.STALE, profiles = listOf(profile(10000002)))
+        )
+        assertEquals(
+            RosterCoverageState.INCOMPLETE,
+            result.roles.single { it.role == CharacterCombatRole.HEALER }.state
+        )
+    }
+
     @Test fun unavailableRosterProducesUnknownCoverage() {
         val result = RoleCapabilityCoverageAssessor.assess(
             knowledge(rosterState = InvestmentFactState.UNAVAILABLE)
