@@ -3507,3 +3507,10 @@ The Genshin DB parser was revised to return `GenshinDbParsedCostSegment` candida
 - The duplicate calculator and test were removed.
 - The parser and tests were rewritten to reuse the existing domain model.
 - New CI runs triggered by the corrective commits are pending. Do not treat the correction as verified until a later run completes successfully.
+
+
+### M51 source-permission boundary reaffirmed during M58
+
+A focused reread of SPECS §3.18 confirmed the existing decision: no external source is currently approved for automated bulk ingestion or bundled upgrade-cost redistribution. The genshin-db package's MIT license does not grant rights to its upstream game-derived datasets or game assets. Its parser therefore remains an isolated, untrusted candidate-format adapter only. It must not fetch, bundle, publish, or promote genshin-db data into trusted calculations unless the specific source rights, attribution, access method, retention obligations, and `material_cost_curation` permission are reviewed and approved in the source registry.
+
+The existing `UpgradeCostCalculator` and `UpgradeCostRecordValidator` remain the sole trusted calculation path. Candidate parsed segments are not usable by account analysis.
