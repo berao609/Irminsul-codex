@@ -3615,3 +3615,20 @@ Room instrumentation tests were skipped in both runs because the workflow determ
 
 **Next action**
 Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and test independent character levels, all three talent tracks, each character's planned weapon and weapon levels, and an existing saved manual material plan. Confirm that saved values remain after leaving and reopening the planner and after restarting the app.
+
+### UI guideline platform-alignment correction
+
+**Status:** Documentation update committed; Android implementation unchanged.
+
+- Updated `docs/Irminsul Codex UI Design Instructions.md` to explicitly target native Kotlin, Jetpack Compose, and Material 3.
+- Preserved the visual direction: Archival Gold, neutral surfaces, restrained elemental accents, data-first typography, compact artifact inspection, dark backing for white game glyphs, and the symmetric five-slot navigation concept.
+- Replaced Flutter-specific theme, widget, asset, WebView, animation, haptics, and verification guidance with Android/Compose equivalents.
+- Clarified that the reserved fifth-shell position is layout space only until a real destination exists; no fake route or dead navigation item should be added.
+- Corrected the icon dependency boundary: the current app has Compose Material Icons Extended; a Lucide Compose dependency is not assumed or added.
+- Clarified that Compose UI/instrumentation testing must be based on the repository's actual test setup. CI JVM unit tests do not prove layout correctness, and device verification remains a separate evidence category.
+- No application source, Gradle dependencies, runtime behavior, or saved data were changed.
+
+**Commit:** `2372621ea4cbdbe611953e998ec6504cc00573c1`
+
+**Next action:** Resume M58 implementation. Continue the Materials Planner work using the corrected native Compose design guidance, preserving manual material rows and existing saved-plan compatibility. Keep source-permission restrictions from SPECS §3.18 in force; do not invent or bundle unapproved upgrade-cost data.
+
