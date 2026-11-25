@@ -624,12 +624,11 @@ private fun CodexScreen(
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("No analysis available yet", fontWeight = FontWeight.SemiBold)
-                        Text("Run Account Analysis to populate the account dashboard.", fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Button(
-                            onClick = { accountViewModel.analyzeAccount(uid, cookie) },
-                            enabled = uid.isNotBlank() && cookie.isNotBlank() && !accountExportState.isExporting
-                        ) { Text("Analyze Account") }
+                        Text(
+                            "Use the Analyze Account button above to populate this dashboard.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             } else {
