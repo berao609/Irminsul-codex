@@ -475,8 +475,18 @@ private fun CodexScreen(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    val selectedGoalDescription = when (accountExportState.selectedDevelopmentGoal) {
+                        CharacterDevelopmentGoal.BALANCED_DEVELOPMENT ->
+                            "Balanced: confirmed build errors, stat discrepancies, build warnings, then data checks."
+                        CharacterDevelopmentGoal.BUILD_RELIABILITY ->
+                            "Build quality: confirmed build errors and warnings come before stat and data checks."
+                        CharacterDevelopmentGoal.STAT_INTEGRITY ->
+                            "Stat accuracy: numerical discrepancies come first, followed by build and data checks."
+                        CharacterDevelopmentGoal.DATA_CONFIDENCE ->
+                            "Data completeness: missing or unverified character information comes first."
+                    }
                     Text(
-                        text = "Choose the objective used to order existing evidence-backed recommendations. This does not change findings or their base priorities.",
+                        text = "These options reorder the same evidence-backed findings. They do not create new findings or change their severity.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -493,7 +503,7 @@ private fun CodexScreen(
                         FilterChip(
                             selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.BUILD_RELIABILITY,
                             onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.BUILD_RELIABILITY) },
-                            label = { Text("Build") },
+                            label = { Text("Build quality") },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -504,16 +514,22 @@ private fun CodexScreen(
                         FilterChip(
                             selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.STAT_INTEGRITY,
                             onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.STAT_INTEGRITY) },
-                            label = { Text("Stat integrity") },
+                            label = { Text("Stat accuracy") },
                             modifier = Modifier.weight(1f)
                         )
                         FilterChip(
                             selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.DATA_CONFIDENCE,
                             onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.DATA_CONFIDENCE) },
-                            label = { Text("Data confidence") },
+                            label = { Text("Data completeness") },
                             modifier = Modifier.weight(1f)
                         )
                     }
+
+                    Text(
+                        text = selectedGoalDescription,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
 
                     Button(
                         onClick = { accountViewModel.analyzeAccount(uid, cookie) },
@@ -1401,6 +1417,11 @@ private fun CharacterRecommendationCard(
                     }
                 }
                 Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    item.prioritizationReason,
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.primary
+                )
                 Text(explanation, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
                 Text("What to do", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 Text(nextStep, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
