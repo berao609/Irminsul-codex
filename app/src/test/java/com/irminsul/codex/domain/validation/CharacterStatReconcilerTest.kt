@@ -35,14 +35,25 @@ class CharacterStatReconcilerTest {
         ).characters.single().results.single()
         assertEquals(StatReconciliationStatus.WITHIN_ROUNDING_TOLERANCE, result.status)
         assertEquals("-0.04", result.difference)
-        assertEquals("0.05", result.roundingTolerance)
+        assertEquals("0.555", result.roundingTolerance)
     }
 
-    @Test fun discrepancyBeyondRoundingToleranceIsMismatch() {
-        val report = CharacterStatReconciler.reconcile(listOf(character(stat("100", "20", "120.2"))))
+    @Test fun independentlyRoundedIntegerInputsAreWithinCombinedTolerance() {
+        val result = CharacterStatReconciler.reconcile(
+            listOf(character(stat("747", "1", "747")))
+        ).characters.single().results.single()
+
+        assertEquals(StatReconciliationStatus.WITHIN_ROUNDING_TOLERANCE, result.status)
+        assertEquals("-1", result.difference)
+        assertEquals("1.5", result.roundingTolerance)
+    }
+
+    @Test fun discrepancyBeyondCombinedInputPrecisionIsMismatch() {
+        val report = CharacterStatReconciler.reconcile(listOf(character(stat("100", "20", "122.2"))))
         val result = report.characters.single().results.single()
         assertEquals(StatReconciliationStatus.MISMATCH, result.status)
-        assertEquals("0.2", result.difference)
+        assertEquals("2.2", result.difference)
+        assertEquals("1.05", result.roundingTolerance)
         assertEquals(1, report.mismatchCount)
     }
 
@@ -94,7 +105,7 @@ class CharacterStatReconcilerTest {
             level = 90, ascensionLevel = 6, typeName = null, description = null,
             refinementLevel = 1,
             mainProperty = stat("100", "20", "120"),
-            subProperty = stat("10", "5", "16")
+            subProperty = stat("10", "5", "17")
         )
         val result = CharacterStatReconciler.reconcile(listOf(
             character().copy(weapon = DataValue.Available(weapon, null))
