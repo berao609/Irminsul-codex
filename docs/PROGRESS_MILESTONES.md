@@ -1355,3 +1355,57 @@ Help a player understand what to address next, why the action is recommended, an
 - No automatic account modification or repair is performed.
 - Recommendations are domain foundations. They are not yet connected to the Account Command Center or a user-facing analysis screen.
 - Goal-aware recommendation adjustment is deferred to M26.
+
+
+## Milestone 026 - Goal-Aware Character Development Prioritization
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Reorder existing evidence-backed character development recommendations according to an explicitly selected player objective, without changing their source evidence or M25 base priority.  
+**Status:** Implemented, unit-test verified, and Debug CI verified (Runs #187-189). Domain foundation only; not yet surfaced in the app UI.
+
+### Objective
+
+Allow a player-selected development objective to influence which existing recommendation appears first. The selected goal changes ordering only. It does not change what the account data says, create new findings, or imply that every character should receive investment.
+
+### Goal profiles
+
+1. **Balanced development:** preserves M25's default order: build errors, stat mismatches, build warnings, then data review.
+2. **Build reliability:** prioritizes build errors, then build warnings, followed by stat mismatches and data review.
+3. **Stat integrity:** prioritizes stat mismatches, then build errors, build warnings, and data review.
+4. **Data confidence:** prioritizes missing or unverified data, then build errors, stat mismatches, and build warnings.
+
+A goal must be supplied explicitly to the analyzer. No user objective is inferred.
+
+### Work implemented
+
+1. Added explicit CharacterDevelopmentGoal values for the four supported profiles.
+2. Added goal-aware result models that retain the original recommendation and expose its goal-specific priority tier and a plain-language prioritization reason.
+3. Added a deterministic analyzer that reorders the existing M25 recommendation list. Within a goal tier, ordering is stable by character ID, original base priority, recommendation type, and recommendation ID.
+4. Preserved each recommendation's original P1-P4 priority, evidence, action, reason, character identity, and stale-data marker. The goal-aware analyzer does not mutate or recalculate these values.
+5. Preserved source availability and failure reason, including stale, missing, unavailable, and failed states. No recommendations are fabricated for an unusable source report.
+6. Added tests for all four goal profiles, balanced-order compatibility, unchanged base priority/evidence/action/reason, deterministic tie ordering, stale data, and unavailable source handling.
+
+### Implementation
+
+- Goal/result model commit: d9f0eaef2506306944f50c038af52ab368d21b29.
+- Prioritization analyzer commit: 1f8a367301292b54789b6840f8ca86250c721d2e.
+- Unit-test commit: 21093dc15ad409aa45c96dfadc352af7a3f34142.
+- Added app/src/main/java/com/irminsul/codex/domain/model/GoalAwareCharacterDevelopment.kt.
+- Added app/src/main/java/com/irminsul/codex/domain/analysis/GoalAwareCharacterDevelopmentAnalyzer.kt.
+- Added app/src/test/java/com/irminsul/codex/domain/analysis/GoalAwareCharacterDevelopmentAnalyzerTest.kt.
+
+### Verification
+
+- [GitHub Actions Run #187](https://github.com/berao609/Irminsul-codex/actions/runs/45554692375) passed for the goal/result model commit.
+- [GitHub Actions Run #188](https://github.com/berao609/Irminsul-codex/actions/runs/45554724078) passed for the prioritization analyzer commit.
+- [GitHub Actions Run #189](https://github.com/berao609/Irminsul-codex/actions/runs/45554760422) passed for the unit-test commit.
+- All three runs completed successfully. The applicable CI workflow verified JVM unit tests, Debug APK build, signature verification, artifact upload, and cleanup.
+- Physical-device verification: not required; this milestone adds domain logic and tests without changing UI or device runtime behavior.
+
+### Qualifications and non-goals
+
+- Goal profiles reorder only the recommendations already produced by M25. They do not establish that an action is mandatory or that a character deserves investment.
+- Goal tier is distinct from M25's base P1-P4 priority. The base priority and supporting evidence remain unchanged and available for traceability.
+- No resource costs, farming plans, meta rankings, combat-strength scores, pull advice, or AI-generated priorities are introduced.
+- No goal-selection UI or user-facing recommendation screen is implemented in this milestone.
