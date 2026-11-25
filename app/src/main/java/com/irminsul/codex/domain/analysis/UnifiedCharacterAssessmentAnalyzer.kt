@@ -56,13 +56,14 @@ object UnifiedCharacterAssessmentAnalyzer {
             val statFindings = statById[id].orEmpty().sortedWith(
                 compareBy<CharacterStatInsight> { it.fieldPath }.thenBy { it.statName.orEmpty() }
             )
-            val completeness = completeness(character, id, statFindings)
+            val completeness = completeness(character, build.availability, stats.availability)
             val errors = buildFindings.count { it.severity == CharacterBuildInsightSeverity.ERROR }
             val warnings = buildFindings.count { it.severity == CharacterBuildInsightSeverity.WARNING }
             val mismatches = statFindings.size
             val attention = when {
                 errors > 0 || mismatches > 0 -> CharacterAttentionStatus.NEEDS_ATTENTION
-                warnings > 0 || completeness.level != CharacterCompletenessLevel.COMPLETE ->
+                warnings > 0 || completeness.level != CharacterCompletenessLevel.COMPLETE ||
+                    completeness.unverifiedAnalyses.isNotEmpty() ->
                     CharacterAttentionStatus.REVIEW
                 else -> CharacterAttentionStatus.CLEAR
             }
@@ -106,10 +107,27 @@ object UnifiedCharacterAssessmentAnalyzer {
 
     private fun completeness(
         character: CharacterSnapshot?,
-        id: Int,
-        statFindings: List<CharacterStatInsight>
+        buildAvailability: CharacterBuildAnalysisAvailability,
+        statAvailability: CharacterStatAnalysisAvailability
     ): CharacterCompletenessEvidence {
         val missing = mutableListOf<String>()
+        val unverified = mutableListOf<String>()
+        if (buildAvailability !in setOf(CharacterBuildAnalysisAvailability.AVAILABLE, CharacterBuildAnalysisAvailability.STALE)) {
+            unverified += when (buildAvailability) {
+                CharacterBuildAnalysisAvailability.MISSING -> "Build validation missing"
+                CharacterBuildAnalysisAvailability.UNAVAILABLE -> "Build validation unavailable"
+                CharacterBuildAnalysisAvailability.FAILED -> "Build validation failed"
+                else -> "Build validation not verified"
+            }
+        }
+        if (statAvailability !in setOf(CharacterStatAnalysisAvailability.AVAILABLE, CharacterStatAnalysisAvailability.STALE)) {
+            unverified += when (statAvailability) {
+                CharacterStatAnalysisAvailability.MISSING -> "Stat reconciliation missing"
+                CharacterStatAnalysisAvailability.UNAVAILABLE -> "Stat reconciliation unavailable"
+                CharacterStatAnalysisAvailability.FAILED -> "Stat reconciliation failed"
+                else -> "Stat reconciliation not verified"
+            }
+        }
         if (character == null) {
             missing += "Character details are unavailable."
         } else {
@@ -142,7 +160,7 @@ object UnifiedCharacterAssessmentAnalyzer {
                 CharacterCompletenessLevel.INSUFFICIENT
             else -> CharacterCompletenessLevel.PARTIAL
         }
-        return CharacterCompletenessEvidence(missing, level)
+        return CharacterCompletenessEvidence(missing, level, unverified)
     }
 
     private fun statusOrder(status: CharacterAttentionStatus): Int = when (status) {
