@@ -109,7 +109,9 @@ object OwnedCharacterInvestmentFactMapper {
                         rarity = observed(weapon.rarity, stale, at),
                         level = observed(weapon.level, stale, at),
                         ascensionLevel = observed(weapon.ascensionLevel, stale, at),
-                        refinementLevel = observed(weapon.refinementLevel, stale, at)
+                        refinementLevel = observed(weapon.refinementLevel, stale, at),
+                        mainProperty = observed(weapon.mainProperty, stale, at),
+                        subProperty = observed(weapon.subProperty, stale, at)
                     )
                 },
                 observedAt = at
@@ -128,7 +130,9 @@ object OwnedCharacterInvestmentFactMapper {
                     rarity = observed(weapon.rarity, true, at),
                     level = observed(weapon.level, true, at),
                     ascensionLevel = observed(weapon.ascensionLevel, true, at),
-                    refinementLevel = observed(weapon.refinementLevel, true, at)
+                    refinementLevel = observed(weapon.refinementLevel, true, at),
+                    mainProperty = observed(weapon.mainProperty, true, at),
+                    subProperty = observed(weapon.subProperty, true, at)
                 ),
                 observedAt = at
             )
@@ -155,7 +159,10 @@ object OwnedCharacterInvestmentFactMapper {
                         slot = observed(artifact.slot, stale, at),
                         slotName = observed(artifact.slotName, stale, at),
                         rarity = observed(artifact.rarity, stale, at),
-                        level = observed(artifact.level, stale, at)
+                        level = observed(artifact.level, stale, at),
+                        set = observed(artifact.set, stale, at),
+                        mainProperty = observed(artifact.mainProperty, stale, at),
+                        subProperties = observedCollection(artifact.subProperties.takeIf { it.isNotEmpty() }, stale, at)
                     )
                 },
                 observedAt = at
@@ -170,7 +177,10 @@ object OwnedCharacterInvestmentFactMapper {
                     slot = observed(artifact.slot, true, source.lastRetrievedAt),
                     slotName = observed(artifact.slotName, true, source.lastRetrievedAt),
                     rarity = observed(artifact.rarity, true, source.lastRetrievedAt),
-                    level = observed(artifact.level, true, source.lastRetrievedAt)
+                    level = observed(artifact.level, true, source.lastRetrievedAt),
+                    set = observed(artifact.set, true, source.lastRetrievedAt),
+                    mainProperty = observed(artifact.mainProperty, true, source.lastRetrievedAt),
+                    subProperties = observedCollection(artifact.subProperties.takeIf { it.isNotEmpty() }, true, source.lastRetrievedAt)
                 )
             },
             observedAt = source.lastRetrievedAt
