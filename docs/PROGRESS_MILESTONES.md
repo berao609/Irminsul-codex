@@ -1928,3 +1928,44 @@ The Visuals page rendered the primary Analyze Account / Refresh Analysis button 
 ### User feedback
 
 - User confirmed the edge-to-edge full-screen presentation and dark/system theme behavior are acceptable.
+
+
+## Milestone 038 - Full Recommendation Access and Evidence Details
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Let users inspect every deterministic development recommendation, including its reason, full supporting evidence, and stale-data status, without changing recommendation generation or ordering.  
+**Status:** Implemented and committed. CI verification pending. Physical-device verification pending.
+
+### Objective
+
+The Visuals page previously displayed only the first five recommendations even when the overview reported a larger recommendation count. This milestone makes the complete available recommendation set inspectable while retaining a compact default preview.
+
+### Work implemented
+
+1. Kept the initial five-recommendation preview.
+2. Added a Show all recommendations / Show fewer recommendations control when more than five recommendations are available.
+3. In expanded mode, displays every recommendation in the existing goal-aware order.
+4. Displays each recommendation's priority, title, character, action, reason, and all evidence entries.
+5. Displays an explicit stale-data indicator for recommendations based on stale account evidence.
+6. Preserved the existing deterministic recommendation model, priority ordering, development-goal behavior, and analysis pipeline.
+
+### Implementation
+
+- Visuals recommendation expansion: [54c554c](https://github.com/berao609/Irminsul-codex/commit/54c554cf8dd851034f49520094aa41c724e3a5ca).
+- README update: [89cd2e4](https://github.com/berao609/Irminsul-codex/commit/89cd2e45dc373d9984688f30d537034b4a41493b).
+
+### Verification
+
+- CI verification: pending.
+- Physical-device verification: pending.
+
+### Qualifications
+
+- The expansion is a presentation change. It does not add filtering, sorting, farming calculations, material requirements, or new recommendation rules.
+- The initial preview remains five items. Full details are shown only after the user expands the list.
+- No account data, credentials, persistence, navigation, theme, or JSON export behavior was changed.
+
+### Next development checkpoint
+
+After CI and device verification, continue with a focused explanation of account-data coverage and freshness concerns so users can understand which source sections are missing, unavailable, failed, stale, or not freshness-assessed. Preserve the distinction between unknown freshness and stale data.
