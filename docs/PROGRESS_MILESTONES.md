@@ -2547,7 +2547,7 @@ M48 should implement and unit-test a small snapshot-to-observed-facts mapper for
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Extract directly observed owned-character investment facts from the normalized account snapshot, preserving source availability, freshness, section provenance, and collection integrity.  
-**Status:** Implementation and unit tests passed CI #330. Milestone documentation CI pending. Domain-only change; no UI, persistence, knowledge collector, recommendation scoring, or shortlist integration.
+**Status:** Closed. Implementation CI #330 and milestone documentation CI #331 succeeded. Domain-only change; no UI, persistence, knowledge collector, recommendation scoring, or shortlist integration.
 
 ### Objective
 
@@ -2607,6 +2607,7 @@ Rechecked AGENTS.md, README.md, SPECS.md, PROGRESS_MILESTONES.md, AccountSnapsho
 ### Verification
 
 - Final combined implementation CI #330: success, https://github.com/berao609/Irminsul-codex/actions/runs/45607745288.
+- M48 milestone documentation CI #331: success, https://github.com/berao609/Irminsul-codex/actions/runs/45608163826.
 - CI #330 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact uploads, and temporary signing-key cleanup.
 - Room instrumentation tests were skipped by the workflow because M48 did not change Room or persistence code.
 - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.330-vc332`, artifact ID `15018157177`, size 8,984,220 bytes.
