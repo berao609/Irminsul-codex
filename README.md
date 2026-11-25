@@ -57,6 +57,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Home Dashboard | Shows account identity, retrieved snapshot summary, and Daily Note activity. |
 | Account Analysis and Visual Dashboard | Combines analysis controls, recommendations, and visual summaries on the Visuals page. |
 | Character Showcase | Displays the retrieved character roster as selectable portrait cards, with a detailed profile for the selected character including level, element, weapon, artifacts and stats, talents, and constellations. Uses source-provided artwork with fallbacks and distinguishes missing or stale equipment data. |
+| Manual Materials Planner | Lets players select an owned character or equipped weapon, set an upgrade level range, manually enter material requirements and owned quantities, calculate remaining amounts, and save the plan locally. Manual quantities are clearly distinguished from verified game-cost data. |
 | AI Chat Destination | Provides a dedicated information screen; AI functionality is not active yet. |
 | Info and Export | Provides account management and the optional JSON export action outside Home. |
 
@@ -69,7 +70,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 - Expanded account analytics, interactive charts, detailed tables, and progression tracking.
 - Broader account gap analysis beyond the implemented roster and character-equipment gap foundation.
 - Farming and Resin optimization.
-- Materials Calculator with manually entered material inventory, verified upgrade-cost requirements, and remaining-to-farm quantities.
+- Verified upgrade-cost catalogue integration to automatically populate the Manual Materials Planner. No redistribution-approved production cost dataset is connected yet.
 - Character and weapon pull evaluation.
 - External Genshin game-knowledge integration for patch-aware character meta, build and weapon recommendations, observed usage, and account-aware pull evaluation. Candidate community sources include KeqingMains and Prydwen; access, attribution, freshness, and redistribution terms must be validated before integration.
 - AI-powered account assistant.
