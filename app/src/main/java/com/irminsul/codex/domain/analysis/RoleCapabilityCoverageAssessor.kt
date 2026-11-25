@@ -17,6 +17,7 @@ object RoleCapabilityCoverageAssessor {
             knowledge.rosterState == InvestmentFactState.STALE
         val ambiguousProfiles = knowledge.profiles.filter { it.ownershipAmbiguous }
         val profiles = if (usableRoster) knowledge.profiles.filterNot { it.ownershipAmbiguous } else emptyList()
+        val effectiveRosterIsPartial = knowledge.rosterIsPartial || ambiguousProfiles.isNotEmpty()
 
         val roles = CharacterCombatRole.entries.map { role ->
             val evidence = profiles.mapNotNull { profile ->
@@ -28,7 +29,7 @@ object RoleCapabilityCoverageAssessor {
             RoleCoverageResult(
                 role = role,
                 state = state(
-                    usableRoster, knowledge.rosterState, knowledge.rosterIsPartial, supporting.isNotEmpty(),
+                    usableRoster, knowledge.rosterState, effectiveRosterIsPartial, supporting.isNotEmpty(),
                     conflicted.isNotEmpty(), evidence.isNotEmpty()
                 ),
                 supportingCharacterIds = supporting.map { it.first }.distinct().sorted(),
@@ -65,7 +66,7 @@ object RoleCapabilityCoverageAssessor {
             evaluatedAt = knowledge.evaluatedAt,
             context = knowledge.context,
             rosterState = knowledge.rosterState,
-            rosterIsPartial = knowledge.rosterIsPartial || ambiguousProfiles.isNotEmpty(),
+            rosterIsPartial = effectiveRosterIsPartial,
             roles = roles,
             capabilities = capabilities,
             rejectedClaims = knowledge.rejectedClaims
