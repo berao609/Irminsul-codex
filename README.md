@@ -52,11 +52,11 @@ The product's primary purpose is to turn account data into actionable in-app int
 ### Planned Core Experience
 
 - In-app account overview and account intelligence as the primary user workflow.
-- Deterministic account analysis, validation, and explainable progression priorities.
-- Evidence-backed character development recommendations with transparent priority levels.
+- Expanded account analysis beyond the implemented deterministic character-assessment and recommendation domain foundations.
+- User-facing character development recommendations and explainable progression priorities.
 - Integrated BYOAI assistant grounded in the unified account model.
 - Account analytics and progression tracking.
-- Character investment recommendations.
+- Goal-aware character investment recommendations.
 - Account gap analysis.
 - Farming and Resin optimization.
 - Character and weapon pull evaluation.
