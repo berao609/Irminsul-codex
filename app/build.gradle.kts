@@ -55,6 +55,7 @@ android {
         applicationId = "com.irminsul.codex"
         minSdk = 26
         targetSdk = 34
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         versionCode = appVersionCode
         versionName = appVersionName
     }
@@ -111,9 +112,6 @@ android {
         compose = true
     }
 
-    testOptions {
-        unitTests.isIncludeAndroidResources = true
-    }
 }
 
 dependencies {
@@ -134,8 +132,11 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.json)
-    testImplementation(libs.robolectric)
     testImplementation(libs.coroutinesTest)
+
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
 }
 
 ksp {

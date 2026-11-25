@@ -1058,14 +1058,14 @@ Establish the first local persistence layer without prematurely duplicating the 
 4. Added transactional snapshot persistence. Account creation, last-updated timestamp maintenance, and snapshot insertion occur in one database transaction. Existing account creation timestamps are preserved.
 5. Added a domain `AccountSnapshotStore` contract and Room implementation supporting snapshot saving and history retrieval. History is ordered newest first.
 6. Connected successful ViewModel account retrieval to local persistence. A storage failure does not discard the fetched export or block the existing Save JSON flow; it is surfaced as a warning.
-7. Added Robolectric-backed Room tests for multiple snapshots, raw JSON preservation, account identity, timestamps, and history ordering. Added ViewModel coverage proving that local database failure does not discard a successfully retrieved export or block file saving.
+7. Added Android instrumentation tests for multiple snapshots, raw JSON preservation, account identity, timestamps, and history ordering. CI runs them on an API 34 emulator. Added ViewModel coverage proving that local database failure does not discard a successfully retrieved export or block file saving.
 8. No destructive migration fallback was added. Database schema version starts at 1; future schema changes must introduce explicit migrations.
 
 ### Verification
 
 - Implementation commit: pending.
-- Unit tests and Debug build: pending CI.
-- Room database runtime behavior: pending CI unit tests.
+- CI Run #150 initially compiled the application and tests but the two Robolectric-backed Room tests failed because Robolectric could not download its Android runtime artifact. The tests are being moved to actual Android instrumentation on an API 34 emulator.
+- Unit tests, emulator instrumentation, Debug build, schema export, APK signature, and artifact upload: pending the corrected CI run.
 - Physical-device persistence and process-restart verification: pending.
 
 ### Qualifications

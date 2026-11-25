@@ -1,6 +1,8 @@
 package com.irminsul.codex.data.local
 
 import androidx.room.Room
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
 import com.irminsul.codex.data.mapper.AccountExportMapper
 import com.irminsul.codex.domain.model.AccountExport
@@ -12,18 +14,17 @@ import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.time.Instant
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class RoomAccountSnapshotStoreTest {
     private lateinit var database: IrminsulDatabase
 
     @Before
     fun setUp() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
         database = Room.inMemoryDatabaseBuilder(
-            RuntimeEnvironment.getApplication(),
+            context,
             IrminsulDatabase::class.java
         ).allowMainThreadQueries().build()
     }
