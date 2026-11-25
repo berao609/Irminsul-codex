@@ -484,7 +484,7 @@ Make the existing selected-section account export more reliable and auditable wi
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Map account-card data, the original character roster, and raw character-detail batches into the domain snapshot while retaining their nested source structure.  
-**Status:** Implemented in source and tests; CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Work implemented
 
@@ -503,6 +503,7 @@ Make the existing selected-section account export more reliable and auditable wi
 ### Verification
 
 - Source commits: `923796c24954336413482b683a5d922ed47eb002`, `9f5329107e92cee651de5695d7120749bccf3eb2`, `6077657c5f255352c0d8a6d0dc9c43e222c74b38`.
-- Unit tests and Debug build: pending GitHub Actions.
+- Unit tests and Debug build: **Success**, GitHub Actions [Run #109](https://github.com/berao609/Irminsul-codex/actions/runs/45519407733), run ID `45519407733`, commit `d05af627821d3e4e0e69456bf8d787cd6fcf8a2b`.
+- Unit tests, Debug APK build, persistent Debug signature verification, artifact upload, and temporary keystore cleanup: **Success**.
 - Device verification: not required for this in-memory mapper increment.
 - No raw export schema change, Room persistence, UI integration, or release was included.
