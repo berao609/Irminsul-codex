@@ -79,6 +79,8 @@ object InvestmentShortlistEvaluator {
         val trustedRecords = knowledgeRecords.filter { record ->
             record.reviewState == KnowledgeReviewState.VERIFIED &&
                 record.confidenceState == KnowledgeConfidenceState.SUPPORTED &&
+                (record.validFrom == null || !record.validFrom.isAfter(evaluatedAt)) &&
+                (record.expiresAt == null || record.expiresAt.isAfter(evaluatedAt)) &&
                 GameKnowledgeRecordValidator.validate(record, sourceRegistry).isEmpty()
         }
         val trustedDecisionEvidence = trustedRecords
