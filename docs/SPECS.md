@@ -1960,6 +1960,57 @@ A positively supported role/capability remains COVERED even when the roster is s
 M50 is intended as a reusable evidence layer for a future lineup builder. A future simulator must separately validate team-level synergy and combat interactions; roster role coverage alone is not proof that four characters form an effective team.
 
 
+### 3.18 M51 versioned upgrade-cost knowledge and source permission contract
+
+M51 establishes a provenance-bound contract for future character, talent, and weapon material calculations. It does not implement calculator arithmetic, inventory comparison, farming schedules, or a materials UI.
+
+#### Cost record shape
+
+`UpgradeCostRecord` is an immutable, versioned cost segment identified by record ID and positive revision. It binds:
+- A subject type and stable subject/catalog ID (character or weapon).
+- An explicit upgrade track: character level, character ascension, talent level, weapon level, or weapon ascension.
+- A positive source level and strictly higher destination level.
+- An explicit talent slot for talent-level records, and no talent slot for other tracks.
+- An exact game version, a non-empty list of material item IDs and positive quantities, source references, retrieval time, optional validity window, review state, and optional superseded record ID.
+
+One record represents one subject/track/range segment. Cumulative requirements are a later deterministic aggregation of non-overlapping, complete segments. The data contract does not assume every level range is available or that a missing range costs zero.
+
+#### Trusted-use gates
+
+`UpgradeCostRecordValidator` requires:
+1. Supported schema version, nonblank stable IDs, positive revision, subject/track consistency, and a strictly increasing level range.
+2. Explicit talent slot binding only for talent upgrades.
+3. Non-empty game version and material list; each item ID is nonblank and each quantity is a positive integer. Duplicate item IDs in one record are rejected rather than silently summed.
+4. At least one absolute HTTPS source reference whose host matches its source registry entry.
+5. Every referenced source is `APPROVED` and explicitly permits `material_cost_curation` in `allowedActions`. Link-only or discovery permission is not permission to curate or redistribute structured cost facts.
+6. The record is `VERIFIED` and has review timestamp and notes. Candidate, rejected, expired-review, or superseded records cannot be used as trusted costs.
+7. Valid timestamp ordering and no self-supersession.
+
+A record is applicable only when the requested game version exactly matches and the evaluation time falls within its optional validity window. No wildcard patch compatibility or silent latest-version fallback is inferred. Missing, malformed, stale, unapproved, or unverified costs remain unavailable and must never be converted to zero.
+
+#### Source validation decision (M51)
+
+- **HoYoverse Help Center / HoYoWiki:** official material-farming guidance confirms relevant categories and farming schedules, while HoYoLAB's official tools overview documents the in-app Enhancement Progression Calculator and HoYoWiki material calendar. These are useful canonical references for manual cross-checking, but no public structured cost API or third-party redistribution permission was established in this review. Reference-only pending permission/API verification.
+- **genshin-db:** technically promising structured data for characters, weapons, materials, and related game data. Its repository advertises MIT licensing for the package and states that its data is sourced from both the Genshin Impact Fandom Wiki and GenshinData. The package license alone does not establish rights to redistribute all underlying game-derived or upstream data. Fandom text is generally CC BY-SA unless otherwise specified, while non-text media has separate licensing. GenshinData's README requests credit but does not provide a clear dataset license. Therefore it remains a technical candidate, not an approved bundled/imported source.
+- **HoyoWhatpeon planner:** demonstrates a working planner using a pinned genshin-db snapshot and explicitly documents excluded cost categories and unsupported cases. It is a useful comparison/reference for coverage and missing-data handling, not an authorized source of reusable cost data.
+- **Community calculators and other databases:** may be used for cross-checking only after their own provenance, source licenses, update cadence, and reuse permissions are reviewed. Do not scrape or copy their databases by default.
+
+M51 approves no external source for automated bulk ingestion or bundled cost-data redistribution. A source can become trusted only after its specific data rights, attribution, permitted access method, retention/deletion obligations, technical stability, and explicit `material_cost_curation` action are documented in the source registry. A permissive license on a software wrapper does not automatically license upstream data or official game assets.
+
+#### Calculator boundary
+
+Future calculator work may calculate only from complete, compatible, trusted cost segments. It must:
+- Keep character leveling, character ascension, each talent track, weapon leveling, and weapon ascension as distinct tracks.
+- Preserve separate material item IDs and integer quantities.
+- Distinguish required totals from player-owned inventory and remaining-to-farm values. M48 account character facts do not include the player's material inventory.
+- Keep EXP books, enhancement ore, Mora, ascension materials, talent books, weekly boss drops, crowns, and other resource families separate.
+- Treat artifact enhancement as a separately scoped track; M51 does not define artifact EXP/feeding costs.
+- Avoid resin/farming-time estimates until domain schedules, drop-yield assumptions, world/domain level, discounts, and inventory are modeled with provenance.
+- Never calculate across different game versions or fill missing segments with zero.
+
+M51 adds only domain models, validation, tests, and source-policy documentation. No external collector, bundled dataset, persistence, UI, arithmetic engine, AI, or backend is introduced.
+
+
 **End of specification.**
 
 
