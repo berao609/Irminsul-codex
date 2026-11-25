@@ -3296,6 +3296,9 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 - `e490ee9c58b11d43f84147f44c97cbd5b87134c5` - Test restoration without a network call.
 - `6235fd3e53e45fbfdfd05b90d815466ed221e540` - Restore the cached snapshot when the signed-in UID is available.
 - `347255df4712b0e23fdb8eef4f2cfb07c8e84807` - Show the saved-analysis restoration state in the UI.
+- `cf16c0eb874acbf20d025b5d031eccbb9268ddc5` - Hide the empty analysis state while restoring cache.
+- `eae75a3668b38e3863a68375d50f0c0e89a28364` - Guard restoration against account and refresh races.
+- `0cb6bfcd25a46e18fdc647f360cac2a6ac17d588` - Test cached analysis survives a failed refresh.
 
 ### Verification
 
