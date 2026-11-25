@@ -61,6 +61,24 @@ class GameKnowledgeRecordValidatorTest {
         assertTrue(KnowledgeRecordIssueCode.INVALID_SOURCE_URL in codes)
     }
 
+    @Test fun sourceReferenceMustMatchItsRegistryPublisherHost() {
+        val invalid = record().copy(
+            sourceReferences = listOf(KnowledgeSourceReference("kqm", "https://unrelated.example/claim"))
+        )
+        assertTrue(
+            GameKnowledgeRecordValidator.validate(invalid, listOf(source))
+                .any { it.code == KnowledgeRecordIssueCode.SOURCE_URL_HOST_MISMATCH }
+        )
+    }
+
+    @Test fun unapprovedSourceCannotValidateAsTrustedEvidence() {
+        val restricted = source.copy(permissionState = KnowledgePermissionState.PENDING_REVIEW)
+        assertTrue(
+            GameKnowledgeRecordValidator.validate(record(), listOf(restricted))
+                .any { it.code == KnowledgeRecordIssueCode.SOURCE_PERMISSION_NOT_APPROVED }
+        )
+    }
+
     @Test fun verifiedRecordRequiresReviewTimestampAndNotes() {
         val invalid = record().copy(reviewedAt = null, reviewNotes = " ")
         assertTrue(
