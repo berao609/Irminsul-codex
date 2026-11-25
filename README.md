@@ -6,7 +6,7 @@ Irminsul Codex is an Android application designed to help Genshin Impact players
 
 The product's primary purpose is to turn account data into actionable in-app intelligence. Irminsul Codex aims to identify development priorities, analyze account weaknesses, optimize farming, evaluate potential pulls, and help players decide what to focus on next. Account retrieval supports this analysis; JSON export is an optional utility for third-party readers and backups.
 
-> **Project Status:** Early development. The app now has four bottom-navigation destinations: Home, Visuals, AI Chat, and Info. Its interface uses an edge-to-edge layout and supports System, Light, and Dark appearance modes, with the selected preference saved locally. Home presents account identity, the latest retrieved snapshot summary, and Daily Note activity such as Resin, commissions, expeditions, and Realm Currency. Visuals combines the deterministic account-analysis workflow, explicit development-goal selection, evidence-backed recommendations, and visual summaries in one destination. AI Chat has a dedicated informational placeholder; BYOAI is not connected or active yet. Info contains HoYoLAB account management and the optional JSON export action. Account retrieval, Daily Note synchronization, Room-backed snapshot persistence, and deterministic account analysis remain available. The broader Account Command Center, detailed finding/recommendation drill-downs, account history, integrated BYOAI assistant, and wider progression features remain planned.
+> **Project Status:** Early development. The app now has four bottom-navigation destinations: Home, Visuals, AI Chat, and Info. Its interface uses an edge-to-edge layout and supports System, Light, and Dark appearance modes, with the selected preference saved locally. Home presents account identity, the latest retrieved snapshot summary, and Daily Note activity such as Resin, commissions, expeditions, and Realm Currency. Visuals combines the deterministic account-analysis workflow, one consistent balanced recommendation order, evidence-backed recommendations, and visual summaries in one destination. AI Chat has a dedicated informational placeholder; BYOAI is not connected or active yet. Info contains HoYoLAB account management and the optional JSON export action. Account retrieval, Daily Note synchronization, Room-backed snapshot persistence, and deterministic account analysis remain available. The broader Account Command Center, detailed finding/recommendation drill-downs, account history, integrated BYOAI assistant, and wider progression features remain planned.
 
 ---
 
@@ -49,12 +49,12 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Optional JSON Export | Exports selected account data for third-party readers and backups. |
 | Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |
 | Account Intelligence | Provides a dedicated Analyze Account action and displays character assessment, recommendations, account gaps, and data coverage independently of JSON export, within the Visuals page. |
-| Development Goal Selection | Reorders the same evidence-backed findings for Balanced, Build quality, Stat accuracy, or Data completeness, with an explanation of the selected focus. |
+| Recommendation Prioritization | Presents evidence-backed findings in one consistent balanced order; the current analysis does not offer selectable analysis modes. |
 | Multi-page Navigation | Provides Home, Visuals, AI Chat, and Info destinations through bottom navigation. |
 | Edge-to-Edge Layout | Extends app surfaces behind the Android status and navigation bars while preserving system-bar controls. |
 | Appearance Settings | Supports System, Light, and Dark themes with a saved user preference. |
 | Home Dashboard | Shows account identity, retrieved snapshot summary, and Daily Note activity. |
-| Account Analysis and Visual Dashboard | Combines analysis controls, goal selection, recommendations, and visual summaries on the Visuals page. |
+| Account Analysis and Visual Dashboard | Combines analysis controls, recommendations, and visual summaries on the Visuals page. |
 | Character Showcase | Displays the retrieved character roster as selectable portrait cards, with a detailed profile for the selected character including level, element, weapon, artifacts and stats, talents, and constellations. Uses source-provided artwork with fallbacks and distinguishes missing or stale equipment data. |
 | AI Chat Destination | Provides a dedicated information screen; AI functionality is not active yet. |
 | Info and Export | Provides account management and the optional JSON export action outside Home. |
@@ -198,7 +198,7 @@ The current application follows a data retrieval workflow:
 
 * Daily Note information is displayed, and selected account data can be exported as JSON.
 
-The application retrieves selected account data through the dedicated Analyze Account action, saves the resulting snapshot in Room, and runs the deterministic account-intelligence pipeline from the normalized snapshot. This flow does not require or launch JSON export. The ViewModel exposes the unified overview and the Visuals page displays an analysis summary with a five-item recommendation preview alongside visual account metrics. Users can expand the list to inspect every available recommendation, including its reason, supporting evidence, and stale-data indicator. The user can select one of four explicit development goals; Balanced Development is the initial default. The goal changes recommendation ordering only. User-facing account history, integrated BYOAI assistance, expanded analysis, and the complete Account Command Center remain planned.
+The application retrieves selected account data through the dedicated Analyze Account action, saves the resulting snapshot in Room, and runs the deterministic account-intelligence pipeline from the normalized snapshot. This flow does not require or launch JSON export. The ViewModel exposes the unified overview and the Visuals page displays an analysis summary with a five-item recommendation preview alongside visual account metrics. Users can expand the list to inspect every available recommendation, including its reason, supporting evidence, and stale-data indicator. Recommendations use one consistent balanced order; there are no selectable analysis objectives. User-facing account history, integrated BYOAI assistance, expanded analysis, and the complete Account Command Center remain planned.
 
 ## Project Structure
 
@@ -280,7 +280,7 @@ Responsible for:
 
 * Running full account export through the domain repository contract.
 * Exposing export progress, errors, the normalized AccountSnapshot, and the unified deterministic AccountIntelligenceOverview as observable state.
-* Running the account-intelligence pipeline after retrieval and re-running it when the selected development goal changes.
+* Running the account-intelligence pipeline after retrieval and using the default balanced recommendation order.
 * Retaining the original JSON export for the Save JSON file action.
 
 ### `data/local/`
