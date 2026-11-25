@@ -1969,3 +1969,57 @@ The Visuals page previously displayed only the first five recommendations even w
 ### Next development checkpoint
 
 After CI and device verification, continue with a focused explanation of account-data coverage and freshness concerns so users can understand which source sections are missing, unavailable, failed, stale, or not freshness-assessed. Preserve the distinction between unknown freshness and stale data.
+
+
+## Milestone 039 - Player-Friendly Character Recommendation Cards
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Present character recommendations as visual, understandable cards instead of technical diagnostic text  
+**Status:** Implemented; CI and physical-device verification pending.
+
+### Objective
+
+Make the Visuals page understandable to Genshin players by presenting character-specific findings in visual cards. Hide internal P1-P4 codes from the player-facing UI, explain the issue in plain language, and give a clear next action. Preserve deterministic findings, evidence, priorities, and recommendation ordering.
+
+### Work implemented
+
+1. Replaced the plain text recommendation rows with character cards showing the character name, an available portrait image, and a visual fallback using the character's element when no portrait is supplied or the image cannot load.
+2. Extended the character snapshot model with an optional portrait icon and mapped it from available character icon/image fields without requiring it to exist.
+3. Reworded data-review recommendations in player-friendly language. Artifact completeness warnings now explain that fewer than five equipped artifacts were found in the account data and advise refreshing/checking the character details.
+4. Explicitly clarify that an incomplete-data warning is not a judgment that the character's build is weak.
+5. Replaced P1-P4 codes in the UI with plain-language labels. The underlying priority enum and deterministic recommendation ordering remain unchanged.
+6. Preserved the existing five-card preview and Show all / Show fewer behavior. Expanded cards retain additional explanation and stale-data notices.
+7. Added a mapper test for optional character portrait mapping and the absent-icon fallback data case.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
+- `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
+- `gradle/libs.versions.toml`
+- `app/build.gradle.kts`
+- `README.md`
+
+### Implementation commits
+
+- Model portrait field: `b1fc572c247751877842fb48259d777330f6fb48`
+- Portrait mapping: `cea32656107dbf643e6edfa82be38c39c7222ad2`
+- Mapper test: `cd8d031fdaa84c0552ea0f3b6489d2c8b9a71d82`
+- Coil dependency catalog: `cdc28df5b43c3b71876afcc9c940d13c2f585490`
+- Coil app dependency: `1a0bfe98bf5c705bed83c44a20602c943b4b0143`
+- Recommendation cards: `76d91d41b125bc4f286271c441339cff82eb966b`
+- Portrait loading fallback: `aaf1891349ae3587ceb5edff2b0eff7ba8572d78`
+
+### Verification evidence
+
+- Automated test and Debug APK CI: pending.
+- APK artifact inspection: pending.
+- Physical-device verification: pending.
+
+### Remaining work
+
+- Confirm that the account-data source supplies usable portrait URLs for the user's characters. If it does not, the card displays an element-themed fallback rather than a broken image.
+- Install the successful Debug APK and inspect character portraits, fallback behavior, recommendation wording, card layout, and expanded/collapsed list behavior on the user's device.
+- Confirm the artifact count wording against a real account response; do not interpret missing artifact entries as proof of a weak build.
