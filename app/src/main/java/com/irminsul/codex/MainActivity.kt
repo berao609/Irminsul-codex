@@ -26,6 +26,7 @@ import com.irminsul.codex.api.HoYoLabClient
 import com.irminsul.codex.data.repository.HoYoLabAccountRepository
 import com.irminsul.codex.data.local.IrminsulDatabase
 import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
+import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import kotlinx.coroutines.launch
@@ -322,6 +323,177 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Text(if (accountExportState.isExporting) "Extracting..." else "Save JSON")
+                    }
+                }
+            }
+        }
+
+        if (accountExportState.snapshot != null) {
+            val overview = accountExportState.intelligenceOverview
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Account Intelligence",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Choose the objective used to order existing evidence-backed recommendations. This does not change findings or their base priorities.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        FilterChip(
+                            selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.BALANCED_DEVELOPMENT,
+                            onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.BALANCED_DEVELOPMENT) },
+                            label = { Text("Balanced") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.BUILD_RELIABILITY,
+                            onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.BUILD_RELIABILITY) },
+                            label = { Text("Build") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        FilterChip(
+                            selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.STAT_INTEGRITY,
+                            onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.STAT_INTEGRITY) },
+                            label = { Text("Stat integrity") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        FilterChip(
+                            selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.DATA_CONFIDENCE,
+                            onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.DATA_CONFIDENCE) },
+                            label = { Text("Data confidence") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    if (accountExportState.isAnalyzingIntelligence) {
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text("Analyzing account data...", fontSize = 12.sp)
+                    }
+
+                    accountExportState.intelligenceErrorMessage?.let { message ->
+                        Text(
+                            text = message,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    overview?.let { report ->
+                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                        Text(
+                            text = "Character assessment",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Assessed: ${report.assessedCharacterCount ?: "Unavailable"} • Need attention: ${report.needsAttentionCount} • Review: ${report.reviewCharacterCount} • Clear: ${report.clearCharacterCount}",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Development recommendations (${report.recommendationCount})",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (report.goalAwareDevelopment.recommendations.isEmpty()) {
+                            Text(
+                                text = if (report.goalAwareDevelopment.availability.name in listOf("AVAILABLE", "STALE")) {
+                                    "No recommendations were identified by the available analysis."
+                                } else {
+                                    "Recommendations are not available from the current character data."
+                                },
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            report.goalAwareDevelopment.recommendations.take(5).forEach { item ->
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        text = "${item.recommendation.priority} • ${item.recommendation.characterName ?: "Character ${item.recommendation.characterId}"}",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = item.recommendation.action,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    item.recommendation.evidence.firstOrNull()?.let { evidence ->
+                                        Text(
+                                            text = evidence,
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                            if (report.recommendationCount > 5) {
+                                Text(
+                                    text = "Showing 5 of ${report.recommendationCount} recommendations.",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                        Text(
+                            text = "Account gaps: ${report.confirmedAccountGapCount} confirmed • ${report.accountDataReviewCount} data review",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Account data: ${report.presentAccountSectionCount}/${report.accountSectionCount} sections present • ${report.missingAccountSectionCount} missing • ${report.unavailableAccountSectionCount} unavailable • ${report.failedAccountSectionCount} failed",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (report.hasStaleEvidence) {
+                            Text(
+                                text = "Some findings rely on stale account evidence.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        if (report.hasUnverifiedSources) {
+                            Text(
+                                text = "One or more analysis sources are missing, unavailable, or failed. Treat this overview as partial.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        if (report.hasDataConfidenceConcerns) {
+                            Text(
+                                text = "Account data coverage or freshness has unresolved concerns.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
