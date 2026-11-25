@@ -832,8 +832,9 @@ Give downstream account analytics a reliable way to distinguish which selected e
 ### Verification
 
 - Implementation, tests, and initial milestone record: `a8450278ecff6b57c6cdf2b6df65863d0a94ff77`.
-- GitHub Actions: pending.
-- Debug artifact: pending.
+- GitHub Actions Run #128: https://github.com/berao609/Irminsul-codex/actions/runs/45525575660 (success; unit tests, Debug APK build, persistent Debug signature verification, artifact upload, and temporary keystore cleanup all passed).
+- Debug artifact: `irminsul-codex-debug-v1.0.0-dev.128-vc130` (ID `14981124189`), 8,265,438 bytes; expires 2026-12-09 01:26:10 UTC.
+- Verification record commit: `0ad5f357afe0b6f5a2d757748bf844fe3a7352d5`.
 - Device verification: not required for this pure in-memory domain assessment and mapper integration.
 
 ### Qualifications
