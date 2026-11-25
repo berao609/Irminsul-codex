@@ -39,6 +39,9 @@ class AccountIntelligenceEngineTest {
             name = "Example Character",
             level = 90,
             rarity = 5,
+            element = "Pyro",
+            friendshipLevel = 10,
+            activeConstellationCount = 0,
             weapon = DataValue.Available(
                 WeaponSnapshot(
                     id = 1000,
@@ -123,7 +126,7 @@ class AccountIntelligenceEngineTest {
     @Test
     fun analyze_keepsFailedAnalysisAvailabilityAndFailureReason() {
         val source = snapshot(
-            characters = DataValue.Available(listOf(CharacterSnapshot(id = 100)), now),
+            characters = DataValue.Available(listOf(CharacterSnapshot(id = 100, name = "Example Character", level = 90, rarity = 5, element = "Pyro", friendshipLevel = 10, activeConstellationCount = 0)), now),
             build = DataValue.Failed("Build validation source failed."),
             stats = DataValue.Available(CharacterStatReconciliationReport(emptyList()), now)
         )
