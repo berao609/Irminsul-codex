@@ -217,7 +217,8 @@ object AccountExportMapper {
             selectedProperties = item.optJSONArray("selected_properties")?.let(::mapStats).orEmpty(),
             baseProperties = item.optJSONArray("base_properties")?.let(::mapStats).orEmpty(),
             extraProperties = item.optJSONArray("extra_properties")?.let(::mapStats).orEmpty(),
-            elementProperties = item.optJSONArray("element_properties")?.let(::mapStats).orEmpty()
+            elementProperties = item.optJSONArray("element_properties")?.let(::mapStats).orEmpty(),
+            avatarIcon = base.stringOrNull("icon") ?: item.stringOrNull("icon") ?: base.stringOrNull("image")
         )
     }
 
