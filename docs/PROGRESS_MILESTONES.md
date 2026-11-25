@@ -1292,3 +1292,66 @@ Provide a unified, explainable character assessment without inventing a score or
 - Assessment coverage depends on the account data and source-analysis availability supplied to the analyzer. It is not a full character optimizer or combat-performance evaluation.
 - `CLEAR` means no identified concerns in the checks represented by this assessment; it is not proof that the character is optimally built.
 - The assessments are domain foundations and are not yet surfaced in the app UI.
+
+### M24 safeguard follow-up
+
+A subsequent edge-case review found that a character with complete raw data could otherwise appear `CLEAR` when one or more required analysis sources were missing, unavailable, or failed. Missing analysis is not equivalent to zero findings.
+
+- Model safeguard commit: `e4b82d197274774357195ec141dccc86e0ea6560`. Added `unverifiedAnalyses` to completeness evidence so analysis-source gaps remain separate from raw character-data gaps.
+- Analyzer safeguard commit: `5fd971dda43bb1f78d4248313e7446cab58b5a43`. Explicitly records build-validation and stat-reconciliation availability gaps and forces `REVIEW` when analysis is unverified, even if raw character data is complete.
+- Test commit: `f5bdb32e080c69c827ab154e222a633f20e21ba2`. Added regression coverage for complete character data with missing build validation and unavailable stat reconciliation.
+- [GitHub Actions Run #178](https://github.com/berao609/Irminsul-codex/actions/runs/45553595570), [Run #179](https://github.com/berao609/Irminsul-codex/actions/runs/45553599260), and [Run #180](https://github.com/berao609/Irminsul-codex/actions/runs/45553603979) all completed successfully for the respective commits.
+- Documentation follow-up commits: README `556b92eb1c3afc6976e9c6180a13610f2567a682`; this milestone record `479f7ea567c303c6e79329bb05fe651e731a2a52`. [Run #176](https://github.com/berao609/Irminsul-codex/actions/runs/45553539533) and [Run #177](https://github.com/berao609/Irminsul-codex/actions/runs/45553544019) passed.
+- M24 acceptance includes this safeguard. `CLEAR` means no identified concerns among verified checks represented by the assessment, not proof of an optimal build or complete analysis coverage.
+
+
+
+## Milestone 025 - Evidence-Backed Account Development Recommendations
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Convert unified character assessments into practical, traceable next actions without inventing costs, farming requirements, meta rankings, or missing evidence.  
+**Status:** Implemented, unit-test verified, and Debug CI verified (Runs #181-183). Domain foundation only; not yet surfaced in the app UI.
+
+### Objective
+
+Help a player understand what to address next, why the action is recommended, and which account evidence supports it. Recommendations are deterministic outputs from M24 assessments, not AI-generated guesses.
+
+### Recommendation rules
+
+1. **P1 - Resolve confirmed build errors.** Create an action only from existing M21 ERROR findings; retain issue code, field path, and source message as evidence.
+2. **P2 - Investigate stat discrepancies.** Create an action only from existing M23 mismatch findings; retain field path, reported value, expected value, difference, and tolerance.
+3. **P3 - Review build warnings.** Create an action only from existing M21 WARNING findings; retain their source evidence.
+4. **P4 - Complete or verify character data.** Create a review action when M24 lists missing character components or unverified analysis sources. This is a data-quality action, not a claim that a build defect exists.
+5. Characters with no identified issues or data gaps receive no unnecessary recommendation.
+6. Recommendations are ordered deterministically by priority (P1 to P4), character ID, then recommendation type.
+7. Each recommendation carries character ID/name, stable recommendation ID, action, reason, evidence, priority, and stale-data status.
+8. STALE assessments remain usable but every derived recommendation is marked stale. MISSING, UNAVAILABLE, and FAILED assessment inputs remain distinct and produce no fabricated recommendations.
+9. Aggregate recommendation and affected-character counts are derived from the generated list.
+
+### Implementation
+
+- Model commit: `d91ba89d26d55ad67e552a24b1483082856c5c4c`.
+- Analyzer commit: `8a3129195ad64b9b00c78ec60f37aaa490ce92f5`.
+- Test commit: `143a5e1ed275487321baec672afbb6d01666280d`.
+- Added `app/src/main/java/com/irminsul/codex/domain/model/CharacterDevelopmentRecommendation.kt`.
+- Added `app/src/main/java/com/irminsul/codex/domain/analysis/CharacterDevelopmentRecommendationAnalyzer.kt`.
+- Added `app/src/test/java/com/irminsul/codex/domain/analysis/CharacterDevelopmentRecommendationAnalyzerTest.kt`.
+
+### Verification
+
+- [GitHub Actions Run #181](https://github.com/berao609/Irminsul-codex/actions/runs/45553964118) passed for the recommendation model commit.
+- [GitHub Actions Run #182](https://github.com/berao609/Irminsul-codex/actions/runs/45553985382) passed for the analyzer commit.
+- [GitHub Actions Run #183](https://github.com/berao609/Irminsul-codex/actions/runs/45554012123) passed for the test commit.
+- Seven unit tests cover priority/evidence ordering, no unnecessary recommendations, incomplete data, unverified analysis sources, stale assessments, unavailable input states, and deterministic cross-character ordering.
+- The applicable CI workflow verified JVM unit tests, Debug APK build, signature verification, artifact upload, and cleanup. Room instrumentation tests were not required because this milestone changes only domain models, analysis logic, and JVM tests.
+- Physical-device verification: not required; no UI or runtime workflow was changed.
+
+### Qualifications and non-goals
+
+- Recommendations identify data-backed next actions; they do not prove that a character deserves further investment.
+- No Mora, Resin, material, or farming cost is estimated. No farming route or resource requirement is invented.
+- No numerical character score, combat-strength ranking, meta ranking, pull advice, or team recommendation is introduced.
+- No automatic account modification or repair is performed.
+- Recommendations are domain foundations. They are not yet connected to the Account Command Center or a user-facing analysis screen.
+- Goal-aware recommendation adjustment is deferred to M26.
