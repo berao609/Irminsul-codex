@@ -57,7 +57,9 @@ Unless separately approved, this specification does not authorize:
 
 ## 2. Product Vision
 
-Irminsul Codex is an account intelligence and planning companion for Genshin Impact.
+Irminsul Codex is an **AI-integrated Genshin Impact account intelligence and progression analyzer**.
+
+Its primary purpose is to turn retrieved account data into reliable analysis, understandable insights, and practical progression decisions. Account retrieval and synchronization are supporting capabilities that supply the intelligence system; they are not the product's main user-facing purpose. JSON export remains available as an optional interoperability utility for third-party readers, backups, and users who want their data outside the application.
 
 The application should help answer practical questions such as:
 
@@ -91,6 +93,24 @@ The long-term product vision includes:
 11. **Account Command Center** — Present account information through an interactive dashboard and relationship explorer.
 
 These are product goals, not claims that all features are already implemented.
+
+### 2.2 Product positioning and feature priority
+
+The primary product experience is account analysis and progression intelligence, not data extraction. The user should connect or synchronize an account and then use the in-app account overview, deterministic analysis, and AI assistance without needing to export a file or use a separate data reader.
+
+The intended priority is:
+
+1. **Account intelligence experience:** account overview, data quality and freshness, character/build assessment, account gaps, and actionable progression priorities.
+2. **Deterministic intelligence engine:** authoritative calculations, validation, resource requirements, and explainable rules that ground analysis.
+3. **Integrated AI assistant:** natural-language questions, explanations, comparisons, and context-aware guidance grounded in the locally available account model and deterministic results.
+4. **Account Command Center:** dashboard and relationship exploration that make account condition and next actions discoverable.
+5. **Optional data interchange:** versioned JSON export and, when appropriate, import/backup workflows. These are supporting utilities, not the primary onboarding or daily-use workflow.
+
+Account synchronization remains essential as a data-input mechanism. It should feed the unified account model and local storage. The application should not require users to manually export and re-import their own account data to access core in-app analysis.
+
+AI is an integrated interface to account intelligence, not a replacement for deterministic calculations. If AI is unavailable or not configured, core account viewing and deterministic analysis should remain useful. AI features require explicit user configuration and consent before account context is sent to an external provider.
+
+This decision changes product priority and user experience. It does not authorize discarding the existing data-preservation, export-format, repository, or domain-model work, nor does it imply that AI, analytics, local persistence, or the redesigned interface are already implemented.
 
 ---
 
@@ -629,7 +649,8 @@ Do not store API keys or authentication cookies as ordinary preferences.
 
 ### 8.6 Import and export
 
-JSON should remain a portable data interchange format.
+JSON remains a portable data interchange format, but export is a secondary utility rather than the primary product workflow. The normal user journey should lead from account synchronization to local account analysis and intelligence inside Irminsul Codex. Users must not need to export JSON to a third-party reader to access the application's core value.
+
 
 Export requirements:
 
