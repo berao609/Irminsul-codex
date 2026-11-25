@@ -42,6 +42,71 @@ data class DailyNoteSnapshot(
     val maxHomeCurrency: DataValue<Int>
 )
 
+data class StatValueSnapshot(
+    val propertyType: Int?,
+    val statName: String?,
+    val base: String?,
+    val add: String?,
+    val final: String?,
+    val value: String?,
+    val rolls: Int?
+)
+
+data class WeaponSnapshot(
+    val id: Int,
+    val name: String?,
+    val icon: String?,
+    val type: Int?,
+    val rarity: Int?,
+    val level: Int?,
+    val ascensionLevel: Int?,
+    val typeName: String?,
+    val description: String?,
+    val refinementLevel: Int?,
+    val mainProperty: StatValueSnapshot?,
+    val subProperty: StatValueSnapshot?
+)
+
+data class ArtifactSnapshot(
+    val id: Int,
+    val name: String?,
+    val icon: String?,
+    val slot: Int?,
+    val slotName: String?,
+    val rarity: Int?,
+    val level: Int?,
+    val set: StructuredData?,
+    val mainProperty: StatValueSnapshot?,
+    val subProperties: List<StatValueSnapshot>
+)
+
+data class ConstellationSnapshot(
+    val id: Int,
+    val name: String?,
+    val icon: String?,
+    val effect: String?,
+    val isActive: Boolean?,
+    val position: Int?,
+    val isEnhanced: Boolean?,
+    val enhancedEffect: String?,
+    val canBeEnhanced: Boolean?
+)
+
+data class CharacterSkillSnapshot(
+    val id: Int,
+    val type: Int?,
+    val name: String?,
+    val level: Int?,
+    val description: String?,
+    val icon: String?,
+    val isUnlocked: Boolean?,
+    val isEnhanced: Boolean?,
+    val enhancedDescription: String?,
+    val canBeEnhanced: Boolean?,
+    val rawAffixes: StructuredData?,
+    val rawEnhancementIndexes: StructuredData?
+)
+
 data class CharacterSnapshot(
     val id: Int,
     val name: String?,
@@ -49,7 +114,15 @@ data class CharacterSnapshot(
     val rarity: Int?,
     val element: String?,
     val friendshipLevel: Int?,
-    val activeConstellationCount: Int?
+    val activeConstellationCount: Int?,
+    val weapon: WeaponSnapshot? = null,
+    val artifacts: List<ArtifactSnapshot> = emptyList(),
+    val constellations: List<ConstellationSnapshot> = emptyList(),
+    val skills: List<CharacterSkillSnapshot> = emptyList(),
+    val selectedProperties: List<StatValueSnapshot> = emptyList(),
+    val baseProperties: List<StatValueSnapshot> = emptyList(),
+    val extraProperties: List<StatValueSnapshot> = emptyList(),
+    val elementProperties: List<StatValueSnapshot> = emptyList()
 )
 
 sealed interface StructuredData {

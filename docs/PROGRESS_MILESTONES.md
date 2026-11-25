@@ -507,3 +507,45 @@ Make the existing selected-section account export more reliable and auditable wi
 - Unit tests, Debug APK build, persistent Debug signature verification, artifact upload, and temporary keystore cleanup: **Success**.
 - Device verification: not required for this in-memory mapper increment.
 - No raw export schema change, Room persistence, UI integration, or release was included.
+
+
+## Milestone 010 - Typed Character and Equipment Domain Models
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Normalize observed character, weapon, artifact, constellation, skill, and combat-stat fields from the existing selected-section export.  
+**Status:** Implemented; CI verification pending.
+
+### Evidence used for the model
+
+The owner inspected the device-generated `irminsul-orders-1-5-check.json` export in Termux:
+- 67 character roster entries and 67 raw character-detail entries across 9 batches.
+- The normalized `characters` records contain `base`, `weapon`, `relics`, `constellations`, `skills`, and property arrays.
+- Weapon fields include ID/name/icon/type/rarity/level/promotion/type name/description/refinement and main/sub properties.
+- Artifact fields include ID/name/icon/slot/rarity/level/set/main property/sub-property list.
+- Constellation fields include active/enhancement flags and effects.
+- Skill fields include skill ID/type/level/name/description/unlock/enhancement fields and affix/index arrays.
+- Numeric stat fields are serialized as strings in the export; artifact property entries use `value` and `times`.
+
+### Work implemented
+
+1. Added typed weapon, artifact, stat, constellation, and character-skill domain models.
+2. Expanded `CharacterSnapshot` with equipped weapon, artifact list, constellations, skills, and selected/base/extra/element property lists.
+3. Extended the export mapper to accept the observed nested `base` character object while retaining compatibility with the earlier flat test representation.
+4. Mapped nullable identifiers and fields without inventing zero values. Malformed or absent equipment identifiers do not create placeholder equipment.
+5. Kept the raw export and raw character-detail source representation intact; no export schema change or Room persistence was introduced.
+6. Added tests for representative nested character/equipment mapping, stat values, zero roll counts, and incomplete equipment.
+
+### Verification
+
+- Implementation commits and CI evidence will be added after the workflow completes.
+- Device export structure was inspected by the owner; this step maps the already exported `characters` section and does not require a new device export.
+- CI verification pending.
+
+### Qualifications
+
+- The normalized fields are limited to those observed in the supplied export structure.
+- Artifact set metadata, skill affix payloads, and enhancement index arrays remain available as `StructuredData` rather than being prematurely interpreted.
+- The raw source sections remain the preservation path for fields not yet modeled.
+- This milestone does not implement artifact scoring, build evaluation, weapon investment analysis, or account recommendations.
+

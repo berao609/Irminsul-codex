@@ -19,8 +19,7 @@ object AccountExportMapper {
             server = root.optString("server").takeIf { it.isNotBlank() }
                 ?: throw IllegalArgumentException("Export is missing server.")
         )
-        val sectionsJson = root.optJSONObject("export_status")?.optJSONObject("sections")
-            ?: JSONObject()
+        val sectionsJson = root.optJSONObject("export_status")?.optJSONObject("sections") ?: JSONObject()
         val sections = linkedMapOf<String, AccountSectionMetadata>()
         val keys = sectionsJson.keys()
         while (keys.hasNext()) {
@@ -40,7 +39,7 @@ object AccountExportMapper {
         val dailyValue = when {
             daily?.status == SectionStatus.FAILED -> DataValue.Failed(daily.message ?: "Daily Note retrieval failed.")
             dailyData == null -> if (daily?.status == SectionStatus.SKIPPED) DataValue.Unavailable else DataValue.Missing
-            else -> DataValue.Available(mapDailyNote(dailyData, daily?.retrievedAt), daily?.retrievedAt)
+            else -> DataValue.Available(mapDailyNote(dailyData, daily.retrievedAt), daily.retrievedAt)
         }
 
         val characterMeta = sections["characters"]
@@ -68,23 +67,12 @@ object AccountExportMapper {
         )
     }
 
-
-    private fun mapStructuredSection(
-        root: JSONObject,
-        key: String,
-        sections: Map<String, AccountSectionMetadata>
-    ): DataValue<StructuredData> {
+    private fun mapStructuredSection(root: JSONObject, key: String, sections: Map<String, AccountSectionMetadata>): DataValue<StructuredData> {
         val metadata = sections[key]
-        if (metadata?.status == SectionStatus.FAILED) {
-            return DataValue.Failed(metadata.message ?: "$key retrieval failed.")
-        }
+        if (metadata?.status == SectionStatus.FAILED) return DataValue.Failed(metadata.message ?: "$key retrieval failed.")
         val raw = root.opt(key)
         if (raw == null || raw == JSONObject.NULL) {
-            return if (metadata?.status == SectionStatus.SKIPPED) {
-                DataValue.Unavailable
-            } else {
-                DataValue.Missing
-            }
+            return if (metadata?.status == SectionStatus.SKIPPED) DataValue.Unavailable else DataValue.Missing
         }
         return DataValue.Available(toStructuredData(raw), metadata?.retrievedAt)
     }
@@ -94,15 +82,10 @@ object AccountExportMapper {
         is JSONObject -> {
             val fields = linkedMapOf<String, StructuredData>()
             val keys = value.keys()
-            while (keys.hasNext()) {
-                val key = keys.next()
-                fields[key] = toStructuredData(value.opt(key))
-            }
+            while (keys.hasNext()) { val key = keys.next(); fields[key] = toStructuredData(value.opt(key)) }
             StructuredData.ObjectValue(fields)
         }
-        is JSONArray -> StructuredData.ArrayValue(
-            (0 until value.length()).map { index -> toStructuredData(value.opt(index)) }
-        )
+        is JSONArray -> StructuredData.ArrayValue((0 until value.length()).map { toStructuredData(value.opt(it)) })
         is String -> StructuredData.StringValue(value)
         is Boolean -> StructuredData.BooleanValue(value)
         is Number -> StructuredData.NumberValue(value.toString())
@@ -120,12 +103,105 @@ object AccountExportMapper {
         maxHomeCurrency = intValue(data, "max_home_coin", at)
     )
 
+    private fun mapCharacters(array: JSONArray): List<CharacterSnapshot> =
+        (0 until array.length()).mapNotNull { index ->
+            val item = array.optJSONObject(index) ?: return@mapNotNull null
+            val base = item.optJSONObject("base") ?: item
+            val id = base.intOrNull("id") ?: return@mapNotNull null
+            CharacterSnapshot(
+                id = id,
+                name = base.stringOrNull("name"),
+                level = base.intOrNull("level"),
+                rarity = base.intOrNull("rarity"),
+                element = base.stringOrNull("element"),
+                friendshipLevel = base.intOrNull("fetter"),
+                activeConstellationCount = base.intOrNull("actived_constellation_num"),
+                weapon = item.optJSONObject("weapon")?.let(::mapWeapon),
+                artifacts = item.optJSONArray("relics")?.let(::mapArtifacts).orEmpty(),
+                constellations = item.optJSONArray("constellations")?.let(::mapConstellations).orEmpty(),
+                skills = item.optJSONArray("skills")?.let(::mapSkills).orEmpty(),
+                selectedProperties = item.optJSONArray("selected_properties")?.let(::mapStats).orEmpty(),
+                baseProperties = item.optJSONArray("base_properties")?.let(::mapStats).orEmpty(),
+                extraProperties = item.optJSONArray("extra_properties")?.let(::mapStats).orEmpty(),
+                elementProperties = item.optJSONArray("element_properties")?.let(::mapStats).orEmpty()
+            )
+        }
+
+    private fun mapWeapon(json: JSONObject) = WeaponSnapshot(
+        id = json.intOrNull("id") ?: return@mapWeapon null,
+        name = json.stringOrNull("name"),
+        icon = json.stringOrNull("icon"),
+        type = json.intOrNull("type"),
+        rarity = json.intOrNull("rarity"),
+        level = json.intOrNull("level"),
+        ascensionLevel = json.intOrNull("promote_level"),
+        typeName = json.stringOrNull("type_name"),
+        description = json.stringOrNull("desc"),
+        refinementLevel = json.intOrNull("affix_level"),
+        mainProperty = json.optJSONObject("main_property")?.let(::mapStat),
+        subProperty = json.optJSONObject("sub_property")?.let(::mapStat)
+    )
+
+    private fun mapArtifacts(array: JSONArray): List<ArtifactSnapshot> =
+        (0 until array.length()).mapNotNull { i ->
+            val json = array.optJSONObject(i) ?: return@mapNotNull null
+            val id = json.intOrNull("id") ?: return@mapNotNull null
+            ArtifactSnapshot(
+                id = id,
+                name = json.stringOrNull("name"),
+                icon = json.stringOrNull("icon"),
+                slot = json.intOrNull("pos"),
+                slotName = json.stringOrNull("pos_name"),
+                rarity = json.intOrNull("rarity"),
+                level = json.intOrNull("level"),
+                set = json.opt("set")?.takeUnless { it == JSONObject.NULL }?.let(::toStructuredData),
+                mainProperty = json.optJSONObject("main_property")?.let(::mapStat),
+                subProperties = json.optJSONArray("sub_property_list")?.let(::mapStats).orEmpty()
+            )
+        }
+
+    private fun mapConstellations(array: JSONArray): List<ConstellationSnapshot> =
+        (0 until array.length()).mapNotNull { i ->
+            val j = array.optJSONObject(i) ?: return@mapNotNull null
+            val id = j.intOrNull("id") ?: return@mapNotNull null
+            ConstellationSnapshot(id, j.stringOrNull("name"), j.stringOrNull("icon"),
+                j.stringOrNull("effect"), j.booleanOrNull("is_actived"), j.intOrNull("pos"),
+                j.booleanOrNull("is_enhanced"), j.stringOrNull("enhanced_effect"), j.booleanOrNull("can_enhanced"))
+        }
+
+    private fun mapSkills(array: JSONArray): List<CharacterSkillSnapshot> =
+        (0 until array.length()).mapNotNull { i ->
+            val j = array.optJSONObject(i) ?: return@mapNotNull null
+            val id = j.intOrNull("skill_id") ?: return@mapNotNull null
+            CharacterSkillSnapshot(
+                id, j.intOrNull("skill_type"), j.stringOrNull("name"), j.intOrNull("level"),
+                j.stringOrNull("desc"), j.stringOrNull("icon"), j.booleanOrNull("is_unlock"),
+                j.booleanOrNull("is_enhanced"), j.stringOrNull("enhanced_desc"),
+                j.booleanOrNull("can_enhanced"),
+                j.opt("skill_affix_list")?.takeUnless { it == JSONObject.NULL }?.let(::toStructuredData),
+                toStructuredData(JSONObject().put("before", j.opt("before_enhanced_skill_attr_index"))
+                    .put("after", j.opt("after_enhanced_skill_attr_index")))
+            )
+        }
+
+    private fun mapStats(array: JSONArray): List<StatValueSnapshot> =
+        (0 until array.length()).mapNotNull { array.optJSONObject(it)?.let(::mapStat) }
+
+    private fun mapStat(j: JSONObject) = StatValueSnapshot(
+        propertyType = j.intOrNull("property_type"),
+        statName = j.stringOrNull("stat_name"),
+        base = j.stringOrNull("base"),
+        add = j.stringOrNull("add"),
+        final = j.stringOrNull("final"),
+        value = j.stringOrNull("value"),
+        rolls = j.intOrNull("times")
+    )
+
     private fun intValue(data: JSONObject, key: String, at: Instant?): DataValue<Int> {
         if (!data.has(key) || data.isNull(key)) return DataValue.Missing
         val value = data.opt(key)
-        val number = (value as? Number)?.toLong()?.takeIf {
-            it in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()
-        }?.toInt() ?: return DataValue.Missing
+        val number = (value as? Number)?.toLong()?.takeIf { it in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong() }?.toInt()
+            ?: return DataValue.Missing
         return DataValue.Available(number, at)
     }
 
@@ -142,26 +218,20 @@ object AccountExportMapper {
 
     private fun booleanValue(data: JSONObject, key: String, at: Instant?): DataValue<Boolean> {
         if (!data.has(key) || data.isNull(key)) return DataValue.Missing
-        val value = data.opt(key) as? Boolean ?: return DataValue.Missing
-        return DataValue.Available(value, at)
+        return (data.opt(key) as? Boolean)?.let { DataValue.Available(it, at) } ?: DataValue.Missing
     }
 
-    private fun mapCharacters(array: JSONArray): List<CharacterSnapshot> =
-        (0 until array.length()).mapNotNull { index ->
-            val item = array.optJSONObject(index) ?: return@mapNotNull null
-            val id = item.optInt("id", 0)
-            if (id <= 0) return@mapNotNull null
-            CharacterSnapshot(
-                id = id,
-                name = item.optString("name").takeIf { it.isNotBlank() },
-                level = item.optInt("level").takeIf { item.has("level") && !item.isNull("level") },
-                rarity = item.optInt("rarity").takeIf { item.has("rarity") && !item.isNull("rarity") },
-                element = item.optString("element").takeIf { it.isNotBlank() },
-                friendshipLevel = item.optInt("fetter").takeIf { item.has("fetter") && !item.isNull("fetter") },
-                activeConstellationCount = item.optInt("actived_constellation_num")
-                    .takeIf { item.has("actived_constellation_num") && !item.isNull("actived_constellation_num") }
-            )
-        }
+    private fun JSONObject.intOrNull(key: String): Int? {
+        if (!has(key) || isNull(key)) return null
+        val number = opt(key) as? Number ?: return null
+        return number.toLong().takeIf { number.toDouble() == it.toDouble() && it in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong() }?.toInt()
+    }
+
+    private fun JSONObject.stringOrNull(key: String): String? =
+        if (!has(key) || isNull(key)) null else opt(key)?.toString()?.takeIf { it.isNotBlank() }
+
+    private fun JSONObject.booleanOrNull(key: String): Boolean? =
+        if (!has(key) || isNull(key)) null else opt(key) as? Boolean
 
     private fun parseStatus(value: String?): SectionStatus = when (value?.lowercase()) {
         "success", "complete" -> SectionStatus.SUCCESS

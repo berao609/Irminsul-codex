@@ -147,4 +147,41 @@ class AccountExportMapperTest {
             fail("Expected invalid identity to be rejected")
         } catch (_: IllegalArgumentException) { }
     }
+
+    @Test fun mapsTypedCharacterWeaponArtifactsSkillsAndStats() {
+        val source = export().put("characters", org.json.JSONArray().put(JSONObject()
+            .put("base", JSONObject().put("id", 10000002).put("name", "Character").put("level", 90)
+                .put("rarity", 5).put("element", "Wind").put("fetter", 10).put("actived_constellation_num", 2))
+            .put("weapon", JSONObject().put("id", 11501).put("name", "Weapon").put("level", 90)
+                .put("promote_level", 6).put("affix_level", 2)
+                .put("main_property", JSONObject().put("property_type", 2000).put("base", "100").put("add", "20").put("final", "120")))
+            .put("relics", org.json.JSONArray().put(JSONObject().put("id", 34501).put("pos", 1).put("level", 20)
+                .put("main_property", JSONObject().put("property_type", 1).put("value", "46.6").put("times", 0))
+                .put("sub_property_list", org.json.JSONArray().put(JSONObject().put("property_type", 2).put("value", "5.8").put("times", 2)))))
+            .put("constellations", org.json.JSONArray().put(JSONObject().put("id", 1).put("is_actived", true)))
+            .put("skills", org.json.JSONArray().put(JSONObject().put("skill_id", 10).put("level", 8).put("is_unlock", true)))
+            .put("selected_properties", org.json.JSONArray().put(JSONObject().put("property_type", 2000).put("final", "120")))))
+        val mapped = (AccountExportMapper.map(source).characters as DataValue.Available).value.single()
+        assertEquals(10000002, mapped.id)
+        assertEquals(11501, mapped.weapon?.id)
+        assertEquals("120", mapped.weapon?.mainProperty?.final)
+        assertEquals(1, mapped.artifacts.size)
+        assertEquals(0, mapped.artifacts.single().mainProperty?.rolls)
+        assertEquals(2, mapped.artifacts.single().subProperties.single().rolls)
+        assertTrue(mapped.constellations.single().isActive == true)
+        assertEquals(8, mapped.skills.single().level)
+        assertEquals("120", mapped.selectedProperties.single().final)
+        assertTrue(source.has("characters"))
+    }
+
+    @Test fun incompleteEquipmentDoesNotInventIdentifiersOrValues() {
+        val source = export().put("characters", org.json.JSONArray().put(JSONObject()
+            .put("base", JSONObject().put("id", 10000002))
+            .put("weapon", JSONObject().put("name", "Unknown weapon"))
+            .put("relics", org.json.JSONArray().put(JSONObject().put("name", "Unknown artifact")))))
+        val mapped = (AccountExportMapper.map(source).characters as DataValue.Available).value.single()
+        assertNull(mapped.weapon)
+        assertTrue(mapped.artifacts.isEmpty())
+    }
+
 }
