@@ -3150,16 +3150,20 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 - `a73dca4fd0ec41004d6f53a162d896b4b8085100` - Update README.
 - `275ee7525260db41910301130f108d7315d913f4` - Update product specification.
 - `0cac21d05a6e1bf28dbdd89ac4c0fa16f0622703` - Refine Account page heading and AI chat conversation area.
+- `72434f5b8745905d36362748d2e6d149aeef5eef` - Switch navigation symbols to outlined vector icons (initial chart icon selection did not compile).
+- `505b9724814429ca22188bd2a31e6bab6d99ae00` - Use the supported outlined InsertChart icon.
 
 ### Verification
 
 - CI #381 and #382 passed the icon catalog and dependency changes.
 - Initial navigation CI #383 failed at Kotlin compilation because the new Material 3 bottom-sheet API required an experimental API opt-in. This was corrected in commit `66422a272fc26b17b1d68cc79021bc1e14067e5f`.
 - Final implementation CI #384 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45630588460.
-- CI #385 README, #386 SPECS, #387 progress documentation, and #388 follow-up progress documentation all passed.
-- Final UI refinement CI #389 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45631311189.
-- CI #389 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. Room instrumentation tests were skipped because no Room/persistence schema changed.
-- Final Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.389-vc391`, artifact ID `15030498243`, size 15,866,899 bytes, SHA-256 `ef9ef9a4ad57c259547fb25852c90564c0cf9ae87a0a00d15bf5eb791f5057c5`. Room schema artifact ID `15030348572`, size 985 bytes.
+- CI #385 README, #386 SPECS, #387 progress documentation, #388 follow-up progress documentation, and #390 final M54 documentation all passed.
+- CI #389 passed the initial UI refinement: https://github.com/berao609/Irminsul-codex/actions/runs/45631311189.
+- CI #391 failed because `Icons.Outlined.BarChart` is not present in the installed Material icon set. The chart was changed to the supported `Icons.Outlined.InsertChart` symbol in commit `505b9724814429ca22188bd2a31e6bab6d99ae00`.
+- Final outlined-icon implementation CI #392 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45632185584.
+- CI #392 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. Room instrumentation tests were skipped because no Room/persistence schema changed.
+- Final Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.392-vc394`, artifact ID `15030547596`, size 15,866,909 bytes, SHA-256 `77afd91035f15442a4dd9ab3f9d957baf2d0f41486cfa9d908989d2f9698d28d`. Room schema artifact ID `15031916116`, size 985 bytes.
 - No M54 physical-device test has been performed yet.
 
 ### Boundaries and next checkpoint
