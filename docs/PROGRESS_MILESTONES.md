@@ -2435,12 +2435,16 @@ Retrieved the current root `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROG
 - `319849ec897db6054340393d95ed80bec650ef47` - Require validated permitted knowledge for investment priorities.
 - `754e12e129db248d74f377bec8fd20e2c7573c85` - Test source permission gate for investment evidence.
 - `45ba92238f7f7afe0d910724252e3b2262ce715a` - Cover source host and permission validation cases.
+- `b14d1840d8ed9905fa8125d1d1cb6d1461a261be` - Prevent usage-only evidence from qualifying investment recommendations.
+- `68eaadd11cda4acbda10b2438e1797272c4fd69f` - Exclude knowledge outside its validity window from investment decisions.
+- `65d55c13e6a0a6a0fc382b86b2155bf8beb67861` - Test knowledge validity window before investment use.
 
 ### Verification
 
 - M45 CI #296: success, https://github.com/berao609/Irminsul-codex/actions/runs/45603259730.
 - M45 CI #297: success, https://github.com/berao609/Irminsul-codex/actions/runs/45603302548.
-- M46 implementation commits are pushed to `main`; CI verification pending.
+- M46 implementation commits are pushed to `main`; final CI verification pending.
+- Intermediate runs #301-#306 exposed test-contract issues during incremental commits: usage observations were incorrectly allowed to satisfy the independent-evidence gate, the test helper needed the expanded source-registry argument, and the usage-only test required a distinct non-usage evidence check. These were corrected in the subsequent implementation commits. The final head must pass before M46 can close.
 - No APK-facing behavior changed. Physical-device verification is not applicable to these domain-only changes.
 
 ### Boundaries and limitations
