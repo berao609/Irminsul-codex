@@ -16,8 +16,9 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class AccountViewModelTest {
-    private class NoOpSnapshotStore : AccountSnapshotStore {
+    private class NoOpSnapshotStore(private val latest: AccountExport? = null) : AccountSnapshotStore {
         override suspend fun save(export: AccountExport) = Unit
+        override suspend fun getLatest(uid: String): AccountExport? = latest
         override suspend fun getHistory(uid: String, server: String): List<AccountExport> = emptyList()
     }
 
@@ -109,6 +110,43 @@ class AccountViewModelTest {
             assertNotNull(state.snapshot)
             assertNotNull(state.intelligenceOverview)
             assertNull("Analysis must not trigger the optional JSON-save flow.", state.pendingExport)
+            assertNull(state.intelligenceErrorMessage)
+        } finally {
+            store.clear()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun restoresLatestSnapshotWithoutCallingNetworkRepository() = runBlocking {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+        val store = ViewModelStore()
+        try {
+            val export = AccountExport(
+                snapshot = AccountExportMapper.map(JSONObject(rawJson)),
+                rawJson = rawJson
+            )
+            val repository = object : AccountRepository {
+                override suspend fun fetchAccountExport(
+                    uid: String,
+                    cookie: String,
+                    onProgress: (String) -> Unit
+                ): Result<AccountExport> {
+                    fail("Restoring a cached snapshot must not call the network repository.")
+                    return Result.failure(IllegalStateException("unexpected network call"))
+                }
+            }
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(export))
+            store.put("account", viewModel)
+
+            viewModel.restoreLatestSnapshot("800000001")
+
+            val state = viewModel.uiState.value
+            assertFalse(state.isRestoringSnapshot)
+            assertFalse(state.isExporting)
+            assertEquals("800000001", state.snapshot?.identity?.uid)
+            assertNotNull(state.intelligenceOverview)
+            assertNull(state.pendingExport)
             assertNull(state.intelligenceErrorMessage)
         } finally {
             store.clear()
