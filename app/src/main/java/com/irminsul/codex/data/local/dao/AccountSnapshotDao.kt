@@ -24,6 +24,14 @@ interface AccountSnapshotDao {
 
     @Query("""
         SELECT * FROM account_snapshots
+        WHERE uid = :uid
+        ORDER BY exportedAtEpochMillis DESC, snapshotId DESC
+        LIMIT 1
+    """)
+    suspend fun getLatestSnapshot(uid: String): AccountSnapshotEntity?
+
+    @Query("""
+        SELECT * FROM account_snapshots
         WHERE uid = :uid AND server = :server
         ORDER BY exportedAtEpochMillis DESC, snapshotId DESC
     """)
