@@ -514,7 +514,7 @@ Make the existing selected-section account export more reliable and auditable wi
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Normalize observed character, weapon, artifact, constellation, skill, and combat-stat fields from the existing selected-section export.  
-**Status:** Implemented; CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Evidence used for the model
 
@@ -538,9 +538,28 @@ The owner inspected the device-generated `irminsul-orders-1-5-check.json` export
 
 ### Verification
 
-- Implementation commits and CI evidence will be added after the workflow completes.
-- Device export structure was inspected by the owner; this step maps the already exported `characters` section and does not require a new device export.
-- CI verification pending.
+**Repository and commits**
+- Branch: `main`
+- Typed model, mapper, tests, and initial milestone record: `870a858efcc73ebb06fe1c3768bcdbab37b1b188`.
+- Nullable weapon mapping correction: `ed59b95a5e089fce14f500c019ca42ddce0e51a9`.
+- Daily Note metadata nullability correction: `aa03efbdbb3c94c9ee173eede67e0b2b045d4bf6`.
+
+**GitHub Actions**
+- Workflow: Build Debug APK
+- Run: [#113](https://github.com/berao609/Irminsul-codex/actions/runs/45521170785)
+- Run ID: `45521170785`
+- CI-triggering commit: `aa03efbdbb3c94c9ee173eede67e0b2b045d4bf6`
+- Overall result: **Success**
+- Unit tests: **Success**
+- Debug APK build: **Success**
+- Persistent Debug signature verification: **Success**
+- Artifact upload: **Success**
+- Temporary Debug keystore cleanup: **Success**
+
+Run #111 and #112 exposed Kotlin compilation errors in the initial implementation and the first correction. Those errors were corrected in the commits above; Run #113 passed on the final source commit.
+
+- Device verification: not required for this in-memory mapper increment.
+- No raw export schema change, Room persistence, UI integration, or release was included.
 
 ### Qualifications
 
