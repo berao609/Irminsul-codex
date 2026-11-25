@@ -53,7 +53,36 @@ class UnifiedCharacterAssessmentAnalyzerTest {
         assertEquals(CharacterAttentionStatus.REVIEW,assessment.attentionStatus)
         assertEquals(CharacterCompletenessLevel.INSUFFICIENT,assessment.completeness.level)
         assertTrue(assessment.completeness.missingOrUnverifiedComponents.contains("Character level"))
-        assertTrue(assessment.completeness.missingOrUnverifiedComponents.contains("Artifact collection has fewer than five entries"))
+        assertFalse(assessment.completeness.missingOrUnverifiedComponents.any { it.contains("artifact", ignoreCase = true) })
+    }
+
+    @Test fun emptyOrPartialArtifactEquipmentIsValidAndDoesNotCreateCompletenessFinding() {
+        listOf(0, 1, 4, 5).forEach { count ->
+            val base = char(20 + count)
+            val artifacts = List(count) { i ->
+                ArtifactSnapshot(i, "Artifact$i", null, i + 1, null, 5, 20, null, null, emptyList())
+            }
+            val character = base.copy(artifacts = DataValue.Available(artifacts, null))
+            val result = UnifiedCharacterAssessmentAnalyzer.assess(
+                build(), stats(), DataValue.Available(listOf(character), null)
+            )
+            val assessment = result.assessments.single()
+            assertEquals("artifact count $count", CharacterCompletenessLevel.COMPLETE, assessment.completeness.level)
+            assertFalse("artifact count $count", assessment.completeness.missingOrUnverifiedComponents.any {
+                it.contains("artifact", ignoreCase = true)
+            })
+            assertEquals("artifact count $count", CharacterAttentionStatus.CLEAR, assessment.attentionStatus)
+        }
+    }
+
+    @Test fun unavailableArtifactDataRemainsDistinctFromEmptyEquipment() {
+        val character = char(21).copy(artifacts = DataValue.Unavailable)
+        val result = UnifiedCharacterAssessmentAnalyzer.assess(
+            build(), stats(), DataValue.Available(listOf(character), null)
+        )
+        val assessment = result.assessments.single()
+        assertTrue(assessment.completeness.missingOrUnverifiedComponents.contains("Artifact data unavailable"))
+        assertEquals(CharacterAttentionStatus.REVIEW, assessment.attentionStatus)
     }
 
     @Test fun fullyPopulatedCharacterCanBeClear() {
