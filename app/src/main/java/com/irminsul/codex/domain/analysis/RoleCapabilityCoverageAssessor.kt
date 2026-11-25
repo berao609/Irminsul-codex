@@ -28,7 +28,7 @@ object RoleCapabilityCoverageAssessor {
             RoleCoverageResult(
                 role = role,
                 state = state(
-                    usableRoster, knowledge.rosterIsPartial, supporting.isNotEmpty(),
+                    usableRoster, knowledge.rosterState, knowledge.rosterIsPartial, supporting.isNotEmpty(),
                     conflicted.isNotEmpty(), evidence.isNotEmpty()
                 ),
                 supportingCharacterIds = supporting.map { it.first }.distinct().sorted(),
@@ -74,6 +74,7 @@ object RoleCapabilityCoverageAssessor {
 
     private fun state(
         usableRoster: Boolean,
+        rosterState: InvestmentFactState,
         rosterIsPartial: Boolean,
         hasSupport: Boolean,
         hasConflict: Boolean,
@@ -83,7 +84,7 @@ object RoleCapabilityCoverageAssessor {
         hasSupport && hasConflict -> RosterCoverageState.COVERED_WITH_CONFLICTS
         hasSupport -> RosterCoverageState.COVERED
         hasConflict -> RosterCoverageState.CONFLICTED
-        rosterIsPartial -> RosterCoverageState.INCOMPLETE
+        rosterIsPartial || rosterState == InvestmentFactState.STALE -> RosterCoverageState.INCOMPLETE
         hasAnyEvidence -> RosterCoverageState.NOT_ESTABLISHED
         else -> RosterCoverageState.NOT_ESTABLISHED
     }
