@@ -49,6 +49,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Optional JSON Export | Exports selected account data for third-party readers and backups. |
 | Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |
 | Account Intelligence | Provides a dedicated Analyze Account action and displays character assessment, recommendations, account gaps, and data coverage independently of JSON export, within the Visuals page. |
+| Artifact Equipment State | Unequipped or partially equipped artifact slots are valid player choices and do not generate completeness recommendations by themselves; unavailable artifact data remains distinguishable. |
 | Recommendation Prioritization | Presents evidence-backed findings in one consistent balanced order; the current analysis does not offer selectable analysis modes. |
 | Multi-page Navigation | Provides Home, Visuals, AI Chat, and Info destinations through bottom navigation. |
 | Edge-to-Edge Layout | Extends app surfaces behind the Android status and navigation bars while preserving system-bar controls. |
