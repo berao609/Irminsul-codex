@@ -1,6 +1,5 @@
 package com.irminsul.codex.data.catalogue
 
-import com.irminsul.codex.domain.model.UpgradeCostItem
 import org.json.JSONArray
 import org.json.JSONObject
 import java.math.BigDecimal
@@ -16,10 +15,16 @@ enum class CatalogueCostParseStatus {
  * and cannot enter UpgradeCostCalculator until it receives source attribution,
  * permission approval, and an explicit human verification review.
  */
+data class GenshinDbParsedCostItem(
+    val itemId: String,
+    val itemName: String,
+    val quantity: Long
+)
+
 data class GenshinDbParsedCostSegment(
     val fromLevel: Int,
     val toLevel: Int,
-    val costs: List<UpgradeCostItem>
+    val costs: List<GenshinDbParsedCostItem>
 )
 
 data class CatalogueCostParseResult(
@@ -72,7 +77,7 @@ object GenshinDbCostParser {
             if (rawStage !is JSONArray) {
                 return CatalogueCostParseResult(CatalogueCostParseStatus.INVALID_DATA)
             }
-            val materials = mutableListOf<UpgradeCostItem>()
+            val materials = mutableListOf<GenshinDbParsedCostItem>()
             for (index in 0 until rawStage.length()) {
                 val rawMaterial = rawStage.opt(index)
                 if (rawMaterial !is JSONObject) {
@@ -84,7 +89,7 @@ object GenshinDbCostParser {
                 if (id !in 1..Int.MAX_VALUE.toLong() || quantity <= 0L || name.isBlank()) {
                     return invalid()
                 }
-                materials += UpgradeCostItem(itemId = id.toString(), quantity = quantity)
+                materials += GenshinDbParsedCostItem(itemId = id.toString(), itemName = name, quantity = quantity)
             }
             segments += GenshinDbParsedCostSegment(
                 fromLevel = range.first,
