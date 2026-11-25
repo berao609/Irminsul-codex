@@ -690,7 +690,7 @@ Produce a machine-readable validation report for normalized character builds so 
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Reconcile source-reported base, additive, and final character/weapon stat values using decimal arithmetic.  
-**Status:** Implementation in progress; CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Objective
 
@@ -714,7 +714,31 @@ Provide a deterministic report showing whether reported final stat values agree 
 
 ### Verification
 
-- Source implementation and automated tests are committed; CI verification pending.
+**Repository and source**
+- Branch: `main`
+- Implementation and initial milestone record: `88ef8d4a77f91ffabd671833e72a887d1231d6d0`.
+- Rounding-test correction: `5c1017b6439633b32a6ce66e99491dfe333077d2`.
+
+**GitHub Actions**
+- Workflow: Build Debug APK
+- Run: [#120](https://github.com/berao609/Irminsul-codex/actions/runs/45523893648)
+- Run ID: `45523893648`
+- CI-tested source commit: `5c1017b6439633b32a6ce66e99491dfe333077d2`
+- Overall result: **Success**
+- Unit tests: **Success**
+- Debug APK build: **Success**
+- Persistent Debug signature verification: **Success**
+- Artifact upload: **Success**
+- Temporary Debug keystore cleanup: **Success**
+
+**Generated Debug artifact**
+- Artifact: `irminsul-codex-debug-v1.0.0-dev.120-vc122`
+- Artifact ID: `14981267234`
+- Size: `8,246,105` bytes
+- Expiry: 2026-12-09 01:12 UTC
+
+- An earlier run #119 failed one rounding-boundary test because its expected tolerance did not match the documented precision rule. The test input and expected signed difference were corrected in the follow-up commit above; run #120 passed.
+- Device verification: not required for this in-memory domain calculation increment.
 - No investment scoring, recommendation logic, export schema change, Room persistence, UI integration, device install, or release is included.
 
 ### Qualifications
