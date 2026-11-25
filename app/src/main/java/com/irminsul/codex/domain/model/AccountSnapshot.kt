@@ -229,7 +229,7 @@ data class StatReconciliationResult(
     val expectedFinal: String?,
     /** Signed difference: reported final minus calculated base + add. */
     val difference: String?,
-    /** Half of the smallest displayed unit in the reported final value. */
+    /** Sum of half-unit precision allowances for the reported base, additive, and final values. */
     val roundingTolerance: String?,
     val status: StatReconciliationStatus,
     val reason: String? = null
