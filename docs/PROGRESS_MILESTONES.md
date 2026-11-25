@@ -2729,7 +2729,7 @@ M49 establishes a provenance-bound, patch/mode-aware typed capability contract a
 
 ### Next development checkpoint
 
-M50 may define a deterministic role/capability coverage assessment using only M49 accepted claims and M48 observed owned-character facts. It should keep each coverage result tied to explicit game-mode/context requirements and report UNKNOWN when roster or knowledge coverage is incomplete. Do not infer team synergy, assign numerical weights, rank investments, or add UI until the coverage contract is independently tested.
+M50 defines and implements the deterministic role/capability coverage assessment using M49 accepted claims and M48 observed owned-character facts. Its coverage results remain tied to the requested game context and preserve unknown, stale, partial, and conflicting evidence. It does not infer team synergy, assign numerical weights, rank investments, or add UI.
 
 ### M49 follow-up - Enforce source action permissions
 
@@ -2766,7 +2766,7 @@ M50 may define a deterministic role/capability coverage assessment using only M4
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Aggregate M49 validated character role/capability evidence across M48 observed owned-character facts.  
-**Status:** Implemented; final CI verification pending.
+**Status:** Closed; implementation CI #355 passed.
 
 ### Objective
 
@@ -2816,10 +2816,12 @@ M49 latest progress-document commit 925143203cd382efd9f4b3e3608726717be56f69 was
 
 ### Verification
 
-- Final combined implementation CI and M50 milestone-documentation CI are pending at the time of this entry.
+- Final combined implementation CI #355 passed for head `9eaf816b66e73e3c7897848e6f77ba5ea52d3c63`: https://github.com/berao609/Irminsul-codex/actions/runs/45620405448.
+- CI #355 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact uploads, and temporary signing-key cleanup. KVM enablement and Room instrumentation tests were skipped by the workflow; no Room/persistence code changed.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.355-vc357`, artifact ID `15023653977`, size 9,013,872 bytes. Room schema artifact: `irminsul-room-schema-v1-run-355`, artifact ID `15023174643`, size 985 bytes.
 - No UI, persistence, source collector, external SDK, AI service, numerical score, or investment evaluator integration changed.
 - Physical-device testing is not applicable to this domain-only milestone.
-- Room instrumentation tests are not expected to run because no Room or persistence code changed; report the actual workflow decision after CI.
+- The M50 milestone-documentation update is committed separately and requires its own CI verification.
 
 ### Boundaries and limitations
 
