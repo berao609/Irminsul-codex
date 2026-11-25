@@ -557,6 +557,7 @@ private fun CodexScreen(
                     }
 
                     if (overview == null && !accountExportState.isAnalyzingIntelligence &&
+                        !accountExportState.isRestoringSnapshot &&
                         accountExportState.intelligenceErrorMessage == null
                     ) {
                         Text(
