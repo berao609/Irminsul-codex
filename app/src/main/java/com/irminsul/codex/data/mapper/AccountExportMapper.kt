@@ -127,20 +127,23 @@ object AccountExportMapper {
             )
         }
 
-    private fun mapWeapon(json: JSONObject) = WeaponSnapshot(
-        id = json.intOrNull("id") ?: return@mapWeapon null,
-        name = json.stringOrNull("name"),
-        icon = json.stringOrNull("icon"),
-        type = json.intOrNull("type"),
-        rarity = json.intOrNull("rarity"),
-        level = json.intOrNull("level"),
-        ascensionLevel = json.intOrNull("promote_level"),
-        typeName = json.stringOrNull("type_name"),
-        description = json.stringOrNull("desc"),
-        refinementLevel = json.intOrNull("affix_level"),
-        mainProperty = json.optJSONObject("main_property")?.let(::mapStat),
-        subProperty = json.optJSONObject("sub_property")?.let(::mapStat)
-    )
+    private fun mapWeapon(json: JSONObject): WeaponSnapshot? {
+        val id = json.intOrNull("id") ?: return null
+        return WeaponSnapshot(
+            id = id,
+            name = json.stringOrNull("name"),
+            icon = json.stringOrNull("icon"),
+            type = json.intOrNull("type"),
+            rarity = json.intOrNull("rarity"),
+            level = json.intOrNull("level"),
+            ascensionLevel = json.intOrNull("promote_level"),
+            typeName = json.stringOrNull("type_name"),
+            description = json.stringOrNull("desc"),
+            refinementLevel = json.intOrNull("affix_level"),
+            mainProperty = json.optJSONObject("main_property")?.let(::mapStat),
+            subProperty = json.optJSONObject("sub_property")?.let(::mapStat)
+        )
+    }
 
     private fun mapArtifacts(array: JSONArray): List<ArtifactSnapshot> =
         (0 until array.length()).mapNotNull { i ->
