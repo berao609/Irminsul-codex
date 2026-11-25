@@ -2160,3 +2160,46 @@ The user tested the M41 build and confirmed that switching from Balanced to Buil
 6. Revisit user-selectable priorities only when they lead to genuinely different useful recommendations or views. Filters for concrete account areas may be considered separately.
 
 The user's device verification of the corrected build remains required before M41 can close.
+
+
+## Milestone 042 - Treat Unequipped Artifacts as a Valid State
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Stop generating data-completeness findings solely because a character has fewer than five equipped artifacts. Preserve actual artifact retrieval failures and existing build/stat findings.  
+**Status:** Implemented and committed; CI verification pending.
+
+### Product correction
+
+Empty artifact slots are a valid player choice. Having zero, one, four, or five artifacts equipped is not inherently an account defect and should not trigger a recommendation to refresh account data.
+
+### Work implemented
+
+1. Removed the completeness rule that marked an available artifact list with fewer than five entries as incomplete.
+2. Kept distinct artifact states: missing, unavailable, failed, stale, and available. Genuine unavailable or failed retrieval states remain reviewable.
+3. Added regression coverage for available artifact lists with 0, 1, 4, and 5 entries. These states no longer produce an artifact-only completeness finding.
+4. Added coverage confirming unavailable artifact data is still reported distinctly.
+5. Updated README feature documentation.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/analysis/UnifiedCharacterAssessmentAnalyzer.kt`
+- `app/src/test/java/com/irminsul/codex/domain/analysis/UnifiedCharacterAssessmentAnalyzerTest.kt`
+- `README.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- Analyzer correction: `e7f99be220b690986ec88db70b066faf765de477`
+- Regression tests: `01be522a5bf9447d1d59ce1b6ec85b060fd551b6`
+- README: `25806e052d5eb5e687ecc936b6931a3e5f10391f`
+
+### Verification
+
+- CI and physical-device verification pending.
+- Regression tests cover available artifact counts of 0, 1, 4, and 5, plus unavailable artifact data.
+- Existing build-error, stat-mismatch, and warning recommendations were not modified.
+
+### Closure
+
+- Pending CI verification and user device test.
