@@ -1161,7 +1161,7 @@ Establish the first account-intelligence analysis output without inventing build
 ## Milestone 022 - Account-Level Character Build Priority Summary
 
 **Development phase:** Phase 3 - First Deterministic Account Analysis  
-**Status:** Planned; implementation not yet started.
+**Status:** Implementation committed; Debug CI verification pending.
 
 ### Objective
 
@@ -1177,6 +1177,14 @@ Turn M21's traceable character-level findings into a concise account-level overv
 6. Preserve AVAILABLE, STALE, MISSING, UNAVAILABLE, and FAILED states. Mark stale-derived summaries as stale.
 7. Retain the underlying traceable findings so every summary can be explained.
 8. Do not assign a numerical score, classify characters with no findings as objectively strong, infer meta value, or invent missing data.
+
+### Implementation
+
+- Implementation commit: `74aba79a9e41c6fb9238fba83fa08fbe21a8e967` (`feat: add account-level character build priorities`).
+- Added `domain/model/AccountCharacterBuildSummary.kt` for account summary and per-character priority models.
+- Added `domain/analysis/CharacterBuildAccountSummaryAnalyzer.kt` to group M21 findings, calculate severity counts, and apply stable priority ordering.
+- Added `domain/analysis/CharacterBuildAccountSummaryAnalyzerTest.kt` with four tests covering grouping and ordering, empty reports, stale data, and missing/unavailable/failed states.
+- GitHub Actions Run #162 is executing for the exact implementation commit; final CI verification is pending.
 
 ### Acceptance criteria
 
