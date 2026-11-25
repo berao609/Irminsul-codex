@@ -10,6 +10,7 @@ import com.irminsul.codex.domain.model.KnowledgeReviewState
 import com.irminsul.codex.domain.model.KnowledgeSourceReference
 import com.irminsul.codex.domain.model.KnowledgeSourceRegistryEntry
 import com.irminsul.codex.domain.model.UpgradeCostRecord
+import com.irminsul.codex.domain.model.UpgradeCostRecordValidator
 import java.net.URI
 import java.time.Instant
 
