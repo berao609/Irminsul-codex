@@ -62,7 +62,7 @@ class InvestmentShortlistEvaluatorTest {
     )
 
     private fun evaluate(candidates: List<InvestmentCandidateAssessment>, records: List<GameKnowledgeRecord> = listOf(knowledge())) =
-        InvestmentShortlistEvaluator.evaluate(candidates, records, now, "snapshot-2026-11-25")
+        InvestmentShortlistEvaluator.evaluate(candidates, records, listOf(source), now, "snapshot-2026-11-25")
 
     @Test fun supportedRoleGapRanksHighAndTeamImprovementRanksWorthInvesting() {
         val result = evaluate(listOf(candidate(1), candidate(2, benefit = InvestmentAccountBenefit.TEAM_IMPROVEMENT)))
@@ -128,6 +128,18 @@ class InvestmentShortlistEvaluatorTest {
             candidate(2, evidence = emptyList())
         ))
         assertEquals(listOf(InvestmentPriorityBand.ALREADY_SUFFICIENT), result.recommendations.map { it.priority })
+    }
+
+    @Test fun sourceWithoutApprovedPermissionCannotSupportPriority() {
+        val restrictedSource = source.copy(permissionState = KnowledgePermissionState.NOT_APPROVED)
+        val result = InvestmentShortlistEvaluator.evaluate(
+            listOf(candidate(1)),
+            listOf(knowledge()),
+            listOf(restrictedSource),
+            now,
+            "snapshot-2026-11-25"
+        )
+        assertTrue(result.recommendations.isEmpty())
     }
 
     @Test fun orderingIsStableAndDeterministic() {
