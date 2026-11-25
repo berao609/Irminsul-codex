@@ -1949,7 +1949,7 @@ The referenced `GameKnowledgeRecord` remains authoritative for publisher/source 
 A typed claim is eligible for joining only when:
 1. Its schema version is supported, claim ID is nonblank and unique, character ID is positive, and at least one typed role/capability is explicitly asserted.
 2. Its source record exists exactly once, has subject type CHARACTER, subject ID equal to the typed character ID, and claim type ROLE_CAPABILITY.
-3. The source record is VERIFIED and SUPPORTED, passes the existing source-registry and structural validator, has approved source permissions, and is within its validity window at evaluation time.
+3. The source record is VERIFIED and SUPPORTED, passes the existing source-registry and structural validator, has approved source permissions, explicitly permits the `manual_claim_curation` action for every referenced source, and is within its validity window at evaluation time.
 4. Observed-usage evidence is not used to establish a role or capability.
 5. Every requested context dimension (game version, patch phase, game mode, difficulty, encounter) exactly matches a populated source-record context field. A missing context field is not a wildcard when that dimension is requested.
 
