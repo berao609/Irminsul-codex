@@ -447,7 +447,6 @@ Make the existing selected-section account export more reliable and auditable wi
 - Source commits: `d121a02c7859a41d348ba97c59d61fd22c82f8fe`, `504110bb23348c698cacc5fc74385e6d9f059cbf`, `3a9c24ad1a988f0b661c9e916f6da3d2c77d14aa`.
 - Unit tests and Debug build: **Success**, GitHub Actions [Run #99](https://github.com/berao609/Irminsul-codex/actions/runs/45518448031), run ID `45518448031`, commit `83cdb9ae3c457890a31533f9e8f92b95a98b6ca7`.
 - CI completed successfully, including unit tests, Debug APK build, signature verification, and artifact upload.
-- CI completed successfully, including unit tests, Debug APK build, signature verification, and artifact upload.
 - Device verification: not yet required for this in-memory model foundation.
 - No Room database, UI integration, export schema change, or release was included.
 
@@ -478,4 +477,32 @@ Make the existing selected-section account export more reliable and auditable wi
 - Unit tests and Debug build: **Success**, GitHub Actions [Run #104](https://github.com/berao609/Irminsul-codex/actions/runs/45518956906), run ID `45518956906`, commit `c7866f9f5556074b9a85c9a1420f7ba0aa0c6cc6`.
 - Unit tests, Debug APK build, persistent Debug signature verification, artifact upload, and temporary keystore cleanup: **Success**.
 - Device verification: not yet required for this mapper expansion.
+- No raw export schema change, Room persistence, UI integration, or release was included.
+
+## Milestone 009 - Unified Account Model: Account Card and Raw Character Sources
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Map account-card data, the original character roster, and raw character-detail batches into the domain snapshot while retaining their nested source structure.  
+**Status:** Implemented in source and tests; CI verification pending.
+
+### Work implemented
+
+1. Extended `AccountSnapshot` with account-card, character-roster-source, and character-detail-source values.
+2. Reused the JSON-independent `StructuredData` tree so nested source fields remain represented without binding the domain layer to Android JSON classes or unstable endpoint schemas.
+3. Mapped the original character roster and raw detail batches, including nested weapon/relic examples and property-map data.
+4. Preserved section status semantics for failed, skipped, and absent source sections.
+5. Added tests for nested raw character source mapping, equipment-shaped data, property maps, and unavailable/failed/missing states.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
+- `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
+
+### Verification
+
+- Source commits: `923796c24954336413482b683a5d922ed47eb002`, `9f5329107e92cee651de5695d7120749bccf3eb2`, `6077657c5f255352c0d8a6d0dc9c43e222c74b38`.
+- Unit tests and Debug build: pending GitHub Actions.
+- Device verification: not required for this in-memory mapper increment.
 - No raw export schema change, Room persistence, UI integration, or release was included.
