@@ -447,5 +447,34 @@ Make the existing selected-section account export more reliable and auditable wi
 - Source commits: `d121a02c7859a41d348ba97c59d61fd22c82f8fe`, `504110bb23348c698cacc5fc74385e6d9f059cbf`, `3a9c24ad1a988f0b661c9e916f6da3d2c77d14aa`.
 - Unit tests and Debug build: **Success**, GitHub Actions [Run #99](https://github.com/berao609/Irminsul-codex/actions/runs/45518448031), run ID `45518448031`, commit `83cdb9ae3c457890a31533f9e8f92b95a98b6ca7`.
 - CI completed successfully, including unit tests, Debug APK build, signature verification, and artifact upload.
+- CI completed successfully, including unit tests, Debug APK build, signature verification, and artifact upload.
 - Device verification: not yet required for this in-memory model foundation.
 - No Room database, UI integration, export schema change, or release was included.
+
+## Milestone 008 - Unified Account Model: Profile and Endgame Sections
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Extend the export mapper to include profile/exploration, both Spiral Abyss periods, and Imaginarium Theater without coupling the domain model to Android JSON classes.  
+**Status:** Implemented in source and tests; CI verification pending.
+
+### Work implemented
+
+1. Added a JSON-independent structured domain value tree supporting objects, arrays, strings, numbers, booleans, and explicit nulls.
+2. Mapped `profile_and_exploration`, `spiral_abyss_current`, `spiral_abyss_previous`, and `imaginarium_theater` into the unified account snapshot.
+3. Preserved nested values and explicit nulls without making assumptions about undocumented or changing endpoint field names.
+4. Preserved section availability semantics: failed sections map to `Failed`, skipped sections to `Unavailable`, absent sections to `Missing`, and present sections to `Available`.
+5. Added tests for nested objects/arrays, numeric and null values, and failed/skipped/missing section states.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
+- `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
+
+### Verification
+
+- Source commits: `ec700ec0918b48176f8aea4dd5fa24f6d1112091`, `def8842229d8230d09fb752c7fcc841ca6b02d80`, `f41299e36b6b1331caeaf51bbd99ef6e6887c4ac`.
+- Unit tests and Debug build: pending GitHub Actions.
+- Device verification: not yet required for this mapper expansion.
+- No raw export schema change, Room persistence, UI integration, or release was included.
