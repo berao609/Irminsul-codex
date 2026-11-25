@@ -2011,6 +2011,7 @@ Make the Visuals page understandable to Genshin players by presenting character-
 - Coil app dependency: `1a0bfe98bf5c705bed83c44a20602c943b4b0143`
 - Recommendation cards: `76d91d41b125bc4f286271c441339cff82eb966b`
 - Portrait loading fallback: `aaf1891349ae3587ceb5edff2b0eff7ba8572d78`
+- Artifact-count presentation correction: `c4962d16535c0e9fe990138eb446164bd6a7713b`
 
 ### Verification evidence
 
