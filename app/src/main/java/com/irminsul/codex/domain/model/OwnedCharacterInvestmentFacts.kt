@@ -87,7 +87,14 @@ data class OwnedCharacterInvestmentRosterFacts(
     val characters: List<OwnedCharacterInvestmentFact> = emptyList(),
     val collectionIntegrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity(),
     val failureReason: String? = null
-)
+) {
+    /** True when the retrieved roster contains omitted or duplicate source entries. */
+    val isPartial: Boolean
+        get() = collectionIntegrity.invalidCharacterEntryIndexes.isNotEmpty() ||
+            collectionIntegrity.duplicateCharacterIds.isNotEmpty() ||
+            (collectionIntegrity.sourceEntryCount != null &&
+                collectionIntegrity.sourceEntryCount != collectionIntegrity.mappedEntryCount)
+}
 
 /**
  * Account observations only. This model deliberately contains no role, synergy,
