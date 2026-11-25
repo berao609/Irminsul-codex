@@ -51,7 +51,7 @@ class AccountViewModelTest {
             val viewModel = AccountViewModel(repository)
             store.put("account", viewModel)
 
-            viewModel.exportAccount("800000001", "test-cookie", saveImmediately = true)
+            viewModel.exportAccount("800000001", "test-cookie")
 
             val state = viewModel.uiState.value
             assertFalse(state.isExporting)
@@ -59,11 +59,9 @@ class AccountViewModelTest {
             assertNull(state.errorMessage)
             assertEquals("800000001", state.snapshot?.identity?.uid)
             assertEquals(rawJson, state.pendingExport?.rawJson)
-            assertTrue(state.saveImmediately)
 
             viewModel.acknowledgeExport()
             assertNull(viewModel.uiState.value.pendingExport)
-            assertFalse(viewModel.uiState.value.saveImmediately)
             assertNotNull(viewModel.uiState.value.snapshot)
         } finally {
             store.clear()
@@ -86,12 +84,11 @@ class AccountViewModelTest {
             val viewModel = AccountViewModel(repository)
             store.put("account", viewModel)
 
-            viewModel.exportAccount("800000001", "test-cookie", saveImmediately = false)
+            viewModel.exportAccount("800000001", "test-cookie")
 
             assertFalse(viewModel.uiState.value.isExporting)
             assertEquals("network unavailable", viewModel.uiState.value.errorMessage)
             assertNull(viewModel.uiState.value.snapshot)
-            assertFalse(viewModel.uiState.value.saveImmediately)
         } finally {
             store.clear()
             Dispatchers.resetMain()
@@ -117,7 +114,7 @@ class AccountViewModelTest {
             val viewModel = AccountViewModel(repository)
             store.put("account", viewModel)
 
-            viewModel.exportAccount("", "", saveImmediately = false)
+            viewModel.exportAccount("", "")
 
             assertFalse(repositoryCalled)
             assertEquals("Sign in with HoYoLAB first.", viewModel.uiState.value.errorMessage)

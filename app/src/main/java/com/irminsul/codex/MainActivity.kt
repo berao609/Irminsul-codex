@@ -1,7 +1,5 @@
 package com.irminsul.codex
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -29,9 +27,6 @@ import com.irminsul.codex.data.repository.HoYoLabAccountRepository
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import kotlinx.coroutines.launch
-
-// Leave headroom below Android Binder's shared transaction buffer limit.
-private const val MAX_CLIPBOARD_JSON_BYTES = 512 * 1024
 
 private val CodexColors = darkColorScheme(
     primary = Color(0xFF80CBC4),
@@ -127,14 +122,14 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
         }
     }
 
-    fun extractAccountJson(saveImmediately: Boolean) {
+    fun extractAccountJson() {
         if (uid.isBlank() || cookie.isBlank()) {
             errorMessage = "Sign in with HoYoLAB first."
             return
         }
         errorMessage = null
         exportStatus = null
-        accountViewModel.exportAccount(uid, cookie, saveImmediately)
+        accountViewModel.exportAccount(uid, cookie)
     }
 
     LaunchedEffect(accountExportState.pendingExport) {
@@ -149,22 +144,8 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
             "FAILED" -> "Export contains no successfully retrieved account sections."
             else -> "Export status unavailable. Check export_status in the JSON."
         }
-        if (accountExportState.saveImmediately) {
-            exportStatus = "$exportLabel ($kb KB). Choose where to save."
-            saveFileLauncher.launch("genshin_${uid.trim()}.json")
-        } else if (jsonByteCount > MAX_CLIPBOARD_JSON_BYTES) {
-            exportStatus = null
-            errorMessage = "This JSON is too large to copy safely to the clipboard ($kb KB). Use Save JSON instead."
-        } else {
-            try {
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("Irminsul Codex JSON", json))
-                exportStatus = "Copied $exportLabel ($kb KB) to clipboard."
-            } catch (error: Exception) {
-                exportStatus = null
-                errorMessage = "Could not copy JSON to clipboard. Use Save JSON instead. ${error.message ?: ""}".trim()
-            }
-        }
+        exportStatus = "$exportLabel ($kb KB). Choose where to save."
+        saveFileLauncher.launch("genshin_${uid.trim()}.json")
         accountViewModel.acknowledgeExport()
     }
 
@@ -329,26 +310,13 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
                         )
                     }
 
-                    Row(
+                    Button(
+                        onClick = { extractAccountJson() },
+                        enabled = !accountExportState.isExporting,
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        shape = RoundedCornerShape(10.dp)
                     ) {
-                        Button(
-                            onClick = { extractAccountJson(saveImmediately = true) },
-                            enabled = !accountExportState.isExporting,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text(if (accountExportState.isExporting) "Extracting..." else "Save JSON")
-                        }
-                        OutlinedButton(
-                            onClick = { extractAccountJson(saveImmediately = false) },
-                            enabled = !accountExportState.isExporting,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text("Copy JSON")
-                        }
+                        Text(if (accountExportState.isExporting) "Extracting..." else "Save JSON")
                     }
                 }
             }

@@ -966,21 +966,21 @@ Create the first repository boundary between application/domain consumers and th
 
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
-**Milestone scope:** Route the existing full account export action through AccountRepository and an Android ViewModel while preserving the original JSON save/copy behavior.  
-**Status:** Implemented, unit-test verified, and Debug CI verified. Physical-device verification pending.
+**Milestone scope:** Route the account export action through AccountRepository and an Android ViewModel while preserving the original JSON for file saving.  
+**Status:** Implemented, unit-test verified, and Debug CI verified. Save JSON device verification passed; Copy JSON was removed by product decision.
 
 ### Objective
 
-Move full account export orchestration and normalized snapshot state out of the Compose screen. Keep the current user-facing Save JSON and Copy JSON actions, progress feedback, and export status messages intact. Avoid duplicate HoYoLAB requests by returning the normalized snapshot and exact original JSON from the same repository operation.
+Move full account export orchestration and normalized snapshot state out of the Compose screen. Keep the user-facing Save JSON action, progress feedback, and export status messages. Clipboard export is not required for the product. Avoid duplicate HoYoLAB requests by returning the normalized snapshot and exact original JSON from the same repository operation.
 
 ### Work implemented
 
 1. Added domain `AccountExport`, containing the normalized `AccountSnapshot` and the exact original JSON string.
 2. Updated `AccountRepository` and `HoYoLabAccountRepository` to return both representations from one export request. Mapping failures become repository failures, and `CancellationException` is rethrown.
 3. Added `AccountViewModel` with observable StateFlow state for loading, progress, errors, the latest normalized snapshot, and a pending raw export for the UI to consume.
-4. Connected MainActivity to the ViewModel. Save JSON and Copy JSON continue using the exact raw export string; document and clipboard operations remain in the Android UI layer.
+4. Connected MainActivity to the ViewModel. Save JSON uses the exact raw export string through Android's document picker. Copy JSON and all clipboard handling were removed after the accepted product decision that JSON export is a secondary file-based utility.
 5. Added ViewModel tests for successful state publication, raw JSON preservation, repository failure, and blank-credential rejection. Updated repository tests for the combined export result.
-6. Added AndroidX ViewModel and kotlinx-coroutines-test dependencies.
+6. Added AndroidX ViewModel and kotlinx-coroutines-test dependencies. The ViewModel now exposes a single file-export flow; it no longer carries a clipboard/save mode flag.
 7. Kept Daily Note synchronization, login, and credential handling unchanged. This increment does not yet migrate those paths to repositories or move credentials out of the current presentation code.
 
 ### Verification
@@ -999,9 +999,8 @@ Move full account export orchestration and normalized snapshot state out of the 
 - Artifact size: 8,280,431 bytes.
 - SHA-256: `610ef60be02b64c79e0ca678a27ae1baa4ce4ea163813854c068c49d14d31d10`.
 - Artifact expiry: 2026-12-09 02:09:15 UTC.
-- Physical-device verification: partially tested. User confirmed Save JSON succeeds. Copy JSON crashes the app after retrieval reaches 9/9.
-- Diagnosis: the current code passes the entire JSON document as one `ClipData.newPlainText` payload. The previously inspected device export was approximately 4.26 MB, which is larger than Android's Binder transaction budget and is a strong suspected cause; the exact device stack trace has not yet been captured.
-- Mitigation added: reject clipboard text payloads larger than 512 KiB before calling `setPrimaryClip`, and catch clipboard exceptions so the app reports a fallback instruction to use Save JSON. Physical-device retest is pending.
+- Physical-device verification: user confirmed Save JSON succeeds. Copy JSON was subsequently removed by explicit product decision because it duplicated the JSON file contents and was not required for the primary account-intelligence workflow.
+- The clipboard-size safeguard and clipboard exception handling are therefore removed with the feature. No Copy JSON device retest is required; Save JSON remains the sole user-facing JSON export action.
 
 ### Qualifications
 

@@ -19,12 +19,11 @@ data class AccountExportUiState(
     val errorMessage: String? = null,
     val snapshot: AccountSnapshot? = null,
     val pendingExport: AccountExport? = null,
-    val saveImmediately: Boolean = false
 )
 
 /**
  * Owns account-export work and the normalized snapshot state observed by the UI.
- * Android document and clipboard actions remain in the Compose presentation layer.
+ * Android document saving remains in the Compose presentation layer.
  */
 class AccountViewModel(
     private val repository: AccountRepository
@@ -32,7 +31,7 @@ class AccountViewModel(
     private val _uiState = MutableStateFlow(AccountExportUiState())
     val uiState: StateFlow<AccountExportUiState> = _uiState.asStateFlow()
 
-    fun exportAccount(uid: String, cookie: String, saveImmediately: Boolean) {
+    fun exportAccount(uid: String, cookie: String) {
         if (uid.isBlank() || cookie.isBlank()) {
             _uiState.update { it.copy(errorMessage = "Sign in with HoYoLAB first.") }
             return
@@ -46,7 +45,6 @@ class AccountViewModel(
                     progress = "Starting extraction...",
                     errorMessage = null,
                     pendingExport = null,
-                    saveImmediately = saveImmediately
                 )
             }
 
@@ -72,7 +70,6 @@ class AccountViewModel(
                                 isExporting = false,
                                 progress = null,
                                 errorMessage = error.message ?: "JSON extraction failed.",
-                                saveImmediately = false
                             )
                         }
                     }
@@ -85,7 +82,6 @@ class AccountViewModel(
                         isExporting = false,
                         progress = null,
                         errorMessage = error.message ?: "JSON extraction failed.",
-                        saveImmediately = false
                     )
                 }
             }
@@ -93,7 +89,7 @@ class AccountViewModel(
     }
 
     fun acknowledgeExport() {
-        _uiState.update { it.copy(pendingExport = null, saveImmediately = false) }
+        _uiState.update { it.copy(pendingExport = null) }
     }
 
     class Factory(

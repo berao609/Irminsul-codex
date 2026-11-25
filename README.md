@@ -6,7 +6,7 @@ Irminsul Codex is an Android application designed to help Genshin Impact players
 
 The product's primary purpose is to turn account data into actionable in-app intelligence. Irminsul Codex aims to identify development priorities, analyze account weaknesses, optimize farming, evaluate potential pulls, and help players decide what to focus on next. Account retrieval supports this analysis; JSON export is an optional utility for third-party readers and backups.
 
-> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, and JSON export. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, and JSON export. The account intelligence engine, local account history, integrated BYOAI assistant, and redesigned Account Command Center remain planned and are not yet implemented.
+> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, and optional JSON file export. The account intelligence engine, local account history, integrated BYOAI assistant, and redesigned Account Command Center remain planned and are not yet implemented.
 
 ---
 
@@ -245,7 +245,7 @@ Responsible for:
 * Main application interface and existing Daily Note presentation.
 * Credential entry and the current SharedPreferences handling.
 * Daily Note synchronization actions.
-* Save and clipboard actions for account JSON exports.
+* Saving account JSON exports through Android's document picker.
 
 ### `api/HoYoLabClient.kt`
 
@@ -262,7 +262,7 @@ Responsible for:
 
 * Running full account export through the domain repository contract.
 * Exposing export progress, errors, and the normalized AccountSnapshot as observable state.
-* Retaining the original JSON export for the existing save and clipboard actions.
+* Retaining the original JSON export for the Save JSON file action.
 
 ### `data/repository/HoYoLabAccountRepository.kt`
 
