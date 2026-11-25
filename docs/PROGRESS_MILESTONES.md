@@ -3632,3 +3632,19 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 
 **Next action:** Resume M58 implementation. Continue the Materials Planner work using the corrected native Compose design guidance, preserving manual material rows and existing saved-plan compatibility. Keep source-permission restrictions from SPECS §3.18 in force; do not invent or bundle unapproved upgrade-cost data.
 
+### M58 planner presentation pass - native Compose
+
+**Status:** UI source committed; CI and device verification pending.
+
+- Reorganized the Materials Planner into a numbered flow: upgrade target, talent investment, planned weapon, and material requirements.
+- Increased section hierarchy and spacing, standardized form-control corner radii, and reduced repeated explanatory copy.
+- Reworked manual material rows into compact cards with a clear remaining-quantity result when both required and owned values are valid.
+- Kept blank owned quantities distinct from an explicit zero.
+- Preserved the existing target-specific SharedPreferences keys, talent/weapon persistence keys, manual row JSON fields, and save/load effects. The UI-only change does not introduce a new saved-plan schema.
+- Kept the automatic-cost status explicit. No unapproved source data or automatic cost claims were introduced.
+- No new dependencies were added.
+
+**Commit:** `a30e20ae6a46dbc17e07eba8a069cf4fb3fcc0a0`
+
+**Verification boundary:** The code change is committed. CI compilation/unit tests and a physical-device check are still required. The existing manual material rows and previously saved plan values must be checked on device after installing the new build.
+
