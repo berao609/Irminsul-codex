@@ -5,6 +5,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.runtime.SideEffect
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import androidx.compose.foundation.layout.*
@@ -31,7 +36,7 @@ import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import kotlinx.coroutines.launch
 
-private val CodexColors = darkColorScheme(
+private val CodexDarkColors = darkColorScheme(
     primary = Color(0xFF80CBC4),
     background = Color(0xFF0F1115),
     surface = Color(0xFF171A21),
@@ -41,6 +46,29 @@ private val CodexColors = darkColorScheme(
     onSurfaceVariant = Color(0xFF9AA0A6),
     error = Color(0xFFEF5350)
 )
+
+private val CodexLightColors = lightColorScheme(
+    primary = Color(0xFF276B65),
+    onPrimary = Color.White,
+    background = Color(0xFFF7F8FA),
+    surface = Color(0xFFFFFFFF),
+    surfaceVariant = Color(0xFFE9EDF1),
+    onBackground = Color(0xFF171A21),
+    onSurface = Color(0xFF171A21),
+    onSurfaceVariant = Color(0xFF626B75),
+    error = Color(0xFFB3261E)
+)
+
+private enum class ThemeMode(val label: String, val preferenceValue: String) {
+    SYSTEM("System", "system"),
+    LIGHT("Light", "light"),
+    DARK("Dark", "dark");
+
+    companion object {
+        fun fromPreference(value: String?): ThemeMode =
+            entries.firstOrNull { it.preferenceValue == value } ?: SYSTEM
+    }
+}
 
 private enum class CodexTab(val label: String, val symbol: String) {
     HOME("Home", "⌂"),
@@ -61,13 +89,43 @@ class MainActivity : ComponentActivity() {
                 RoomAccountSnapshotStore(IrminsulDatabase.getInstance(applicationContext))
             )
         )[AccountViewModel::class.java]
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
         setContent {
-            MaterialTheme(colorScheme = CodexColors) {
+            val preferences = remember {
+                getSharedPreferences("irminsul_prefs", Context.MODE_PRIVATE)
+            }
+            var themeMode by remember {
+                mutableStateOf(ThemeMode.fromPreference(preferences.getString("theme_mode", "system")))
+            }
+            val systemDark = isSystemInDarkTheme()
+            val useDarkTheme = when (themeMode) {
+                ThemeMode.SYSTEM -> systemDark
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+            }
+            val view = LocalView.current
+            SideEffect {
+                val controller = WindowInsetsControllerCompat(window, view)
+                controller.isAppearanceLightStatusBars = !useDarkTheme
+                controller.isAppearanceLightNavigationBars = !useDarkTheme
+            }
+
+            MaterialTheme(colorScheme = if (useDarkTheme) CodexDarkColors else CodexLightColors) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    CodexScreen(accountViewModel)
+                    CodexScreen(
+                        accountViewModel = accountViewModel,
+                        themeMode = themeMode,
+                        onThemeModeChange = { selected ->
+                            themeMode = selected
+                            preferences.edit().putString("theme_mode", selected.preferenceValue).apply()
+                        }
+                    )
                 }
             }
         }
@@ -75,7 +133,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun CodexScreen(accountViewModel: AccountViewModel) {
+fun CodexScreen(
+    accountViewModel: AccountViewModel,
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit
+) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("irminsul_prefs", Context.MODE_PRIVATE) }
     val scope = rememberCoroutineScope()
@@ -632,6 +694,29 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
 
         if (selectedTab == CodexTab.INFO) {
             Text("Info & settings", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Appearance", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Choose how Irminsul Codex looks. System follows your device setting.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ThemeMode.entries.forEach { mode ->
+                            FilterChip(
+                                selected = themeMode == mode,
+                                onClick = { onThemeModeChange(mode) },
+                                label = { Text(mode.label) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            }
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Irminsul Codex", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
