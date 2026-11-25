@@ -105,9 +105,10 @@ class MaterialCatalogue(
                 val referenceHost = runCatching { URI(reference.canonicalUrl).host }.getOrNull()
                 val sourceHost = runCatching { URI(source.canonicalSourceUrl).host }.getOrNull()
                 if (referenceHost == null || sourceHost == null ||
-                    !referenceHost.equals(sourceHost, ignoreCase = true)
+                    !referenceHost.equals(sourceHost, ignoreCase = true) ||
+                    !isHttps(source.canonicalSourceUrl)
                 ) {
-                    issues += "Source host mismatch: ${reference.sourceId}."
+                    issues += "Source host mismatch or non-HTTPS registry URL: ${reference.sourceId}."
                 }
             }
             if (!isHttps(reference.canonicalUrl)) issues += "Source reference must use HTTPS."
