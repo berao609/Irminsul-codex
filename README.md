@@ -6,7 +6,7 @@ Irminsul Codex is an Android application designed to help Genshin Impact players
 
 The product's primary purpose is to turn account data into actionable in-app intelligence. Irminsul Codex aims to identify development priorities, analyze account weaknesses, optimize farming, evaluate potential pulls, and help players decide what to focus on next. Account retrieval supports this analysis; JSON export is an optional utility for third-party readers and backups.
 
-> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, optional JSON file export, and Room-backed persistence of retrieved account snapshots. The deterministic character-build assessment engine, account-level build priority summary, explainable character stat reconciliation findings, unified character assessment, evidence-backed character development recommendations, goal-aware recommendation ordering, roster/equipment gap analysis, account data confidence summary, and unified account intelligence overview composition integrating all four report groups are implemented as domain foundations, but they are not yet surfaced in the user interface. The broader account intelligence experience, user-facing account history, integrated BYOAI assistant, and redesigned Account Command Center remain planned.
+> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, optional JSON file export, and Room-backed persistence of retrieved account snapshots. The deterministic account-intelligence pipeline is now connected to the retrieval workflow and an initial Account Intelligence card. The screen shows character assessment counts, up to five evidence-backed recommendations, account-gap counts, account-section coverage, and stale/unverified-source warnings. Players can choose Balanced Development, Build Reliability, Stat Integrity, or Data Confidence to change recommendation ordering. The full Account Command Center, user-facing account history, integrated BYOAI assistant, and broader progression features remain planned.
 
 ---
 
@@ -47,7 +47,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Expeditions | Displays current and maximum expedition counts. |
 | Account Data Retrieval | Retrieves selected account information for the existing app workflow. |
 | Optional JSON Export | Exports selected account data for third-party readers and backups. |
-| Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |
+| Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |\n| Initial Account Intelligence | Runs deterministic analysis after retrieval and displays character assessment, recommendations, account gaps, and data coverage. |\n| Development Goal Selection | Lets the user choose one of four explicit objectives for recommendation ordering. |
 
 ### Planned Core Experience
 
@@ -187,7 +187,7 @@ The current application follows a data retrieval workflow:
 
 * Daily Note information is displayed, and selected account data can be exported as JSON.
 
-The current implementation still focuses on HoYoLAB retrieval, Daily Note presentation, and selected account JSON export. Successful account exports are also saved locally in Room as historical raw JSON snapshots. The intended primary workflow is in-app account analysis with integrated AI assistance. The deterministic intelligence stages and their domain-level orchestration entry point are implemented, but they are not yet connected to the ViewModel or user interface. User-facing history, BYOAI integration, and the Account Command Center remain planned.
+The application retrieves selected account data, saves each successful raw export in Room, and runs the deterministic account-intelligence pipeline from the normalized snapshot. The ViewModel exposes the unified overview and the existing screen displays an initial summary with up to five recommendations. The user can select one of four explicit development goals; Balanced Development is the initial default. The goal changes recommendation ordering only. User-facing account history, integrated BYOAI assistance, expanded analysis, and the complete Account Command Center remain planned.
 
 ## Project Structure
 
