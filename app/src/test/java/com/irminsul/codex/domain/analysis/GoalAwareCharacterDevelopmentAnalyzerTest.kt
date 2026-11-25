@@ -86,6 +86,49 @@ class GoalAwareCharacterDevelopmentAnalyzerTest {
         assertTrue(result.recommendations.first().prioritizationReason.contains("missing or unverified"))
     }
 
+    @Test fun everyGoalHasItsOwnCategoryOrdering() {
+        fun orderedTypes(goal: CharacterDevelopmentGoal) =
+            GoalAwareCharacterDevelopmentAnalyzer.prioritize(report(), goal)
+                .recommendations.map { it.recommendation.type }
+
+        assertEquals(
+            listOf(
+                CharacterDevelopmentRecommendationType.BUILD_ERRORS,
+                CharacterDevelopmentRecommendationType.STAT_MISMATCHES,
+                CharacterDevelopmentRecommendationType.BUILD_WARNINGS,
+                CharacterDevelopmentRecommendationType.DATA_REVIEW
+            ),
+            orderedTypes(CharacterDevelopmentGoal.BALANCED_DEVELOPMENT)
+        )
+        assertEquals(
+            listOf(
+                CharacterDevelopmentRecommendationType.BUILD_ERRORS,
+                CharacterDevelopmentRecommendationType.BUILD_WARNINGS,
+                CharacterDevelopmentRecommendationType.STAT_MISMATCHES,
+                CharacterDevelopmentRecommendationType.DATA_REVIEW
+            ),
+            orderedTypes(CharacterDevelopmentGoal.BUILD_RELIABILITY)
+        )
+        assertEquals(
+            listOf(
+                CharacterDevelopmentRecommendationType.STAT_MISMATCHES,
+                CharacterDevelopmentRecommendationType.BUILD_ERRORS,
+                CharacterDevelopmentRecommendationType.BUILD_WARNINGS,
+                CharacterDevelopmentRecommendationType.DATA_REVIEW
+            ),
+            orderedTypes(CharacterDevelopmentGoal.STAT_INTEGRITY)
+        )
+        assertEquals(
+            listOf(
+                CharacterDevelopmentRecommendationType.DATA_REVIEW,
+                CharacterDevelopmentRecommendationType.BUILD_ERRORS,
+                CharacterDevelopmentRecommendationType.STAT_MISMATCHES,
+                CharacterDevelopmentRecommendationType.BUILD_WARNINGS
+            ),
+            orderedTypes(CharacterDevelopmentGoal.DATA_CONFIDENCE)
+        )
+    }
+
     @Test fun goalChangesOrderingWithoutChangingBasePriorityOrEvidence() {
         val source = report()
         val original = source.recommendations.associateBy { it.recommendationId }
