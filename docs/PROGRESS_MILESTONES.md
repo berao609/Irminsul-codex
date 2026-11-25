@@ -3448,3 +3448,31 @@ The upstream data is a promising catalogue source, not yet an approved imported 
 5. Replace manual material-name/required-quantity entry with catalogue-derived rows while retaining owned-quantity entry.
 6. Preserve and migrate existing manual planner rows without silently discarding user data.
 7. Verify combined plans, farming-day grouping, local persistence, CI, APK installation, and physical-device behavior before closing M58.
+
+
+### M58 implementation continuation - catalogue cost parsing
+
+After implementing the aggregation engine, the model was refined to use explicit upgrade milestone thresholds rather than assuming every integer character level has a cost row. This is necessary because character and weapon ascension costs are sparse milestones (20, 40, 50, 60, 70, 80), while talent costs use levels 2 through 10.
+
+Additional implementation:
+
+- Added `GenshinDbCostParser` to normalize the upstream `costs` JSON object for character ascension, weapon ascension, and talent progression.
+- Missing stage keys return `MISSING_STAGE`; they are not interpreted as free upgrades.
+- Explicit empty arrays remain valid empty cost stages.
+- Malformed arrays or material records return `INVALID_DATA`.
+- Added parser tests for character/weapon ascension thresholds, talent levels, missing stages, explicit empty stages, and malformed records.
+
+Additional files:
+
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinDbCostParser.kt` (new)
+- `app/src/test/java/com/irminsul/codex/data/catalogue/GenshinDbCostParserTest.kt` (new)
+
+Additional commits:
+
+- `48bfa3b9a68277317a4c30c0d126358f11b61def` - Model sparse progression cost milestones.
+- `004eb14c2711709d5296d743c002b87c78088380` - Test sparse progression milestones.
+- `3f56580f2656eb70057ad3f53d40daac6dd54b27` - Parse Genshin DB upgrade cost records.
+- `6820f32ae81e6be2bef916e70969608282c0358a` - Test Genshin DB cost parsing.
+- The calculator contract comment was clarified in a follow-up commit.
+
+Verification remains pending: no local Gradle execution is available in this session, and CI status checks have not yet reported a result for the M58 commits.
