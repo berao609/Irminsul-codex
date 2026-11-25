@@ -57,8 +57,53 @@ object AccountExportMapper {
             overallStatus = parseStatus(root.optJSONObject("export_status")?.optString("overall_status")),
             dailyNote = dailyValue,
             characters = characterValue,
+            profileAndExploration = mapStructuredSection(root, "profile_and_exploration", sections),
+            spiralAbyssCurrent = mapStructuredSection(root, "spiral_abyss_current", sections),
+            spiralAbyssPrevious = mapStructuredSection(root, "spiral_abyss_previous", sections),
+            imaginariumTheater = mapStructuredSection(root, "imaginarium_theater", sections),
             sections = sections
         )
+    }
+
+
+    private fun mapStructuredSection(
+        root: JSONObject,
+        key: String,
+        sections: Map<String, AccountSectionMetadata>
+    ): DataValue<StructuredData> {
+        val metadata = sections[key]
+        if (metadata?.status == SectionStatus.FAILED) {
+            return DataValue.Failed(metadata.message ?: "$key retrieval failed.")
+        }
+        val raw = root.opt(key)
+        if (raw == null || raw == JSONObject.NULL) {
+            return if (metadata?.status == SectionStatus.SKIPPED) {
+                DataValue.Unavailable
+            } else {
+                DataValue.Missing
+            }
+        }
+        return DataValue.Available(toStructuredData(raw), metadata?.retrievedAt)
+    }
+
+    private fun toStructuredData(value: Any?): StructuredData = when (value) {
+        null, JSONObject.NULL -> StructuredData.NullValue
+        is JSONObject -> {
+            val fields = linkedMapOf<String, StructuredData>()
+            val keys = value.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                fields[key] = toStructuredData(value.opt(key))
+            }
+            StructuredData.ObjectValue(fields)
+        }
+        is JSONArray -> StructuredData.ArrayValue(
+            (0 until value.length()).map { index -> toStructuredData(value.opt(index)) }
+        )
+        is String -> StructuredData.StringValue(value)
+        is Boolean -> StructuredData.BooleanValue(value)
+        is Number -> StructuredData.NumberValue(value.toString())
+        else -> StructuredData.StringValue(value.toString())
     }
 
     private fun mapDailyNote(data: JSONObject, at: Instant?) = DailyNoteSnapshot(
