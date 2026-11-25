@@ -6,9 +6,10 @@ import java.math.BigDecimal
 /**
  * Reconciles source-reported stat triplets without changing their original string values.
  *
- * The tolerance is half of the smallest displayed unit in the reported final value.
- * For example, "123" permits 0.5 and "123.4" permits 0.05. This accounts only
- * for rounding of the reported final value, not uncertainty in base or add.
+ * The tolerance is the sum of the half-unit rounding intervals for base, additive,
+ * and final values. Each source string is treated at its reported decimal precision.
+ * This allows independently rounded displayed inputs to reconcile without hiding
+ * discrepancies larger than the combined precision can explain.
  */
 object CharacterStatReconciler {
     fun reconcile(characters: List<CharacterSnapshot>): CharacterStatReconciliationReport =
@@ -85,7 +86,9 @@ object CharacterStatReconciler {
 
         val expected = base.amount.add(add.amount)
         val difference = final.amount.subtract(expected)
-        val tolerance = BigDecimal("0.5").movePointLeft(final.amount.scale().coerceAtLeast(0))
+        val tolerance = roundingHalfUnit(base.amount)
+            .add(roundingHalfUnit(add.amount))
+            .add(roundingHalfUnit(final.amount))
         val status = when {
             difference.compareTo(BigDecimal.ZERO) == 0 -> StatReconciliationStatus.MATCH
             difference.abs().compareTo(tolerance) <= 0 -> StatReconciliationStatus.WITHIN_ROUNDING_TOLERANCE
@@ -106,6 +109,9 @@ object CharacterStatReconciler {
             status = status
         )
     }
+
+    private fun roundingHalfUnit(value: BigDecimal): BigDecimal =
+        BigDecimal("0.5").movePointLeft(value.scale().coerceAtLeast(0))
 
     private data class ParsedValue(val amount: BigDecimal, val isPercent: Boolean)
 
