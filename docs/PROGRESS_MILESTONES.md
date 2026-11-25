@@ -3476,3 +3476,34 @@ Additional commits:
 - The calculator contract comment was clarified in a follow-up commit.
 
 Verification remains pending: no local Gradle execution is available in this session, and CI status checks have not yet reported a result for the M58 commits.
+
+
+### M58 architecture correction - reuse the existing verified cost registry
+
+The first M58 code attempt introduced a second progression calculator and duplicate domain result types. CI #435 and #436 exposed the conflict: `ProgressionMaterialCalculator.kt` redeclared `CalculatedMaterialRequirement`, which is already owned by the existing `UpgradeCostCalculator.kt` architecture. The same build also reported constructor-property mismatches caused by that duplicate type resolution.
+
+Re-audited the full existing cost model before proceeding. The repository already contains:
+
+- `UpgradeCostRecord`, `UpgradeCostItem`, `UpgradeCostTrack`, and `UpgradeCostSubjectType`.
+- `KnowledgeSourceRegistryEntry` and `KnowledgeSourceReference`.
+- `UpgradeCostRecordValidator`, which requires explicit source registry permission, allowed curation action, source-host consistency, verification state, review timestamp, and review notes.
+- `UpgradeCostCalculator`, which only aggregates exact subject/track/game-version records, checks validity and source permission, requires contiguous segments, rejects missing or overlapping cost data, and detects overflow.
+- `ManualMaterialInventory`, which already distinguishes not-entered inventory from explicit zero and rejects invalid/duplicate inventory entries.
+
+The duplicate `ProgressionMaterialCalculator.kt` and its test were deleted. No duplicate calculator or duplicate domain result model should be added. Future catalogue ingestion must feed the existing cost-record governance path rather than bypass it.
+
+The Genshin DB parser was revised to return `GenshinDbParsedCostSegment` candidate data using the existing `UpgradeCostItem` model. It maps ascension stages to contiguous ranges (1-20, 20-40, 40-50, 50-60, 60-70, 70-80) and talent levels to (1-2) through (9-10). Parsed candidates are not trusted `UpgradeCostRecord` objects and cannot enter the calculator until the source registry and human verification requirements are satisfied. Explicit empty source arrays are preserved in the parsed candidate for review; they are not silently treated as verified zero-cost records.
+
+### Corrected M58 files
+
+- `app/src/main/java/com/irminsul/codex/domain/analysis/ProgressionMaterialCalculator.kt` - added and then deleted because it duplicated the existing governed calculator.
+- `app/src/test/java/com/irminsul/codex/domain/analysis/ProgressionMaterialCalculatorTest.kt` - added and then deleted with the duplicate calculator.
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinDbCostParser.kt` - now emits untrusted parsed cost segments compatible with the existing model.
+- `app/src/test/java/com/irminsul/codex/data/catalogue/GenshinDbCostParserTest.kt` - tests source-stage mapping, missing stages, explicit empty arrays, malformed records, fractional values, and overflow.
+
+### CI evidence and correction status
+
+- CI #435 and #436 failed at Kotlin compilation because of the duplicate `CalculatedMaterialRequirement` declaration and resulting type mismatch errors.
+- The duplicate calculator and test were removed.
+- The parser and tests were rewritten to reuse the existing domain model.
+- New CI runs triggered by the corrective commits are pending. Do not treat the correction as verified until a later run completes successfully.
