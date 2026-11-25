@@ -13,10 +13,10 @@ class LineupSelectionRulesTest {
     }
 
     @Test
-    fun doesNotAddDuplicateCharacter() {
+    fun togglingSelectedCharacterRemovesItAndNormalizesDuplicates() {
         assertEquals(
-            listOf(100, 200),
-            LineupSelectionRules.toggle(listOf(100, 200), 100)
+            listOf(200),
+            LineupSelectionRules.toggle(listOf(100, 100, 200), 100)
         )
     }
 
