@@ -148,6 +148,7 @@ private fun CodexScreen(
     var showCredentials by remember { mutableStateOf(uid.isBlank() || cookie.isBlank()) }
     var showWebLogin by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(CodexTab.HOME) }
+    var showAllRecommendations by remember { mutableStateOf(false) }
 
     var dailyNote by remember { mutableStateOf<DailyNote?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -544,34 +545,87 @@ private fun CodexScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         } else {
-                            report.goalAwareDevelopment.recommendations.take(5).forEach { item ->
-                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        text = "${item.recommendation.priority} • ${item.recommendation.characterName ?: "Character ${item.recommendation.characterId}"}",
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary
+                            val recommendations = report.goalAwareDevelopment.recommendations
+                            val visibleRecommendations = if (showAllRecommendations) {
+                                recommendations
+                            } else {
+                                recommendations.take(5)
+                            }
+                            visibleRecommendations.forEach { item ->
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                                     )
-                                    Text(
-                                        text = item.recommendation.action,
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    item.recommendation.evidence.firstOrNull()?.let { evidence ->
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
                                         Text(
-                                            text = evidence,
-                                            fontSize = 11.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            text = "${item.recommendation.priority} • ${item.recommendation.title}",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.primary
                                         )
+                                        Text(
+                                            text = item.recommendation.characterName ?: "Character ${item.recommendation.characterId}",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = item.recommendation.action,
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        if (showAllRecommendations) {
+                                            Text(
+                                                text = item.recommendation.reason,
+                                                fontSize = 12.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            item.recommendation.evidence.forEach { evidence ->
+                                                Text(
+                                                    text = "• $evidence",
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                            if (item.recommendation.basedOnStaleData) {
+                                                Text(
+                                                    text = "Based on stale account data",
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.error
+                                                )
+                                            }
+                                        } else {
+                                            item.recommendation.evidence.firstOrNull()?.let { evidence ->
+                                                Text(
+                                                    text = evidence,
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
                             if (report.recommendationCount > 5) {
                                 Text(
-                                    text = "Showing 5 of ${report.recommendationCount} recommendations.",
+                                    text = if (showAllRecommendations) {
+                                        "Showing all ${report.recommendationCount} recommendations."
+                                    } else {
+                                        "Showing 5 of ${report.recommendationCount} recommendations."
+                                    },
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                TextButton(
+                                    onClick = { showAllRecommendations = !showAllRecommendations },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(if (showAllRecommendations) "Show fewer recommendations" else "Show all recommendations")
+                                }
                             }
                         }
 
