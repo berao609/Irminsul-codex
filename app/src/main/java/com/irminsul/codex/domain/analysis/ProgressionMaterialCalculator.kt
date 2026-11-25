@@ -51,7 +51,7 @@ data class ProgressionMaterialCalculation(
 /**
  * Deterministic aggregation engine for versioned, normalized game catalogue costs.
  *
- * This class does not invent costs. Every level step between current and target
+ * This class does not invent costs. Every requested upgrade milestone between current and target
  * must have an explicit catalogue record, including a valid empty record when
  * the source confirms that a step has no material cost.
  */
