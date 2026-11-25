@@ -6,7 +6,7 @@ Irminsul Codex is an Android application designed to help Genshin Impact players
 
 The product's primary purpose is to turn account data into actionable in-app intelligence. Irminsul Codex aims to identify development priorities, analyze account weaknesses, optimize farming, evaluate potential pulls, and help players decide what to focus on next. Account retrieval supports this analysis; JSON export is an optional utility for third-party readers and backups.
 
-> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, optional JSON file export, and Room-backed persistence of retrieved account snapshots. The deterministic account-intelligence pipeline is connected to a dedicated Analyze Account action and an initial Account Intelligence card. The card is available when account credentials are configured; analysis retrieves and saves the account snapshot without requiring JSON export. The screen shows character assessment counts, up to five evidence-backed recommendations, account-gap counts, account-section coverage, and stale/unverified-source warnings. Players can choose Balanced Development, Build Reliability, Stat Integrity, or Data Confidence to change recommendation ordering. Save JSON remains an optional, separate action. The full Account Command Center, user-facing account history, integrated BYOAI assistant, and broader progression features remain planned.
+> **Project Status:** Early development. The app now has five bottom-navigation destinations: Home, Intel, Visuals, AI Chat, and Info. Home presents account identity, the latest retrieved snapshot summary, and Daily Note activity such as Resin, commissions, expeditions, and Realm Currency. Intel contains the deterministic account-analysis experience and explicit development-goal selection. Visuals presents an initial dashboard of assessment, recommendation, gap, and account-coverage counts. AI Chat has a dedicated informational placeholder; BYOAI is not connected or active yet. Info contains HoYoLAB account management and the optional JSON export action. Account retrieval, Daily Note synchronization, Room-backed snapshot persistence, and deterministic account analysis remain available. The broader Account Command Center, detailed finding/recommendation drill-downs, account history, integrated BYOAI assistant, and wider progression features remain planned.
 
 ---
 
@@ -50,14 +50,19 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |
 | Initial Account Intelligence | Provides a dedicated Analyze Account action and displays character assessment, recommendations, account gaps, and data coverage independently of JSON export. |
 | Development Goal Selection | Lets the user choose one of four explicit objectives for recommendation ordering. |
+| Multi-page Navigation | Provides Home, Intel, Visuals, AI Chat, and Info destinations through bottom navigation. |
+| Home Dashboard | Shows account identity, retrieved snapshot summary, and Daily Note activity. |
+| Initial Visual Dashboard | Shows deterministic character assessment, recommendation, gap, and account-section counts. |
+| AI Chat Destination | Provides a dedicated information screen; AI functionality is not active yet. |
+| Info and Export | Provides account management and the optional JSON export action outside Home. |
 
 ### Planned Core Experience
 
 - A complete Account Command Center and broader account overview as the primary user workflow.
 - Expanded account analysis beyond the currently implemented character-assessment, recommendation, roster/equipment-gap, and data-confidence foundations.
 - Full recommendation detail, filtering, and progression-history experiences beyond the initial summary card.
-- Integrated BYOAI assistant grounded in the unified account model.
-- Account analytics and progression tracking.
+- Active BYOAI chat grounded in the unified account model.
+- Expanded account analytics, interactive charts, detailed tables, and progression tracking.
 - Broader account gap analysis beyond the implemented roster and character-equipment gap foundation.
 - Farming and Resin optimization.
 - Character and weapon pull evaluation.
