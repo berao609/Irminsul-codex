@@ -90,6 +90,56 @@ class AccountExportMapperTest {
         assertEquals(DataValue.Missing, model.spiralAbyssPrevious)
     }
 
+    @Test fun mapsAccountCardRosterAndRawCharacterDetailBatches() {
+        val source = export()
+            .put("account_card", JSONObject().put("nickname", "Traveler").put("level", 60))
+            .put("character_roster_source", JSONObject()
+                .put("list", org.json.JSONArray().put(JSONObject().put("id", 10000002).put("weapon", JSONObject().put("id", 11501)))))
+            .put("character_detail_source", JSONObject()
+                .put("batches", org.json.JSONArray().put(JSONObject()
+                    .put("list", org.json.JSONArray().put(JSONObject()
+                        .put("id", 10000002)
+                        .put("weapon", JSONObject().put("id", 11501).put("level", 90))
+                        .put("relics", org.json.JSONArray().put(JSONObject().put("id", 34501)))))
+                    .put("property_map", JSONObject().put("1", "FIGHT_PROP_HP")))))
+            .put("export_status", JSONObject()
+                .put("overall_status", "complete")
+                .put("sections", JSONObject()
+                    .put("account_card", JSONObject().put("status", "success"))
+                    .put("character_roster_source", JSONObject().put("status", "success"))
+                    .put("character_detail_source", JSONObject().put("status", "success"))))
+        val model = AccountExportMapper.map(source)
+
+        val card = (model.accountCard as DataValue.Available).value as StructuredData.ObjectValue
+        assertEquals(StructuredData.StringValue("Traveler"), card.fields["nickname"])
+
+        val roster = (model.characterRosterSource as DataValue.Available).value as StructuredData.ObjectValue
+        val rosterList = roster.fields["list"] as StructuredData.ArrayValue
+        assertEquals(1, rosterList.items.size)
+
+        val details = (model.characterDetailSource as DataValue.Available).value as StructuredData.ObjectValue
+        val batches = details.fields["batches"] as StructuredData.ArrayValue
+        val firstBatch = batches.items.single() as StructuredData.ObjectValue
+        assertTrue(firstBatch.fields.containsKey("property_map"))
+        val detailList = firstBatch.fields["list"] as StructuredData.ArrayValue
+        val character = detailList.items.single() as StructuredData.ObjectValue
+        assertTrue(character.fields.containsKey("weapon"))
+        assertTrue(character.fields.containsKey("relics"))
+        assertTrue(source.has("character_detail_source"))
+    }
+
+    @Test fun rawCharacterSourceSectionsPreserveFailedAndSkippedStates() {
+        val source = export().put("export_status", JSONObject()
+            .put("overall_status", "partial")
+            .put("sections", JSONObject()
+                .put("account_card", JSONObject().put("status", "skipped"))
+                .put("character_roster_source", JSONObject().put("status", "failed").put("message", "roster failed"))))
+        val model = AccountExportMapper.map(source)
+        assertEquals(DataValue.Unavailable, model.accountCard)
+        assertTrue(model.characterRosterSource is DataValue.Failed)
+        assertEquals(DataValue.Missing, model.characterDetailSource)
+    }
+
     @Test fun rejectsMissingIdentityOrInvalidExportTimestamp() {
         val invalid = export().put("uid", "")
         try {
