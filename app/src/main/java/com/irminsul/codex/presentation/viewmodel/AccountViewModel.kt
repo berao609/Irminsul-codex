@@ -8,6 +8,7 @@ import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.model.AccountIntelligenceOverview
 import com.irminsul.codex.domain.model.AccountSnapshot
 import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
+import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
 import com.irminsul.codex.domain.repository.AccountRepository
 import com.irminsul.codex.domain.repository.AccountSnapshotStore
 import kotlinx.coroutines.CancellationException
