@@ -2030,7 +2030,7 @@ Make the Visuals page understandable to Genshin players by presenting character-
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Add a Battle Chronicle-inspired character roster and a detailed selected-character build view using the account data already mapped by the app.  
-**Status:** Implemented and committed; CI verification pending; physical-device verification pending.
+**Status:** Implemented, CI verified, and physical-device tested by the user (Debug build #266).
 
 ### Objective
 
@@ -2058,9 +2058,14 @@ The Visuals page previously showed character portraits only inside recommendatio
 
 ### Verification
 
-- Automated unit tests and Debug APK CI: pending.
-- APK artifact and signature verification: pending.
-- Physical-device verification: pending.
+- Implementation commit: `24b40ea1abb92d88263ac84fb6ed9658cb9f1437`.
+- README commit: `9f4ed847d3072424fcff76ef9c8845187b8d9b87`.
+- Milestone documentation commit: `3de8f87`.
+- GitHub Actions #266 (implementation): success. Unit tests, Debug APK build, Room schema check, APK signature verification, and artifact upload passed. Room instrumentation tests were skipped by workflow logic.
+- GitHub Actions #267 (README): success.
+- GitHub Actions #268 (milestone documentation): success.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.266-vc268`, artifact ID `15005853740`, size 8,946,411 bytes.
+- User confirmed the character showcase was tested on the physical device using build #266.
 
 ### Qualifications
 
