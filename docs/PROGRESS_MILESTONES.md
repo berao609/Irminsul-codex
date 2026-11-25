@@ -3177,7 +3177,7 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Add a collapsible four-character lineup sandbox inside Visuals, using the observed owned roster and preserving uncertainty.  
-**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+**Status:** Implementation CI #402 passed; final documentation CI pending; physical-device verification pending.
 
 ### Active Memory Recall and repository verification
 
@@ -3218,15 +3218,21 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 - `bd0ec28217d6ad03b7550231d784bcae7e25f44d` - Test four-character lineup selection.
 - `a48d3c859ae01c5aab57bb8fca29e4c0cd83a5ad` - Add four-character lineup simulator sandbox.
 - `5adc7f9f69ea89c7601cb600eb84ff5a6b10f65e` - Preserve lineup roster freshness context.
+- `359ff572b38277b2850814f7cd53e707a108413c` - Correct the lineup toggle test to match the intended remove-on-toggle behavior.
 - `f7b9c8e2d6ad0241e6c72e61a9629411279300f3` - Document the Lineup Simulator in README.
 - `5b2a6a86256d42e3e66a44be19d79018d41a154d` - Specify M55 lineup selection and evidence boundaries.
 
 ### Verification
 
 - M54 closure documentation CI #394 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45634311908.
-- Initial M55 model CI #395, test CI #396, and UI CI #397 were started; final outcomes must be checked before claiming implementation verification.
-- The roster-freshness refinement and README/SPECS/progress documentation CI results are pending.
-- No M55 APK or physical-device verification has been confirmed yet.
+- M55 selection-rules model CI #395 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45634496973.
+- Initial test CI #396 failed because the test expected toggling an already-selected character to leave it selected. The intended toggle behavior is to remove it; the test was corrected in commit `359ff572b38277b2850814f7cd53e707a108413c`.
+- CI #397 and #398 (initial UI/freshness changes), #399 (README), #400 (SPECS), and #401 (milestone documentation) also failed while building the same intermediate test state. These are not final source failures.
+- Final combined implementation CI #402 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45634948651.
+- CI #402 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. Room instrumentation tests were skipped because no Room/persistence schema changed.
+- Final Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.402-vc404`, artifact ID `15032876933`, size 15,880,772 bytes, SHA-256 `cc58b4ad3d83955b421e0ba612181923bf3776027b75bbda82489e5507e0bf72`. Room schema artifact ID `15032652360`, size 985 bytes.
+- Final M55 progress-document CI is pending.
+- No M55 physical-device verification has been confirmed yet.
 
 ### Boundaries and next checkpoint
 
