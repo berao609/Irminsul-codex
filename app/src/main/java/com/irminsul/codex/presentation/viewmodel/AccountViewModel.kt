@@ -3,8 +3,11 @@ package com.irminsul.codex.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.irminsul.codex.domain.analysis.AccountIntelligenceEngine
 import com.irminsul.codex.domain.model.AccountExport
+import com.irminsul.codex.domain.model.AccountIntelligenceOverview
 import com.irminsul.codex.domain.model.AccountSnapshot
+import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
 import com.irminsul.codex.domain.repository.AccountRepository
 import com.irminsul.codex.domain.repository.AccountSnapshotStore
 import kotlinx.coroutines.CancellationException
@@ -20,11 +23,15 @@ data class AccountExportUiState(
     val errorMessage: String? = null,
     val snapshot: AccountSnapshot? = null,
     val pendingExport: AccountExport? = null,
+    val selectedDevelopmentGoal: CharacterDevelopmentGoal = CharacterDevelopmentGoal.BALANCED_DEVELOPMENT,
+    val isAnalyzingIntelligence: Boolean = false,
+    val intelligenceOverview: AccountIntelligenceOverview? = null,
+    val intelligenceErrorMessage: String? = null,
 )
 
 /**
- * Owns account-export work and the normalized snapshot state observed by the UI.
- * Android document saving remains in the Compose presentation layer.
+ * Owns account-export work, local snapshot persistence, and deterministic account
+ * intelligence state observed by the UI. Android document saving remains in Compose.
  */
 class AccountViewModel(
     private val repository: AccountRepository,
@@ -47,6 +54,9 @@ class AccountViewModel(
                     progress = "Starting extraction...",
                     errorMessage = null,
                     pendingExport = null,
+                    intelligenceOverview = null,
+                    intelligenceErrorMessage = null,
+                    isAnalyzingIntelligence = false,
                 )
             }
 
@@ -64,6 +74,7 @@ class AccountViewModel(
                         } catch (error: Exception) {
                             persistenceError = "Account retrieved, but local saving failed: ${error.message ?: "unknown storage error"}"
                         }
+                        val goal = _uiState.value.selectedDevelopmentGoal
                         _uiState.update {
                             it.copy(
                                 isExporting = false,
@@ -73,6 +84,7 @@ class AccountViewModel(
                                 pendingExport = export
                             )
                         }
+                        analyzeSnapshot(export.snapshot, goal)
                     },
                     onFailure = { error ->
                         _uiState.update {
@@ -94,6 +106,47 @@ class AccountViewModel(
                         errorMessage = error.message ?: "JSON extraction failed.",
                     )
                 }
+            }
+        }
+    }
+
+    /**
+     * Changes only the ordering objective. The engine and its source analyzers keep
+     * all findings and base priorities unchanged.
+     */
+    fun selectDevelopmentGoal(goal: CharacterDevelopmentGoal) {
+        val snapshot = _uiState.value.snapshot
+        _uiState.update { it.copy(selectedDevelopmentGoal = goal) }
+        if (snapshot != null) analyzeSnapshot(snapshot, goal)
+    }
+
+    private fun analyzeSnapshot(snapshot: AccountSnapshot, goal: CharacterDevelopmentGoal) {
+        _uiState.update {
+            it.copy(
+                selectedDevelopmentGoal = goal,
+                isAnalyzingIntelligence = true,
+                intelligenceOverview = null,
+                intelligenceErrorMessage = null
+            )
+        }
+        try {
+            val overview = AccountIntelligenceEngine.analyze(snapshot, goal)
+            _uiState.update {
+                it.copy(
+                    isAnalyzingIntelligence = false,
+                    intelligenceOverview = overview,
+                    intelligenceErrorMessage = null
+                )
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            _uiState.update {
+                it.copy(
+                    isAnalyzingIntelligence = false,
+                    intelligenceOverview = null,
+                    intelligenceErrorMessage = error.message ?: "Account analysis failed."
+                )
             }
         }
     }
