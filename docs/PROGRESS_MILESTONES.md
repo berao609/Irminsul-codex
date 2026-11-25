@@ -1044,7 +1044,7 @@ This decision does not authorize removing the existing JSON exporter, discarding
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 2 - Local Account Persistence  
 **Milestone scope:** Introduce Room and automatically persist successful account exports as immutable, historical raw JSON snapshots associated with an account UID and server.  
-**Status:** Implementation committed; CI and device verification pending.
+**Status:** Implemented, unit-test and Android instrumentation-test verified, and Debug CI verified. Physical-device verification remains pending.
 
 ### Objective
 
@@ -1060,16 +1060,32 @@ Establish the first local persistence layer without prematurely duplicating the 
 6. Connected successful ViewModel account retrieval to local persistence. A storage failure does not discard the fetched export or block the existing Save JSON flow; it is surfaced as a warning.
 7. Added Android instrumentation tests for multiple snapshots, raw JSON preservation, account identity, timestamps, and history ordering. CI runs them on an API 34 emulator. Added ViewModel coverage proving that local database failure does not discard a successfully retrieved export or block file saving.
 8. No destructive migration fallback was added. Database schema version starts at 1; future schema changes must introduce explicit migrations.
+9. Updated the CI emulator configuration to use supported TCG software CPU emulation on GitHub-hosted Linux runners, where KVM hardware acceleration is unavailable.
 
 ### Verification
 
-- Implementation commit: pending.
-- CI Run #150 initially compiled the application and tests but the two Robolectric-backed Room tests failed because Robolectric could not download its Android runtime artifact. The tests are being moved to actual Android instrumentation on an API 34 emulator.
-- Unit tests, emulator instrumentation, Debug build, schema export, APK signature, and artifact upload: pending the corrected CI run.
+**Implementation commits**
+- Initial Room persistence implementation: `ab93141534891a954bff7895087ecb63eb1421ea`.
+- ViewModel test wiring correction: `8dfe97fdb9759cb7c56fd39dd503562574bc3033`.
+- Test dependency correction made during the abandoned Robolectric approach: `d06094a41b5a889cda449542313a6a0f1e7aa2bb`.
+- Android instrumentation test migration: `821caf8e466bfae6ffe7b3139d401de8f0a7f67a`.
+- CI software-emulation correction: `13a648e1938b8907aff2ef139c820a7b43c2c98d`.
+
+**Successful CI**
+- [GitHub Actions Run #152](https://github.com/berao609/Irminsul-codex/actions/runs/45538191685) completed successfully for exact commit `13a648e1938b8907aff2ef139c820a7b43c2c98d`.
+- Verified steps: JVM unit tests, API 34 Android emulator startup, Room instrumentation tests, Debug APK build, Room schema snapshot generation and verification, schema artifact upload, persistent Debug APK signature verification, APK artifact upload, and temporary Debug keystore cleanup.
+- The JVM unit-test step passed. The earlier Run #151 recorded 90 passing JVM tests; Run #152 reran the same unit-test task successfully.
+- Room instrumentation tests completed successfully on the API 34 emulator using TCG software CPU emulation.
+- Generated schema: `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/1.json`.
+- Schema artifact: `irminsul-room-schema-v1-run-152`; artifact ID `14988124310`; size 985 bytes; SHA-256 `6390d484346e4843fa440bedeed6aa165e9e430f84ad82883b37f9306a9792b9`; expires 2026-12-09 03:28:27 UTC.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.152-vc154`; artifact ID `14988374157`; size 8,456,536 bytes; artifact archive SHA-256 `866fb157a96d49aecc0cc38e7914a3a5c694ba67cc35457dc68cafc7d4ce7b78`; expires 2026-12-09 03:28:29 UTC.
+- APK signature verification passed using APK Signature Scheme v2; one signer was reported.
+- CI emitted a non-blocking notice that Gradle 8.14.8 is out of date. This did not fail the run. Gradle version modernization is not part of M20 and should be handled separately after checking plugin and Android Gradle Plugin compatibility.
 - Physical-device persistence and process-restart verification: pending.
 
 ### Qualifications
 
 - This milestone stores the exact selected-section export JSON as the canonical persisted source. It does not claim that the existing export is a complete account inventory or raw API archive.
 - The normalized `AccountSnapshot` is reconstructed from raw JSON when history is read; it is not yet duplicated into separate character, weapon, artifact, or resource tables.
-- User-facing account history, snapshot comparison, retention controls, encrypted credential storage, and migration beyond schema version 1 are outside this milestone.
+- User-facing account history browsing, snapshot comparison, retention controls, encrypted credential storage, and migration beyond schema version 1 are outside this milestone.
+- Room uses app-private storage but has no additional database-level encryption configured. HoYoLAB cookies remain in ordinary SharedPreferences and are not encrypted by this milestone.
