@@ -47,6 +47,11 @@ class RoomAccountSnapshotStore(
         }
     }
 
+    override suspend fun getLatest(uid: String): AccountExport? =
+        database.accountSnapshotDao().getLatestSnapshot(uid)?.let { record ->
+            AccountExport(mapExport(record.rawJson), record.rawJson)
+        }
+
     override suspend fun getHistory(uid: String, server: String): List<AccountExport> =
         database.accountSnapshotDao().getSnapshotHistory(uid, server).map { record ->
             AccountExport(mapExport(record.rawJson), record.rawJson)
