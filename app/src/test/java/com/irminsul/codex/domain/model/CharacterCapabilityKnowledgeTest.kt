@@ -30,14 +30,26 @@ class CharacterCapabilityKnowledgeTest {
         confidence: KnowledgeConfidenceState = KnowledgeConfidenceState.SUPPORTED,
         gameVersion: String? = "6.2",
         gameMode: String? = "Spiral Abyss",
-        expiresAt: Instant? = now.plusSeconds(86_400)
+        expiresAt: Instant? = now.plusSeconds(86_400),
+        assertion: CharacterCapabilityAssertion = CharacterCapabilityAssertion.AFFIRMS,
+        roles: Set<CharacterCombatRole> = setOf(CharacterCombatRole.OFF_FIELD_DAMAGE_DEALER),
+        capabilities: Set<CharacterCombatCapability> = setOf(CharacterCombatCapability.OFF_FIELD_DAMAGE),
+        conditions: List<String> = emptyList()
     ) = GameKnowledgeRecord(
         schemaVersion = 1,
         recordId = id,
         subjectType = subjectType,
         subjectId = characterId.toString(),
         claimType = claimType,
-        claim = KnowledgeClaim("Curated character role and capability assertion."),
+        claim = KnowledgeClaim(
+            "Curated character role and capability assertion.",
+            mapOf(
+                "assertion" to assertion.name,
+                "roles" to roles.map { it.name }.sorted().joinToString(","),
+                "capabilities" to capabilities.map { it.name }.sorted().joinToString(","),
+                "conditions" to conditions.joinToString("|")
+            )
+        ),
         evidenceClass = evidenceClass,
         sourceReferences = listOf(KnowledgeSourceReference("kqm", "https://keqingmains.com/example/")),
         gameContext = KnowledgeGameContext(gameVersion = gameVersion, gameMode = gameMode),
@@ -59,7 +71,8 @@ class CharacterCapabilityKnowledgeTest {
         recordId: String = "record-10000002",
         assertion: CharacterCapabilityAssertion = CharacterCapabilityAssertion.AFFIRMS,
         roles: Set<CharacterCombatRole> = setOf(CharacterCombatRole.OFF_FIELD_DAMAGE_DEALER),
-        capabilities: Set<CharacterCombatCapability> = setOf(CharacterCombatCapability.OFF_FIELD_DAMAGE)
+        capabilities: Set<CharacterCombatCapability> = setOf(CharacterCombatCapability.OFF_FIELD_DAMAGE),
+        conditions: List<String> = emptyList()
     ) = CharacterCapabilityKnowledgeClaim(
         schemaVersion = 1,
         claimId = id,
@@ -67,7 +80,8 @@ class CharacterCapabilityKnowledgeTest {
         sourceRecordId = recordId,
         assertion = assertion,
         roles = roles,
-        capabilities = capabilities
+        capabilities = capabilities,
+        conditions = conditions
     )
 
     private fun ownedFacts(
@@ -136,7 +150,10 @@ class CharacterCapabilityKnowledgeTest {
 
     @Test fun conflictingAffirmingAndRefutingClaimsRemainExplicitlyConflicted() {
         val first = record(id = "record-positive")
-        val second = record(id = "record-negative")
+        val second = record(
+            id = "record-negative",
+            assertion = CharacterCapabilityAssertion.REFUTES
+        )
         val result = OwnedCharacterCapabilityJoiner.join(
             ownedFacts(),
             listOf(
@@ -216,6 +233,21 @@ class CharacterCapabilityKnowledgeTest {
         assertTrue(result.rejectedClaims.any {
             it.code == CharacterCapabilityIssueCode.SUBJECT_ID_MISMATCH
         })
+    }
+
+    @Test fun typedClaimMustMatchTheCanonicalSourceRecordPayload() {
+        val mismatchedRecord = record(
+            roles = setOf(CharacterCombatRole.SUPPORT),
+            capabilities = setOf(CharacterCombatCapability.HEALING)
+        )
+        val result = CharacterCapabilityKnowledgeValidator.validate(
+            listOf(claim()),
+            listOf(mismatchedRecord),
+            listOf(source),
+            now,
+            context
+        )
+        assertTrue(result.any { it.code == CharacterCapabilityIssueCode.TYPED_PAYLOAD_MISMATCH })
     }
 
     @Test fun emptyAndInvalidTypedAssertionsAreRejected() {
