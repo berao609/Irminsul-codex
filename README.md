@@ -6,7 +6,7 @@ Irminsul Codex is an Android application designed to help Genshin Impact players
 
 The product's primary purpose is to turn account data into actionable in-app intelligence. Irminsul Codex aims to identify development priorities, analyze account weaknesses, optimize farming, evaluate potential pulls, and help players decide what to focus on next. Account retrieval supports this analysis; JSON export is an optional utility for third-party readers and backups.
 
-> **Project Status:** Early development. The app now has five bottom-navigation destinations: Home, Intel, Visuals, AI Chat, and Info. Home presents account identity, the latest retrieved snapshot summary, and Daily Note activity such as Resin, commissions, expeditions, and Realm Currency. Intel contains the deterministic account-analysis experience and explicit development-goal selection. Visuals presents an initial dashboard of assessment, recommendation, gap, and account-coverage counts. AI Chat has a dedicated informational placeholder; BYOAI is not connected or active yet. Info contains HoYoLAB account management and the optional JSON export action. Account retrieval, Daily Note synchronization, Room-backed snapshot persistence, and deterministic account analysis remain available. The broader Account Command Center, detailed finding/recommendation drill-downs, account history, integrated BYOAI assistant, and wider progression features remain planned.
+> **Project Status:** Early development. The app now has four bottom-navigation destinations: Home, Visuals, AI Chat, and Info. Home presents account identity, the latest retrieved snapshot summary, and Daily Note activity such as Resin, commissions, expeditions, and Realm Currency. Visuals combines the deterministic account-analysis workflow, explicit development-goal selection, evidence-backed recommendations, and visual summaries in one destination. AI Chat has a dedicated informational placeholder; BYOAI is not connected or active yet. Info contains HoYoLAB account management and the optional JSON export action. Account retrieval, Daily Note synchronization, Room-backed snapshot persistence, and deterministic account analysis remain available. The broader Account Command Center, detailed finding/recommendation drill-downs, account history, integrated BYOAI assistant, and wider progression features remain planned.
 
 ---
 
@@ -48,11 +48,11 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Account Data Retrieval | Retrieves selected account information for the existing app workflow. |
 | Optional JSON Export | Exports selected account data for third-party readers and backups. |
 | Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |
-| Initial Account Intelligence | Provides a dedicated Analyze Account action and displays character assessment, recommendations, account gaps, and data coverage independently of JSON export. |
+| Account Intelligence | Provides a dedicated Analyze Account action and displays character assessment, recommendations, account gaps, and data coverage independently of JSON export, within the Visuals page. |
 | Development Goal Selection | Lets the user choose one of four explicit objectives for recommendation ordering. |
-| Multi-page Navigation | Provides Home, Intel, Visuals, AI Chat, and Info destinations through bottom navigation. |
+| Multi-page Navigation | Provides Home, Visuals, AI Chat, and Info destinations through bottom navigation. |
 | Home Dashboard | Shows account identity, retrieved snapshot summary, and Daily Note activity. |
-| Initial Visual Dashboard | Shows deterministic character assessment, recommendation, gap, and account-section counts. |
+| Account Analysis and Visual Dashboard | Combines analysis controls, goal selection, recommendations, and visual summaries on the Visuals page. |
 | AI Chat Destination | Provides a dedicated information screen; AI functionality is not active yet. |
 | Info and Export | Provides account management and the optional JSON export action outside Home. |
 
@@ -194,7 +194,7 @@ The current application follows a data retrieval workflow:
 
 * Daily Note information is displayed, and selected account data can be exported as JSON.
 
-The application retrieves selected account data through the dedicated Analyze Account action, saves the resulting snapshot in Room, and runs the deterministic account-intelligence pipeline from the normalized snapshot. This flow does not require or launch JSON export. The ViewModel exposes the unified overview and the existing screen displays an initial summary with up to five recommendations. The user can select one of four explicit development goals; Balanced Development is the initial default. The goal changes recommendation ordering only. User-facing account history, integrated BYOAI assistance, expanded analysis, and the complete Account Command Center remain planned.
+The application retrieves selected account data through the dedicated Analyze Account action, saves the resulting snapshot in Room, and runs the deterministic account-intelligence pipeline from the normalized snapshot. This flow does not require or launch JSON export. The ViewModel exposes the unified overview and the Visuals page displays an analysis summary with up to five recommendations alongside visual account metrics. The user can select one of four explicit development goals; Balanced Development is the initial default. The goal changes recommendation ordering only. User-facing account history, integrated BYOAI assistance, expanded analysis, and the complete Account Command Center remain planned.
 
 ## Project Structure
 
