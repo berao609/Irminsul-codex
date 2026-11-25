@@ -24,6 +24,7 @@ data class AccountExportUiState(
     val snapshot: AccountSnapshot? = null,
     val pendingExport: AccountExport? = null,
     val isAnalyzingIntelligence: Boolean = false,
+    val isRestoringSnapshot: Boolean = false,
     val intelligenceOverview: AccountIntelligenceOverview? = null,
     val intelligenceErrorMessage: String? = null,
 )
@@ -38,6 +39,66 @@ class AccountViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AccountExportUiState())
     val uiState: StateFlow<AccountExportUiState> = _uiState.asStateFlow()
+
+    /**
+     * Restores the latest locally saved snapshot for this UID and rebuilds its
+     * deterministic overview without contacting HoYoLAB.
+     */
+    fun restoreLatestSnapshot(uid: String) {
+        val normalizedUid = uid.trim()
+        if (normalizedUid.isBlank() || _uiState.value.isRestoringSnapshot) return
+        if (_uiState.value.snapshot?.identity?.uid == normalizedUid &&
+            _uiState.value.intelligenceOverview != null
+        ) return
+
+        viewModelScope.launch {
+            _uiState.update { state ->
+                if (state.snapshot?.identity?.uid != normalizedUid) {
+                    state.copy(
+                        snapshot = null,
+                        intelligenceOverview = null,
+                        intelligenceErrorMessage = null,
+                        pendingExport = null,
+                        isRestoringSnapshot = true
+                    )
+                } else {
+                    state.copy(isRestoringSnapshot = true)
+                }
+            }
+            try {
+                val cached = snapshotStore.getLatest(normalizedUid)
+                if (cached != null) {
+                    _uiState.update {
+                        it.copy(
+                            snapshot = cached.snapshot,
+                            pendingExport = null,
+                            errorMessage = null,
+                            intelligenceErrorMessage = null
+                        )
+                    }
+                    analyzeSnapshot(cached.snapshot)
+                } else {
+                    _uiState.update {
+                        it.copy(
+                            snapshot = null,
+                            intelligenceOverview = null,
+                            intelligenceErrorMessage = null
+                        )
+                    }
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                _uiState.update {
+                    it.copy(
+                        intelligenceErrorMessage = "Could not restore the saved account analysis: ${error.message ?: "local storage error"}"
+                    )
+                }
+            } finally {
+                _uiState.update { it.copy(isRestoringSnapshot = false) }
+            }
+        }
+    }
 
     fun exportAccount(uid: String, cookie: String) {
         retrieveAccount(uid, cookie, prepareJsonExport = true)
@@ -65,7 +126,6 @@ class AccountViewModel(
                     progress = if (prepareJsonExport) "Starting extraction..." else "Retrieving account for analysis...",
                     errorMessage = null,
                     pendingExport = null,
-                    intelligenceOverview = null,
                     intelligenceErrorMessage = null,
                     isAnalyzingIntelligence = false,
                 )
