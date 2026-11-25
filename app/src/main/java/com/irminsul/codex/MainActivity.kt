@@ -29,6 +29,14 @@ import com.irminsul.codex.domain.model.GoalAwareCharacterRecommendation
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Build
+import androidx.compose.material.icons.rounded.DoorFront
+import androidx.compose.material.icons.rounded.ExpandLess
+import androidx.compose.material.icons.rounded.ExpandMore
+import androidx.compose.material.icons.rounded.InsertChart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -87,12 +95,10 @@ private enum class ThemeMode(val label: String, val preferenceValue: String) {
     }
 }
 
-private enum class CodexTab(val label: String, val symbol: String) {
-    HOME("Home", "⌂"),
-    VISUALS("Visuals", "▥"),
-    MATERIALS("Materials", "▤"),
-    AI_CHAT("AI Chat", "✧"),
-    INFO("Info", "ⓘ")
+private enum class CodexTab(val label: String) {
+    HOME("Home"),
+    VISUALS("Visuals"),
+    ACCOUNT("Account")
 }
 
 class MainActivity : ComponentActivity() {
@@ -166,6 +172,9 @@ private fun CodexScreen(
     var showCredentials by remember { mutableStateOf(uid.isBlank() || cookie.isBlank()) }
     var showWebLogin by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(CodexTab.HOME) }
+    var showAiSheet by remember { mutableStateOf(false) }
+    var showMaterialsPlanner by remember { mutableStateOf(false) }
+    val aiSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAllRecommendations by remember { mutableStateOf(false) }
     var selectedCharacterId by remember { mutableStateOf<Int?>(null) }
 
@@ -284,15 +293,45 @@ private fun CodexScreen(
 
     Scaffold(
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                CodexTab.values().forEach { tab ->
+            Box {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 3.dp
+                ) {
                     NavigationBarItem(
-                        selected = selectedTab == tab,
-                        onClick = { selectedTab = tab },
-                        icon = { Text(tab.symbol, fontSize = 19.sp) },
-                        label = { Text(tab.label, fontSize = 10.sp) },
+                        selected = selectedTab == CodexTab.HOME,
+                        onClick = { selectedTab = CodexTab.HOME },
+                        icon = { Icon(Icons.Rounded.DoorFront, contentDescription = "Home") },
+                        label = { Text("Home", fontSize = 10.sp) },
                         alwaysShowLabel = true
                     )
+                    NavigationBarItem(
+                        selected = selectedTab == CodexTab.VISUALS,
+                        onClick = { selectedTab = CodexTab.VISUALS },
+                        icon = { Icon(Icons.Rounded.InsertChart, contentDescription = "Visuals") },
+                        label = { Text("Visuals", fontSize = 10.sp) },
+                        alwaysShowLabel = true
+                    )
+                    Spacer(Modifier.weight(1f))
+                    NavigationBarItem(
+                        selected = selectedTab == CodexTab.ACCOUNT,
+                        onClick = {
+                            selectedTab = CodexTab.ACCOUNT
+                            showCredentials = true
+                        },
+                        icon = { Icon(Icons.Rounded.AccountCircle, contentDescription = "Account") },
+                        label = { Text("Account", fontSize = 10.sp) },
+                        alwaysShowLabel = true
+                    )
+                }
+                FloatingActionButton(
+                    onClick = { showAiSheet = true },
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-18).dp),
+                    shape = RoundedCornerShape(50),
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(Icons.Rounded.AutoAwesome, contentDescription = "Open AI assistant")
                 }
             }
         }
@@ -326,14 +365,16 @@ private fun CodexScreen(
                 }
             }
             TextButton(onClick = {
-                selectedTab = CodexTab.INFO
+                selectedTab = CodexTab.ACCOUNT
                 showCredentials = true
             }) {
+                Icon(Icons.Rounded.AccountCircle, contentDescription = null)
+                Spacer(Modifier.width(6.dp))
                 Text("Account")
             }
         }
 
-        if (showCredentials && (selectedTab == CodexTab.INFO || uid.isBlank() || cookie.isBlank())) {
+        if (showCredentials && (selectedTab == CodexTab.ACCOUNT || uid.isBlank() || cookie.isBlank())) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(14.dp)
@@ -380,7 +421,7 @@ private fun CodexScreen(
             }
         }
 
-        if (selectedTab == CodexTab.INFO && uid.isNotBlank() && cookie.isNotBlank()) {
+        if (selectedTab == CodexTab.ACCOUNT && uid.isNotBlank() && cookie.isNotBlank()) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(14.dp),
@@ -688,42 +729,48 @@ private fun CodexScreen(
         }
 
 
-        if (selectedTab == CodexTab.MATERIALS) {
+        if (selectedTab == CodexTab.VISUALS) {
             val materialCharacters = when (val value = accountExportState.snapshot?.characters) {
                 is DataValue.Available -> value.value
                 is DataValue.Stale -> value.value
                 else -> emptyList()
             }
-            MaterialsPlannerSection(
-                characters = materialCharacters,
-                preferences = prefs
-            )
-        }
-
-        if (selectedTab == CodexTab.AI_CHAT) {
-            Text("AI Assistant", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Your account-aware assistant", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        "Ask about character builds, account findings, and progression decisions. The chat interface is planned, but an AI provider has not been connected yet.",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable {
+                    showMaterialsPlanner = !showMaterialsPlanner
+                },
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Rounded.Build, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("Materials Planner", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Plan character and weapon upgrades",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        if (showMaterialsPlanner) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                        contentDescription = if (showMaterialsPlanner) "Collapse Materials Planner" else "Expand Materials Planner"
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-                    Text("Planned capabilities", fontWeight = FontWeight.SemiBold)
-                    Text("• Explain deterministic account findings\n• Compare character builds\n• Help interpret account data\n• Discuss progression priorities", fontSize = 13.sp)
-                    Text(
-                        "AI will be opt-in through your own provider. HoYoLAB cookies will never be sent to an AI provider.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text("AI chat is not active in this build.", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
                 }
+            }
+            if (showMaterialsPlanner) {
+                MaterialsPlannerSection(
+                    characters = materialCharacters,
+                    preferences = prefs
+                )
             }
         }
 
-        if (selectedTab == CodexTab.INFO) {
+        if (selectedTab == CodexTab.ACCOUNT) {
             Text("Info & settings", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -804,7 +851,7 @@ private fun CodexScreen(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = if (uid.isNotBlank()) HoYoLabClient.detectServer(uid) else "Connect your HoYoLAB account in Info",
+                        text = if (uid.isNotBlank()) HoYoLabClient.detectServer(uid) else "Connect your HoYoLAB account in Account",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -969,6 +1016,65 @@ private fun CodexScreen(
             }
         }
         }
+        if (showAiSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showAiSheet = false },
+                sheetState = aiSheetState,
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Text("Irminsul AI", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.weight(1f))
+                        TextButton(onClick = { showAiSheet = false }) { Text("Close") }
+                    }
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(18.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text("Your account-aware assistant", fontWeight = FontWeight.SemiBold)
+                            Text(
+                                "Ask about your characters, builds, teams, and progression priorities.",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "The chat interface is ready for the AI integration. A provider is not connected yet, so responses are not active in this build.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = {},
+                        enabled = false,
+                        placeholder = { Text("AI chat will be available after provider setup") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    )
+                    Text(
+                        "Your HoYoLAB authentication cookies will never be sent to an AI provider.",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+
     }
     }
 }
