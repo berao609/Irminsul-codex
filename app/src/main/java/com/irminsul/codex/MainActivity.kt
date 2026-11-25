@@ -1214,12 +1214,20 @@ private fun MaterialsPlannerSection(
 
     val characterId = selectedTargetId.takeIf { it.startsWith("character:") }
         ?.removePrefix("character:")
-    val talentTracks = listOf("normal", "skill", "burst")
-    val talentValues = talentTracks.associateWith { track ->
-        remember(characterId, track) {
-            mutableStateOf(preferences.getString("material_talent_${track}_$characterId", "") ?: "")
-        }
+    var normalTalentTarget by remember(characterId) {
+        mutableStateOf(preferences.getString("material_talent_normal_$characterId", "") ?: "")
     }
+    var skillTalentTarget by remember(characterId) {
+        mutableStateOf(preferences.getString("material_talent_skill_$characterId", "") ?: "")
+    }
+    var burstTalentTarget by remember(characterId) {
+        mutableStateOf(preferences.getString("material_talent_burst_$characterId", "") ?: "")
+    }
+    val talentValues = listOf(
+        Triple("normal", "Normal Attack", normalTalentTarget),
+        Triple("skill", "Elemental Skill", skillTalentTarget),
+        Triple("burst", "Elemental Burst", burstTalentTarget)
+    )
     var plannedWeaponId by remember {
         mutableStateOf(preferences.getString("material_planned_weapon_id", "custom") ?: "custom")
     }
@@ -1259,13 +1267,13 @@ private fun MaterialsPlannerSection(
             .putString("material_target_level", targetLevel)
             .apply()
     }
-    LaunchedEffect(characterId, talentValues.mapValues { it.value.value }) {
+    LaunchedEffect(characterId, normalTalentTarget, skillTalentTarget, burstTalentTarget) {
         if (characterId != null) {
-            val editor = preferences.edit()
-            talentValues.forEach { (track, state) ->
-                editor.putString("material_talent_${track}_$characterId", state.value)
-            }
-            editor.apply()
+            preferences.edit()
+                .putString("material_talent_normal_$characterId", normalTalentTarget)
+                .putString("material_talent_skill_$characterId", skillTalentTarget)
+                .putString("material_talent_burst_$characterId", burstTalentTarget)
+                .apply()
         }
     }
     LaunchedEffect(plannedWeaponId, plannedWeaponName) {
@@ -1368,10 +1376,17 @@ private fun MaterialsPlannerSection(
             ) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Talent levels", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                    listOf("normal" to "Normal Attack", "skill" to "Elemental Skill", "burst" to "Elemental Burst").forEach { (track, label) ->
+                    talentValues.forEach { (track, label, value) ->
                         OutlinedTextField(
-                            value = talentValues.getValue(track).value,
-                            onValueChange = { talentValues.getValue(track).value = it.filter(Char::isDigit).take(2) },
+                            value = value,
+                            onValueChange = { next ->
+                                val level = next.filter(Char::isDigit).take(2)
+                                when (track) {
+                                    "normal" -> normalTalentTarget = level
+                                    "skill" -> skillTalentTarget = level
+                                    "burst" -> burstTalentTarget = level
+                                }
+                            },
                             label = { Text("$label target level") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
