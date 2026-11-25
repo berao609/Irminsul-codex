@@ -208,8 +208,8 @@ Irminsul-codex/
 │   │       │       │   ├── local/
 │   │       │       │   │   ├── dao/
 │   │       │       │   │   ├── entity/
-│   │       │       │   └── repository/
-│   │       │       ├── mapper/
+│   │       │       │   │   └── repository/
+│   │       │       │   ├── mapper/
 │   │       │       │   │   └── AccountExportMapper.kt
 │   │       │       │   └── repository/
 │   │       │       │       └── HoYoLabAccountRepository.kt
@@ -217,7 +217,8 @@ Irminsul-codex/
 │   │       │       │   ├── model/
 │   │       │       │   │   └── AccountSnapshot.kt
 │   │       │       │   └── repository/
-│   │       │       │       └── AccountRepository.kt
+│   │       │       │       ├── AccountRepository.kt
+│   │       │       │       └── AccountSnapshotStore.kt
 │   │       │       ├── presentation/
 │   │       │       │   └── viewmodel/
 │   │       │       │       └── AccountViewModel.kt
