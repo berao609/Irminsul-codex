@@ -185,6 +185,25 @@ class CharacterCapabilityKnowledgeTest {
         })
     }
 
+    @Test fun approvedSourceMustAlsoPermitManualCapabilityCuration() {
+        val linkOnlySource = source.copy(
+            permissionState = KnowledgePermissionState.APPROVED,
+            allowedActions = setOf("canonical_link")
+        )
+        val result = OwnedCharacterCapabilityJoiner.join(
+            ownedFacts(),
+            listOf(claim()),
+            listOf(record()),
+            listOf(linkOnlySource),
+            now,
+            context
+        )
+        assertTrue(result.profiles.single().roles.isEmpty())
+        assertTrue(result.rejectedClaims.any {
+            it.code == CharacterCapabilityIssueCode.SOURCE_ACTION_NOT_APPROVED
+        })
+    }
+
     @Test fun observedUsageCannotEstablishRoleOrCapability() {
         val usage = record(evidenceClass = KnowledgeEvidenceClass.OBSERVED_USAGE)
         val result = OwnedCharacterCapabilityJoiner.join(
