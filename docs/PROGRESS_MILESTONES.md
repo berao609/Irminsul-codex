@@ -3171,3 +3171,66 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 - The AI bottom sheet is only a UI foundation. It does not send messages or call an AI provider.
 - The Materials Planner remains manual and does not gain a trusted material-cost dataset.
 - The next planned product feature after this navigation milestone is the four-character Lineup Simulator foundation.
+
+## Milestone 055 - Four-Character Lineup Simulator Foundation
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Add a collapsible four-character lineup sandbox inside Visuals, using the observed owned roster and preserving uncertainty.  
+**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+
+### Active Memory Recall and repository verification
+
+Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.md`, `MainActivity.kt`, the account snapshot character model, M48 owned-character fact mapper, M49 capability knowledge join, and M50 role/capability coverage contract. Confirmed M54 documentation CI #393 passed and the user confirmed successful physical-device testing of APK #392.
+
+### Product decisions
+
+1. Add the Lineup Simulator as a collapsible section inside Visuals, not a new navigation destination.
+2. Allow the user to select up to four distinct characters from the observed owned roster.
+3. Preserve selection order as lineup slot order. Tapping a selected character removes it; a fifth character cannot be added while all four slots are occupied.
+4. Display the selected character portraits, names, and observed element labels/counts.
+5. Explicitly disclose stale and partial roster data.
+6. Do not claim role coverage, reaction quality, team synergy, rotation quality, encounter suitability, or combat performance without verified, permitted, current evidence.
+7. Keep selection temporary in this first foundation. No saved team profiles, combat simulation, AI, backend, or source collector.
+
+### Implemented
+
+- Added pure `LineupSelectionRules` with a four-character maximum, unique-ID normalization, stable selection order, add/remove toggle behavior, and no-op behavior when full.
+- Added unit tests for add/order, duplicate selection, removal, maximum team size, and malformed pre-existing selections.
+- Added a collapsible Lineup Simulator section in Visuals.
+- Added four lineup slots and an owned-roster picker with portrait fallbacks and selected-state feedback.
+- Added descriptive element counts without inferring reaction quality or synergy.
+- Added stale-roster and partial-roster warnings.
+- Existing account analysis, character showcase, and Materials Planner behavior remain unchanged.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/analysis/LineupSelectionRules.kt` (new)
+- `app/src/test/java/com/irminsul/codex/domain/analysis/LineupSelectionRulesTest.kt` (new)
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `README.md`
+- `docs/SPECS.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- `97710b3ec81be6455d644aad988ff1a7f37062bd` - Add deterministic lineup selection rules.
+- `bd0ec28217d6ad03b7550231d784bcae7e25f44d` - Test four-character lineup selection.
+- `a48d3c859ae01c5aab57bb8fca29e4c0cd83a5ad` - Add four-character lineup simulator sandbox.
+- `5adc7f9f69ea89c7601cb600eb84ff5a6b10f65e` - Preserve lineup roster freshness context.
+- `f7b9c8e2d6ad0241e6c72e61a9629411279300f3` - Document the Lineup Simulator in README.
+- `5b2a6a86256d42e3e66a44be19d79018d41a154d` - Specify M55 lineup selection and evidence boundaries.
+
+### Verification
+
+- M54 closure documentation CI #394 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45634311908.
+- Initial M55 model CI #395, test CI #396, and UI CI #397 were started; final outcomes must be checked before claiming implementation verification.
+- The roster-freshness refinement and README/SPECS/progress documentation CI results are pending.
+- No M55 APK or physical-device verification has been confirmed yet.
+
+### Boundaries and next checkpoint
+
+- This milestone is a team selection sandbox, not a team recommendation engine or combat simulator.
+- Element counts are descriptive only. Do not infer reactions or team quality from element co-occurrence.
+- M50 role/capability coverage remains roster-level evidence, not a team synergy score.
+- Next milestone should add evidence-backed team synergy and improvement suggestions only when verified team interaction claims and required source permissions exist.
