@@ -3560,5 +3560,6 @@ The existing `UpgradeCostCalculator` and `UpgradeCostRecordValidator` remain the
 - Existing saved-plan preservation is supported by retaining the original target-specific row keys and row JSON fields, but still requires an on-device regression test using a pre-existing saved plan.
 - The new planner UI provides independent character/weapon levels, current/target levels for all three talent tracks, and per-character planned-weapon choices and levels. It does not yet automatically populate material requirements, Mora, EXP books, weapon ore, crafting conversions, domain schedules, boss farming, or Resin estimates because no redistribution-approved trusted cost dataset is connected.
 - The weapon selector is limited to weapons currently represented in the retrieved roster plus a custom text entry. It is not yet a complete inventory of every owned weapon.
+- The catalogue bridge has a positive integration test using a synthetic, explicitly approved source registry entry. This proves the governed adapter path, not that a real upstream game-data source has been approved.
 - Review Kotlin compilation and unit tests in CI. Fix any failures before asking for device verification.
 
