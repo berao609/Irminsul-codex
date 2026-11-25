@@ -2080,7 +2080,7 @@ The Visuals page previously showed character portraits only inside recommendatio
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Validate the four recommendation-ordering objectives, correct misleading player-facing labels and explanations, and make each recommendation's selected-goal rationale visible.  
-**Status:** Initial implementation CI verified; user device testing exposed a product/UX flaw. Corrective revision implemented and committed; CI and device verification pending.
+**Status:** Closed. Corrective revision implemented, CI verified in run #287, and user-confirmed physical-device test passed.
 
 ### Objective
 
@@ -2159,7 +2159,7 @@ The user tested the M41 build and confirmed that switching from Balanced to Buil
 5. Retain the domain analyzer's objective-ordering tests as internal coverage for possible future use, but do not expose these modes in the current product.
 6. Revisit user-selectable priorities only when they lead to genuinely different useful recommendations or views. Filters for concrete account areas may be considered separately.
 
-The user's device verification of the corrected build remains required before M41 can close.
+The user tested the corrected single-analysis workflow on the physical device and confirmed it worked. Corrective implementation commit: aef0949021cb4d1b1e968e93ed77aa44f2240b4f. GitHub Actions run #287 succeeded. M41 is closed.
 
 
 ## Milestone 042 - Treat Unequipped Artifacts as a Valid State
@@ -2167,7 +2167,7 @@ The user's device verification of the corrected build remains required before M4
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Stop generating data-completeness findings solely because a character has fewer than five equipped artifacts. Preserve actual artifact retrieval failures and existing build/stat findings.  
-**Status:** Implemented and committed; CI verification pending.
+**Status:** Closed. Implementation and regression tests committed; CI run #289 succeeded; user-confirmed physical-device test passed.
 
 ### Product correction
 
@@ -2202,4 +2202,50 @@ Empty artifact slots are a valid player choice. Having zero, one, four, or five 
 
 ### Closure
 
-- Pending CI verification and user device test.
+- CI run #289 succeeded for regression-test commit 01be522a5bf9447d1d59ce1b6ec85b060fd551b6.
+- User-confirmed physical-device verification passed on build #289.
+- M42 is closed.
+
+## Milestone 043 - Account-First Investment Intelligence Requirements
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Establish the product rules and architecture boundary for selective, account-relative investment recommendations and the hybrid external game-knowledge lifecycle.  
+**Status:** Requirements and architecture decision documented; implementation not started.
+
+### Objective
+
+The user clarified that the app should not flag every unbuilt or underinvested character. It should focus attention on characters who genuinely deserve resources for the current account. Community knowledge is needed to evaluate character roles, strengths, team synergies, build requirements, and changing game relevance. The user selected a hybrid knowledge-update approach: automatically discover and collect updates, then verify and curate them before they influence recommendations.
+
+### Agreed product rules
+
+1. Keep account diagnostics separate from investment intelligence. A missing-data or validation finding is not automatically a reason to invest in that character.
+2. Evaluate characters relative to the actual account, including owned roster, weapons, development, team options, role coverage, and known resource constraints.
+3. Rank candidates using explainable factors such as account value, team synergy, role redundancy, current game-mode relevance, investment requirements/cost, and evidence quality.
+4. Show a selective shortlist rather than treating every underbuilt character as a deficiency. Underbuilt does not mean high priority.
+5. Explain why each candidate matters to this account, which teams it improves or enables, what is required, and why it ranks above alternatives.
+6. Recalculate when relevant account data or trusted game knowledge changes, and explain material priority changes.
+7. Preserve deterministic authority for account facts, numerical calculations, and explicit ranking rules. AI assists with evidence synthesis and explanations; it does not invent account state or silently override deterministic results.
+
+### Agreed hybrid knowledge lifecycle
+
+1. Automatically detect and collect updates from supported sources using permitted access methods.
+2. Keep newly collected information in a candidate/staging state, not trusted recommendation input.
+3. Verify source permissions, attribution, freshness, patch context, evidence quality, assumptions, and conflicts.
+4. Publish verified knowledge as versioned records with source provenance and evidence type.
+5. Recalculate affected account priorities when trusted knowledge or account state changes, preserving enough history to explain what changed.
+
+Automatic collection is not automatic trust and does not authorize unrestricted scraping. Candidate sources such as KeqingMains and Prydwen require access, terms, licensing, attribution, and technical validation. No mandatory backend or paid AI service is approved by this decision. Core account viewing and deterministic analysis must remain useful without cloud AI.
+
+### Documentation updated
+
+- docs/SPECS.md: added account-first investment intelligence, hybrid external game-knowledge lifecycle, and AI responsibility sections.
+- docs/PROGRESS_MILESTONES.md: closed M41 and M42 using user-reported device verification and observed CI evidence; recorded this requirements milestone.
+
+### Implementation boundary
+
+This milestone defines requirements only. It does not add external-source collection, a backend, an AI service, investment scoring code, or new UI. Those require subsequent focused milestones and source-access validation.
+
+### Next development checkpoint
+
+M44 should define and validate the initial external knowledge source set and its permitted update/access mechanisms before implementing a collector or importing community data. In parallel, the deterministic investment-ranking criteria should be specified against the current account model before implementation.
