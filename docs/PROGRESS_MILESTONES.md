@@ -1976,7 +1976,7 @@ After CI and device verification, continue with a focused explanation of account
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Present character recommendations as visual, understandable cards instead of technical diagnostic text  
-**Status:** Implemented; CI and physical-device verification pending.
+**Status:** Implemented, CI verified, and physical-device tested by the user (Debug build #264).
 
 ### Objective
 
@@ -2015,12 +2015,56 @@ Make the Visuals page understandable to Genshin players by presenting character-
 
 ### Verification evidence
 
-- Automated test and Debug APK CI: pending.
-- APK artifact inspection: pending.
+- CI workflow run #264 succeeded for the implementation and milestone documentation commits. The Debug build, unit tests, Room schema check, signature verification, and artifact upload completed successfully; Room instrumentation tests were skipped by the workflow's decision logic.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.264-vc266`, artifact ID `15003606569`, size 8,916,185 bytes.
+- APK SHA-256: `a714ec976587b71c854a9395d9a224b6c40f110d62ba910d340696eb9f7bc83f`.
+- User confirmed that Debug build #264 was installed and tested on the physical device.
+
+### Closure
+
+- M39 is closed based on successful CI and the user's device-test confirmation.
+
+
+## Milestone 040 - Character Showcase Foundation
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Add a Battle Chronicle-inspired character roster and a detailed selected-character build view using the account data already mapped by the app.  
+**Status:** Implemented and committed; CI verification pending; physical-device verification pending.
+
+### Objective
+
+The Visuals page previously showed character portraits only inside recommendation cards. This milestone introduces a dedicated character showcase so the account's retrieved characters and their existing build data can be explored directly.
+
+### Work implemented
+
+1. Added a horizontally browsable character roster with portrait artwork, character name, and level. Selecting a character opens its detail view.
+2. Added a character profile header with portrait, element, rarity, level, friendship, and constellation count.
+3. Added a weapon section with weapon artwork, level, refinement, rarity, and stale-data indication.
+4. Added an artifact section with available artifact artwork, slot, level, main stat, and substats. Missing, unavailable, and failed artifact data remain distinguishable from an empty equipped-artifact list.
+5. Added selected character attributes, talent artwork and levels, and constellation artwork with unlocked/locked/unknown states.
+6. Reused source-provided image URLs already mapped by the account parser. Missing or failed images display local visual fallbacks. No external asset catalog, new network source, backend, or new dependency was introduced.
+7. Kept the showcase within the existing Visuals destination. Account analysis and recommendation behavior remain unchanged.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `README.md`
+
+### Implementation commits
+
+- Character showcase UI: [24b40ea](https://github.com/berao609/Irminsul-codex/commit/24b40ea1abb92d88263ac84fb6ed9658cb9f1437).
+- README: [9f4ed84](https://github.com/berao609/Irminsul-codex/commit/9f4ed847d3072424fcff76ef9c8845187b8d9b87).
+
+### Verification
+
+- Automated unit tests and Debug APK CI: pending.
+- APK artifact and signature verification: pending.
 - Physical-device verification: pending.
 
-### Remaining work
+### Qualifications
 
-- Confirm that the account-data source supplies usable portrait URLs for the user's characters. If it does not, the card displays an element-themed fallback rather than a broken image.
-- Install the successful Debug APK and inspect character portraits, fallback behavior, recommendation wording, card layout, and expanded/collapsed list behavior on the user's device.
-- Confirm the artifact count wording against a real account response; do not interpret missing artifact entries as proof of a weak build.
+- The showcase can display only characters and fields returned by the current account-data source. It does not infer missing equipment or fabricate artwork.
+- The UI uses existing mapped URLs. This milestone does not yet add a separate maintained game-asset catalog, alternate splash/portrait artwork, artifact-set gallery, or full-screen artwork viewer.
+- The roster is horizontally browsable in this first iteration. A richer multi-column roster layout can be considered after device feedback.
+- The showcase requires a retrieved character snapshot. Users must run Analyze Account before character profiles can be populated.
