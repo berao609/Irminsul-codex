@@ -3680,3 +3680,15 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 **Commit:** `83ee34e5a997d7e036c58edc7178987ac1b1661a`
 
 **Verification boundary:** Source is committed. CI compilation/unit tests and physical-device layout/interaction checks are pending. Device checks should cover roster collapse/expand, portrait selection, all filter combinations, level boundaries, sort direction, empty results, and Light/Dark themes.
+
+### Showcase compact progression and description cleanup
+
+**Status:** Source committed; CI build in progress; weapon passive source still requires verification.
+
+- Moved talent and constellation icon groups into the compact character profile area directly following portrait/core identity, ahead of build inspection.
+- Added shared display cleanup for talent, constellation, enhanced descriptions, and weapon description text: strips markup, removes internal link syntax, converts escaped newline sequences, and reduces excessive blank lines. Original mapped data remains untouched.
+- Weapon passive is not added yet: current account mapper only maps weapon `desc`, which is not a verified combat-passive source. Do not display lore as a passive or fabricate refinement text.
+- No account schema or persisted data changes.
+
+**Commit:** `ff72b6414ad0e5f14b2d5feb0c507e1e5e022cd2`
+**CI:** Run #483 in progress.
