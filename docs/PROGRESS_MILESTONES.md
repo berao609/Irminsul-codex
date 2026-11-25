@@ -1881,10 +1881,12 @@ Address the request for a full-screen presentation and user-selectable appearanc
 
 ### Verification
 
-- [Run #244](https://github.com/berao609/Irminsul-codex/actions/runs/45567570932) checks the edge-to-edge and theme implementation commit.
-- [Run #245](https://github.com/berao609/Irminsul-codex/actions/runs/45567600077) checks the final combined implementation after the visibility correction.
-- README documentation CI: pending.
-- Milestone documentation CI: pending.
+- [Run #244](https://github.com/berao609/Irminsul-codex/actions/runs/45567570932) failed during JVM unit tests on the initial implementation commit `35760ed1b993b45deede77d9b09a34c8fd6a26ee`. This was an intermediate commit before the follow-up visibility correction; it is retained here as verification history.
+- [Run #245](https://github.com/berao609/Irminsul-codex/actions/runs/45567600077) passed on the final combined implementation commit `f00df6d4a78197b727ea6ee72747c2b9f89d04bb`: JVM unit tests, Debug APK build, Room schema verification, APK signature verification, artifact uploads, and signing-key cleanup.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.245-vc247`, artifact ID `15000099805`, size 8,554,168 bytes.
+- Room schema artifact: `irminsul-room-schema-v1-run-245`, artifact ID `15001250430`, size 985 bytes.
+- [Run #246](https://github.com/berao609/Irminsul-codex/actions/runs/45567642492) passed for README commit `514b32576823259f2f91c292ea18230048c21615`.
+- [Run #247](https://github.com/berao609/Irminsul-codex/actions/runs/45567689211) passed for this milestone record's previous commit `213b7ce61869d0021db27ef8f1c3319c08c632b3`.
 - Physical-device verification: pending.
 
 ### Qualifications
