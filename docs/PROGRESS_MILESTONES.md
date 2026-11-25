@@ -1060,7 +1060,7 @@ Establish the first local persistence layer without prematurely duplicating the 
 6. Connected successful ViewModel account retrieval to local persistence. A storage failure does not discard the fetched export or block the existing Save JSON flow; it is surfaced as a warning.
 7. Added Android instrumentation tests for multiple snapshots, raw JSON preservation, account identity, timestamps, and history ordering. CI runs them on an API 34 emulator. Added ViewModel coverage proving that local database failure does not discard a successfully retrieved export or block file saving.
 8. No destructive migration fallback was added. Database schema version starts at 1; future schema changes must introduce explicit migrations.
-9. Updated the CI emulator configuration to use supported TCG software CPU emulation on GitHub-hosted Linux runners, where KVM hardware acceleration is unavailable.
+9. At the time of M20 verification, the GitHub-hosted runner required TCG software CPU emulation because KVM was not accessible to the workflow process. A later CI optimization, recorded after M21, corrected KVM device permissions and verified hardware acceleration on the same standard `ubuntu-latest` runner; see the CI Optimization Record below.
 
 ### Verification
 
@@ -1096,7 +1096,7 @@ Establish the first local persistence layer without prematurely duplicating the 
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - First Deterministic Account Analysis  
 **Milestone scope:** Convert existing deterministic character-build validation results into prioritized, traceable, actionable domain findings.  
-**Status:** Implementation committed; CI verification pending. No user-facing analysis screen is included.
+**Status:** Implemented, unit-test verified, and Debug CI verified (Run #155). No user-facing analysis screen is included.
 
 ### Objective
 
@@ -1121,9 +1121,10 @@ Establish the first account-intelligence analysis output without inventing build
 
 ### Verification
 
-- Implementation commit: pending.
-- GitHub Actions: pending.
-- Physical-device verification: not required for this domain-only increment; no UI or runtime workflow has changed.
+- Implementation commit: `495488f7f4438615205a02a090c4d9da2083c79b` (`feat: add deterministic character build assessment`).
+- [GitHub Actions Run #155](https://github.com/berao609/Irminsul-codex/actions/runs/45542508297) completed successfully for that exact commit.
+- The successful workflow verified JVM unit tests, Debug APK assembly, persistent Debug APK signature verification, artifact upload, and temporary Debug keystore cleanup. Room instrumentation tests were not required for this domain-only change under the path filter.
+- Physical-device verification: not required because this increment adds domain logic and tests without changing the runtime UI or workflow.
 
 ### Qualifications
 
@@ -1131,3 +1132,58 @@ Establish the first account-intelligence analysis output without inventing build
 - This is a first deterministic assessment pipeline, not a complete character build optimizer or account-wide progression recommendation engine.
 - It does not yet analyze artifact substat quality, team fit, rotation performance, enemy matchups, or user goals.
 - No user-facing UI currently displays these findings. A later milestone must connect the report to the Account Command Center or a dedicated account analysis screen.
+
+
+
+## CI Optimization Record - Post-M21
+
+**Date recorded:** 2026-11-25  
+**Scope:** Reduce Room instrumentation-test emulator startup time without using paid or larger runners.  
+**Runner:** Standard GitHub-hosted `ubuntu-latest`; no paid runner tier was introduced.
+
+### Changes and verification
+
+1. Commit `f15e203d918301d140f994486ff030b50c5c5e04` introduced path filtering so Room instrumentation tests can be skipped for unrelated changes while remaining mandatory for relevant persistence paths and manual workflow dispatch. [Run #157](https://github.com/berao609/Irminsul-codex/actions/runs/45544452026) passed. Because the workflow file itself changed, the emulator tests correctly ran for that workflow change.
+2. Commit `0b567f9e58b21c826088dbb0446e183f9bb49578` added conditional KVM detection and a TCG fallback. [Run #158](https://github.com/berao609/Irminsul-codex/actions/runs/455475...) passed, but logs showed that KVM existed and was inaccessible to the runner process, so TCG was still used. Emulator boot took approximately 767 seconds.
+3. Commit `502b3e91bf19d89b71f5209261d9973200b62e20` applied permissions to the existing `/dev/kvm` device and verified access by opening it and querying `KVM_GET_API_VERSION`. [Run #159](https://github.com/berao609/Irminsul-codex/actions/runs/45550142783) passed. Logs confirmed that KVM opened successfully with API version 12 and hardware acceleration was available.
+4. On Run #159, the emulator booted in approximately 25.6 seconds, compared with approximately 767 seconds under TCG in Run #158. The Room instrumentation Gradle task completed successfully in approximately 38 seconds, with both instrumentation tests passing.
+
+### Current CI behavior
+
+- Keep the standard `ubuntu-latest` runner.
+- Use KVM when the device is present, accessible, and passes the API-version check.
+- Retain TCG as a fallback when KVM is unavailable or unusable.
+- Keep Room instrumentation path filtering.
+- Do not change the working KVM setup without new evidence of a problem.
+- AVD snapshot caching remains a possible future optimization, not an implemented change.
+
+
+## Milestone 022 - Account-Level Character Build Priority Summary
+
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Status:** Planned; implementation not yet started.
+
+### Objective
+
+Turn M21's traceable character-level findings into a concise account-level overview that identifies which characters need attention first and why.
+
+### Planned scope
+
+1. Group existing character-build findings by character.
+2. Count ERROR and WARNING findings per affected character.
+3. Classify affected characters using transparent rule-based categories: `NEEDS_ATTENTION` when at least one ERROR exists, otherwise `REVIEW` when at least one WARNING exists.
+4. Sort affected characters deterministically by ERROR count descending, WARNING count descending, then character ID ascending.
+5. Expose account-level analyzed-character, affected-character, error, and warning counts.
+6. Preserve AVAILABLE, STALE, MISSING, UNAVAILABLE, and FAILED states. Mark stale-derived summaries as stale.
+7. Retain the underlying traceable findings so every summary can be explained.
+8. Do not assign a numerical score, classify characters with no findings as objectively strong, infer meta value, or invent missing data.
+
+### Acceptance criteria
+
+- An available empty report produces a valid empty account summary, not a missing-data state.
+- Missing, unavailable, and failed validation inputs remain distinct.
+- Stale findings remain visibly marked stale in the summary.
+- Character grouping and priority ordering are deterministic.
+- Aggregate counts match the underlying findings.
+- Unit tests cover grouping, priority categories, ordering, empty reports, and all input availability states.
+- The existing application workflow remains unchanged; no UI is included in this milestone.
