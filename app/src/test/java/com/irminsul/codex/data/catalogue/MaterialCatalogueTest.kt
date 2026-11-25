@@ -5,6 +5,12 @@ import com.irminsul.codex.domain.analysis.ManualMaterialInventory
 import com.irminsul.codex.domain.analysis.MaterialInventoryEntryState
 import com.irminsul.codex.domain.analysis.UpgradeCostCalculationRequest
 import com.irminsul.codex.domain.analysis.UpgradeCostCalculationStatus
+import com.irminsul.codex.domain.model.KnowledgeAccessMethod
+import com.irminsul.codex.domain.model.KnowledgePermissionState
+import com.irminsul.codex.domain.model.KnowledgeReviewState
+import com.irminsul.codex.domain.model.KnowledgeSourcePlatform
+import com.irminsul.codex.domain.model.KnowledgeSourceReference
+import com.irminsul.codex.domain.model.KnowledgeSourceRegistryEntry
 import com.irminsul.codex.domain.model.UpgradeCostSubjectType
 import com.irminsul.codex.domain.model.UpgradeCostTrack
 import org.junit.Assert.assertEquals
@@ -23,9 +29,15 @@ class MaterialCatalogueTest {
                     displayName = "Mora",
                     category = MaterialCategory.CURRENCY,
                     rarity = 3,
-                    iconUrl = "https://example.org/mora.png"
+                    iconUrl = "https://example.org/mora.png",
+                    sourceReferences = listOf(KnowledgeSourceReference("approved-test", "https://example.org/materials/mora")),
+                    retrievedAt = Instant.parse("2026-11-25T00:00:00Z"),
+                    reviewState = KnowledgeReviewState.VERIFIED,
+                    reviewedAt = Instant.parse("2026-11-25T00:00:00Z"),
+                    reviewNotes = "Manually cross-checked against an approved source."
                 )
-            )
+            ),
+            approvedRegistry()
         )
 
         val display = catalogue.display(
@@ -47,7 +59,7 @@ class MaterialCatalogueTest {
 
     @Test
     fun unknownMaterialRemainsExplicitAndDoesNotTrustCandidateName() {
-        val display = MaterialCatalogue(emptyList()).display(
+        val display = MaterialCatalogue(emptyList(), emptyList()).display(
             CalculatedMaterialRequirement(
                 itemId = "9999",
                 requiredQuantity = 4L,
@@ -63,9 +75,18 @@ class MaterialCatalogueTest {
 
     @Test
     fun rejectsDuplicateCatalogueIds() {
-        val duplicate = MaterialCatalogueEntry("202", "Mora", MaterialCategory.CURRENCY)
+        val duplicate = MaterialCatalogueEntry(
+            itemId = "202",
+            displayName = "Mora",
+            category = MaterialCategory.CURRENCY,
+            sourceReferences = listOf(KnowledgeSourceReference("approved-test", "https://example.org/materials/mora")),
+            retrievedAt = Instant.parse("2026-11-25T00:00:00Z"),
+            reviewState = KnowledgeReviewState.VERIFIED,
+            reviewedAt = Instant.parse("2026-11-25T00:00:00Z"),
+            reviewNotes = "Reviewed."
+        )
         assertThrows(IllegalArgumentException::class.java) {
-            MaterialCatalogue(listOf(duplicate, duplicate.copy(displayName = "Duplicate")))
+            MaterialCatalogue(listOf(duplicate, duplicate.copy(displayName = "Duplicate")), approvedRegistry())
         }
     }
 
@@ -84,7 +105,7 @@ class MaterialCatalogueTest {
             records = emptyList(),
             sourceRegistry = emptyList(),
             evaluatedAt = Instant.parse("2026-11-26T00:00:00Z"),
-            catalogue = MaterialCatalogue(emptyList()),
+            catalogue = MaterialCatalogue(emptyList(), emptyList()),
             inventory = null
         )
 
@@ -92,4 +113,40 @@ class MaterialCatalogueTest {
         assertEquals(request, result.calculation.request)
         assertEquals(emptyList<MaterialRequirementDisplay>(), result.materials)
     }
+
+    @Test
+    fun rejectsCatalogueMetadataFromUnapprovedSource() {
+        val entry = MaterialCatalogueEntry(
+            itemId = "202",
+            displayName = "Mora",
+            category = MaterialCategory.CURRENCY,
+            sourceReferences = listOf(KnowledgeSourceReference("pending-test", "https://example.org/materials/mora")),
+            retrievedAt = Instant.parse("2026-11-25T00:00:00Z"),
+            reviewState = KnowledgeReviewState.VERIFIED,
+            reviewedAt = Instant.parse("2026-11-25T00:00:00Z"),
+            reviewNotes = "Reviewed."
+        )
+        assertThrows(IllegalArgumentException::class.java) {
+            MaterialCatalogue(listOf(entry), listOf(approvedRegistry().single().copy(
+                sourceId = "pending-test",
+                permissionState = KnowledgePermissionState.PENDING_REVIEW
+            )))
+        }
+    }
+
+    private fun approvedRegistry() = listOf(
+        KnowledgeSourceRegistryEntry(
+            sourceId = "approved-test",
+            platform = KnowledgeSourcePlatform.OTHER,
+            publisherName = "Test publisher",
+            canonicalSourceUrl = "https://example.org/catalogue",
+            accessMethod = KnowledgeAccessMethod.PUBLIC_METADATA,
+            permissionState = KnowledgePermissionState.APPROVED,
+            attributionRequirements = "Test attribution",
+            allowedActions = setOf("material_cost_curation"),
+            retentionAndDeletionPolicy = "Test policy",
+            rateLimitOrQuotaNotes = null,
+            termsLastCheckedAt = Instant.parse("2026-11-25T00:00:00Z")
+        )
+    )
 }
