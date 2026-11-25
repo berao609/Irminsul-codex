@@ -867,7 +867,7 @@ Expose section retrieval age and freshness without assuming every account sectio
 
 ### Verification
 
-- Implementation commit: pending.
+- Implementation, tests, and initial milestone record: `41e5a1e4b80b45fbf1220d6a0674184501661819`.
 - GitHub Actions: pending.
 - Debug artifact: pending.
 - Device verification: not required for this pure in-memory domain assessment and mapper integration.
