@@ -3530,8 +3530,8 @@ The existing `UpgradeCostCalculator` and `UpgradeCostRecordValidator` remain the
 #### Planner UI and saved-plan compatibility
 
 - Reworked the planner target form so each character and weapon target has its own persisted current/target level pair instead of sharing one global pair.
-- Added separate Normal Attack, Elemental Skill, and Elemental Burst target levels, persisted independently per character.
-- Added a planned weapon selector using the currently observed weapon options plus a custom-weapon entry, with its own independent current/target levels.
+- Added separate current and target levels for Normal Attack, Elemental Skill, and Elemental Burst, persisted independently per character.
+- Added a planned weapon selector per character using the currently observed weapon options plus a custom-weapon entry, with its own independent current/target levels.
 - Kept the existing material-row SharedPreferences key format `manual_material_plan_rows_<targetId>` and the existing row JSON fields (`id`, `materialName`, `requiredQuantity`, `ownedQuantity`). Existing rows are loaded through the original parser and are not rewritten into a new schema.
 - Kept the legacy shared level preference keys readable and updated them alongside the new per-target keys for compatibility with older builds.
 - The UI explicitly states that verified automatic material costs are unavailable while the source-permission boundary remains unresolved. Manual material rows remain available.
@@ -3548,6 +3548,9 @@ The existing `UpgradeCostCalculator` and `UpgradeCostRecordValidator` remain the
 - `8e6e9e294f79fdbb2e2489fbf296312a1897df91` - test material catalogue resolution and calculator delegation.
 - `b1afae3a4112aacb9f9281a004e2954ee45f6316` - redesign planner target and material planning sections.
 - `1c1ae8a16afa42b9f6e1869d08dd1376aea0cc44` - persist talent targets independently per character.
+- `a96533651cfeb748c0e0ce96bdc72e6fdb735f7a` - persist current/target talent levels and weapon plans per character.
+- `d445602da8ff6ab5ff05c3604058333466f8427f` and `31bba2f7cedb88811e5378593ece449a07a6fefb` - enforce material catalogue provenance and source permission.
+- `027172563b48a1ea838c9916d7286af3066bf2df` - test approved-source enforcement for material metadata.
 
 #### Verification and remaining work
 
