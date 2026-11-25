@@ -136,7 +136,6 @@ object UnifiedCharacterAssessmentAnalyzer {
                 missing += "Character stat collections"
             }
         }
-        if (statFindings.isNotEmpty()) missing += "Stat reconciliation has mismatches"
         val level = when {
             missing.isEmpty() -> CharacterCompletenessLevel.COMPLETE
             character == null || character.level == null || character.rarity == null ->
