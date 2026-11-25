@@ -230,6 +230,7 @@ class OwnedCharacterInvestmentFactMapperTest {
             snapshot(DataValue.Available(listOf(character(), character()), retrievedAt), integrity)
         )
         assertEquals(integrity, result.roster.collectionIntegrity)
+        assertTrue(result.roster.isPartial)
         assertEquals(2, result.roster.characters.size)
     }
 }
