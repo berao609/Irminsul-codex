@@ -69,6 +69,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 - Expanded account analytics, interactive charts, detailed tables, and progression tracking.
 - Broader account gap analysis beyond the implemented roster and character-equipment gap foundation.
 - Farming and Resin optimization.
+- Materials Calculator with manually entered material inventory, verified upgrade-cost requirements, and remaining-to-farm quantities.
 - Character and weapon pull evaluation.
 - External Genshin game-knowledge integration for patch-aware character meta, build and weapon recommendations, observed usage, and account-aware pull evaluation. Candidate community sources include KeqingMains and Prydwen; access, attribution, freshness, and redistribution terms must be validated before integration.
 - AI-powered account assistant.
