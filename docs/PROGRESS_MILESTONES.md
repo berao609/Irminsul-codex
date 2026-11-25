@@ -3386,3 +3386,65 @@ Confirmed that M56 stored the complete raw export in `AccountSnapshotEntity.rawJ
 - Updated `.github/workflows/build.yml` to verify and upload `com.irminsul.codex.data.local.IrminsulDatabase/2.json`, with the artifact named for schema version 2.
 - Fix commit: `50c5f981b14e9940599a80f5f981c7aee188762a`.
 - The corrected workflow has not yet been verified by a completed CI run. The next CI result must confirm schema generation, instrumentation tests, APK build, and signature verification.
+
+
+## Milestone 058 - Deterministic Materials Planner Foundation
+
+**Date recorded:** 2026-11-26  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Replace manually authored material requirements with a verified, versioned game-data catalogue and deterministic progression calculations.  
+**Status:** Initial calculation engine and unit tests committed; catalogue ingestion, UI integration, CI verification, and device verification pending.
+
+### Active Memory Recall and source investigation
+
+Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, the current progress history, the existing manual planner calculator and tests, and the planner section in `MainActivity.kt`.
+
+Confirmed the current planner still stores manually entered material rows in SharedPreferences. Its existing calculator only subtracts manually entered owned quantities from manually entered required quantities. It does not derive requirements from character, talent, or weapon progression.
+
+Inspected the upstream `theBowja/genshin-db` repository documentation and representative English JSON records. The inspected data schema includes:
+
+- Character ascension cost records keyed by ascension stage, with stable item IDs, names, and quantities.
+- Talent cost records keyed by talent level.
+- Weapon ascension cost records keyed by ascension stage.
+- Material metadata including names, categories, source descriptions, domain names, and weekday availability.
+- The upstream project declares an MIT license and explicitly warns that data formats can change between versions.
+
+The upstream data is a promising catalogue source, not yet an approved imported production catalogue. Coverage, version pinning, attribution, image handling, crafting recipes, character/weapon EXP curves, Traveler exceptions, and source-data integrity still require validation.
+
+### Implemented
+
+- Added a normalized domain model for one material cost per upgrade step.
+- Added a deterministic progression material calculator that aggregates costs across every level step in a requested current-to-target range by stable material ID.
+- Requires an explicit cost record for every intermediate target level. Missing records return `MISSING_COST_DATA`; they are never interpreted as free upgrades.
+- Distinguishes unknown inventory from explicitly entered zero inventory.
+- Aggregates repeated material IDs, rejects conflicting names and malformed quantities, validates level ranges and inventory quantities, and detects Long overflow.
+- Added unit tests for aggregation, missing cost steps, inventory semantics, invalid ranges, malformed data, duplicate steps, conflicting material names, and overflow.
+- The engine is catalogue-agnostic. It does not embed unverified game costs or make network requests.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/analysis/ProgressionMaterialCalculator.kt` (new)
+- `app/src/test/java/com/irminsul/codex/domain/analysis/ProgressionMaterialCalculatorTest.kt` (new)
+
+### Implementation commits
+
+- `d29a3d956ede8d838d932f9d83c85de7a3ee49f6` - Add deterministic progression material aggregation.
+- `028381f236ec338dc360afbdcd522098c486aa28` - Test progression material aggregation and validation.
+
+### Verification
+
+- Both files were created on the repository default branch through the GitHub contents API.
+- CI status for these commits has not yet been observed.
+- Unit tests have not been executed locally in this environment.
+- No APK has been built or device-tested for M58.
+- Existing M53 manual planner data has not been migrated or modified.
+
+### Next actions
+
+1. Validate and pin an upstream catalogue revision. Preserve source IDs and raw source records during normalization.
+2. Audit character ascension, all three talent tracks, weapon ascension, character EXP, weapon EXP, crafting recipes, and Traveler-specific data.
+3. Add import/parser validation and fixture tests before bundling any catalogue data.
+4. Adapt the planner UI to separate character levels, three talent tracks, and customizable weapon targets.
+5. Replace manual material-name/required-quantity entry with catalogue-derived rows while retaining owned-quantity entry.
+6. Preserve and migrate existing manual planner rows without silently discarding user data.
+7. Verify combined plans, farming-day grouping, local persistence, CI, APK installation, and physical-device behavior before closing M58.
