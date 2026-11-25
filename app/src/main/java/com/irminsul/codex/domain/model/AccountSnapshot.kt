@@ -123,7 +123,9 @@ data class CharacterSnapshot(
     val selectedProperties: List<StatValueSnapshot> = emptyList(),
     val baseProperties: List<StatValueSnapshot> = emptyList(),
     val extraProperties: List<StatValueSnapshot> = emptyList(),
-    val elementProperties: List<StatValueSnapshot> = emptyList()
+    val elementProperties: List<StatValueSnapshot> = emptyList(),
+    /** Optional portrait URL supplied by the account-data source. */
+    val avatarIcon: String? = null
 )
 
 data class EquipmentIntegritySnapshot(
