@@ -55,6 +55,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Appearance Settings | Supports System, Light, and Dark themes with a saved user preference. |
 | Home Dashboard | Shows account identity, retrieved snapshot summary, and Daily Note activity. |
 | Account Analysis and Visual Dashboard | Combines analysis controls, goal selection, recommendations, and visual summaries on the Visuals page. |
+| Character Showcase | Displays the retrieved character roster as selectable portrait cards, with a detailed profile for the selected character including level, element, weapon, artifacts and stats, talents, and constellations. Uses source-provided artwork with fallbacks and distinguishes missing or stale equipment data. |
 | AI Chat Destination | Provides a dedicated information screen; AI functionality is not active yet. |
 | Info and Export | Provides account management and the optional JSON export action outside Home. |
 
