@@ -47,6 +47,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Expeditions | Displays current and maximum expedition counts. |
 | Account Data Retrieval | Retrieves selected account information for the existing app workflow. |
 | Optional JSON Export | Exports selected account data for third-party readers and backups. |
+| Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |
 
 ### Planned Core Experience
 
@@ -204,7 +205,11 @@ Irminsul-codex/
 │   │       │       ├── api/
 │   │       │       │   └── HoYoLabClient.kt
 │   │       │       ├── data/
-│   │       │       │   ├── mapper/
+│   │       │       │   ├── local/
+│   │       │       │   │   ├── dao/
+│   │       │       │   │   ├── entity/
+│   │       │       │   └── repository/
+│   │       │       ├── mapper/
 │   │       │       │   │   └── AccountExportMapper.kt
 │   │       │       │   └── repository/
 │   │       │       │       └── HoYoLabAccountRepository.kt

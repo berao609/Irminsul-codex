@@ -87,7 +87,7 @@ class AccountViewModelTest {
                     onProgress: (String) -> Unit
                 ): Result<AccountExport> = Result.failure(IllegalStateException("network unavailable"))
             }
-            val viewModel = AccountViewModel(repository)
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
             store.put("account", viewModel)
 
             viewModel.exportAccount("800000001", "test-cookie")
@@ -117,7 +117,7 @@ class AccountViewModelTest {
                     return Result.failure(IllegalStateException("should not be called"))
                 }
             }
-            val viewModel = AccountViewModel(repository)
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
             store.put("account", viewModel)
 
             viewModel.exportAccount("", "")
