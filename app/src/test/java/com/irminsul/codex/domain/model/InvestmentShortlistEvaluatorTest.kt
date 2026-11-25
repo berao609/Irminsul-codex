@@ -109,6 +109,15 @@ class InvestmentShortlistEvaluatorTest {
         assertEquals(listOf("trusted", "usage"), result.recommendations.single().supportingKnowledgeRecordIds)
     }
 
+    @Test fun expiredOrNotYetValidKnowledgeCannotSupportPriority() {
+        val expired = knowledge("expired").copy(expiresAt = now.minusSeconds(1))
+        val future = knowledge("future").copy(validFrom = now.plusSeconds(1))
+        val expiredResult = evaluate(listOf(candidate(1, evidence = listOf("expired"))), listOf(expired))
+        val futureResult = evaluate(listOf(candidate(2, evidence = listOf("future"))), listOf(future))
+        assertTrue(expiredResult.recommendations.isEmpty())
+        assertTrue(futureResult.recommendations.isEmpty())
+    }
+
     @Test fun uncertainPatchOrSynergyProducesSituationalPriority() {
         val result = evaluate(listOf(candidate(1, patch = InvestmentEvidenceState.UNKNOWN)))
         assertEquals(InvestmentPriorityBand.SITUATIONAL, result.recommendations.single().priority)
