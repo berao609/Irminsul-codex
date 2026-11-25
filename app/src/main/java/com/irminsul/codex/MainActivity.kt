@@ -60,6 +60,7 @@ import org.json.JSONObject
 import java.util.UUID
 import com.irminsul.codex.domain.analysis.ManualMaterialPlanCalculator
 import com.irminsul.codex.domain.analysis.ManualPlanCalculationStatus
+import com.irminsul.codex.domain.analysis.LineupSelectionRules
 
 private val CodexDarkColors = darkColorScheme(
     primary = Color(0xFF80CBC4),
@@ -175,6 +176,8 @@ private fun CodexScreen(
     var selectedTab by remember { mutableStateOf(CodexTab.HOME) }
     var showAiSheet by remember { mutableStateOf(false) }
     var showMaterialsPlanner by remember { mutableStateOf(false) }
+    var showLineupSimulator by remember { mutableStateOf(false) }
+    var selectedLineupCharacterIds by remember { mutableStateOf(emptyList<Int>()) }
     val aiSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAllRecommendations by remember { mutableStateOf(false) }
     var selectedCharacterId by remember { mutableStateOf<Int?>(null) }
@@ -731,11 +734,50 @@ private fun CodexScreen(
 
 
         if (selectedTab == CodexTab.VISUALS) {
-            val materialCharacters = when (val value = accountExportState.snapshot?.characters) {
+            val lineupCharacters = when (val value = accountExportState.snapshot?.characters) {
                 is DataValue.Available -> value.value
                 is DataValue.Stale -> value.value
                 else -> emptyList()
             }
+            val availableLineupIds = lineupCharacters.map { it.id }.toSet()
+            val activeLineupIds = selectedLineupCharacterIds.filter { it in availableLineupIds }
+            Card(
+                modifier = Modifier.fillMaxWidth().clickable {
+                    showLineupSimulator = !showLineupSimulator
+                },
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("Lineup Simulator", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "${activeLineupIds.size}/4 characters selected",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        if (showLineupSimulator) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                        contentDescription = if (showLineupSimulator) "Collapse Lineup Simulator" else "Expand Lineup Simulator"
+                    )
+                }
+            }
+            if (showLineupSimulator) {
+                LineupSimulatorSection(
+                    characters = lineupCharacters,
+                    selectedCharacterIds = activeLineupIds,
+                    onToggleCharacter = { characterId ->
+                        selectedLineupCharacterIds = LineupSelectionRules.toggle(activeLineupIds, characterId)
+                    }
+                )
+            }
+
+            val materialCharacters = lineupCharacters
             Card(
                 modifier = Modifier.fillMaxWidth().clickable {
                     showMaterialsPlanner = !showMaterialsPlanner
@@ -1429,6 +1471,148 @@ private fun saveManualMaterialPlanRows(rows: List<ManualMaterialPlanRow>): Strin
         )
     }
     return array.toString()
+}
+
+
+@Composable
+private fun LineupSimulatorSection(
+    characters: List<CharacterSnapshot>,
+    selectedCharacterIds: List<Int>,
+    onToggleCharacter: (Int) -> Unit
+) {
+    val selectedCharacters = selectedCharacterIds.mapNotNull { id ->
+        characters.firstOrNull { it.id == id }
+    }
+    val elementSummary = selectedCharacters
+        .groupingBy { it.element?.takeIf(String::isNotBlank) ?: "Unknown" }
+        .eachCount()
+        .entries
+        .joinToString(" • ") { (element, count) -> "$element ×$count" }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            "Choose up to four characters you own. This sandbox helps you arrange a team; it does not yet rate combat performance or claim unsupported synergies.",
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            repeat(LineupSelectionRules.MAX_TEAM_SIZE) { index ->
+                val character = selectedCharacters.getOrNull(index)
+                Card(
+                    modifier = Modifier.width(88.dp).heightIn(min = 126.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (character != null) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        if (character == null) {
+                            Text("＋", fontSize = 26.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Slot ${index + 1}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            Text("Empty", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        } else {
+                            ShowcaseArtwork(
+                                url = character.avatarIcon,
+                                description = "${character.name ?: "Character"} portrait",
+                                fallback = elementGlyph(character.element),
+                                modifier = Modifier.size(54.dp)
+                            )
+                            Text(
+                                character.name ?: "Character #${character.id}",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 2
+                            )
+                            TextButton(
+                                onClick = { onToggleCharacter(character.id) },
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                            ) {
+                                Text("Remove", fontSize = 10.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (selectedCharacters.isNotEmpty()) {
+            Text(
+                "Elements represented: $elementSummary",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+        Text(
+            "Element counts are descriptive only. Role coverage, elemental reaction quality, rotations, and team synergy will require verified game knowledge before recommendations are shown.",
+            fontSize = 11.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (characters.isEmpty()) {
+            Text(
+                "Analyze your account to load your owned character roster.",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            Text("Your roster", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                characters.forEach { character ->
+                    val isSelected = character.id in selectedCharacterIds
+                    val isFull = selectedCharacterIds.size >= LineupSelectionRules.MAX_TEAM_SIZE
+                    Card(
+                        onClick = {
+                            if (isSelected || !isFull) onToggleCharacter(character.id)
+                        },
+                        modifier = Modifier.width(104.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surface
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            ShowcaseArtwork(
+                                url = character.avatarIcon,
+                                description = "${character.name ?: "Character"} portrait",
+                                fallback = elementGlyph(character.element),
+                                modifier = Modifier.size(58.dp)
+                            )
+                            Text(
+                                character.name ?: "Character #${character.id}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 2
+                            )
+                            Text(
+                                when {
+                                    isSelected -> "Selected"
+                                    isFull -> "Team full"
+                                    else -> "Tap to add"
+                                },
+                                fontSize = 10.sp,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
