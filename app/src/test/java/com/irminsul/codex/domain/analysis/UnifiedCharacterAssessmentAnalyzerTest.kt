@@ -63,6 +63,19 @@ class UnifiedCharacterAssessmentAnalyzerTest {
         assertEquals(1,result.clearCount)
     }
 
+    @Test fun completeCharacterIsReviewWhenRequiredAnalysisSourcesAreUnverified() {
+        val result=UnifiedCharacterAssessmentAnalyzer.assess(
+            CharacterBuildAnalysisReport(CharacterBuildAnalysisAvailability.MISSING),
+            CharacterStatAnalysisReport(CharacterStatAnalysisAvailability.UNAVAILABLE),
+            DataValue.Available(listOf(char(12)),null)
+        )
+        val assessment=result.assessments.single()
+        assertEquals(CharacterAttentionStatus.REVIEW,assessment.attentionStatus)
+        assertEquals(CharacterCompletenessLevel.COMPLETE,assessment.completeness.level)
+        assertTrue(assessment.completeness.unverifiedAnalyses.contains("Build validation missing"))
+        assertTrue(assessment.completeness.unverifiedAnalyses.contains("Stat reconciliation unavailable"))
+    }
+
     @Test fun staleDataIsPreserved() {
         val result=UnifiedCharacterAssessmentAnalyzer.assess(
             build(),stats(),DataValue.Stale(listOf(char(8)),java.time.Instant.parse("2026-11-25T00:00:00Z"))
