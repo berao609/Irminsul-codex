@@ -171,6 +171,51 @@ data class CharacterBuildValidationReport(
     val invalidCharacterCount: Int get() = characters.size - validCharacterCount
 }
 
+enum class StatPropertyCategory {
+    CORE_ATTRIBUTE, OFFENSIVE, DEFENSIVE, ELEMENTAL, HEALING, ENERGY, CONTROL, UTILITY, UNKNOWN
+}
+
+enum class StatValueKind { FLAT, PERCENTAGE, UNKNOWN }
+
+enum class StatClassificationStatus { CLASSIFIED, UNKNOWN, CONFLICT }
+
+enum class StatClassificationSource { SOURCE_NAME, PROPERTY_TYPE_ID, NONE }
+
+data class StatPropertyDefinition(
+    val canonicalId: String,
+    val displayName: String,
+    val category: StatPropertyCategory,
+    val valueKind: StatValueKind,
+    val element: String? = null
+)
+
+data class StatPropertyClassification(
+    val characterId: Int,
+    val fieldPath: String,
+    val propertyType: Int?,
+    val sourceStatName: String?,
+    val definition: StatPropertyDefinition?,
+    val status: StatClassificationStatus,
+    val resolvedBy: StatClassificationSource
+)
+
+data class CharacterStatClassification(
+    val characterId: Int,
+    val results: List<StatPropertyClassification>
+) {
+    val classifiedCount: Int get() = results.count { it.status == StatClassificationStatus.CLASSIFIED }
+    val unknownCount: Int get() = results.count { it.status == StatClassificationStatus.UNKNOWN }
+    val conflictCount: Int get() = results.count { it.status == StatClassificationStatus.CONFLICT }
+}
+
+data class CharacterStatClassificationReport(
+    val characters: List<CharacterStatClassification>
+) {
+    val classifiedCount: Int get() = characters.sumOf { it.classifiedCount }
+    val unknownCount: Int get() = characters.sumOf { it.unknownCount }
+    val conflictCount: Int get() = characters.sumOf { it.conflictCount }
+}
+
 enum class StatReconciliationStatus { MATCH, WITHIN_ROUNDING_TOLERANCE, MISMATCH, NOT_CHECKED }
 
 data class StatReconciliationResult(
@@ -234,5 +279,6 @@ data class AccountSnapshot(
     val sections: Map<String, AccountSectionMetadata>,
     val characterCollectionIntegrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity(),
     val characterBuildValidation: DataValue<CharacterBuildValidationReport> = DataValue.Missing,
-    val characterStatReconciliation: DataValue<CharacterStatReconciliationReport> = DataValue.Missing
+    val characterStatReconciliation: DataValue<CharacterStatReconciliationReport> = DataValue.Missing,
+    val characterStatClassification: DataValue<CharacterStatClassificationReport> = DataValue.Missing
 )

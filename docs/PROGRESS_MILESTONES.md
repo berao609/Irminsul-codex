@@ -749,3 +749,38 @@ Provide a deterministic report showing whether reported final stat values agree 
 - A not-checked result means the available fields do not support a safe comparison.
 - The report does not mutate source JSON or normalized source strings.
 
+
+## Milestone 014 - Stat Property Semantics and Classification
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Canonical classification of known character, weapon, and artifact stat properties.  
+**Status:** Implementation in progress; CI verification pending.
+
+### Objective
+
+Establish a deterministic stat-property catalog that distinguishes canonical identity, category, element, and flat versus percentage value semantics without rewriting source values or guessing unknown identifiers.
+
+### Work implemented
+
+1. Added a catalog for recognized Genshin FightProp names and the documented numeric FightPropType identifiers included in the implementation.
+2. Added categories for core attributes, offensive, defensive, elemental, healing, energy, control, and utility properties.
+3. Added flat and percentage value-kind metadata, plus element labels for elemental damage bonuses and resistances.
+4. Added classification outcomes: classified, unknown, and conflict.
+5. Source stat names and numeric property identifiers must agree when both resolve to known definitions. Conflicts remain unresolved.
+6. Added an account-level classification report covering character property collections, equipped weapon properties, and equipped artifact main/substats.
+7. Preserved unknown source identifiers and original numeric/string values.
+
+### Verification
+
+- Source implementation and automated tests are committed; CI verification pending.
+- No stat scoring, build recommendations, damage simulation, value conversion, source JSON mutation, export schema change, Room persistence, UI integration, device install, or release is included.
+
+### Qualifications
+
+- The catalog is an initial bounded registry, not an exhaustive guarantee of every internal or future game property.
+- Numeric identifiers are based on community-maintained game data definitions; the application retains unknown values instead of assuming a meaning.
+- Flat/percentage classification describes the property semantic, not a transformation to apply to its stored value.
+- The catalog does not infer whether a stat is optimal for a specific character or build.
+- Some internal/derived properties are intentionally not catalogued in this increment.
+
