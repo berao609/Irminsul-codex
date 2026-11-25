@@ -51,9 +51,9 @@ The product's primary purpose is to turn account data into actionable in-app int
 
 ### Planned Core Experience
 
-- In-app account overview and account intelligence as the primary user workflow.
-- Expanded account analysis beyond the implemented deterministic character-assessment and recommendation domain foundations.
-- User-facing character development recommendations and explainable progression priorities.
+- A complete Account Command Center and broader account overview as the primary user workflow.
+- Expanded account analysis beyond the currently implemented character-assessment, recommendation, roster/equipment-gap, and data-confidence foundations.
+- Full recommendation detail, filtering, and progression-history experiences beyond the initial summary card.
 - Integrated BYOAI assistant grounded in the unified account model.
 - Account analytics and progression tracking.
 - Broader account gap analysis beyond the implemented roster and character-equipment gap foundation.
@@ -268,7 +268,8 @@ Responsible for:
 Responsible for:
 
 * Running full account export through the domain repository contract.
-* Exposing export progress, errors, and the normalized AccountSnapshot as observable state.
+* Exposing export progress, errors, the normalized AccountSnapshot, and the unified deterministic AccountIntelligenceOverview as observable state.
+* Running the account-intelligence pipeline after retrieval and re-running it when the selected development goal changes.
 * Retaining the original JSON export for the Save JSON file action.
 
 ### `data/local/`
