@@ -2162,3 +2162,18 @@ The sandbox does not calculate or claim:
 Those conclusions require verified, permitted, in-date team and interaction knowledge. The next milestone may add evidence-backed team synergy only after the required claims and source permissions are available. A lack of evidence must remain unknown, not a negative rating.
 
 M55 is a UI and selection-foundation milestone. It does not change the existing account-analysis or investment-priority outputs and does not add AI, a backend, source collectors, or combat simulation.
+
+
+### 3.23 M56 local account-analysis restoration
+
+The latest successfully persisted account snapshot is the startup source for the signed-in UID. On app startup, the application loads the most recent matching Room snapshot and reconstructs the deterministic account-intelligence overview locally. This restoration must not call the HoYoLAB account-export endpoint or require the user's cookie.
+
+- Snapshot lookup is scoped to the signed-in UID and ordered by export timestamp, newest first.
+- A restored snapshot remains visibly the saved snapshot; its original export timestamp and existing freshness/coverage metadata are preserved.
+- The account-intelligence engine is rerun locally from the normalized restored snapshot. No network or AI call is required.
+- Daily Note synchronization is independent and may continue using its existing lightweight request.
+- A user-initiated Analyze/Refresh action retrieves new account data and persists a new snapshot.
+- A failed explicit refresh must not erase the previously restored snapshot or its overview.
+- If no saved snapshot exists, the normal Analyze Account empty state remains available.
+- Switching to a different UID must not display the previous account's snapshot while the new UID is being restored.
+- Credentials are not added to Room or to the snapshot-store interface.
