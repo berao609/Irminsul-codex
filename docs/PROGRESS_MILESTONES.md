@@ -924,3 +924,34 @@ Ensure a failed or unavailable refresh does not erase the temporal context of th
 - A freshness status describes the age of its selected timestamp, not whether the current refresh succeeded. Consumers must inspect payloadState and timestampSource together.
 - The selected sections and export schema are unchanged.
 - This increment does not add historical storage, retry scheduling, UI, investment scoring, recommendations, or AI behavior.
+
+## Milestone 018 - Initial Account Repository Boundary
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Introduce a domain-facing account repository contract and a HoYoLAB-backed adapter that returns the unified AccountSnapshot.  
+**Status:** Implemented; unit-test and Debug CI verification pending.
+
+### Objective
+
+Create the first repository boundary between application/domain consumers and the existing HoYoLAB export implementation. Keep the current network workflow and export format intact while allowing the domain model to be retrieved without exposing JSON parsing details to future consumers.
+
+### Work implemented
+
+1. Added the domain `AccountRepository` contract, returning `Result<AccountSnapshot>` and forwarding optional progress updates.
+2. Added `HoYoLabAccountRepository` in the data layer. It delegates to the existing HoYoLAB export workflow, maps the returned JSON through `AccountExportMapper`, and exposes the normalized domain snapshot.
+3. Made export and mapping functions injectable so repository behavior can be tested without network access or real account credentials.
+4. Preserved export failures without invoking the mapper, converted malformed export JSON into a failed result, and retained coroutine cancellation semantics.
+5. Kept existing UI and synchronization/export flows unchanged; this milestone establishes the boundary but does not yet migrate MainActivity to it.
+
+### Verification
+
+- Implementation and tests commit: `9c1c890a5b07c3de083732d8129697055577cf21`.
+- Unit tests and Debug CI: pending for the implementation commit.
+- Physical-device verification: not required because this increment adds an unused repository adapter and does not change the app's runtime path.
+
+### Qualifications
+
+- The repository currently accepts UID and cookie as arguments because credential ownership remains in the existing presentation layer. This is transitional and must be replaced by a dedicated credential/session boundary before broader repository use.
+- The adapter currently wraps the existing full JSON export operation; it does not introduce a new HoYoLAB endpoint or local persistence.
+- MainActivity still calls HoYoLabClient directly. UI migration, ViewModel introduction, credential security, Room, historical snapshots, and release work are outside this increment.
