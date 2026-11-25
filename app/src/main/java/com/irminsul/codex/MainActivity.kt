@@ -997,9 +997,8 @@ private fun MaterialsPlannerSection(
     var customTargetName by remember {
         mutableStateOf(preferences.getString("material_custom_target", "") ?: "")
     }
-    val planStorageKey = remember(selectedTargetId, customTargetName) {
-        "manual_material_plan_rows_" + selectedTargetId +
-            if (selectedTargetId == "custom") ":" + customTargetName.trim().lowercase() else ""
+    val planStorageKey = remember(selectedTargetId) {
+        "manual_material_plan_rows_" + selectedTargetId
     }
     val rows = remember { mutableStateListOf<ManualMaterialPlanRow>() }
     var loadedPlanKey by remember { mutableStateOf<String?>(null) }
