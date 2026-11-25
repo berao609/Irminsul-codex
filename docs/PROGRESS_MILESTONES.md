@@ -3305,7 +3305,7 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 - M55 final documentation CI #403 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45635363391. User confirmed device testing of the #403 milestone build.
 - Intermediate CI #404-#414 exposed incomplete states between sequential interface, Room, ViewModel, test, UI, and documentation commits. #404-#405 failed while the interface and Room implementation were not yet both present; #406-#410 failed because the test double had not yet implemented the new store method; #411-#414 were also built from those intermediate states.
 - CI #415 passed unit tests on the then-current implementation; APK build was still running when recorded.
-- Final combined code CI #418 is pending: https://github.com/berao609/Irminsul-codex/actions/runs/45643514735.
+- Final combined code CI #418 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45643514735. Physical-device verification of cached restoration remains pending.
 - Physical-device verification of cached restoration is pending.
 
 ### Boundaries and next checkpoint
@@ -3313,3 +3313,66 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 - Restoration reads the newest snapshot for the UID; it does not fetch or refresh the full account JSON.
 - Daily Note remains a separate network request and is not part of the cached character/account analysis.
 - Material Calculator redesign remains a separate active task. The current manual-row planner has no approved production material catalogue, so it must not invent costs or material identities.
+
+
+## Milestone 057 - CursorWindow-Safe Account Snapshot Persistence
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Correct M56 startup restoration failure caused by retrieving multi-megabyte raw JSON from one SQLite row.  
+**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+
+### Active Memory Recall and root-cause verification
+
+Rechecked repository instructions, README, SPECS, progress history, the Room database, snapshot entity, DAO, snapshot store, and ViewModel. The reported Android error was:
+
+`Could not restore the saved account analysis: Row too big to fit into CursorWindow`.
+
+Confirmed that M56 stored the complete raw export in `AccountSnapshotEntity.rawJson` and its latest-snapshot query selected the full entity. The approximately 4 MB JSON value exceeded the available CursorWindow capacity.
+
+### Implemented
+
+- Added a dedicated `account_snapshot_json_chunks` table keyed by snapshot ID and ordered chunk index.
+- Limited each stored JSON text value to 32 KiB.
+- Updated new snapshot writes to store JSON chunks inside the same Room transaction as snapshot metadata.
+- Updated latest-snapshot and history restoration to reassemble chunks in their original order.
+- Added Room database version 1-to-2 migration.
+- The migration reads only snapshot IDs and JSON lengths through CursorWindow, then uses SQLite `substr()` to copy bounded slices into chunk rows. It clears the legacy large `rawJson` value only after its chunks have been inserted.
+- Kept a compatibility fallback for a legacy raw JSON value when no chunks are present.
+- Added unit coverage for large-content splitting, exact reassembly, and empty content.
+- Updated README and SPECS with the bounded-storage contract.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/data/local/entity/AccountSnapshotJsonChunkEntity.kt` (new)
+- `app/src/main/java/com/irminsul/codex/data/local/SnapshotJsonChunks.kt` (new)
+- `app/src/test/java/com/irminsul/codex/data/local/SnapshotJsonChunksTest.kt` (new)
+- `app/src/main/java/com/irminsul/codex/data/local/dao/AccountSnapshotDao.kt`
+- `app/src/main/java/com/irminsul/codex/data/local/IrminsulDatabase.kt`
+- `app/src/main/java/com/irminsul/codex/data/local/repository/RoomAccountSnapshotStore.kt`
+- `README.md`
+- `docs/SPECS.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- `29ca3e91c6eb652295502705041d115494ba8484` - Add chunked account snapshot JSON entity.
+- `8b8fe9d21dea4820aa029705504dc17862b6ec35` - Add bounded JSON chunking helper.
+- `e0f894caf16fea293b8bd2de8f95197f675e1541` - Test bounded JSON chunking and reassembly.
+- `341f5845242c60e5b147f32c51cc19f1f921b0f0` - Add chunk access to snapshot DAO.
+- `a5df0f2e3279ae0af213ecb5a27ff340d5fe62ef` - Add version 1-to-2 chunk-storage migration.
+- `fca2de71b6be0bbadaead992968a6b2203abdcc7` - Persist and restore account JSON through bounded chunks.
+
+### Verification
+
+- The source changes above are committed to `main`.
+- CI verification for the combined chunk-storage implementation is pending.
+- The existing M56 CI #418 passed, but it predates this CursorWindow correction.
+- Existing saved data migration and startup restoration have not yet been verified on the user's physical device.
+
+### Boundaries and next actions
+
+1. Verify Room schema generation, migration behavior, unit tests, and Debug APK build in CI.
+2. Install the resulting APK over the existing installation without clearing app data.
+3. Confirm the app restores the existing account analysis after a full close and reopen, without downloading the account JSON again.
+4. Keep M56/M57 open until migration and physical-device restoration are confirmed.
