@@ -1,12 +1,12 @@
 # Irminsul Codex
 
-**An AI-Powered Genshin Impact Account Intelligence System**
+**An AI-Integrated Genshin Impact Account Intelligence and Progression Analyzer**
 
 Irminsul Codex is an Android application designed to help Genshin Impact players understand their accounts, make better investment decisions, and plan their progression efficiently.
 
-The long-term vision is to transform account data into actionable intelligence. Instead of simply displaying statistics, Irminsul Codex aims to identify development priorities, analyze account weaknesses, optimize farming, evaluate potential pulls, and recommend what players should focus on next.
+The product's primary purpose is to turn account data into actionable in-app intelligence. Irminsul Codex aims to identify development priorities, analyze account weaknesses, optimize farming, evaluate potential pulls, and help players decide what to focus on next. Account retrieval supports this analysis; JSON export is an optional utility for third-party readers and backups.
 
-> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, and JSON export. Advanced analytics, AI integration, and the interactive dashboard are planned features.
+> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, and JSON export. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, and JSON export. The account intelligence engine, local account history, integrated BYOAI assistant, and redesigned Account Command Center remain planned and are not yet implemented.
 
 ---
 
@@ -45,11 +45,14 @@ The long-term vision is to transform account data into actionable intelligence. 
 | Realm Currency | Displays current and maximum Realm Currency. |
 | Weekly Resin Discounts | Displays remaining discounted Resin usage. |
 | Expeditions | Displays current and maximum expedition counts. |
-| Account Data Export | Retrieves selected account information and exports it as JSON. |
-| Clipboard Export | Copies exported JSON to the clipboard. |
+| Account Data Retrieval | Retrieves selected account information for the existing app workflow. |
+| Optional JSON Export | Exports selected account data for third-party readers and backups. |
 
-### Planned Features
+### Planned Core Experience
 
+- In-app account overview and account intelligence as the primary user workflow.
+- Deterministic account analysis, validation, and explainable progression priorities.
+- Integrated BYOAI assistant grounded in the unified account model.
 - Account analytics and progression tracking.
 - Character investment recommendations.
 - Account gap analysis.
@@ -182,7 +185,7 @@ The current application follows a data retrieval workflow:
 
 * Daily Note information is displayed, and selected account data can be exported as JSON.
 
-The current implementation focuses on retrieving and presenting account data. It does not yet include the planned intelligence engine or AI recommendation systems.
+The current implementation still focuses on HoYoLAB retrieval, Daily Note presentation, and selected account JSON export. The intended primary workflow is in-app account analysis with integrated AI assistance, but the intelligence engine, local persistence, BYOAI integration, and Account Command Center are not yet implemented.
 
 ## Project Structure
 
