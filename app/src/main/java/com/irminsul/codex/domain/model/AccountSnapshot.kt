@@ -52,11 +52,24 @@ data class CharacterSnapshot(
     val activeConstellationCount: Int?
 )
 
+sealed interface StructuredData {
+    data class ObjectValue(val fields: Map<String, StructuredData>) : StructuredData
+    data class ArrayValue(val items: List<StructuredData>) : StructuredData
+    data class StringValue(val value: String) : StructuredData
+    data class NumberValue(val value: String) : StructuredData
+    data class BooleanValue(val value: Boolean) : StructuredData
+    data object NullValue : StructuredData
+}
+
 data class AccountSnapshot(
     val identity: AccountIdentity,
     val metadata: SnapshotMetadata,
     val overallStatus: SectionStatus,
     val dailyNote: DataValue<DailyNoteSnapshot>,
     val characters: DataValue<List<CharacterSnapshot>>,
+    val profileAndExploration: DataValue<StructuredData>,
+    val spiralAbyssCurrent: DataValue<StructuredData>,
+    val spiralAbyssPrevious: DataValue<StructuredData>,
+    val imaginariumTheater: DataValue<StructuredData>,
     val sections: Map<String, AccountSectionMetadata>
 )
