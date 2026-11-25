@@ -49,7 +49,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Optional JSON Export | Exports selected account data for third-party readers and backups. |
 | Local Snapshot Persistence | Saves each successful account export in Room for future in-app history and analysis. |
 | Account Intelligence | Provides a dedicated Analyze Account action and displays character assessment, recommendations, account gaps, and data coverage independently of JSON export, within the Visuals page. |
-| Development Goal Selection | Lets the user choose one of four explicit objectives for recommendation ordering. |
+| Development Goal Selection | Reorders the same evidence-backed findings for Balanced, Build quality, Stat accuracy, or Data completeness, with an explanation of the selected focus. |
 | Multi-page Navigation | Provides Home, Visuals, AI Chat, and Info destinations through bottom navigation. |
 | Edge-to-Edge Layout | Extends app surfaces behind the Android status and navigation bars while preserving system-bar controls. |
 | Appearance Settings | Supports System, Light, and Dark themes with a saved user preference. |
@@ -69,6 +69,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 - Broader account gap analysis beyond the implemented roster and character-equipment gap foundation.
 - Farming and Resin optimization.
 - Character and weapon pull evaluation.
+- External Genshin game-knowledge integration for patch-aware character meta, build and weapon recommendations, observed usage, and account-aware pull evaluation. Candidate community sources include KeqingMains and Prydwen; access, attribution, freshness, and redistribution terms must be validated before integration.
 - AI-powered account assistant.
 - Interactive Account Command Center.
 - Account relationship explorer.
