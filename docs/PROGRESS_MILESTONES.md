@@ -3555,6 +3555,15 @@ The existing `UpgradeCostCalculator` and `UpgradeCostRecordValidator` remain the
 - `7f5487eefee81c9ac90234749c547d66c4fd138a` - test a reviewed cost record flowing through the existing calculator and catalogue metadata.
 - `04060f4d92cc7a7d3ffcc4d392dbc586800c97bd` - require HTTPS source-registry URLs for catalogue metadata.
 
+#### CI failure #468 and correction
+
+- Run #468 failed in `:app:testDebugUnitTest`, not during Kotlin compilation or APK packaging.
+- The only reported failing test was `GenshinDbCostParserTest.parsesCharacterAscensionSegmentsIntoVerifiedCalculatorRanges` at line 18.
+- Root cause: the synthetic fixture generates the first `ascend1` count as `(index + 1) * 10_000`, so its expected quantity is 10,000. The assertion incorrectly expected 20,000.
+- Corrected the assertion to 10,000 and renamed the test to avoid implying that parser output is already trusted calculator data.
+- Fix commit: `f404f723772f42081ec8c947d146e3dfb7ce2aa4`.
+- A new CI run must confirm that the corrected test and the full unit-test suite pass. No passing result is claimed yet.
+
 #### Verification and remaining work
 
 - No successful CI run has been observed for these commits yet. The GitHub commit status endpoint returned no status entries; that is not evidence of a passing build.
