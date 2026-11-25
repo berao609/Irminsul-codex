@@ -148,6 +148,17 @@ class AccountExportMapperTest {
         } catch (_: IllegalArgumentException) { }
     }
 
+    @Test fun mapsOptionalCharacterPortraitIconWithoutRequiringIt() {
+        val withIcon = export().put("characters", org.json.JSONArray().put(JSONObject()
+            .put("base", JSONObject().put("id", 10000003).put("name", "Jean")
+                .put("icon", "https://example.invalid/jean.png"))))
+        val mapped = (AccountExportMapper.map(withIcon).characters as DataValue.Available).value.single()
+        assertEquals("https://example.invalid/jean.png", mapped.avatarIcon)
+
+        val withoutIcon = (AccountExportMapper.map(export()).characters as DataValue.Available).value.single()
+        assertNull(withoutIcon.avatarIcon)
+    }
+
     @Test fun mapsTypedCharacterWeaponArtifactsSkillsAndStats() {
         val source = export().put("characters", org.json.JSONArray().put(JSONObject()
             .put("base", JSONObject().put("id", 10000002).put("name", "Character").put("level", 90)
