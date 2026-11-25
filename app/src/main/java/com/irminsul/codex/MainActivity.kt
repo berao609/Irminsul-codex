@@ -983,8 +983,8 @@ private fun CharacterRecommendationCard(
         recommendation.type == CharacterDevelopmentRecommendationType.BUILD_WARNINGS -> "Review $name's build"
         else -> recommendation.title
     }
-    val artifactCount = character?.equipmentIntegrity?.artifactSourceEntryCount
-        ?: (character?.artifacts as? DataValue.Available)?.value?.size
+    val artifactCount = (character?.artifacts as? DataValue.Available)?.value?.size
+        ?: character?.equipmentIntegrity?.artifactSourceEntryCount
     val explanation = when {
         artifactGap && artifactCount != null ->
             "We found $artifactCount of 5 equipped artifact entries in your account data."
