@@ -2383,7 +2383,7 @@ M46 should implement and unit-test the smallest domain-level knowledge-record an
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Add typed domain contracts and deterministic unit tests for source-attributed game knowledge and a selective account-relative investment shortlist.  
-**Status:** Implementation committed; CI verification pending. No UI, persistence, network collector, platform SDK, AI service, or APK-facing behavior was added.
+**Status:** Closed. Implementation and unit tests passed CI #310. No UI, persistence, network collector, platform SDK, AI service, or APK-facing behavior was added.
 
 ### Objective
 
