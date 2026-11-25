@@ -3362,6 +3362,8 @@ Confirmed that M56 stored the complete raw export in `AccountSnapshotEntity.rawJ
 - `341f5845242c60e5b147f32c51cc19f1f921b0f0` - Add chunk access to snapshot DAO.
 - `a5df0f2e3279ae0af213ecb5a27ff340d5fe62ef` - Add version 1-to-2 chunk-storage migration.
 - `fca2de71b6be0bbadaead992968a6b2203abdcc7` - Persist and restore account JSON through bounded chunks.
+- `7820bd26d2e801b1e110af869a83a0f3b5555588` - Preserve Unicode surrogate pairs across chunk boundaries.
+- `4628dc755f33662c9d9a33b4b2664309c82fbd95` - Test Unicode-safe chunk boundaries.
 
 ### Verification
 
