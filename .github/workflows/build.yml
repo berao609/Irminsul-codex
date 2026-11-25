@@ -151,11 +151,42 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-          if [[ -r /dev/kvm && -w /dev/kvm ]]; then
-            echo "KVM is available and accessible."
+          # The runner may create /dev/kvm before this udev rule is installed.
+          # Apply the permission to the existing device node as well.
+          sudo chmod 0666 /dev/kvm || true
+
+          echo "KVM device details:"
+          ls -l /dev/kvm
+          id
+
+          # Verify that the runner can open KVM and query its API, not merely
+          # that the device node appears readable and writable.
+          if python3 - <<'PY'
+          import fcntl
+          import os
+          import sys
+
+          try:
+              fd = os.open("/dev/kvm", os.O_RDWR | os.O_CLOEXEC)
+              try:
+                  version = fcntl.ioctl(fd, 0xAE00, 0)  # KVM_GET_API_VERSION
+              finally:
+                  os.close(fd)
+
+              if version != 12:
+                  print(f"Unexpected KVM API version: {version}")
+                  sys.exit(1)
+
+              print(f"KVM device opened successfully; API version: {version}")
+          except OSError as error:
+              print(f"KVM cannot be used by this runner: {error}")
+              sys.exit(1)
+          PY
+          then
+            echo "KVM hardware acceleration is available."
             echo "available=true" >> "$GITHUB_OUTPUT"
           else
-            echo "KVM exists but is not accessible; using the existing TCG fallback."
+            echo "KVM is present but unusable; retaining the TCG fallback."
             echo "available=false" >> "$GITHUB_OUTPUT"
           fi
 
