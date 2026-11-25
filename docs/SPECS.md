@@ -1923,6 +1923,43 @@ The guiding principle is:
 
 ---
 
+### 3.17 M50 deterministic owned-roster role and capability coverage
+
+M50 aggregates the M49 validated per-character role/capability evidence across the M48 observed owned roster. It is a domain assessment contract only; it does not generate investment recommendations or infer team synergy.
+
+#### Inputs and context
+
+\`RoleCapabilityCoverageAssessor\` consumes only \`OwnedCharacterCapabilityKnowledge\`, which already contains the M49 roster join, trusted evidence, requested \`CharacterCapabilityQueryContext\`, source-record provenance, rejected claims, and roster availability/partiality. It does not accept raw claims or bypass M49 trust validation.
+
+The assessment preserves evaluation time, requested game version/patch/mode/difficulty/encounter context, roster state, roster partiality, and all rejected-claim issues. Role and capability outputs retain supporting character IDs, conflicted character IDs, explicitly contradicted character IDs, supporting record IDs, and contradicting record IDs.
+
+#### Aggregate states
+
+Each role and capability receives one of these states:
+
+- \`COVERED\`: at least one unambiguous owned character has accepted affirmative evidence.
+- \`COVERED_WITH_CONFLICTS\`: at least one owned character supports the role/capability and at least one owned character has conflicting evidence for it.
+- \`CONFLICTED\`: conflicting evidence exists, but no unambiguous owned character has affirmative-only evidence.
+- \`NOT_ESTABLISHED\`: no affirmative evidence was found in the currently joined roster. This is not proof that the account lacks the role/capability and is not an investment gap.
+- \`INCOMPLETE\`: the roster is stale or partial and no affirmative evidence establishes coverage.
+- \`UNKNOWN\`: the roster is missing, unavailable, or failed, so account coverage cannot be assessed.
+
+A positively supported role/capability remains COVERED even when the roster is stale/partial, but the assessment retains the stale/partial roster qualification. Ownership-ambiguous duplicate profiles are excluded from positive and negative aggregation and make the roster coverage partial.
+
+#### Deterministic boundaries
+
+1. Only M49 accepted, context-applicable, verified role/capability evidence contributes.
+2. A positive assertion from any unambiguous owned character establishes coverage; one character's refutation does not cancel another character's affirmative evidence.
+3. Contradictions remain visible with source record IDs; they are never silently resolved by source ordering or confidence ranking.
+4. No assertion and refutation-only evidence never become a proven role/capability absence.
+5. Stale, partial, duplicate, missing, unavailable, and failed roster states are not converted into complete coverage.
+6. \`NOT_ESTABLISHED\` does not measure completeness of the external knowledge catalogue. The current model has no authoritative per-character knowledge-coverage manifest, so absence of claims must remain neutral.
+7. The assessment does not infer team synergy, rotations, elemental reaction quality, performance, role gaps, character investment value, redundancy, material cost, affordability, or pull value.
+8. No numerical score, weights, AI ranking, collectors, persistence, or UI are introduced.
+
+M50 is intended as a reusable evidence layer for a future lineup builder. A future simulator must separately validate team-level synergy and combat interactions; roster role coverage alone is not proof that four characters form an effective team.
+
+
 **End of specification.**
 
 
