@@ -30,13 +30,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AccountCircle
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.Build
-import androidx.compose.material.icons.rounded.DoorFront
-import androidx.compose.material.icons.rounded.ExpandLess
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.InsertChart
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.outlined.DoorFront
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.InsertChart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -302,14 +302,14 @@ private fun CodexScreen(
                     NavigationBarItem(
                         selected = selectedTab == CodexTab.HOME,
                         onClick = { selectedTab = CodexTab.HOME },
-                        icon = { Icon(Icons.Rounded.DoorFront, contentDescription = "Home") },
+                        icon = { Icon(Icons.Outlined.DoorFront, contentDescription = "Home") },
                         label = { Text("Home", fontSize = 10.sp) },
                         alwaysShowLabel = true
                     )
                     NavigationBarItem(
                         selected = selectedTab == CodexTab.VISUALS,
                         onClick = { selectedTab = CodexTab.VISUALS },
-                        icon = { Icon(Icons.Rounded.InsertChart, contentDescription = "Visuals") },
+                        icon = { Icon(Icons.Outlined.BarChart, contentDescription = "Visuals") },
                         label = { Text("Visuals", fontSize = 10.sp) },
                         alwaysShowLabel = true
                     )
@@ -320,7 +320,7 @@ private fun CodexScreen(
                             selectedTab = CodexTab.ACCOUNT
                             showCredentials = true
                         },
-                        icon = { Icon(Icons.Rounded.AccountCircle, contentDescription = "Account") },
+                        icon = { Icon(Icons.Outlined.AccountCircle, contentDescription = "Account") },
                         label = { Text("Account", fontSize = 10.sp) },
                         alwaysShowLabel = true
                     )
@@ -332,7 +332,7 @@ private fun CodexScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
-                    Icon(Icons.Rounded.AutoAwesome, contentDescription = "Open AI assistant")
+                    Icon(Icons.Outlined.AutoAwesome, contentDescription = "Open AI assistant")
                 }
             }
         }
@@ -369,7 +369,7 @@ private fun CodexScreen(
                 selectedTab = CodexTab.ACCOUNT
                 showCredentials = true
             }) {
-                Icon(Icons.Rounded.AccountCircle, contentDescription = null)
+                Icon(Icons.Outlined.AccountCircle, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
                 Text("Account")
             }
@@ -748,7 +748,7 @@ private fun CodexScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Rounded.Build, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(Icons.Outlined.Build, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text("Materials Planner", fontWeight = FontWeight.SemiBold)
                         Text(
@@ -758,7 +758,7 @@ private fun CodexScreen(
                         )
                     }
                     Icon(
-                        if (showMaterialsPlanner) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
+                        if (showMaterialsPlanner) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
                         contentDescription = if (showMaterialsPlanner) "Collapse Materials Planner" else "Expand Materials Planner"
                     )
                 }
@@ -1032,7 +1032,7 @@ private fun CodexScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Rounded.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Outlined.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Text("Irminsul AI", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.weight(1f))
                         TextButton(onClick = { showAiSheet = false }) { Text("Close") }
