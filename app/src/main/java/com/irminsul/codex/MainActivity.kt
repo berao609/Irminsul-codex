@@ -41,7 +41,6 @@ import com.irminsul.codex.api.HoYoLabClient
 import com.irminsul.codex.data.repository.HoYoLabAccountRepository
 import com.irminsul.codex.data.local.IrminsulDatabase
 import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
-import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import kotlinx.coroutines.launch
@@ -475,60 +474,10 @@ private fun CodexScreen(
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    val selectedGoalDescription = when (accountExportState.selectedDevelopmentGoal) {
-                        CharacterDevelopmentGoal.BALANCED_DEVELOPMENT ->
-                            "Balanced: confirmed build errors, stat discrepancies, build warnings, then data checks."
-                        CharacterDevelopmentGoal.BUILD_RELIABILITY ->
-                            "Build quality: confirmed build errors and warnings come before stat and data checks."
-                        CharacterDevelopmentGoal.STAT_INTEGRITY ->
-                            "Stat accuracy: numerical discrepancies come first, followed by build and data checks."
-                        CharacterDevelopmentGoal.DATA_CONFIDENCE ->
-                            "Data completeness: missing or unverified character information comes first."
-                    }
                     Text(
-                        text = "These options reorder the same evidence-backed findings. They do not create new findings or change their severity.",
+                        text = "One balanced review of your available account data. Recommendations keep a consistent priority order based on confirmed issues, stat discrepancies, build warnings, and information gaps.",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        FilterChip(
-                            selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.BALANCED_DEVELOPMENT,
-                            onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.BALANCED_DEVELOPMENT) },
-                            label = { Text("Balanced") },
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.BUILD_RELIABILITY,
-                            onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.BUILD_RELIABILITY) },
-                            label = { Text("Build quality") },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        FilterChip(
-                            selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.STAT_INTEGRITY,
-                            onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.STAT_INTEGRITY) },
-                            label = { Text("Stat accuracy") },
-                            modifier = Modifier.weight(1f)
-                        )
-                        FilterChip(
-                            selected = accountExportState.selectedDevelopmentGoal == CharacterDevelopmentGoal.DATA_CONFIDENCE,
-                            onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.DATA_CONFIDENCE) },
-                            label = { Text("Data completeness") },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    Text(
-                        text = selectedGoalDescription,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.primary
                     )
 
                     Button(
@@ -1417,11 +1366,6 @@ private fun CharacterRecommendationCard(
                     }
                 }
                 Text(title, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                Text(
-                    item.prioritizationReason,
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.primary
-                )
                 Text(explanation, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
                 Text("What to do", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 Text(nextStep, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
