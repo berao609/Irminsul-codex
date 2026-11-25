@@ -2100,3 +2100,19 @@ M52 implements domain calculation and tests only. It does not implement:
 - AI-generated quantities or AI authority over numerical results.
 
 A future UI must expose incomplete/invalid cost-data states and must never present unknown remaining quantities as zero.
+
+
+
+### 3.20 M53 manual Materials Planner UI
+
+M53 adds a usable manual planning workflow while no redistribution-approved production material-cost catalogue is connected.
+
+- The player can select a character from the retrieved roster or a weapon observed as equipped on a retrieved character. A custom target is also supported.
+- Current and target levels are editable. Retrieved current levels are prefilled when available; unavailable levels remain blank.
+- The player manually enters material names, total required quantities, and owned quantities.
+- Remaining quantity is calculated only when both required and owned quantities are valid non-negative whole numbers: max(required - owned, 0).
+- An explicit owned quantity of zero is different from a blank owned quantity. Blank means inventory is not entered and remaining quantity stays unknown.
+- Manual plans and target/level selections are stored locally in app preferences. They are not synchronized with HoYoLAB or a remote service.
+- The UI labels manually entered requirements as unverified. It must not imply that the quantities came from HoYoverse or a trusted game-knowledge record.
+- The M52 verified-cost engine remains the future auto-population path. It is not wired to the UI until an approved, in-date, version-matched cost catalogue is available.
+- This milestone does not add inventory synchronization, automatic material costs, farming schedules, domain drop yields, Resin estimates, or AI-generated quantities.
