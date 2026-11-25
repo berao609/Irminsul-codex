@@ -3023,7 +3023,7 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Add a usable local Materials Planner while no redistribution-approved production cost catalogue is available.  
-**Status:** Implemented; code CI #373, #375, and #376 passed; final documentation verification and physical-device testing pending.
+**Status:** Implemented and CI-verified; user reported testing the final #376 APK, but did not explicitly state pass/fail.
 
 ### Objective and product boundary
 
@@ -3093,7 +3093,7 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 - Final Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.376-vc378`, artifact ID `15026489813`, size 9,064,766 bytes. Room schema artifact ID `15028935149`, size 985 bytes.
 - Final SPECS target-isolation update CI #377 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45626388663.
 - The final progress-document update CI #378 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45626563675.
-- Physical-device UI and persistence testing remains pending. Do not mark M53 fully closed until the user installs and tests the final #376 build.
+- Physical-device UI and persistence testing: user reported that the final #376 APK was tested on 2026-11-25. The test outcome was not explicitly stated, so device verification is recorded as performed but not yet confirmed successful.
 
 ### Boundaries and next checkpoint
 
@@ -3101,3 +3101,63 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 - M52's verified-cost engine is not wired into this UI until an approved, in-date, version-matched cost catalogue is available.
 - The user can manually enter required quantities from a source they trust and enter owned quantities without any in-game inventory integration.
 - Next planned feature remains the four-character Lineup Simulator foundation. Do not add combat simulation or unverified team synergy claims.
+
+## Milestone 054 - Streamlined Navigation and Integrated AI Entry Point
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Simplify the primary navigation, relocate Materials Planner into Visuals, and introduce a centered AI action with a chat-style bottom sheet.  
+**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+
+### Active Memory Recall and repository verification
+
+Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.md`, `MainActivity.kt`, `app/build.gradle.kts`, and `gradle/libs.versions.toml`. Confirmed M53 build CI #376 passed. The user reported testing #376; the result was not explicitly stated.
+
+### Approved product decisions
+
+1. Keep only Home, Visuals, and Account as bottom-navigation destinations.
+2. Keep Account accessible from the top app-bar shortcut and the rightmost bottom-navigation item. Account contains appearance settings, HoYoLAB account management, and optional JSON export.
+3. Put a raised AI sparkle action at the center of the bottom bar. Tapping it opens a modal bottom-sheet chat interface.
+4. Keep the AI surface explicitly inactive until a provider is connected. Do not imply that message sending or AI responses work yet.
+5. Move Materials Planner into Visuals as a collapsible section. Preserve its existing target-specific local storage and manual/unverified quantity semantics.
+6. Replace text-glyph navigation with consistent vector icons: door/entrance for Home, analytics chart for Visuals, sparkle for AI, and profile for Account.
+
+### Implemented
+
+- Added the Compose Material extended vector-icon dependency.
+- Replaced the five-item text-glyph navigation with Home, Visuals, and Account plus a raised center AI action.
+- Added a modal bottom-sheet AI interface with a clear provider-not-connected state and existing cookie privacy statement.
+- Removed the dedicated Materials and AI Chat navigation destinations.
+- Integrated Materials Planner into Visuals behind a collapsible section; planner calculation and persistence logic are unchanged.
+- Kept Account and settings accessible from the top app bar and the Account navigation item.
+- Updated README and product specification to match the new navigation model.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/build.gradle.kts`
+- `gradle/libs.versions.toml`
+- `README.md`
+- `docs/SPECS.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- `6a2b1d5cb47f3b5558475e97333595ab2a4753da` - Add Compose vector icon catalog alias.
+- `512fdd61486279b1ebfa800a80b6d14f51c9c74a` - Add Material vector icon dependency.
+- `271a2f96a7b3fa1b435814bf04c6fc299bf744d9` - Implement navigation redesign, AI sheet, and integrated Materials Planner.
+- `66422a272fc26b17b1d68cc79021bc1e14067e5f` - Add required Material 3 experimental API opt-in.
+- `a73dca4fd0ec41004d6f53a162d896b4b8085100` - Update README.
+- `275ee7525260db41910301130f108d7315d913f4` - Update product specification.
+
+### Verification
+
+- CI runs #381-#383 were started for the dependency and navigation changes; their results must be checked before claiming a successful build.
+- The follow-up source commit `66422a2` and documentation commits are awaiting their own CI results.
+- No new APK or device test has been verified for M54.
+
+### Boundaries and next checkpoint
+
+- The AI bottom sheet is only a UI foundation. It does not send messages or call an AI provider.
+- The Materials Planner remains manual and does not gain a trusted material-cost dataset.
+- The next planned product feature after this navigation milestone is the four-character Lineup Simulator foundation.
