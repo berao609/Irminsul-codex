@@ -2073,3 +2073,67 @@ The Visuals page previously showed character portraits only inside recommendatio
 - The UI uses existing mapped URLs. This milestone does not yet add a separate maintained game-asset catalog, alternate splash/portrait artwork, artifact-set gallery, or full-screen artwork viewer.
 - The roster is horizontally browsable in this first iteration. A richer multi-column roster layout can be considered after device feedback.
 - The showcase requires a retrieved character snapshot. Users must run Analyze Account before character profiles can be populated.
+
+
+## Milestone 041 - Analysis Objective Validation and Clarity
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Validate the four recommendation-ordering objectives, correct misleading player-facing labels and explanations, and make each recommendation's selected-goal rationale visible.  
+**Status:** Implemented and committed; CI verification pending; physical-device verification pending.
+
+### Objective
+
+The user reported that Balanced, Builds, Stat Integrity, and Data Confidence appeared to show the same results. Repository inspection found that the objectives were designed to reorder the same evidence-backed findings, not generate different findings. The domain analyzer already assigned distinct category orders, but the UI did not explain the selected focus, and the test for Stat Integrity incorrectly expected build errors to rank first.
+
+### Findings
+
+1. The four objectives are ordering strategies over the same recommendation set. They do not filter, generate, or alter findings.
+2. The initial five-card preview can look unchanged when the selected account has no findings in the categories that would otherwise move ahead. An objective cannot surface a category for which no finding exists.
+3. The Build label represented build-validation reliability, not character build optimization or meta build recommendations.
+4. Data Confidence currently reorders character-level missing/unverified information checks. It does not create account-wide freshness or coverage recommendations.
+5. The Stat Integrity unit test contradicted the intended objective by expecting a build error ahead of a stat discrepancy.
+
+### Work implemented
+
+1. Clarified the goal-aware analyzer documentation: objectives reorder existing evidence, and cannot create missing findings.
+2. Corrected the Stat Integrity test to expect stat discrepancies first.
+3. Added a test asserting the complete and distinct recommendation-category order for all four objectives.
+4. Renamed the player-facing objectives to Balanced, Build quality, Stat accuracy, and Data completeness. The underlying enum values remain unchanged for compatibility.
+5. Added a plain-language explanation of the selected objective and clarified that switching objectives reorders the same findings without changing their evidence or severity.
+6. Added each recommendation's goal-specific prioritization rationale to its character card.
+7. Preserved the base recommendation priorities, evidence, actions, findings, analysis calculations, and five-item preview behavior.
+
+### External game-knowledge direction reaffirmed
+
+This milestone also records the user's explicit requirement to integrate external Genshin community knowledge as a planned product capability. The specification now describes patch-aware character meta and relevance, character builds and artifact recommendations, weapon rankings/comparisons, theorycrafting, observed player usage, and account-aware pull evaluation. KeqingMains and Prydwen are initial candidate sources, subject to validation of access methods, licensing, attribution, freshness, and redistribution permissions. No external data integration is implemented by M41.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/analysis/GoalAwareCharacterDevelopmentAnalyzer.kt`
+- `app/src/test/java/com/irminsul/codex/domain/analysis/GoalAwareCharacterDevelopmentAnalyzerTest.kt`
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `README.md`
+- `docs/SPECS.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- Analyzer clarification: `59eab1785313e9692d2231ea1ae6c88f2a2c1031`.
+- Distinct objective-ordering tests: `a073f7bc45be95561479721fb39e179420cfea4b`.
+- Objective labels, explanations, and per-card rationale: `dfe2f4c191ca625dd338f4d9b5d313c63376154f`.
+- README roadmap update: `6bfaf5c17b3be3f9ab2725c8e991afe7c410e15d`.
+- Product specification update: `230eabcf68abc77c71a143e3a53d790ef8e99dba`.
+
+### Verification
+
+- CI runs #270 through #274 were triggered for the analyzer, test, UI, README, and product-spec commits. Their final conclusions are pending at the time this milestone record was written.
+- Physical-device verification: pending.
+
+### Qualifications
+
+- The objectives intentionally do not produce four different analysis reports. They change recommendation order only. If the account has no findings in a goal's focus category, that objective cannot make such findings appear.
+- Build quality refers to deterministic validation of currently available build data. It is not yet an optimizer that recommends best-in-slot weapons, artifact sets, or rotations.
+- Data completeness refers to the existing character-level data review recommendation category. Account-wide section coverage and freshness remain displayed separately.
+- External meta/build/weapon/pull knowledge is planned, not implemented. External sources must not be scraped or republished without checking their permitted access and terms.
+- No account data, credentials, persistence schema, network behavior, or recommendation-generation rules were changed.
