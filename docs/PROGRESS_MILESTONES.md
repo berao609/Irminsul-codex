@@ -1089,3 +1089,45 @@ Establish the first local persistence layer without prematurely duplicating the 
 - The normalized `AccountSnapshot` is reconstructed from raw JSON when history is read; it is not yet duplicated into separate character, weapon, artifact, or resource tables.
 - User-facing account history browsing, snapshot comparison, retention controls, encrypted credential storage, and migration beyond schema version 1 are outside this milestone.
 - Room uses app-private storage but has no additional database-level encryption configured. HoYoLAB cookies remain in ordinary SharedPreferences and are not encrypted by this milestone.
+
+
+## Milestone 021 - Deterministic Character Build Assessment Foundation
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Convert existing deterministic character-build validation results into prioritized, traceable, actionable domain findings.  
+**Status:** Implementation committed; CI verification pending. No user-facing analysis screen is included.
+
+### Objective
+
+Establish the first account-intelligence analysis output without inventing build scores, relying on AI for calculations, or treating missing data as a valid empty result.
+
+### Work implemented
+
+1. Added a domain report that explicitly distinguishes available, stale, missing, unavailable, and failed validation inputs.
+2. Added deterministic character-build findings derived from the existing `CharacterBuildValidator` report. Every finding retains its character ID, optional character name, issue code, severity, field path, source message, and a suggested next action.
+3. Findings are ordered deterministically, with errors before warnings and stable character/path/code ordering.
+4. Stale validation inputs remain marked stale on every derived finding.
+5. An available empty validation report remains distinct from missing or unavailable validation data.
+6. The analyzer does not assign a numerical build score, infer meta strength, compare against external builds, modify account data, or automatically repair anything.
+7. Updated README to distinguish this domain foundation from the future user-facing account intelligence experience.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/model/CharacterBuildAnalysis.kt` (new)
+- `app/src/main/java/com/irminsul/codex/domain/analysis/CharacterBuildAnalyzer.kt` (new)
+- `app/src/test/java/com/irminsul/codex/domain/analysis/CharacterBuildAnalyzerTest.kt` (new)
+- `README.md`
+
+### Verification
+
+- Implementation commit: pending.
+- GitHub Actions: pending.
+- Physical-device verification: not required for this domain-only increment; no UI or runtime workflow has changed.
+
+### Qualifications
+
+- Findings are only as complete as the selected account data and the existing validation rules.
+- This is a first deterministic assessment pipeline, not a complete character build optimizer or account-wide progression recommendation engine.
+- It does not yet analyze artifact substat quality, team fit, rotation performance, enemy matchups, or user goals.
+- No user-facing UI currently displays these findings. A later milestone must connect the report to the Account Command Center or a dedicated account analysis screen.
