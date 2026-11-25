@@ -2629,3 +2629,99 @@ M48 establishes a tested, provenance-aware account-fact boundary. The app can no
 ### Next development checkpoint
 
 M49 should define a typed, versioned character role/capability knowledge contract and a safe join against these owned-character facts. It should cover only evidence-backed capabilities needed to reason about account role coverage, preserve game-version/mode applicability and provenance, and reject unknown or unsupported claims. Do not add platform collectors, arbitrary weights, AI ranking, or UI at this stage.
+
+## Milestone 049 - Typed Character Capability Knowledge and Owned-Roster Join
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Define a typed, versioned character role/capability assertion contract and safely join trusted assertions to characters observed in the M48 account roster.  
+**Status:** Implementation and tests committed. Final combined CI verification pending. Domain-only change; no UI, persistence, source collector, recommendation scoring, or AI integration.
+
+### Objective
+
+Create the first typed bridge between reviewed character knowledge and a player's actual owned roster. The bridge must preserve evidence and conflicts, reject unsupported or context-mismatched knowledge, and never treat absence from an incomplete roster as proof of non-ownership.
+
+### Repository retrieval
+
+Rechecked AGENTS.md, README.md, SPECS.md, PROGRESS_MILESTONES.md, M46 GameKnowledge.kt and InvestmentShortlist.kt, M48 OwnedCharacterInvestmentFacts.kt and OwnedCharacterInvestmentFactMapper.kt, AccountSnapshot.kt, and existing GameKnowledgeRecordValidator tests. M48 implementation CI #330, documentation CI #331, and M48 closure CI #332 were confirmed successful before M49 implementation.
+
+### Implementation
+
+1. Added `CharacterCapabilityKnowledge.kt`:
+   - Versioned `CharacterCapabilityKnowledgeClaim` linked to one canonical `GameKnowledgeRecord`.
+   - Typed combat-role vocabulary: on-field damage dealer, off-field damage dealer, support, enabler, driver, healer, shielder, buffer, debuffer, battery, and crowd control.
+   - Typed capability vocabulary: on-/off-field damage, elemental application, reaction triggering/enabling, healing, shielding, damage/defense buffs, resistance reduction, energy generation, crowd control/grouping, interruption resistance, damage mitigation, and elemental infusion.
+   - Explicit AFFIRMS/REFUTES polarity and optional qualifying conditions.
+   - Typed query context for game version, patch phase, mode, difficulty, and encounter.
+2. Added structural and trust validation:
+   - Requires supported schema, unique claim IDs, positive character IDs, and at least one explicitly typed role/capability.
+   - Requires an exact source record, CHARACTER subject, matching character ID, and ROLE_CAPABILITY claim type.
+   - Requires typed role/capability/polarity/condition values to exactly match the canonical source record attributes. The typed interpretation cannot silently diverge from its provenance record.
+   - Requires VERIFIED + SUPPORTED knowledge, approved source permission, structural validity, and an active validity window.
+   - Rejects observed-usage evidence as a basis for role/capability assertions.
+   - Requested game-version/patch/mode/difficulty/encounter dimensions must exactly match populated source-record context; missing context is not a wildcard.
+3. Added `OwnedCharacterCapabilityJoiner`:
+   - Emits profiles only for character IDs present in an AVAILABLE or STALE M48 roster.
+   - Preserves roster state and partial-coverage status.
+   - Does not infer that absent characters are unowned.
+   - Suppresses joins for duplicate character IDs and marks those profiles ownership-ambiguous.
+   - Preserves supporting and contradicting source record IDs. Affirming and refuting claims for the same role/capability become CONFLICTED; refutation-only evidence is CONTRADICTED.
+   - No accepted assertion means no role/capability evidence, not a negative role assessment.
+4. Added no automatic source adapters, scraped content, persistence, UI, numerical weighting, team-synergy inference, or investment recommendations.
+
+### Tests
+
+`CharacterCapabilityKnowledgeTest.kt` covers:
+- Joining only verified typed claims to characters actually present in the roster.
+- Affirming/refuting evidence conflict preservation.
+- Candidate/untrusted knowledge rejection.
+- Usage-only evidence rejection.
+- Expired and game-version-mismatched knowledge rejection.
+- Unapproved source permission and mismatched subject identity rejection.
+- Empty/invalid typed assertions.
+- Exact binding between the typed claim and canonical source-record attributes.
+- Stale/partial roster preservation.
+- Duplicate owned-character IDs blocking ambiguous joins.
+- Unavailable roster producing no ownership profiles.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/model/CharacterCapabilityKnowledge.kt`
+- `app/src/test/java/com/irminsul/codex/domain/model/CharacterCapabilityKnowledgeTest.kt`
+- `docs/SPECS.md`: added section 3.16.
+- `docs/PROGRESS_MILESTONES.md`: this M49 record.
+
+### Implementation and specification commits
+
+- `9e64cc63d34976eaa1c36c0037ca1a3b9baa6a24` - Add typed character capability knowledge contract and safe join.
+- `e32d891c2e671b53c72befd1dffd38b1a5828000` - Add capability validation and roster-join tests.
+- `fd2c0cc07c2aa9861618cd8f3b2acf68469dd835` - Remove unused join-helper inputs.
+- `60f703b27a9f905c09682660ed0e6f8bd3613649` - Specify M49 contract and trust boundaries in SPECS.
+- `e250cdfc5b5a07bc6f0efde64e9a2c33ac310e52` - Bind typed assertions to canonical source-record attributes.
+- `958977fd63658a335dbafa3c681abf9c50ac45de` - Test canonical payload binding.
+- `3aa5785933d420ce290d9d56a05b43850fd56c4c` - Use a stable delimiter for condition attributes.
+
+### Verification
+
+- CI #333: source model, validator, and join compiled; unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact uploads passed. https://github.com/berao609/Irminsul-codex/actions/runs/45610405724
+- CI #334: capability-join unit tests passed; Debug APK build, Room schema verification, APK signature verification, and artifact uploads passed. https://github.com/berao609/Irminsul-codex/actions/runs/45610532811
+- CI #336: SPECS update passed unit tests and Debug APK build. https://github.com/berao609/Irminsul-codex/actions/runs/45610833596
+- CI #335, #337, #338, and #339 were triggered by subsequent source/test/doc commits; final outcomes are pending at the time this entry was written.
+- Room instrumentation tests are skipped because M49 changes no Room or persistence code.
+- No user-facing runtime behavior changed. Physical-device testing is not applicable.
+
+### Boundaries and limitations
+
+- Role/capability claims are curated typed assertions. This milestone does not populate them with live KQM, Prydwen, HoYoLAB, social, or creator data.
+- Source record review notes and canonical source references remain necessary; a typed payload is not independently verified merely because it is well-formed.
+- Context matching is exact for requested dimensions. Broader compatibility/patch-range semantics are not inferred.
+- A joined profile is not a team, role-gap assessment, character ranking, build recommendation, or investment priority.
+- The joiner does not connect to the M46 InvestmentShortlistEvaluator.
+
+### Outcome
+
+M49 establishes a provenance-bound, patch/mode-aware typed capability contract and a conservative join to observed owned characters. It preserves contradictory claims and incomplete roster states rather than manufacturing certainty. The output is evidence for later account coverage analysis, not a recommendation.
+
+### Next development checkpoint
+
+M50 may define a deterministic role/capability coverage assessment using only M49 accepted claims and M48 observed owned-character facts. It should keep each coverage result tied to explicit game-mode/context requirements and report UNKNOWN when roster or knowledge coverage is incomplete. Do not infer team synergy, assign numerical weights, rank investments, or add UI until the coverage contract is independently tested.
