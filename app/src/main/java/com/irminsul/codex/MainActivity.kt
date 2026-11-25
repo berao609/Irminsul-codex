@@ -1305,30 +1305,46 @@ private fun MaterialsPlannerSection(
             .apply()
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Materials Planner", fontSize = 23.sp, fontWeight = FontWeight.Bold)
             Text(
-                "Plan character, talent, and weapon upgrades independently.",
-                fontSize = 13.sp,
+                "Materials Planner",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Build upgrade plans for your characters and weapons.",
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(20.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text("Upgrade target", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("1. Choose an upgrade target", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Each character and weapon keeps its own level range.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Box {
-                    OutlinedButton(onClick = { targetMenuExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { targetMenuExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
                         Text(
                             selectedTarget?.label ?: if (selectedTargetId == "custom") "Custom target" else "Choose target",
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1
                         )
                         Text("⌄")
                     }
@@ -1351,12 +1367,13 @@ private fun MaterialsPlannerSection(
                         onValueChange = { customTargetName = it },
                         label = { Text("Character or weapon name") },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
                 Text(
-                    if (selectedTargetId.startsWith("character:")) "Character level"
-                    else "Weapon level",
+                    if (selectedTargetId.startsWith("character:")) "Character level" else "Weapon level",
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1366,7 +1383,8 @@ private fun MaterialsPlannerSection(
                         label = { Text("Current") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
                     )
                     OutlinedTextField(
                         value = targetLevel,
@@ -1374,78 +1392,98 @@ private fun MaterialsPlannerSection(
                         label = { Text("Target") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
-                Text(
-                    "Each target keeps its own saved level range. Existing saved ranges are retained.",
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
 
         if (characterId != null) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(20.dp)
             ) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Talent levels", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Column(
+                    Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("2. Talent investment", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Set each talent track independently.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     talentValues.forEach { (track, label, levels) ->
-                        Text(label, fontWeight = FontWeight.Medium, fontSize = 13.sp)
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            OutlinedTextField(
-                                value = levels.first,
-                                onValueChange = { next ->
-                                    val level = next.filter(Char::isDigit).take(2)
-                                    when (track) {
-                                        "normal" -> normalTalentCurrent = level
-                                        "skill" -> skillTalentCurrent = level
-                                        "burst" -> burstTalentCurrent = level
-                                    }
-                                },
-                                label = { Text("Current") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
-                            )
-                            OutlinedTextField(
-                                value = levels.second,
-                                onValueChange = { next ->
-                                    val level = next.filter(Char::isDigit).take(2)
-                                    when (track) {
-                                        "normal" -> normalTalentTarget = level
-                                        "skill" -> skillTalentTarget = level
-                                        "burst" -> burstTalentTarget = level
-                                    }
-                                },
-                                label = { Text("Target") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
-                            )
+                        Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                OutlinedTextField(
+                                    value = levels.first,
+                                    onValueChange = { next ->
+                                        val level = next.filter(Char::isDigit).take(2)
+                                        when (track) {
+                                            "normal" -> normalTalentCurrent = level
+                                            "skill" -> skillTalentCurrent = level
+                                            "burst" -> burstTalentCurrent = level
+                                        }
+                                    },
+                                    label = { Text("Current") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                OutlinedTextField(
+                                    value = levels.second,
+                                    onValueChange = { next ->
+                                        val level = next.filter(Char::isDigit).take(2)
+                                        when (track) {
+                                            "normal" -> normalTalentTarget = level
+                                            "skill" -> skillTalentTarget = level
+                                            "burst" -> burstTalentTarget = level
+                                        }
+                                    },
+                                    label = { Text("Target") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                            }
                         }
                     }
-                    Text(
-                        "Talent targets are saved separately for each character.",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
 
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(20.dp)
             ) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Weapon to equip", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Column(
+                    Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("3. Planned weapon", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Choose the weapon this character is intended to equip.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Box {
-                        OutlinedButton(onClick = { weaponMenuExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { weaponMenuExpanded = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
                             Text(
                                 plannedWeapon?.label ?: if (plannedWeaponId == "custom") "Choose or enter a weapon" else "Custom weapon",
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1
                             )
                             Text("⌄")
                         }
@@ -1468,25 +1506,28 @@ private fun MaterialsPlannerSection(
                             onValueChange = { plannedWeaponName = it },
                             label = { Text("Weapon name") },
                             singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         OutlinedTextField(
                             value = plannedWeaponCurrent,
                             onValueChange = { plannedWeaponCurrent = it.filter(Char::isDigit).take(3) },
-                            label = { Text("Weapon current level") },
+                            label = { Text("Current level") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
                         )
                         OutlinedTextField(
                             value = plannedWeaponTarget,
                             onValueChange = { plannedWeaponTarget = it.filter(Char::isDigit).take(3) },
-                            label = { Text("Weapon target level") },
+                            label = { Text("Target level") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
                 }
@@ -1497,107 +1538,148 @@ private fun MaterialsPlannerSection(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Verified material costs unavailable", fontWeight = FontWeight.SemiBold)
+            Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Automatic costs are not connected yet", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Text(
-                    "The catalogue metadata and trusted-calculation connection are in place, but no external cost source is currently approved for automatic ingestion. Manual entries remain available until reviewed cost records are authorized.",
-                    fontSize = 12.sp,
+                    "Only reviewed, approved cost data can populate automatic requirements. Manual tracking is available in the meantime.",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Material requirements", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-            TextButton(onClick = { rows.add(ManualMaterialPlanRow(id = UUID.randomUUID().toString())) }) {
-                Text("+ Add material")
-            }
-        }
-        if (rows.isEmpty()) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("No manual materials added", fontWeight = FontWeight.SemiBold)
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("Material requirements", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                     Text(
-                        "Add a material and enter its required and owned quantities. Existing saved rows are loaded automatically.",
-                        fontSize = 12.sp,
+                        if (rows.isEmpty()) "No materials tracked" else "${rows.size} materials tracked",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Button(onClick = { rows.add(ManualMaterialPlanRow(id = UUID.randomUUID().toString())) }) {
-                        Text("Add first material")
+                }
+                Button(
+                    onClick = { rows.add(ManualMaterialPlanRow(id = UUID.randomUUID().toString())) },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Add material")
+                }
+            }
+
+            if (rows.isEmpty()) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("Your material list is empty", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Add a material to track its required and owned quantities. Existing saved rows are loaded automatically.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
-        }
-        rows.forEachIndexed { index, row ->
-            val calculation = ManualMaterialPlanCalculator.calculate(row.requiredQuantity, row.ownedQuantity)
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+
+            rows.forEachIndexed { index, row ->
+                val calculation = ManualMaterialPlanCalculator.calculate(row.requiredQuantity, row.ownedQuantity)
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text("Material ${index + 1}", fontWeight = FontWeight.SemiBold)
-                        TextButton(onClick = { rows.removeAt(index) }) { Text("Remove") }
-                    }
-                    OutlinedTextField(
-                        value = row.materialName,
-                        onValueChange = { rows[index] = row.copy(materialName = it) },
-                        label = { Text("Material name") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Material ${index + 1}",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            TextButton(onClick = { rows.removeAt(index) }) { Text("Remove") }
+                        }
                         OutlinedTextField(
-                            value = row.requiredQuantity,
-                            onValueChange = { rows[index] = row.copy(requiredQuantity = it.filter(Char::isDigit)) },
-                            label = { Text("Required") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            value = row.materialName,
+                            onValueChange = { rows[index] = row.copy(materialName = it) },
+                            label = { Text("Material name") },
                             singleLine = true,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
-                        OutlinedTextField(
-                            value = row.ownedQuantity,
-                            onValueChange = { rows[index] = row.copy(ownedQuantity = it.filter(Char::isDigit)) },
-                            label = { Text("Owned") },
-                            placeholder = { Text("Not entered") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    when (calculation.status) {
-                        ManualPlanCalculationStatus.COMPLETE -> Text(
-                            "Remaining: ${calculation.remainingQuantity}  •  Required: ${calculation.requiredQuantity}  •  Owned: ${calculation.ownedQuantity}",
-                            fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary
-                        )
-                        ManualPlanCalculationStatus.INVENTORY_NOT_ENTERED -> Text(
-                            "Required: ${calculation.requiredQuantity}  •  Enter owned quantity to calculate what remains.",
-                            fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        ManualPlanCalculationStatus.REQUIRED_NOT_ENTERED -> Text(
-                            "Enter the required quantity.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        ManualPlanCalculationStatus.INVALID_QUANTITY -> Text(
-                            "Enter valid non-negative whole numbers.", fontSize = 12.sp, color = MaterialTheme.colorScheme.error
-                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedTextField(
+                                value = row.requiredQuantity,
+                                onValueChange = { rows[index] = row.copy(requiredQuantity = it.filter(Char::isDigit)) },
+                                label = { Text("Required") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            OutlinedTextField(
+                                value = row.ownedQuantity,
+                                onValueChange = { rows[index] = row.copy(ownedQuantity = it.filter(Char::isDigit)) },
+                                label = { Text("Owned") },
+                                placeholder = { Text("Not entered") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                        }
+                        when (calculation.status) {
+                            ManualPlanCalculationStatus.COMPLETE -> {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Remaining", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(
+                                        calculation.remainingQuantity.toString(),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                            ManualPlanCalculationStatus.INVENTORY_NOT_ENTERED -> Text(
+                                "Enter your owned quantity to calculate what remains.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            ManualPlanCalculationStatus.REQUIRED_NOT_ENTERED -> Text(
+                                "Enter the required quantity.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            ManualPlanCalculationStatus.INVALID_QUANTITY -> Text(
+                                "Enter valid non-negative whole numbers.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }
         }
         Text(
-            "Plans remain saved locally. Existing material rows keep their original target-specific storage keys. Blank owned quantities remain unknown; 0 means none owned.",
-            fontSize = 11.sp,
+            "Plans are saved locally. A blank owned quantity means unknown; 0 means none owned.",
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
