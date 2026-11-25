@@ -1,5 +1,6 @@
 package com.irminsul.codex.data.repository
 
+import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.model.AccountSnapshot
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
@@ -63,7 +64,7 @@ class HoYoLabAccountRepositoryTest {
             }
         )
 
-        val result = repository.fetchAccountSnapshot("800000001", "test-cookie")
+        val result = repository.fetchAccountExport("800000001", "test-cookie")
 
         assertTrue(result.isFailure)
         assertSame(failure, result.exceptionOrNull())
@@ -76,7 +77,7 @@ class HoYoLabAccountRepositoryTest {
             exportJson = { _, _, _ -> Result.success("{not-json") }
         )
 
-        val result = repository.fetchAccountSnapshot("800000001", "test-cookie")
+        val result = repository.fetchAccountExport("800000001", "test-cookie")
 
         assertTrue(result.isFailure)
     }
@@ -88,7 +89,7 @@ class HoYoLabAccountRepositoryTest {
         )
 
         try {
-            repository.fetchAccountSnapshot("800000001", "test-cookie")
+            repository.fetchAccountExport("800000001", "test-cookie")
             fail("Expected coroutine cancellation to propagate.")
         } catch (cancelled: CancellationException) {
             assertEquals("cancelled", cancelled.message)
