@@ -1549,3 +1549,50 @@ Give the future account intelligence experience a concise, explainable view of h
 - This is a domain foundation and is not yet connected to the user-facing account intelligence experience.
 - No physical-device installation or UI behavior was verified.
 
+## Milestone 030 - Integrate Account Data Confidence into Unified Overview
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Extend the unified account intelligence overview to retain and expose the M29 account data-confidence summary alongside the existing character assessment, goal-aware recommendations, and roster/equipment gap reports.  
+**Status:** Implemented, unit-test verified, and Debug CI verified (final implementation Run #209). Intermediate commits #207 and #208 failed because they represented incomplete stages of the multi-commit change; the final commit #209 passed.
+
+### Objective
+
+Make account-section coverage and freshness evidence available through the same domain overview that already composes character assessments, development recommendations, and account gaps. Preserve every source report and its own availability/state semantics. Do not convert the combined overview into a score or imply complete gameplay analysis.
+
+### Work implemented
+
+1. Extended `AccountIntelligenceOverview` to retain the supplied `AccountDataConfidenceSummary` as a fourth source report.
+2. Exposed account-section coverage counts: total, present, stale, missing, unavailable, and failed sections.
+3. Exposed freshness counts as nullable values so an absent freshness assessment remains distinguishable from an assessed report with zero findings.
+4. Exposed explicit indicators for incomplete account data, unassessed freshness, coverage inconsistencies, and data-confidence concerns.
+5. Extended stale-evidence reporting to include stale account-section coverage/freshness evidence while keeping unknown freshness separate from stale evidence.
+6. Kept missing, unavailable, and failed character-analysis sources distinct from stale sources. Existing source reports remain accessible and unchanged.
+7. Extended the composition analyzer to accept and retain all four source reports without recalculating, filtering, reordering, or reclassifying findings.
+8. Added eight unit tests covering four-report composition and counts, stale account data, unknown freshness, missing freshness assessment, incomplete coverage and inconsistencies, stale analysis reports, unusable source states, empty reports, and partial source failure.
+
+### Implementation
+
+- Overview model commit: [0166a10](https://github.com/berao609/Irminsul-codex/commit/0166a10def499b71f3d2f663a1da2e46d7ee73f1).
+- Composition analyzer commit: [7e8123d](https://github.com/berao609/Irminsul-codex/commit/7e8123d1d25fa078c86f1cccdd5dbe77d3e7cf59).
+- Unit-test commit: [fbf5f3a](https://github.com/berao609/Irminsul-codex/commit/fbf5f3a9b38d6f822127c727515d7c8591d3116d).
+- Updated `app/src/main/java/com/irminsul/codex/domain/model/AccountIntelligenceOverview.kt`.
+- Updated `app/src/main/java/com/irminsul/codex/domain/analysis/AccountIntelligenceOverviewAnalyzer.kt`.
+- Updated `app/src/test/java/com/irminsul/codex/domain/analysis/AccountIntelligenceOverviewAnalyzerTest.kt`.
+
+### Verification
+
+- [GitHub Actions Run #207](https://github.com/berao609/Irminsul-codex/actions/runs/45556952899) failed at Kotlin compilation because the model commit introduced the required `dataConfidence` constructor parameter before the analyzer commit supplied it.
+- [GitHub Actions Run #208](https://github.com/berao609/Irminsul-codex/actions/runs/45556955419) failed at test compilation because the analyzer commit preceded the test-file update; existing test constructions had not yet supplied the new required parameter.
+- [GitHub Actions Run #209](https://github.com/berao609/Irminsul-codex/actions/runs/45556959401) passed on the final test commit, which contains the complete model, analyzer, and test changes. The full JVM unit-test task, Debug build, Room schema verification, signature verification, artifact uploads, and cleanup passed; emulator instrumentation tests were skipped because this domain-only change did not modify Room-sensitive paths.
+- Physical-device verification: not required; no UI or runtime workflow changed.
+
+### Qualifications and non-goals
+
+- The two intermediate CI failures are recorded rather than hidden. They do not represent failures of the final combined tree; Run #209 verifies the final implementation commit.
+- The overview remains a domain composition object and is not connected to a user-facing Account Command Center or account dashboard.
+- Coverage and freshness remain separate evidence sources. Unknown freshness is not stale, and an absent freshness report is not equivalent to verified freshness.
+- No unified account score, combat-strength ranking, meta ranking, farming plan, resource estimate, pull recommendation, or AI-generated conclusion is introduced.
+- The combined reports do not establish complete account-wide gameplay, team-coverage, or progression analysis.
+- No physical-device installation or UI behavior was verified.
+
