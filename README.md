@@ -56,7 +56,6 @@ The product's primary purpose is to turn account data into actionable in-app int
 - User-facing character development recommendations and explainable progression priorities.
 - Integrated BYOAI assistant grounded in the unified account model.
 - Account analytics and progression tracking.
-- Goal-aware character investment recommendations.
 - Account gap analysis.
 - Farming and Resin optimization.
 - Character and weapon pull evaluation.
