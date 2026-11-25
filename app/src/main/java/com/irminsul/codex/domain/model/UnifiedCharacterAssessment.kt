@@ -6,7 +6,8 @@ enum class CharacterAttentionStatus { NEEDS_ATTENTION, REVIEW, CLEAR }
 
 data class CharacterCompletenessEvidence(
     val missingOrUnverifiedComponents: List<String>,
-    val level: CharacterCompletenessLevel
+    val level: CharacterCompletenessLevel,
+    val unverifiedAnalyses: List<String> = emptyList()
 )
 
 data class UnifiedCharacterAssessment(
