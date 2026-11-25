@@ -774,7 +774,7 @@ Establish a deterministic stat-property catalog that distinguishes canonical ide
 ### Verification
 
 - Source implementation and automated tests are committed; CI verification pending.
-- A follow-up milestone-record commit is being used to trigger the repository's push-based Debug CI workflow for this source commit.
+- Initial CI run #122 exposed an incorrect test expectation for the number of classified properties (six were supplied, not five). The assertion was corrected in source commit `0fe078c645dc689203245e245b86edf6cede7dd8`; follow-up CI verification is pending.
 - No stat scoring, build recommendations, damage simulation, value conversion, source JSON mutation, export schema change, Room persistence, UI integration, device install, or release is included.
 
 ### Qualifications
