@@ -967,7 +967,7 @@ Create the first repository boundary between application/domain consumers and th
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Route the existing full account export action through AccountRepository and an Android ViewModel while preserving the original JSON save/copy behavior.  
-**Status:** Implemented; unit-test and Debug CI verification pending. Physical-device verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified. Physical-device verification pending.
 
 ### Objective
 
@@ -985,9 +985,21 @@ Move full account export orchestration and normalized snapshot state out of the 
 
 ### Verification
 
-- Implementation commit: pending.
-- Unit tests and Debug CI: pending.
-- Physical-device verification: pending. After CI, verify both Save JSON and Copy JSON actions, export progress/status feedback, and that Daily Note sync/login still work.
+**Implementation**
+- Main implementation commit: `415291683a4f7a9678a20669ec6ad2442bf4754e`.
+- Corrective test commit: `68d019c85ec25e86175c0c20e1c6414ca1045e9b`.
+- Initial CI Run #140 failed at unit-test compilation because three repository tests still referenced the previous `fetchAccountSnapshot` method after the contract changed to `fetchAccountExport`. The compiler output identified all three stale references.
+- Those references were corrected and the missing `AccountExport` import was added in the corrective commit.
+
+**Successful CI**
+- [GitHub Actions Run #141](https://github.com/berao609/Irminsul-codex/actions/runs/45530665510) completed successfully for corrected commit `68d019c85ec25e86175c0c20e1c6414ca1045e9b`.
+- Verified steps: unit tests, Debug APK build, persistent Debug APK signature verification, artifact upload, and temporary Debug keystore cleanup.
+- Debug artifact: `irminsul-codex-debug-v1.0.0-dev.141-vc143`.
+- Artifact ID: `14985051134`.
+- Artifact size: 8,280,431 bytes.
+- SHA-256: `610ef60be02b64c79e0ca678a27ae1baa4ce4ea163813854c068c49d14d31d10`.
+- Artifact expiry: 2026-12-09 02:09:15 UTC.
+- Physical-device verification: pending. Verify both Save JSON and Copy JSON actions, export progress/status feedback, and that Daily Note sync/login still work.
 
 ### Qualifications
 
