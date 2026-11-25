@@ -903,9 +903,9 @@ Ensure a failed or unavailable refresh does not erase the temporal context of th
 
 ### Verification
 
-- Implementation commit: pending.
-- GitHub Actions: pending.
-- Debug artifact: pending.
+- Implementation commit: `e5b4be8c9007cc5e8ee6aeb26ae6110dcee283be`.
+- GitHub Actions Run #134: [in progress](https://github.com/berao609/Irminsul-codex/actions/runs/45527887445), testing commit `e5b4be8c9007cc5e8ee6aeb26ae6110dcee283be`.
+- Debug artifact: pending CI completion.
 - Device verification: not required for this in-memory domain assessment.
 
 ### Qualifications
