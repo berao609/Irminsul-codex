@@ -1008,3 +1008,33 @@ Move full account export orchestration and normalized snapshot state out of the 
 - The ViewModel receives UID and cookie as arguments because credential ownership remains in the existing activity/presentation flow. This is transitional and does not constitute secure credential storage.
 - Account export still uses the existing HoYoLAB endpoints and selected-section JSON format.
 - No Room persistence, historical snapshots, new analytics, new UI screens, or official Release changes are included.
+
+
+## Product Decision 001 - Account Intelligence as the Primary Product
+
+**Date:** 2026-11-25  
+**Decision status:** Accepted  
+**Scope:** Product positioning, user-facing priority, and development sequencing.
+
+### Decision
+
+Irminsul Codex will be developed and presented primarily as an **AI-integrated Genshin Impact account intelligence and progression analyzer**, rather than as a data extractor whose main purpose is to produce JSON for third-party readers.
+
+### Consequences
+
+1. The main user journey should be account connection/synchronization followed by in-app account overview, analysis, and progression guidance.
+2. Account retrieval remains a foundational data-input capability, but should not dominate the product's navigation or identity.
+3. Deterministic application logic remains authoritative for calculations, validation, resource requirements, and rule-based assessments.
+4. The integrated BYOAI assistant should explain and help explore account intelligence using relevant account context. It must not replace deterministic calculations or invent missing account data.
+5. Account data should be managed locally and made available to in-app features without requiring a JSON export step.
+6. JSON export remains supported as an optional utility for third-party readers, backups, and external analysis. Existing data-preservation and versioning requirements remain applicable.
+7. The Account Command Center should present insights, priorities, and relationships as the primary experience; export controls should be secondary.
+8. External AI providers must never receive HoYoLAB cookies or other authentication credentials. Account context must only be transmitted under explicit user-configured provider settings and appropriate user control.
+
+### Development priority
+
+Prioritize, in order: reliable unified account data and local persistence; deterministic account analysis; the integrated BYOAI interface and provider boundary; the Account Command Center; then optional import/export improvements as supporting workflows. This is a priority direction, not a claim that these capabilities are already implemented.
+
+### Scope and non-goals
+
+This decision does not authorize removing the existing JSON exporter, discarding raw source preservation, changing the account export schema, introducing a mandatory backend, or immediately building every AI and analytics feature. It does not change the native Android, local-first, layered architecture, BYOAI, or deterministic-first principles already agreed.
