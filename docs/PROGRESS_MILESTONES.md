@@ -3524,7 +3524,7 @@ The existing `UpgradeCostCalculator` and `UpgradeCostRecordValidator` remain the
 
 - Added `MaterialCatalogue.kt` with a typed material category, stable item-ID lookup, display metadata (name, rarity, HTTPS icon URL), duplicate-ID rejection, and explicit unknown-material fallback.
 - Added `CatalogueUpgradeCostCalculator` as a presentation adapter. It delegates all arithmetic, source validation, game-version matching, contiguous-segment checks, inventory handling, and overflow handling to the existing `UpgradeCostCalculator`. It only enriches the resulting requirements with catalogue metadata.
-- Added tests for metadata resolution, unknown IDs, duplicate IDs, and delegation to the existing calculator.
+- Added tests for metadata resolution, unknown IDs, duplicate IDs, unapproved sources, missing-cost status, and a complete verified-record path through the existing calculator into named/quantified material output.
 - The catalogue currently has no bundled game-data entries. This is intentional: M51/SPECS §3.18 still approves no external source for automated bulk ingestion or cost-data redistribution. Parsed genshin-db records remain candidates only. No automatic costs are claimed or displayed as verified until reviewed records and metadata are supplied by an approved source.
 
 #### Planner UI and saved-plan compatibility
@@ -3551,13 +3551,14 @@ The existing `UpgradeCostCalculator` and `UpgradeCostRecordValidator` remain the
 - `a96533651cfeb748c0e0ce96bdc72e6fdb735f7a` - persist current/target talent levels and weapon plans per character.
 - `d445602da8ff6ab5ff05c3604058333466f8427f` and `31bba2f7cedb88811e5378593ece449a07a6fefb` - enforce material catalogue provenance and source permission.
 - `027172563b48a1ea838c9916d7286af3066bf2df` - test approved-source enforcement for material metadata.
+- `7f5487eefee81c9ac90234749c547d66c4fd138a` - test a reviewed cost record flowing through the existing calculator and catalogue metadata.
 
 #### Verification and remaining work
 
 - No successful CI run has been observed for these commits yet. The GitHub commit status endpoint returned no status entries; that is not evidence of a passing build.
 - No APK has been built or installed for this update, and no physical-device planner test has been reported.
 - Existing saved-plan preservation is supported by retaining the original target-specific row keys and row JSON fields, but still requires an on-device regression test using a pre-existing saved plan.
-- The new planner UI provides independent character/weapon levels and talent targets. It does not yet automatically populate material requirements, Mora, EXP books, weapon ore, crafting conversions, domain schedules, boss farming, or Resin estimates because no redistribution-approved trusted cost dataset is connected.
+- The new planner UI provides independent character/weapon levels, current/target levels for all three talent tracks, and per-character planned-weapon choices and levels. It does not yet automatically populate material requirements, Mora, EXP books, weapon ore, crafting conversions, domain schedules, boss farming, or Resin estimates because no redistribution-approved trusted cost dataset is connected.
 - The weapon selector is limited to weapons currently represented in the retrieved roster plus a custom text entry. It is not yet a complete inventory of every owned weapon.
 - Review Kotlin compilation and unit tests in CI. Fix any failures before asking for device verification.
 
