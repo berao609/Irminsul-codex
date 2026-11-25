@@ -2376,3 +2376,82 @@ M45 defines how the app can represent source-attributed, patch-aware, versioned 
 ### Next development checkpoint
 
 M46 should implement and unit-test the smallest domain-level knowledge-record and investment-shortlist contracts. Keep source registry metadata and evidence provenance explicit. Do not add network collectors, platform SDKs, AI services, a numeric score, or UI until the domain contract is validated.
+
+
+## Milestone 046 - Domain Contracts for Versioned Knowledge and Investment Shortlists
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Add typed domain contracts and deterministic unit tests for source-attributed game knowledge and a selective account-relative investment shortlist.  
+**Status:** Implementation committed; CI verification pending. No UI, persistence, network collector, platform SDK, AI service, or APK-facing behavior was added.
+
+### Objective
+
+Turn the M45 requirements into a small testable domain boundary. Preserve claim provenance and review state, keep usage observations methodologically explicit, and prevent unsupported or unpermitted knowledge from driving investment priority.
+
+### Repository retrieval
+
+Retrieved the current root `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.md`, relevant domain models and tests, `app/build.gradle.kts`, and `.github/workflows/build.yml` from `main`. Confirmed M45 CI #296 and #297 both succeeded and the starting main head was `834ad631033084da1e62f3d91397c2882eb5d4c8`.
+
+### Implementation
+
+1. **Versioned knowledge domain model** in `GameKnowledge.kt`:
+   - Typed subject, claim, evidence, review, confidence, source-platform, access, and permission states.
+   - Separate source-registry entries and per-claim canonical source references.
+   - Explicit game/patch/mode context and distinct publication, observation, retrieval, validity, expiry, and review timestamps.
+   - A structured usage-observation context retaining mode/cycle, difficulty, encounter, sample size, numerator, denominator and population, ownership context, collection period, methodology, and preliminary/updating/finalized/qualified status.
+   - Structural validation for schema version, identifiers, source references, HTTPS URLs, publisher-host consistency, approved source permission, verified-review metadata, timestamp consistency, and usage count/date consistency.
+   - Candidate records remain representable without being treated as verified.
+
+2. **Deterministic investment shortlist** in `InvestmentShortlist.kt`:
+   - Versioned ruleset and evaluation timestamp tied to an explicit account snapshot reference.
+   - Priority bands: High priority, Worth investing, Situational, Low priority for now, and Already sufficient.
+   - Stable reason codes, owned-team references, investment requirements, supporting record IDs, unknown/conflicting factors, and plain-language explanations.
+   - Only verified, supported, structurally valid records from approved source-registry entries can independently support a priority.
+   - Usage-observation records may accompany a recommendation but cannot independently promote a character.
+   - No account benefit or no eligible independent evidence produces no investment recommendation.
+   - No aggregate numeric score or arbitrary factor weights. Deterministic explicit rules only.
+   - This is a domain contract, not yet wired to the account snapshot, current diagnostics, persistence, or UI.
+
+3. **Unit tests**:
+   - Knowledge validation: provenance, source host/permission, review requirements, usage metadata, impossible counts/dates, missing usage context, and candidate state.
+   - Shortlist evaluation: role-gap and team-improvement bands, no-benefit/unknown omission, unreviewed/rejected/limited evidence rejection, usage-only rejection, usage as contextual supporting evidence, uncertainty, redundancy, already-sufficient state, stable ordering, and source-permission gate.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/model/GameKnowledge.kt`
+- `app/src/main/java/com/irminsul/codex/domain/model/InvestmentShortlist.kt`
+- `app/src/test/java/com/irminsul/codex/domain/model/GameKnowledgeRecordValidatorTest.kt`
+- `app/src/test/java/com/irminsul/codex/domain/model/InvestmentShortlistEvaluatorTest.kt`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- `34826c0b26e805b01e5c6ff1873ce4de5a3e36b6` - Add versioned game knowledge domain contract.
+- `80770e693bfce7fa1177fd05123d5708f2e2505a` - Add deterministic investment shortlist contract.
+- `0e824a79313168dbe1123fc414232f5fc5aa642a` - Test versioned game knowledge validation.
+- `c0cc57276295df52fe6659b01163d04ecac4073d` - Test account-relative investment shortlist rules.
+- `212645a7d01f1d3c85c0367b0fc28a797cf696fb` - Enforce source registry permission and provenance checks.
+- `319849ec897db6054340393d95ed80bec650ef47` - Require validated permitted knowledge for investment priorities.
+- `754e12e129db248d74f377bec8fd20e2c7573c85` - Test source permission gate for investment evidence.
+- `45ba92238f7f7afe0d910724252e3b2262ce715a` - Cover source host and permission validation cases.
+
+### Verification
+
+- M45 CI #296: success, https://github.com/berao609/Irminsul-codex/actions/runs/45603259730.
+- M45 CI #297: success, https://github.com/berao609/Irminsul-codex/actions/runs/45603302548.
+- M46 implementation commits are pushed to `main`; CI verification pending.
+- No APK-facing behavior changed. Physical-device verification is not applicable to these domain-only changes.
+
+### Boundaries and limitations
+
+- Source-registry entries and knowledge records are in-memory domain models only; no database schema or persistence was introduced.
+- No automatic discovery or collection from HoYoLAB, KQM, Prydwen, YouTube, X, TikTok, Facebook, or other sources.
+- No source is granted permission by the model itself; a registry entry must explicitly represent approved permission and allowed actions.
+- No automatic knowledge verification, AI extraction, or AI ranking.
+- Candidate assessment inputs are supplied to the evaluator; this milestone does not yet derive role gaps, team synergy, patch relevance, redundancy, or affordability from the live account model.
+- The shortlist evaluator is not yet integrated with the existing account diagnostics. Existing diagnostic behavior remains unchanged.
+
+### Next development checkpoint
+
+M47 should validate how these contracts map to real account and game-domain inputs. Identify which candidate facts can be derived reliably from the current account snapshot and which require curated knowledge or explicit unknown states. Do not add source collectors, platform SDKs, AI services, arbitrary scoring weights, or UI until the input boundary is validated.
