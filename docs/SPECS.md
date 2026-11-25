@@ -2177,3 +2177,4 @@ The latest successfully persisted account snapshot is the startup source for the
 - If no saved snapshot exists, the normal Analyze Account empty state remains available.
 - Switching to a different UID must not display the previous account's snapshot while the new UID is being restored.
 - Credentials are not added to Room or to the snapshot-store interface.
+- Raw account JSON must not be stored or queried as one large SQLite text value. Persist it as bounded chunks (32 KiB per text row) keyed by snapshot ID, and reassemble chunks in index order when restoring. Existing version-1 snapshot rows must be migrated in SQLite using `substr()` so the full legacy JSON is never materialized through Android `CursorWindow` during migration. Keep snapshot metadata queries independent of JSON content.
