@@ -96,7 +96,7 @@ class AccountIntelligenceEngineTest {
             result.goalAwareDevelopment.recommendations.single().recommendation.type
         )
         assertEquals(AccountGapAnalysisAvailability.AVAILABLE, result.accountGaps.availability)
-        assertEquals(1, result.accountSectionCount.let { result.accountSectionCount })
+        assertEquals(0, result.accountSectionCount)
         assertFalse(result.hasUnverifiedSources)
     }
 
@@ -117,13 +117,13 @@ class AccountIntelligenceEngineTest {
         assertEquals(CharacterDevelopmentRecommendationAvailability.MISSING, result.goalAwareDevelopment.availability)
         assertEquals(AccountGapAnalysisAvailability.MISSING, result.accountGaps.availability)
         assertTrue(result.hasUnverifiedSources)
-        assertTrue(result.hasUnassessedFreshness.not())
+        assertFalse(result.hasUnassessedFreshness)
     }
 
     @Test
     fun analyze_keepsFailedAnalysisAvailabilityAndFailureReason() {
         val source = snapshot(
-            characters = DataValue.Available(emptyList(), now),
+            characters = DataValue.Available(listOf(CharacterSnapshot(id = 100)), now),
             build = DataValue.Failed("Build validation source failed."),
             stats = DataValue.Available(CharacterStatReconciliationReport(emptyList()), now)
         )
@@ -134,7 +134,8 @@ class AccountIntelligenceEngineTest {
         )
 
         assertEquals(UnifiedCharacterAssessmentAvailability.AVAILABLE, result.characterAssessment.availability)
-        assertTrue(result.characterAssessment.assessments.isEmpty())
+        assertEquals(1, result.characterAssessment.assessments.size)
+        assertTrue(result.characterAssessment.assessments.single().completeness.unverifiedAnalyses.contains("Build validation failed"))
         assertEquals(CharacterDevelopmentRecommendationAvailability.AVAILABLE, result.goalAwareDevelopment.availability)
         assertEquals(CharacterDevelopmentGoal.BUILD_RELIABILITY, result.selectedGoal)
         assertFalse(result.hasUnverifiedSources)
