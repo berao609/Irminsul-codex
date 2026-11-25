@@ -1199,3 +1199,50 @@ Turn M21's traceable character-level findings into a concise account-level overv
 - Aggregate counts match the underlying findings.
 - Unit tests cover grouping, priority categories, ordering, empty reports, and all input availability states.
 - The existing application workflow remains unchanged; no UI is included in this milestone.
+
+## Milestone 023 - Explainable Character Stat Reconciliation Findings
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Convert existing character stat-reconciliation mismatches into traceable, explainable account findings.  
+**Status:** Implemented, unit-test verified, and Debug CI verified.
+
+### Objective
+
+Build on M13's existing deterministic arithmetic reconciler. Turn only confirmed `MISMATCH` reconciliation results into explanatory findings, without changing the arithmetic or treating discrepancies as proof of incorrect upstream data.
+
+### Work implemented
+
+1. Added stat-analysis domain models with explicit `AVAILABLE`, `STALE`, `MISSING`, `UNAVAILABLE`, and `FAILED` input availability.
+2. Added a domain analyzer that consumes the existing reconciliation report and produces findings only for `MISMATCH` results. `MATCH`, `WITHIN_ROUNDING_TOLERANCE`, and `NOT_CHECKED` remain non-findings.
+3. Each finding preserves character ID and optional name, field path, property type, stat name, original base/add/final strings, calculated expected final, signed difference, and rounding tolerance.
+4. Each finding includes a plain-language arithmetic explanation and a practical verification action. It does not declare which source value is wrong.
+5. Stale reconciliation, stale character data, and stale weapon data are marked on derived findings. Missing, unavailable, and failed reconciliation inputs remain distinct.
+6. Findings are ordered deterministically by character ID, field path, and stat name.
+7. No score, external meta comparison, automatic repair, UI, or change to M13's calculation/rounding policy was introduced.
+
+### Files added
+
+- `app/src/main/java/com/irminsul/codex/domain/model/CharacterStatAnalysis.kt`
+- `app/src/main/java/com/irminsul/codex/domain/analysis/CharacterStatAnalyzer.kt`
+- `app/src/test/java/com/irminsul/codex/domain/analysis/CharacterStatAnalyzerTest.kt`
+
+### Verification
+
+- Model commit: `1fd6831c3df7c4df181695d1ba674a30528c3d5c`
+- Analyzer commit: `d83b5994bbf3338dc5fdc4911fd8105071787150`
+- Unit-test commit: `a15234b846849fcd21ce9e4b094b099e2c8785bd`
+- [GitHub Actions Run #165](https://github.com/berao609/Irminsul-codex/actions/runs/45552276639) succeeded.
+- [GitHub Actions Run #166](https://github.com/berao609/Irminsul-codex/actions/runs/45552280557) succeeded.
+- [GitHub Actions Run #167](https://github.com/berao609/Irminsul-codex/actions/runs/45552288840) succeeded.
+- All three runs completed successfully. The implementation, analyzer, and unit-test commits were each CI-verified. Run #167 verified the unit-test commit and full applicable workflow steps.
+- Seven unit tests cover mismatch evidence/explanation, no findings for matches/tolerance, unchecked values, stale-data markers, missing/unavailable/failed states, empty reports, and stable ordering.
+- Physical-device verification: not required; this milestone adds domain analysis and tests without UI or device workflow changes.
+
+### Qualifications
+
+- Findings reflect M13's arithmetic and tolerance policy and are limited to the reconciliation data available in the selected account export.
+- A mismatch is a detected arithmetic discrepancy, not proof that the game, upstream service, or any particular field is defective.
+- This analyzer does not yet combine stat integrity with build validation or account completeness. That unified character assessment is the next planned milestone (M24).
+- No user-facing analysis screen currently displays these findings.
+
