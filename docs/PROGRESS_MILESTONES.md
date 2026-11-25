@@ -2256,7 +2256,7 @@ M44 should define and validate the initial external knowledge source set and its
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Validate the initial community and structured-data source candidates, document permitted access boundaries, and define the evidence dimensions required for deterministic account-relative investment prioritization.  
-**Status:** Research and requirements documented; no external source collector, dataset import, AI service, investment scoring implementation, or new UI added. CI verification pending.
+**Status:** Closed. Research and requirements documented; no external source collector, dataset import, AI service, investment scoring implementation, or new UI added.
 
 ### Objective
 
@@ -2293,14 +2293,16 @@ Theorycrafting, editorial evaluations, calculated comparisons, and observed usag
 
 ### Files changed
 
-- `docs/SPECS.md): added the initial external source validation register and the deterministic investment-ranking input boundary.
-- `docs/PROGRESS_MILESTONES.md): recorded M44 research findings and the next checkpoint.
+- `docs/SPECS.md`: added the initial external source validation register and the deterministic investment-ranking input boundary.
+- `docs/PROGRESS_MILESTONES.md`: recorded M44 research findings and the next checkpoint.
 
 ### Verification
 
 - M43 SPECS CI #292: success.
 - M43 milestone documentation CI #293: success.
-- M44 documentation commits and CI verification: pending.
+- SPECS commit `6a5c42294317641e5c558b66606f321e06b8a3b6`; CI #294 success: https://github.com/berao609/Irminsul-codex/actions/runs/45602354271.
+- Milestone documentation commit `d1d383d3096b790a2382ff849bf4c700315998fc`; CI #295 success: https://github.com/berao609/Irminsul-codex/actions/runs/45602387221.
+- Both documentation files were refetched and the M44 sections confirmed present.
 - No runtime behavior changed. No APK or device test is applicable to this research/documentation-only milestone.
 
 ### Outcome
@@ -2309,4 +2311,68 @@ The project now has a conservative source-access boundary and an evidence-based 
 
 ### Next development checkpoint
 
-M45 should define the smallest versioned, source-attributed game-knowledge record and deterministic investment-shortlist contract. It must preserve unknown inputs and separate account diagnostics from investment recommendations. Do not add a crawler, paid backend, mandatory cloud AI, or unsupported source imports.
+M45 defined the versioned game-knowledge record, social-source access boundaries, usage-observation context, and deterministic investment-shortlist contract. M46 should implement and test the smallest domain-level knowledge record and shortlist contracts without adding collectors or platform SDKs.
+
+
+## Milestone 045 - Versioned Game Knowledge and Investment Shortlist Contract
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Define the smallest versioned, source-attributed knowledge record; classify source channels including HoYoLAB and social platforms; preserve usage-stat methodology; and specify the deterministic, account-relative investment-shortlist output.  
+**Status:** Requirements documented; no runtime implementation, source collector, platform SDK, AI service, scoring engine, or new UI added. CI verification pending.
+
+### Objective
+
+Prepare a trustworthy knowledge and recommendation contract that can support selective account-first investment decisions. Include community usage statistics and public creator content as possible evidence without treating public visibility as permission to scrape or republish.
+
+### Repository retrieval
+
+Before updating the specification, retrieved current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.md`, and the current `AccountSnapshot` model from `main`. Confirmed that the normalized account model includes character, weapon, artifact, talent, constellation, validation, reconciliation, coverage, and freshness information, but lacks explicit normalized role, synergy, patch relevance, and resource-cost records.
+
+### Source-channel decisions
+
+1. **HoYoLAB:** Public community posts demonstrate that Abyss and Stygian usage reports are discoverable, including reports attributed to YSHelper/HxG. HoYoLAB is a publication/discovery channel, not an assumed official usage-data API. Its reviewed terms restrict unauthorized scraping and reproduction. Use canonical links and manual curation only; seek the original data publisher for an authorized dataset/API.
+2. **YSHelper / HxG and other original data publishers:** Preferred candidates for usage metrics if a supported API, license, or explicit permission is available. Preserve the exact sample population, denominator, game mode/cycle, difficulty, encounter, collection period, ownership filters, and methodology.
+3. **YouTube:** Official Data API can support public video metadata discovery, subject to developer policies and quotas. Official playback links/embeds remain the path to video content. Do not assume transcript/caption harvesting or republication rights.
+4. **X:** Public-post API access exists through a registered developer application, but current access tier, cost, rate limits, display, retention, and redistribution rules must be checked before any adapter is approved.
+5. **TikTok:** Research API access is limited to eligible approved research applicants and is not a general-purpose commercial content-search API. No automated collector is approved.
+6. **Facebook:** Public Page access may require Graph API permissions and review. Meta Content Library/API access is restricted to qualified research organizations and approved programs. No broad Facebook scraper is approved.
+7. **KQM, Prydwen, and structured game-data candidates:** M44's source decisions remain in force.
+
+No platform adapter is approved for implementation by M45. Public posts, videos, and creator demonstrations are candidate discovery evidence. Full posts, media, comments, transcripts, and personal profile histories must not be mirrored by default. Store only permitted source metadata, canonical links, and minimally necessary reviewed claims. Respect platform terms, creator rights, access revocation, deletion, rate limits, and official embed requirements.
+
+### Versioned knowledge record
+
+The M45 specification defines a small typed record containing schema version, stable record ID, subject, claim type, minimal structured claim, evidence class, source references, game/patch/mode context, publication/observation/retrieval timestamps, validity/expiry, review state, reviewer notes, and a qualitative confidence state.
+
+Source registry metadata is separate from claim evidence and records access method, terms/license/permission state, attribution, allowed actions/fields, retention/deletion requirements, quotas, and last review date. A changed claim or context creates a new version or superseding record. AI extraction remains candidate-only until verified.
+
+### Usage-statistics handling
+
+Abyss and Stygian usage observations must not be conflated. Each observation preserves source methodology and the exact denominator/population when available. Clear-only samples, ownership filters, difficulty, encounter buffs, and collection windows affect interpretation. Usage is contextual evidence and cannot independently establish character strength or investment priority. Unknown methodology lowers confidence and prevents unsupported cross-cycle comparisons.
+
+### Deterministic shortlist contract
+
+The first recommendation output is a small selective account-relative shortlist, not a universal tier list or an alert for every unbuilt character. The contract includes a versioned ruleset, evaluation time, account snapshot reference, priority band, stable reason codes, account benefit, owned-team synergy, patch/mode context, redundancy comparison, supported investment requirements, trusted evidence IDs/links, unknown/conflicting factors, and an explanation of why the candidate ranks ahead of alternatives.
+
+The initial ruleset is deterministic and explainable. It must not use an LLM-generated score, arbitrary numeric weights, or usage rate as a standalone ranking signal. Unknown evidence stays unknown. Account diagnostics remain separate from investment recommendations. If evidence cannot justify a recommendation, the shortlist may be empty.
+
+### Files changed
+
+- `docs/SPECS.md`: added sections 3.12-3.14 covering the versioned knowledge record, social-source policy, usage observations, and deterministic investment-shortlist contract.
+- `docs/PROGRESS_MILESTONES.md`: closed M44 with CI evidence and recorded M45 scope, decisions, and verification state.
+
+### Verification
+
+- M44 SPECS CI #294: success, https://github.com/berao609/Irminsul-codex/actions/runs/45602354271.
+- M44 milestone documentation CI #295: success, https://github.com/berao609/Irminsul-codex/actions/runs/45602387221.
+- M45 documentation commits and CI verification: pending.
+- No runtime behavior changed. No APK or physical-device test is applicable to this documentation-only milestone.
+
+### Outcome
+
+M45 defines how the app can represent source-attributed, patch-aware, versioned knowledge and use it to produce selective account-relative investment recommendations. HoYoLAB usage reports and social content can contribute evidence, but only through permitted access and with methodology preserved. The source platform, original data publisher, and evidence class remain distinct.
+
+### Next development checkpoint
+
+M46 should implement and unit-test the smallest domain-level knowledge-record and investment-shortlist contracts. Keep source registry metadata and evidence provenance explicit. Do not add network collectors, platform SDKs, AI services, a numeric score, or UI until the domain contract is validated.
