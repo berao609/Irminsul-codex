@@ -1642,3 +1642,50 @@ Make the existing analysis capabilities consumable through one deterministic dom
 - The engine is not yet called by `AccountViewModel` or surfaced in the application UI. The account intelligence experience remains a domain foundation.
 - No account score, combat-strength ranking, meta ranking, resource-cost estimate, farming plan, pull recommendation, or AI-generated conclusion is introduced.
 - No device installation or user-facing behavior was verified.
+
+
+## Milestone 032 - Integrate Account Intelligence into the Application
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Connect the M31 deterministic account-intelligence pipeline to the account retrieval workflow, expose its result through ViewModel state, and surface an initial evidence-backed account summary in the existing Android screen.  
+**Status:** Implemented, unit-test verified, Debug CI verified (final Run #221). Physical-device verification pending.
+
+### Objective
+
+Make the existing deterministic intelligence engine useful inside the application without introducing a backend, AI dependency, or premature full dashboard. A successful account retrieval should continue to be persisted locally and should also produce an account-intelligence overview that the UI can explain. The player must be able to explicitly select the objective used to order existing recommendations.
+
+### Work implemented
+
+1. Extended `AccountExportUiState` with the selected development goal, analysis progress/error state, and nullable `AccountIntelligenceOverview`.
+2. Connected `AccountViewModel` to `AccountIntelligenceEngine`. After a successful retrieval and the existing Room-save attempt, the ViewModel analyzes the normalized snapshot and publishes the unified overview.
+3. Preserved the existing export behavior: raw JSON remains available for the Save JSON document flow, persistence failures remain visible without discarding the retrieved export, and authentication credentials are not added to the snapshot or intelligence model.
+4. Added explicit goal selection for Balanced Development, Build Reliability, Stat Integrity, and Data Confidence. Balanced Development is the initial default; changing the goal re-runs the deterministic pipeline with that explicit goal. The goal changes recommendation ordering only, not the source findings or base priorities.
+5. Added an initial Account Intelligence card to the existing Compose screen. It displays character assessment counts, up to five evidence-backed recommendations, account gap counts, account-section coverage counts, and warnings for stale or unverified sources.
+6. Extended the ViewModel test to verify successful pipeline integration, preservation of unverified-source state when character data is missing, and re-analysis after changing the development goal.
+
+### Implementation
+
+- ViewModel integration commit: [43f205d](https://github.com/berao609/Irminsul-codex/commit/43f205d72af0a1c7c08be9659381f74bbc84de36).
+- ViewModel integration test commit: [1e0a2d8](https://github.com/berao609/Irminsul-codex/commit/1e0a2d8db2763b2262ccb7ae3ba9c92e9b5fb848).
+- Initial Compose overview commit: [44a43cf](https://github.com/berao609/Irminsul-codex/commit/44a43cf54064ffccc84a1b96a881635d52514307).
+- Updated `app/src/main/java/com/irminsul/codex/presentation/viewmodel/AccountViewModel.kt`.
+- Updated `app/src/test/java/com/irminsul/codex/presentation/viewmodel/AccountViewModelTest.kt`.
+- Updated `app/src/main/java/com/irminsul/codex/MainActivity.kt`.
+
+### Verification
+
+- [GitHub Actions Run #219](https://github.com/berao609/Irminsul-codex/actions/runs/45559291966) passed for the ViewModel integration commit.
+- [GitHub Actions Run #220](https://github.com/berao609/Irminsul-codex/actions/runs/45559315653) passed for the ViewModel test commit.
+- [GitHub Actions Run #221](https://github.com/berao609/Irminsul-codex/actions/runs/45559376464) passed for the final combined implementation commit `44a43cf54064ffccc84a1b96a881635d52514307`.
+- Run #221 passed JVM unit tests, Debug APK build, Room schema snapshot verification and upload, APK signature verification, APK artifact upload, and temporary signing-key cleanup. Room emulator instrumentation was skipped because this milestone did not modify Room-sensitive paths.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.221-vc223`, artifact ID `14997636089`, size 8,524,460 bytes. Room schema artifact: `irminsul-room-schema-v1-run-221`, artifact ID `14996454020`.
+- Physical-device verification: pending. The Compose screen and goal-selection behavior still need confirmation on the project owner's Android device.
+
+### Qualifications and non-goals
+
+- Balanced Development is an application default, not an inferred statement about the player's personal objective. The user can change it in the Account Intelligence card.
+- The initial screen shows at most five recommendations. It is not a full recommendation detail/history experience or the complete Account Command Center.
+- The selected goal is currently in ViewModel state and is not persisted as a user preference across process recreation.
+- This milestone does not add AI, resource-cost estimates, farming plans, pull advice, combat-strength scores, meta rankings, or a complete account-wide gameplay analysis.
+- JSON export remains an optional utility. The account intelligence pipeline runs from the normalized snapshot inside the app.
