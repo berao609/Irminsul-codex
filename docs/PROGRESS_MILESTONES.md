@@ -1409,3 +1409,50 @@ A goal must be supplied explicitly to the analyzer. No user objective is inferre
 - Goal tier is distinct from M25's base P1-P4 priority. The base priority and supporting evidence remain unchanged and available for traceability.
 - No resource costs, farming plans, meta rankings, combat-strength scores, pull advice, or AI-generated priorities are introduced.
 - No goal-selection UI or user-facing recommendation screen is implemented in this milestone.
+
+## Milestone 027 - Evidence-Based Account Roster and Equipment Gap Analysis
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Identify roster-integrity and character-equipment gaps that are directly supported by retrieved account data, while keeping confirmed integrity findings distinct from data-review conditions.  
+**Status:** Implemented, unit-test verified, and Debug CI verified (Runs #192-194). Domain foundation only; not yet surfaced in the app UI.
+
+### Objective
+
+Create a deterministic account-level gap report from the available character roster and equipment snapshots. Report only evidence-backed observations. Missing or unavailable information must remain a data-review condition rather than being presented as a confirmed defect or an investment recommendation.
+
+### Work implemented
+
+1. Added account gap models for analysis availability, gap type, confidence, character identity, explanation, evidence, stale-data status, aggregate counts, and failure reason.
+2. Added deterministic analysis for invalid roster entries and duplicate character IDs as confirmed roster-integrity findings.
+3. Added data-review findings for missing, stale, unavailable, or failed weapon and artifact data without treating unknown information as a confirmed equipment defect.
+4. Reported unoccupied artifact slots as confirmed equipment observations, explicitly not as recommendations to invest in a character.
+5. Detected supported equipment-integrity issues, including duplicate or invalid artifact identifiers/slots and invalid artifact subproperty entries.
+6. Preserved roster availability and failure reason. Findings derived from stale roster data remain marked stale.
+7. Applied stable ordering to findings. No gameplay-strength score, team-coverage inference, farming plan, resource cost, investment priority, or AI-generated conclusion was introduced.
+
+### Implementation
+
+- Model commit: `748d1a29beff0e83d78828d16b3e9698d8f43309`.
+- Analyzer commit: `c9f22d13b69bca9e317e756d0d7e975cf6cde5f1`.
+- Unit-test commit: `cfc9735c62b1e24f1e6d3662d7261b83bc006f05`.
+- Added `app/src/main/java/com/irminsul/codex/domain/model/AccountGapAnalysis.kt`.
+- Added `app/src/main/java/com/irminsul/codex/domain/analysis/AccountGapAnalyzer.kt`.
+- Added `app/src/test/java/com/irminsul/codex/domain/analysis/AccountGapAnalyzerTest.kt`.
+
+### Verification
+
+- [GitHub Actions Run #192](https://github.com/berao609/Irminsul-codex/actions/runs/45555403281) passed for the account-gap model commit.
+- [GitHub Actions Run #193](https://github.com/berao609/Irminsul-codex/actions/runs/45555451798) passed for the analyzer commit.
+- [GitHub Actions Run #194](https://github.com/berao609/Irminsul-codex/actions/runs/45555489070) passed for the unit-test commit.
+- Eight unit tests cover clean data, invalid and duplicate roster entries, missing equipment data, unavailable and failed states, unoccupied artifact slots, malformed artifact integrity evidence, stale collections, and unusable roster availability.
+- The three implementation runs were confirmed successful by the project owner. Physical-device verification is not required because this milestone adds domain models, deterministic analysis, and JVM tests without UI or runtime workflow changes.
+
+### Qualifications and non-goals
+
+- This milestone covers character roster and equipment gaps only. It is not a complete account-wide capability, progression, or team-coverage analysis.
+- An unoccupied artifact slot is an observation, not proof that the character needs investment or that the slot should be filled.
+- Missing, unavailable, failed, and stale inputs remain distinct. Unknown data is not converted into a confirmed gap.
+- No artifact/weapon farming requirements, Mora or Resin costs, build-strength scores, meta rankings, pull advice, or automatic account changes are produced.
+- The report is a domain foundation and is not yet connected to a user-facing account intelligence screen.
+
