@@ -187,7 +187,7 @@ The current application follows a data retrieval workflow:
 
 * Daily Note information is displayed, and selected account data can be exported as JSON.
 
-The current implementation still focuses on HoYoLAB retrieval, Daily Note presentation, and selected account JSON export. Successful account exports are also saved locally in Room as historical raw JSON snapshots. The intended primary workflow is in-app account analysis with integrated AI assistance; the intelligence engine, user-facing history, BYOAI integration, and Account Command Center are not yet implemented.
+The current implementation still focuses on HoYoLAB retrieval, Daily Note presentation, and selected account JSON export. Successful account exports are also saved locally in Room as historical raw JSON snapshots. The intended primary workflow is in-app account analysis with integrated AI assistance. The deterministic intelligence stages and their domain-level orchestration entry point are implemented, but they are not yet connected to the ViewModel or user interface. User-facing history, BYOAI integration, and the Account Command Center remain planned.
 
 ## Project Structure
 
