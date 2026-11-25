@@ -2127,7 +2127,12 @@ This milestone also records the user's explicit requirement to integrate externa
 
 ### Verification
 
-- CI runs #270 through #274 were triggered for the analyzer, test, UI, README, and product-spec commits. Their final conclusions are pending at the time this milestone record was written.
+- [Run #270](https://github.com/berao609/Irminsul-codex/actions/runs/45584655813) succeeded for the analyzer clarification commit.
+- [Run #271](https://github.com/berao609/Irminsul-codex/actions/runs/45584683242) succeeded for the objective-ordering tests. The full unit-test suite, Debug APK build, Room schema check, APK signature verification, and artifact upload passed; Room instrumentation tests were skipped by workflow logic.
+- [Run #272](https://github.com/berao609/Irminsul-codex/actions/runs/45584722292) succeeded for the UI implementation. The full unit-test suite, Debug APK build, Room schema check, APK signature verification, and artifact upload passed; Room instrumentation tests were skipped by workflow logic.
+- [Run #273](https://github.com/berao609/Irminsul-codex/actions/runs/45584794802) succeeded for the README update.
+- [Run #274](https://github.com/berao609/Irminsul-codex/actions/runs/45584837090) succeeded for the external game-knowledge product specification update.
+- [Run #275](https://github.com/berao609/Irminsul-codex/actions/runs/45584906490), for this milestone documentation commit, was still running when this verification record was updated.
 - Physical-device verification: pending.
 
 ### Qualifications
