@@ -297,8 +297,7 @@ Reassess the export schema and retrieval coverage against the actual account dat
 ## Milestone record rules
 
 1. Add a new numbered section for each meaningful milestone; do not silently rewrite historical results.
-2. Record the exact branch, commit SHA, workflow run, and relevant evidence when available.
-3. Separate automated CI results from physical-device observations.
+2. Record the exact branch, commit SHA, workflow run, and relevant evidence when available.3. Separate automated CI results from physical-device observations.
 4. State what was not tested or remains uncertain.
 5. Update a milestone's status only when new evidence supports the change.
 
@@ -646,8 +645,7 @@ Produce a machine-readable validation report for normalized character builds so 
 3. Validates stat property identifiers, numeric stat strings (including percentage-form values), and nonnegative roll counts.
 4. Checks artifact main-stat presence, duplicate substat property types, main-stat/substat collisions, and excessive substat counts.
 5. Surfaces existing M11 equipment-integrity diagnostics in the character build report.
-6. Attaches the report to the unified account snapshot while preserving missing, unavailable, failed, and stale character-section states.
-7. Validation reports issues without mutating or normalizing the source values.
+6. Attaches the report to the unified account snapshot while preserving missing, unavailable, failed, and stale character-section states.7. Validation reports issues without mutating or normalizing the source values.
 
 ### Verification
 
@@ -755,7 +753,7 @@ Provide a deterministic report showing whether reported final stat values agree 
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Canonical classification of known character, weapon, and artifact stat properties.  
-**Status:** Implementation in progress; CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Objective
 
@@ -773,8 +771,33 @@ Establish a deterministic stat-property catalog that distinguishes canonical ide
 
 ### Verification
 
-- Source implementation and automated tests are committed; CI verification pending.
-- Initial CI run #122 exposed an incorrect test expectation for the number of classified properties (six were supplied, not five). The assertion was corrected in source commit `0fe078c645dc689203245e245b86edf6cede7dd8`; follow-up CI verification is pending.
+**Repository and source**
+- Branch: `main`
+- Initial implementation commit: `18394b2` (short SHA as recorded during implementation).
+- Test expectation correction: `0fe078c645dc689203245e245b86edf6cede7dd8`.
+- CI-triggering documentation commit: `c31c220190833e2336c833c8c16184b00431756e`.
+
+**GitHub Actions**
+- Workflow: Build Debug APK
+- Run: [#125](https://github.com/berao609/Irminsul-codex/actions/runs/45524689622)
+- Run ID: `45524689622`
+- CI head commit: `c31c220190833e2336c833c8c16184b00431756e`
+- Overall result: **Success**
+- Unit tests: **Success**
+- Debug APK build: **Success**
+- Persistent Debug signature verification: **Success**
+- Artifact upload: **Success**
+- Temporary Debug keystore cleanup: **Success**
+
+**Generated Debug artifact**
+- Artifact: `irminsul-codex-debug-v1.0.0-dev.125-vc127`
+- Artifact ID: `14980818679`
+- Size: `8,259,767` bytes
+- SHA-256: `0db52e507318c2305d0d61c0d6acfc2b5b48453b014f8d07194df32cf1ca1730`
+- Expiry: 2026-12-09 01:19 UTC
+
+- The earlier Run #122 exposed an incorrect test expectation for the number of classified properties (six were supplied, not five). The assertion was corrected in source commit `0fe078c645dc689203245e245b86edf6cede7dd8`; Run #125 passed.
+- Device verification: not required for this in-memory classification and mapper increment.
 - No stat scoring, build recommendations, damage simulation, value conversion, source JSON mutation, export schema change, Room persistence, UI integration, device install, or release is included.
 
 ### Qualifications
@@ -784,4 +807,3 @@ Establish a deterministic stat-property catalog that distinguishes canonical ide
 - Flat/percentage classification describes the property semantic, not a transformation to apply to its stored value.
 - The catalog does not infer whether a stat is optimal for a specific character or build.
 - Some internal/derived properties are intentionally not catalogued in this increment.
-
