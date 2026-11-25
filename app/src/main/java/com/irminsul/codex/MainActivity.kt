@@ -133,7 +133,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun CodexScreen(
+private fun CodexScreen(
     accountViewModel: AccountViewModel,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit
