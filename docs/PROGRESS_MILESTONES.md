@@ -426,7 +426,7 @@ Make the existing selected-section account export more reliable and auditable wi
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Introduce the initial pure Kotlin account snapshot model and map the existing versioned export into it.  
-**Status:** Implemented in source and tests; CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Work implemented
 
@@ -445,6 +445,7 @@ Make the existing selected-section account export more reliable and auditable wi
 ### Verification
 
 - Source commits: `d121a02c7859a41d348ba97c59d61fd22c82f8fe`, `504110bb23348c698cacc5fc74385e6d9f059cbf`, `3a9c24ad1a988f0b661c9e916f6da3d2c77d14aa`.
-- Unit tests and Debug build: pending GitHub Actions.
+- Unit tests and Debug build: **Success**, GitHub Actions [Run #99](https://github.com/berao609/Irminsul-codex/actions/runs/45518448031), run ID `45518448031`, commit `83cdb9ae3c457890a31533f9e8f92b95a98b6ca7`.
+- CI completed successfully, including unit tests, Debug APK build, signature verification, and artifact upload.
 - Device verification: not yet required for this in-memory model foundation.
 - No Room database, UI integration, export schema change, or release was included.
