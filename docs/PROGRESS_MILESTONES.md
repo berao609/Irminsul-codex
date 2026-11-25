@@ -1818,7 +1818,7 @@ Give Irminsul Codex a clean, full-screen native-app structure rather than placin
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Remove the redundant Intel bottom-navigation destination and consolidate its account-analysis controls and detailed deterministic findings into the Visuals destination.  
-**Status:** Implemented and committed. Final combined CI and documentation CI verification pending. Physical-device verification pending.
+**Status:** Implemented, final combined Debug CI verified (Run #241), README and milestone documentation CI verified (Runs #242-243). Physical-device verification pending.
 
 ### Rationale
 
@@ -1840,9 +1840,9 @@ The Intel destination and Visuals destination exposed two parts of the same acco
 
 ### Verification
 
-- Final combined implementation CI: pending.
-- README documentation CI: pending.
-- Milestone documentation CI: pending.
+- [Run #241](https://github.com/berao609/Irminsul-codex/actions/runs/45567021493) passed for the consolidated MainActivity implementation commit `a7d9b92456c76b1f85781d60a4ba195dd1d0b1d5`.
+- [Run #242](https://github.com/berao609/Irminsul-codex/actions/runs/45567053962) passed for README commit `cfccec3e2786d74e085604a6eb896fcdb17f18f4`.
+- [Run #243](https://github.com/berao609/Irminsul-codex/actions/runs/45567094064) passed for milestone documentation commit `9e841b5acac7635529b2eaf66f91ce04cb3703a6`.
 - Physical-device verification: pending.
 
 ### Qualifications
@@ -1850,3 +1850,45 @@ The Intel destination and Visuals destination exposed two parts of the same acco
 - The existing Visuals screen still uses the current deterministic summary components. This milestone consolidates navigation and content; it does not yet add expanded interactive charts, full recommendation drill-down, or detailed gap explanations.
 - AI Chat remains an inactive placeholder pending BYOAI implementation.
 - No domain analysis logic, account data, persistence, credentials, or export behavior was changed.
+
+## Milestone 036 - Edge-to-Edge Layout and Appearance Preferences
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Extend the app surface edge-to-edge and provide persistent System, Light, and Dark appearance choices.  
+**Status:** Implemented and committed. Final combined implementation and documentation CI verification pending. Physical-device verification pending.
+
+### Objective
+
+Address the request for a full-screen presentation and user-selectable appearance without changing the four-destination navigation or account workflows.
+
+### Work implemented
+
+1. Enabled edge-to-edge window layout with transparent status and navigation bar backgrounds. Android system status and navigation controls remain visible and usable.
+2. Updated status-bar and navigation-bar icon appearance to maintain contrast with the active theme.
+3. Replaced the forced dark-only Material 3 color scheme with coordinated dark and light color schemes.
+4. Added three appearance choices under Info: System, Light, and Dark.
+5. System mode follows the device's current appearance setting.
+6. Persisted the selected appearance in the existing app preferences under `theme_mode`; the default for existing installs is System.
+7. Kept the existing four navigation destinations, account data, credentials, persistence, retrieval, and export workflows unchanged.
+
+### Implementation
+
+- Edge-to-edge and theme settings: [35760ed](https://github.com/berao609/Irminsul-codex/commit/35760ed1b993b45deede77d9b09a34c8fd6a26ee).
+- Internal visibility correction: [f00df6d](https://github.com/berao609/Irminsul-codex/commit/f00df6d4a78197b727ea6ee72747c2b9f89d04bb).
+- README update: [514b325](https://github.com/berao609/Irminsul-codex/commit/514b32576823259f2f91c292ea18230048c21615).
+- Main implementation file: `app/src/main/java/com/irminsul/codex/MainActivity.kt`.
+
+### Verification
+
+- [Run #244](https://github.com/berao609/Irminsul-codex/actions/runs/45567570932) checks the edge-to-edge and theme implementation commit.
+- [Run #245](https://github.com/berao609/Irminsul-codex/actions/runs/45567600077) checks the final combined implementation after the visibility correction.
+- README documentation CI: pending.
+- Milestone documentation CI: pending.
+- Physical-device verification: pending.
+
+### Qualifications
+
+- Edge-to-edge means the app's surfaces extend behind the Android status and navigation bars; it does not hide Android's system indicators or enable immersive mode.
+- The three theme choices are applied to the Material 3 application color scheme and system-bar icon contrast. Further component-by-component visual refinement may be needed after device testing.
+- No new dependencies, backend services, release configuration, or signing changes were introduced.
