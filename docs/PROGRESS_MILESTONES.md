@@ -1762,3 +1762,49 @@ Investigate repeated ±1 stat mismatches observed in the Account Intelligence sc
 - The change does not hide arbitrary differences: discrepancies beyond the combined precision interval remain mismatches.
 - The observed account's actual mismatch counts have not yet been rechecked on a newly installed APK.
 - No physical-device verification has been performed for the updated displayed findings.
+
+## Milestone 034 - Multi-Page Navigation and Account Home
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Replace the single long home screen with focused bottom-navigation destinations, make Home an account and Daily Note dashboard, move JSON export into Info, and establish dedicated destinations for intelligence, visuals, and AI chat.  
+**Status:** Implemented. Final combined Debug CI verification pending (Run #237). Physical-device verification pending.
+
+### Objective
+
+Give Irminsul Codex a clean, full-screen native-app structure rather than placing account retrieval, export, intelligence, and daily activity in one vertically crowded screen. Preserve the existing retrieval and analysis workflows while assigning each capability a clear destination.
+
+### Work implemented
+
+1. Added five bottom-navigation destinations: Home, Intel, Visuals, AI Chat, and Info.
+2. Reorganized Home around account identity (UID and detected server), the latest retrieved account snapshot summary, and Daily Note activity.
+3. Kept Resin, commission progress and bonus status, Realm Currency, weekly Resin discounts, and expeditions on Home.
+4. Moved the detailed Account Intelligence experience and its four development-goal selectors to the dedicated Intel destination.
+5. Added an initial Visuals dashboard using existing deterministic results: character assessment distribution, recommendation count, confirmed account gaps, and account-section coverage.
+6. Added a dedicated AI Chat destination that clearly states BYOAI is not connected or active. It does not simulate AI responses or collect provider credentials.
+7. Moved Account Data Export and the Save JSON action to Info, separate from Home and the primary analysis experience.
+8. Added account-management access in Info while retaining the existing HoYoLAB login and manual credential flow.
+9. Preserved existing Daily Note synchronization, account retrieval, Room snapshot persistence, deterministic analysis, and JSON document-picker behavior.
+
+### Implementation
+
+- Initial navigation and page composition: [bd87626](https://github.com/berao609/Irminsul-codex/commit/bd876260c2d77aec479eed28daa0c69b71f926b6).
+- Home snapshot summary: [027a88b](https://github.com/berao609/Irminsul-codex/commit/027a88b53b39a0e3334234023ee6c7ce57ef6c72).
+- Updated `app/src/main/java/com/irminsul/codex/MainActivity.kt`.
+- Updated `README.md` to describe the current navigation and distinguish active screens from planned AI functionality.
+
+### Verification
+
+- [Run #236](https://github.com/berao609/Irminsul-codex/actions/runs/45565734113) completed JVM unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and signing-key cleanup successfully for the initial navigation commit.
+- [Run #237](https://github.com/berao609/Irminsul-codex/actions/runs/45565899838) is the final combined implementation run for commit `027a88b53b39a0e3334234023ee6c7ce57ef6c72`; final result pending at the time of this record.
+- Documentation CI for the README and milestone record is pending.
+- Physical-device verification: pending.
+
+### Qualifications and next work
+
+- The initial Visuals destination is a compact deterministic summary dashboard, not yet a full charting, comparison, or interactive table experience.
+- AI Chat is a navigation destination and explanatory placeholder only. BYOAI provider configuration, chat messages, context controls, and model calls are not implemented.
+- The five destinations currently use Compose navigation state within the existing application screen; this milestone does not add Navigation Compose or split the project into additional Gradle modules.
+- Account identity currently displays the UID and detected server plus the retrieved character-roster count when available. Profile nickname, Adventure Rank, and World Level are not added because those fields are not currently exposed by the normalized snapshot model.
+- Detailed gap explanations, data-confidence causes, and full recommendation inspection remain follow-up work.
+- No paid runners, mandatory backend, release, or signing changes were introduced.
