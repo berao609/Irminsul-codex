@@ -2821,7 +2821,7 @@ M49 latest progress-document commit 925143203cd382efd9f4b3e3608726717be56f69 was
 - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.355-vc357`, artifact ID `15023653977`, size 9,013,872 bytes. Room schema artifact: `irminsul-room-schema-v1-run-355`, artifact ID `15023174643`, size 985 bytes.
 - No UI, persistence, source collector, external SDK, AI service, numerical score, or investment evaluator integration changed.
 - Physical-device testing is not applicable to this domain-only milestone.
-- The M50 milestone-documentation update is committed separately and requires its own CI verification.
+- M50 closure documentation commit `487a453ce8f67b526712a1f504e7b72d74553c30` passed CI #356: https://github.com/berao609/Irminsul-codex/actions/runs/45620921620.
 
 ### Boundaries and limitations
 
@@ -2832,3 +2832,96 @@ M49 latest progress-document commit 925143203cd382efd9f4b3e3608726717be56f69 was
 ### Next development checkpoint
 
 Proceed to M51 only after M50's final CI evidence is recorded. M51 should validate material-cost sources and define versioned character, talent, and weapon upgrade-cost records before implementing calculator arithmetic or farming estimates.
+
+
+## Milestone 051 - Materials Data Source Validation and Upgrade-Cost Contract
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Validate potential material-cost sources and define a provenance-bound, versioned domain contract for future character/talent/weapon calculations.  
+**Status:** Implemented; final CI verification pending.
+
+### Objective
+
+Establish a safe and testable source and data boundary for the planned Materials Calculator. No numerical cost dataset is bundled or treated as trusted by this milestone.
+
+### Active Memory Recall and repository verification
+
+Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.md`, M46 `GameKnowledge.kt` source registry/permission contract, M46 `InvestmentShortlist.kt`, and M50 coverage model/assessor. Confirmed M50 documentation CI #356 passed for commit `487a453ce8f67b526712a1f504e7b72d74553c30`: https://github.com/berao609/Irminsul-codex/actions/runs/45620921620.
+
+### Source validation findings and decisions
+
+1. **HoYoverse Help Center / HoYoWiki**
+   - Official help guidance identifies weapon ascension materials, enemy drops, enhancement ores, Mora, and domain rotation.
+   - HoYoLAB's official tools overview documents the Enhancement Progression Calculator and HoYoWiki material calendar.
+   - No public structured material-cost API or third-party structured-data redistribution permission was established in this review.
+   - Decision: canonical manual reference only, pending API/permission verification. No automated collection or republishing.
+
+2. **genshin-db**
+   - Technically useful structured catalog for characters, weapons, materials, talents, and other game data.
+   - Repository advertises MIT licensing for the package, but README identifies upstream content from both Genshin Impact Fandom Wiki and GenshinData.
+   - The package's software license does not independently establish redistribution rights for all underlying game-derived/upstream data. Fandom text is generally CC BY-SA unless otherwise specified; media assets have separate licenses. GenshinData README requests credit but provides no clear dataset license.
+   - Decision: technical candidate for schema/reference evaluation only. Not approved for automated bulk ingestion or bundled cost-data redistribution.
+
+3. **HoyoWhatpeon planner**
+   - Public planner documents using a pinned genshin-db snapshot and explicitly describes excluded EXP categories and unsupported cases.
+   - Decision: reference for calculator coverage and transparent limitation handling only, not an authorized data source.
+
+4. **Community calculators and other databases**
+   - Decision: reference-only until each publisher's provenance, terms/license, attribution, permitted access, retention/deletion, update cadence, and redistribution rights are independently reviewed.
+
+### Implemented domain contract
+
+1. Added `UpgradeCostKnowledge.kt`:
+   - Explicit character/weapon subject types.
+   - Separate character level, character ascension, talent level, weapon level, and weapon ascension tracks.
+   - Stable subject/catalog ID, exact game version, from/to level range, optional explicit talent slot, item IDs and positive integer quantities.
+   - Source references, retrieval time, optional validity window, review state and notes, positive revision, and supersession reference.
+   - Structural/trust validator requiring approved source permission and explicit `material_cost_curation` in `allowedActions`.
+   - Exact game-version and validity-window applicability check.
+   - Candidate/unverified, missing, malformed, expired, mismatched, or unapproved data cannot enter trusted cost calculations.
+
+2. Added `UpgradeCostRecordValidatorTest.kt` covering:
+   - Valid verified records.
+   - Link-only action rejection and unapproved-source rejection.
+   - Candidate/unverified record rejection and missing review metadata.
+   - Subject/track mismatch and talent-slot rules.
+   - Empty, zero, negative, and duplicate cost entries.
+   - Host mismatch and unknown source references.
+   - Exact game-version matching and validity boundaries.
+   - Revision and supersession validation.
+   - Character, talent, and weapon record shapes.
+
+3. Added SPECS section 3.18 documenting source decisions, trust gates, calculator boundaries, and explicit exclusions.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/model/UpgradeCostKnowledge.kt` (new)
+- `app/src/test/java/com/irminsul/codex/domain/model/UpgradeCostRecordValidatorTest.kt` (new)
+- `docs/SPECS.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation and specification commits
+
+- `1e1ac4309d2dfe4fdde25daf458bb3efde98cfd0` - Add versioned upgrade-cost knowledge contract and validator.
+- `aa352dab23e2c9534bb14afc59800257bc8d1d63` - Add upgrade-cost provenance and applicability tests.
+- `d2bb28e472f4669345a802520e68c4a7e3bdb58f` - Specify M51 source decisions and upgrade-cost contract.
+
+### Verification
+
+- Final implementation and milestone-documentation CI are pending at the time of this entry.
+- No source adapter, automated scraping, bundled cost dataset, persistence, calculator arithmetic, inventory mapping, UI, AI, or backend was introduced.
+- No physical-device test is applicable to this domain-only contract milestone.
+- Room instrumentation tests should be skipped by the workflow because no Room or persistence code changed; record the actual workflow result after CI.
+
+### Boundaries and limitations
+
+- No external source is approved yet for automated material-cost ingestion or bundled redistribution.
+- The M48 account snapshot does not expose actual player material inventory. Remaining-to-farm calculation therefore requires a separately validated inventory input source or explicit manual inventory entry.
+- Artifact enhancement/feeding costs are excluded from this contract.
+- Domain availability calendars, drop yields, resin estimates, and farming-time forecasts are not implemented.
+- M51 does not calculate costs. It defines the trusted data required before a calculator can safely do so.
+
+### Next development checkpoint
+
+Proceed to M52 only after M51 CI passes. M52 should implement deterministic aggregation of complete, trusted, same-version cost segments. Inventory subtraction and farming estimates should remain out of scope until their inputs are validated.
