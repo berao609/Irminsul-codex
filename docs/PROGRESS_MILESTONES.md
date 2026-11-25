@@ -1689,3 +1689,34 @@ Make the existing deterministic intelligence engine useful inside the applicatio
 - The selected goal is currently in ViewModel state and is not persisted as a user preference across process recreation.
 - This milestone does not add AI, resource-cost estimates, farming plans, pull advice, combat-strength scores, meta rankings, or a complete account-wide gameplay analysis.
 - JSON export remains an optional utility. The account intelligence pipeline runs from the normalized snapshot inside the app.
+
+
+### M32 Follow-up - Make Account Analysis a First-Class Action
+
+**Date recorded:** 2026-11-25  
+**Reason:** Physical-device feedback after installing the initial M32 build showed no visible change from the previous app version. Investigation found that the Account Intelligence card was rendered only after `AccountViewModel.snapshot` became non-null. The existing Daily Note Save & Sync path did not populate that snapshot; the card was effectively gated behind the optional full-account JSON export flow. This contradicted the product decision that JSON export is secondary.
+
+**Correction implemented:**
+
+1. Added `AccountViewModel.analyzeAccount(uid, cookie)`, which uses the existing account repository, saves the retrieved snapshot to Room, and runs the deterministic intelligence pipeline without setting `pendingExport` or opening the JSON-save flow.
+2. Kept `exportAccount` behavior for the optional Save JSON action. Both entry points share the same retrieval, persistence, and analysis implementation.
+3. Made the Account Intelligence card visible when account credentials are available, before a snapshot has been retrieved.
+4. Added a dedicated **Analyze Account** button. After analysis, it changes to **Refresh Analysis**. The UI also explains that this action is separate from optional JSON export.
+5. Added a ViewModel regression test proving that account analysis publishes an overview without preparing a JSON export.
+
+**Correction commits:**
+
+- ViewModel retrieval/action separation: [5dba2f1](https://github.com/berao609/Irminsul-codex/commit/5dba2f18f2e77bb4af309a4fb50edd4a95b08d96).
+- Compose card visibility and Analyze Account action: [b5f3cb3](https://github.com/berao609/Irminsul-codex/commit/b5f3cb3ff929a460cad64949078ea0743b7fbefc).
+- Regression test: [399753b](https://github.com/berao609/Irminsul-codex/commit/399753bc3a3328c7c921a4f5c153b371c7a7f24c).
+
+**Verification:**
+
+- [GitHub Actions Run #226](https://github.com/berao609/Irminsul-codex/actions/runs/45561255523) passed for the ViewModel change.
+- [GitHub Actions Run #227](https://github.com/berao609/Irminsul-codex/actions/runs/45561284173) passed for the UI change.
+- [GitHub Actions Run #228](https://github.com/berao609/Irminsul-codex/actions/runs/45561311725) passed for the final combined tree at `399753bc3a3328c7c921a4f5c153b371c7a7f24c`.
+- Run #228 completed the build job successfully, including the workflow's unit-test, Debug build, schema verification, signature verification, artifact upload, and signing-key cleanup stages.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.228-vc230`, artifact ID `14997867111`, size 8,524,897 bytes. Room schema artifact: `irminsul-room-schema-v1-run-228`, artifact ID `14998455653`.
+- Physical-device verification of the corrected entry point and visible card: pending.
+
+**Updated M32 status:** Implementation and final combined CI verified. Physical-device verification remains pending. The initial M32 build's integration defect is documented here rather than treated as a successful user-facing delivery.
