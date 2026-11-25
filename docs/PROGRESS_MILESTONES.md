@@ -850,7 +850,7 @@ Give downstream account analytics a reliable way to distinguish which selected e
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Add deterministic, policy-driven age assessment for the nine modeled account sections.  
-**Status:** Implemented; unit-test and Debug CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Objective
 
@@ -868,8 +868,10 @@ Expose section retrieval age and freshness without assuming every account sectio
 ### Verification
 
 - Implementation, tests, and initial milestone record: `41e5a1e4b80b45fbf1220d6a0674184501661819`.
-- GitHub Actions: pending.
-- Debug artifact: pending.
+- Implementation CI: [Run #131](https://github.com/berao609/Irminsul-codex/actions/runs/45527293731), success for `41e5a1e4b80b45fbf1220d6a0674184501661819`. Unit tests, Debug APK build, persistent signing verification, artifact upload, and temporary keystore cleanup all passed.
+- Documentation CI: [Run #132](https://github.com/berao609/Irminsul-codex/actions/runs/45527299268), success for `e65adb55ab2a5d4c97e646734941c8455eb19d8b`. All workflow steps passed.
+- Run #131 Debug artifact: `irminsul-codex-debug-v1.0.0-dev.131-vc133`, artifact ID `14982213693`, size 8,270,720 bytes, expires 2026-12-09 01:40:12 UTC.
+- Run #132 Debug artifact: `irminsul-codex-debug-v1.0.0-dev.132-vc134`, artifact ID `14983386316`, size 8,270,709 bytes, expires 2026-12-09 01:40:24 UTC.
 - Device verification: not required for this pure in-memory domain assessment and mapper integration.
 
 ### Qualifications
