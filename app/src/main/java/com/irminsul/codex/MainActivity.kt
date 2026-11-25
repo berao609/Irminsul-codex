@@ -282,6 +282,12 @@ private fun CodexScreen(
         }
     }
 
+    LaunchedEffect(uid) {
+        if (uid.isNotBlank()) {
+            accountViewModel.restoreLatestSnapshot(uid)
+        }
+    }
+
     LaunchedEffect(Unit) {
         if (uid.isNotBlank() && cookie.isNotBlank()) {
             refreshData()
