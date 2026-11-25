@@ -477,7 +477,7 @@ private fun CodexScreen(
 
                     Button(
                         onClick = { extractAccountJson() },
-                        enabled = !accountExportState.isExporting,
+                        enabled = !accountExportState.isExporting && !accountExportState.isRestoringSnapshot,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
                     ) {
@@ -549,6 +549,7 @@ private fun CodexScreen(
                         Text(
                             when {
                                 accountExportState.isExporting -> "Retrieving account..."
+                                accountExportState.isRestoringSnapshot -> "Restoring saved analysis..."
                                 accountExportState.snapshot == null -> "Analyze Account"
                                 else -> "Refresh Analysis"
                             }
