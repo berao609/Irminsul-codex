@@ -1900,7 +1900,7 @@ Address the request for a full-screen presentation and user-selectable appearanc
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Remove the duplicate Analyze Account button from the Visuals page while retaining the primary analysis action.  
-**Status:** Implemented and committed. CI verification pending. Physical-device verification pending.
+**Status:** Implemented, committed, CI-verified, and physical-device verified.
 
 ### Finding
 
@@ -1919,8 +1919,11 @@ The Visuals page rendered the primary Analyze Account / Refresh Analysis button 
 
 ### Verification
 
-- CI verification: pending.
-- Physical-device verification: pending.
+- [Run #249](https://github.com/berao609/Irminsul-codex/actions/runs/45568622860) passed for implementation commit `3e9be98158c6150d22fb7ef76ee5725acd2434ae`.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.249-vc251`, artifact ID `15001291778`, size 8,553,043 bytes.
+- Room schema artifact: `irminsul-room-schema-v1-run-249`, artifact ID `15001491320`, size 985 bytes.
+- User reported Run #250, the milestone documentation workflow, succeeded.
+- User installed and tested the updated app and confirmed the redundant Analyze Account button is gone. This is physical-device verification of the duplicate-button fix.
 
 ### User feedback
 
