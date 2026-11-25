@@ -373,7 +373,7 @@ Prevent Android from rejecting consecutive CI Debug APKs because they reuse the 
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 0 - Stabilize the Existing Application  
 **Milestone scope:** Implement Orders 1-5 from the account-data export reliability audit  
-**Status:** Implemented in source and tests; CI verification pending.
+**Status:** Implemented, CI-verified, and device-export verified with explicit scope qualifications.
 
 ### Objective
 
@@ -399,15 +399,24 @@ Make the existing selected-section account export more reliable and auditable wi
 
 ### Verification evidence
 
-- Implementation commit: `d82ef3e068797707dd77bf1c8594aef91b751278`
-- Unit tests and Debug build: **Pending CI result**
-- Physical-device export inspection: **Pending**
-- Export-size impact from preserving raw character data: **Not yet measured**
-- Live API shape compatibility for every endpoint: **Not yet re-verified against the user's account**
+**Repository and CI**
+- Implementation commits: `d82ef3e068797707dd77bf1c8594aef91b751278` and `ddf230bbd6d1a686237c25479c962dfa98e69e2a`.
+- Build Debug APK workflow: [Run #94](https://github.com/berao609/Irminsul-codex/actions/runs/45463930525).
+- Run result: **Success**.
+- The run completed for commit `ddf230bbd6d1a686237c25479c962dfa98e69e2a`.
 
-### Remaining work
+**Physical-device export verification**
+- Export file: `irminsul-orders-1-5-check.json`.
+- JSON parsing: **Success**; `export_format_version=1`; overall status: `complete`.
+- File size: 4,258,474 bytes (previous M4 export: 2,098,772 bytes).
+- Character roster source: 67 entries.
+- Character detail source: 9 batches, 67 raw detail entries.
+- Raw property maps: present and nonempty in all 9 batches, 333 entries total.
+- All 9 section statuses: `success`.
+- All 9 sections had populated source identifiers and valid `retrieved_at` and `last_successful_retrieval_at` timestamps.
 
-- Verify the CI unit-test and Debug build results for this commit.
-- Inspect a fresh on-device export. Confirm the new raw source sections and per-section metadata, validate JSON parsing, and compare file size with the previous 2,098,772-byte M4 export.
-- Confirm that the actual HoYoLAB responses satisfy the new endpoint-specific response-shape checks.
-- Do not treat this selected-section export as a complete raw API archive or complete account inventory.
+**Qualifications**
+- This verifies the observed account export and the fields available in that response; it is not a byte-for-byte comparison with raw HoYoLAB network responses.
+- The file-size increase is measured, but size alone is not a preservation guarantee.
+- The metadata inspection verified timestamp parseability and presence, not historical freshness across separate exports.
+- The export remains selected-section account data, not a complete raw API archive or complete inventory.
