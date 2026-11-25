@@ -1246,3 +1246,49 @@ Build on M13's existing deterministic arithmetic reconciler. Turn only confirmed
 - This analyzer does not yet combine stat integrity with build validation or account completeness. That unified character assessment is the next planned milestone (M24).
 - No user-facing analysis screen currently displays these findings.
 
+
+
+## Milestone 024 - Unified Character Assessment
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Combine character build validation, stat integrity findings, and character data completeness into one deterministic assessment per character.  
+**Status:** Implemented, unit-test verified, and Debug CI verified (Run #175).
+
+### Objective
+
+Provide a unified, explainable character assessment without inventing a score or treating missing information as a healthy result.
+
+### Work implemented
+
+1. Added assessment models covering availability, completeness level, attention status, completeness evidence, per-character assessment, and account-level report.
+2. Combined M21 build-validation findings and M23 stat-mismatch findings per character, while keeping the original evidence intact.
+3. Added explicit completeness evidence for character level and rarity, weapon, artifacts, and relevant stat collections. Missing or unverified components are listed rather than treated as zero or confirmed complete.
+4. Classified characters as `NEEDS_ATTENTION` for build errors or stat mismatches, `REVIEW` for warnings or incomplete data, and `CLEAR` only when no identified build/stat/completeness concerns remain.
+5. Kept stat mismatches separate from completeness evidence. A numerical mismatch is an integrity finding, not a missing-data indicator.
+6. Preserved stale-data markers and distinct missing, unavailable, and failed input states.
+7. Applied deterministic ordering so the highest-attention assessments appear first, with stable secondary ordering.
+8. No score, meta ranking, combat-strength rating, automatic repair, or UI was added.
+
+### Implementation
+
+- Model commit: `76212e48186303364d3ba3fea5901084f8a824f3`.
+- Analyzer commit: `8c5ac30d217320e5c96fe2db7f6a6466568dcf46`.
+- Test commits: `2d29e1355917bfe70c8c5b0f07179ccb669764fb` and `0ae05c72b9fb80cf0b1a9a8d958cfd25fcbb5ed`.
+- Corrected test report constructor commit: `5f683bfa70d68f038890072957a017b007c23942`.
+- Analyzer evidence correction: `9a116d08f9a2e7aaae04fc5ab2e841837aa0c356` (stat mismatches are not completeness gaps).
+- Added `UnifiedCharacterAssessment.kt`, `UnifiedCharacterAssessmentAnalyzer.kt`, and `UnifiedCharacterAssessmentAnalyzerTest.kt`.
+
+### Verification
+
+- [GitHub Actions Run #170](https://github.com/berao609/Irminsul-codex/actions/runs/45552796697) succeeded for the model commit.
+- [GitHub Actions Run #171](https://github.com/berao609/Irminsul-codex/actions/runs/45552801836) succeeded for the analyzer commit.
+- Runs #172, #173, and #174 failed during test compilation because the test helper passed its insights list positionally into the report's integer `matchCount` parameter. The failure was corrected by using the named `insights` argument.
+- [GitHub Actions Run #175](https://github.com/berao609/Irminsul-codex/actions/runs/45553232661) succeeded for commit `5f683bfa70d68f038890072957a017b007c23942`, verifying the corrected test code and applicable workflow.
+- Physical-device verification: not required. This milestone adds domain logic and tests without a user-facing UI or runtime workflow change.
+
+### Qualifications
+
+- Assessment coverage depends on the account data and source-analysis availability supplied to the analyzer. It is not a full character optimizer or combat-performance evaluation.
+- `CLEAR` means no identified concerns in the checks represented by this assessment; it is not proof that the character is optimally built.
+- The assessments are domain foundations and are not yet surfaced in the app UI.
