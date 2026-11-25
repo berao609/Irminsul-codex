@@ -172,6 +172,24 @@ class OwnedCharacterInvestmentFactMapperTest {
         assertEquals(InvestmentFactState.STALE, mapped.artifactIntegrity.state)
     }
 
+    @Test fun unavailableNestedEquipmentRemainsUnavailable() {
+        val result = OwnedCharacterInvestmentFactMapper.map(
+            snapshot(DataValue.Available(
+                listOf(character(
+                    weapon = DataValue.Unavailable,
+                    artifacts = DataValue.Unavailable
+                )),
+                retrievedAt
+            ))
+        )
+        val mapped = result.roster.characters.single()
+        assertEquals(InvestmentFactState.UNAVAILABLE, mapped.weapon.state)
+        assertEquals(InvestmentFactState.UNAVAILABLE, mapped.artifacts.state)
+        assertNull(mapped.weapon.value)
+        assertNull(mapped.artifacts.value)
+        assertEquals(InvestmentFactState.UNAVAILABLE, mapped.artifactIntegrity.state)
+    }
+
     @Test fun failedNestedEquipmentRetainsFailureReason() {
         val result = OwnedCharacterInvestmentFactMapper.map(
             snapshot(DataValue.Available(
