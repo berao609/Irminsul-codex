@@ -1161,7 +1161,7 @@ Establish the first account-intelligence analysis output without inventing build
 ## Milestone 022 - Account-Level Character Build Priority Summary
 
 **Development phase:** Phase 3 - First Deterministic Account Analysis  
-**Status:** Implementation committed; Debug CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Objective
 
@@ -1184,7 +1184,11 @@ Turn M21's traceable character-level findings into a concise account-level overv
 - Added `domain/model/AccountCharacterBuildSummary.kt` for account summary and per-character priority models.
 - Added `domain/analysis/CharacterBuildAccountSummaryAnalyzer.kt` to group M21 findings, calculate severity counts, and apply stable priority ordering.
 - Added `domain/analysis/CharacterBuildAccountSummaryAnalyzerTest.kt` with four tests covering grouping and ordering, empty reports, stale data, and missing/unavailable/failed states.
-- GitHub Actions Run #162 is executing for the exact implementation commit; final CI verification is pending.
+- [GitHub Actions Run #162](https://github.com/berao609/Irminsul-codex/actions/runs/45551342864) completed successfully for exact implementation commit `74aba79a9e41c6fb9238fba83fa08fbe21a8e967`.
+- Verified: JVM unit tests, Debug APK assembly, Room schema snapshot generation and upload, persistent Debug APK signature verification, Debug APK artifact upload, and temporary Debug keystore cleanup. Room instrumentation tests were correctly skipped by the existing path filter because this milestone changes only domain models, analysis logic, and JVM tests.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.162-vc164`; artifact ID `14994715100`; size 8,468,895 bytes; SHA-256 `ec2e72d4dac6aa0124724d285dfbdf602930010833aeef51db8787f82a073e26`; expires 2026-12-09 05:08:39 UTC.
+- Room schema artifact: `irminsul-room-schema-v1-run-162`; artifact ID `14993422968`; size 985 bytes; SHA-256 `1674a5fbba4ba89eac492c48bee9e6b40f47b929725ac62f748ca7cbb1ee1883`; expires 2026-12-09 05:08:37 UTC.
+- Physical-device verification: not required; this is a domain-only increment with no UI or runtime workflow change.
 
 ### Acceptance criteria
 
