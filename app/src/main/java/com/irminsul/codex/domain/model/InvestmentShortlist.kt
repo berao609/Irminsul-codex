@@ -72,19 +72,26 @@ object InvestmentShortlistEvaluator {
     fun evaluate(
         candidates: List<InvestmentCandidateAssessment>,
         knowledgeRecords: List<GameKnowledgeRecord>,
+        sourceRegistry: List<KnowledgeSourceRegistryEntry>,
         evaluatedAt: Instant,
         accountSnapshotReference: String
     ): InvestmentShortlist {
-        val trustedDecisionEvidence = knowledgeRecords.filter {
-            it.reviewState == KnowledgeReviewState.VERIFIED &&
-                it.confidenceState == KnowledgeConfidenceState.SUPPORTED &&
-                it.claimType != KnowledgeClaimType.USAGE_OBSERVATION
-        }.associateBy { it.recordId }
+        val trustedRecords = knowledgeRecords.filter { record ->
+            record.reviewState == KnowledgeReviewState.VERIFIED &&
+                record.confidenceState == KnowledgeConfidenceState.SUPPORTED &&
+                GameKnowledgeRecordValidator.validate(record, sourceRegistry).isEmpty()
+        }
+        val trustedDecisionEvidence = trustedRecords
+            .filter { it.claimType != KnowledgeClaimType.USAGE_OBSERVATION }
+            .associateBy { it.recordId }
+        val trustedUsageEvidenceIds = trustedRecords
+            .filter { it.claimType == KnowledgeClaimType.USAGE_OBSERVATION }
+            .mapTo(mutableSetOf()) { it.recordId }
 
         val recommendations = candidates.mapNotNull { candidate ->
             val evidenceIds = candidate.supportingKnowledgeRecordIds
                 .distinct()
-                .filter { it in trustedDecisionEvidence }
+                .filter { it in trustedDecisionEvidence || it in trustedUsageEvidenceIds }
             if (candidate.alreadySufficient) {
                 return@mapNotNull InvestmentRecommendation(
                     characterId = candidate.characterId,
