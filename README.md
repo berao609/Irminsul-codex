@@ -6,7 +6,7 @@ Irminsul Codex is an Android application designed to help Genshin Impact players
 
 The product's primary purpose is to turn account data into actionable in-app intelligence. Irminsul Codex aims to identify development priorities, analyze account weaknesses, optimize farming, evaluate potential pulls, and help players decide what to focus on next. Account retrieval supports this analysis; JSON export is an optional utility for third-party readers and backups.
 
-> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, optional JSON file export, and Room-backed persistence of retrieved account snapshots. The deterministic character-build assessment engine, account-level build priority summary, explainable character stat reconciliation findings, unified character assessment, and evidence-backed character development recommendations are implemented as domain foundations, but they are not yet surfaced in the user interface. The broader account intelligence experience, user-facing account history, integrated BYOAI assistant, and redesigned Account Command Center remain planned.
+> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, optional JSON file export, and Room-backed persistence of retrieved account snapshots. The deterministic character-build assessment engine, account-level build priority summary, explainable character stat reconciliation findings, unified character assessment, evidence-backed character development recommendations, goal-aware recommendation ordering, and roster/equipment gap analysis are implemented as domain foundations, but they are not yet surfaced in the user interface. The broader account intelligence experience, user-facing account history, integrated BYOAI assistant, and redesigned Account Command Center remain planned.
 
 ---
 
@@ -56,7 +56,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 - User-facing character development recommendations and explainable progression priorities.
 - Integrated BYOAI assistant grounded in the unified account model.
 - Account analytics and progression tracking.
-- Account gap analysis.
+- Broader account gap analysis beyond the implemented roster and character-equipment gap foundation.
 - Farming and Resin optimization.
 - Character and weapon pull evaluation.
 - AI-powered account assistant.
