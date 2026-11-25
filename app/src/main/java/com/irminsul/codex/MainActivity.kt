@@ -973,8 +973,6 @@ private fun CodexScreen(
     }
 }
 
-@Composable
-
 private data class ManualMaterialPlanRow(
     val id: String,
     val materialName: String = "",
@@ -1315,6 +1313,7 @@ private fun saveManualMaterialPlanRows(rows: List<ManualMaterialPlanRow>): Strin
     return array.toString()
 }
 
+@Composable
 private fun CharacterShowcaseSection(
     characters: List<CharacterSnapshot>,
     selectedCharacterId: Int?,
