@@ -233,7 +233,6 @@ object OwnedCharacterCapabilityJoiner {
             claims, records, sourceRegistry, evaluatedAt, context
         )
         val invalidClaimIds = issues.mapTo(mutableSetOf()) { it.claimId }
-        val recordsById = records.associateBy { it.recordId }
         val accepted = claims.filter { it.claimId !in invalidClaimIds }
         val duplicateCharacterIds = ownedFacts.roster.collectionIntegrity.duplicateCharacterIds.toSet()
 
@@ -247,13 +246,13 @@ object OwnedCharacterCapabilityJoiner {
                 }
                 val roleEvidence = CharacterCombatRole.entries.mapNotNull { role ->
                     val assertions = matching.filter { role in it.roles }
-                    evidence(role, assertions, recordsById)?.let { (state, supporting, contradicting) ->
+                    evidence(assertions)?.let { (state, supporting, contradicting) ->
                         CharacterRoleEvidence(role, state, supporting, contradicting)
                     }
                 }
                 val capabilityEvidence = CharacterCombatCapability.entries.mapNotNull { capability ->
                     val assertions = matching.filter { capability in it.capabilities }
-                    evidence(capability, assertions, recordsById)?.let { (state, supporting, contradicting) ->
+                    evidence(assertions)?.let { (state, supporting, contradicting) ->
                         CharacterCapabilityEvidence(capability, state, supporting, contradicting)
                     }
                 }
@@ -287,10 +286,8 @@ object OwnedCharacterCapabilityJoiner {
         val contradicting: List<String>
     )
 
-    private fun <T> evidence(
-        value: T,
-        assertions: List<CharacterCapabilityKnowledgeClaim>,
-        recordsById: Map<String, GameKnowledgeRecord>
+    private fun evidence(
+        assertions: List<CharacterCapabilityKnowledgeClaim>
     ): EvidenceParts? {
         if (assertions.isEmpty()) return null
         val supporting = assertions.filter { it.assertion == CharacterCapabilityAssertion.AFFIRMS }
