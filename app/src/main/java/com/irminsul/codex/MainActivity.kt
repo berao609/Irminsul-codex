@@ -328,7 +328,7 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
             }
         }
 
-        if (accountExportState.snapshot != null) {
+        if (uid.isNotBlank() && cookie.isNotBlank()) {
             val overview = accountExportState.intelligenceOverview
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -382,6 +382,31 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
                             onClick = { accountViewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.DATA_CONFIDENCE) },
                             label = { Text("Data confidence") },
                             modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Button(
+                        onClick = { accountViewModel.analyzeAccount(uid, cookie) },
+                        enabled = !accountExportState.isExporting,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text(
+                            when {
+                                accountExportState.isExporting -> "Retrieving account..."
+                                accountExportState.snapshot == null -> "Analyze Account"
+                                else -> "Refresh Analysis"
+                            }
+                        )
+                    }
+
+                    if (overview == null && !accountExportState.isAnalyzingIntelligence &&
+                        accountExportState.intelligenceErrorMessage == null
+                    ) {
+                        Text(
+                            text = "Run an account analysis here. This is separate from the optional Save JSON export.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
