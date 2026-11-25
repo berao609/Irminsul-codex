@@ -3091,7 +3091,8 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 - CI #376 passed the final custom-target storage correction: https://github.com/berao609/Irminsul-codex/actions/runs/45625965817.
 - CI #376 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. KVM and Room instrumentation tests were skipped because no Room/persistence schema code changed.
 - Final Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.376-vc378`, artifact ID `15026489813`, size 9,064,766 bytes. Room schema artifact ID `15028935149`, size 985 bytes.
-- Final SPECS target-isolation update CI #377 and this progress-document update's CI remain pending.
+- Final SPECS target-isolation update CI #377 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45626388663.
+- The final progress-document update CI #378 is running at https://github.com/berao609/Irminsul-codex/actions/runs/45626563675.
 - Physical-device UI and persistence testing remains pending. Do not mark M53 fully closed until the user installs and tests the final #376 build.
 
 ### Boundaries and next checkpoint
