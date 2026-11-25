@@ -2080,7 +2080,7 @@ The Visuals page previously showed character portraits only inside recommendatio
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Validate the four recommendation-ordering objectives, correct misleading player-facing labels and explanations, and make each recommendation's selected-goal rationale visible.  
-**Status:** Implemented and committed; CI verification pending; physical-device verification pending.
+**Status:** Implemented, committed, and CI verified; physical-device verification pending.
 
 ### Objective
 
@@ -2132,7 +2132,7 @@ This milestone also records the user's explicit requirement to integrate externa
 - [Run #272](https://github.com/berao609/Irminsul-codex/actions/runs/45584722292) succeeded for the UI implementation. The full unit-test suite, Debug APK build, Room schema check, APK signature verification, and artifact upload passed; Room instrumentation tests were skipped by workflow logic.
 - [Run #273](https://github.com/berao609/Irminsul-codex/actions/runs/45584794802) succeeded for the README update.
 - [Run #274](https://github.com/berao609/Irminsul-codex/actions/runs/45584837090) succeeded for the external game-knowledge product specification update.
-- [Run #275](https://github.com/berao609/Irminsul-codex/actions/runs/45584906490), for this milestone documentation commit, was still running when this verification record was updated.
+- [Run #275](https://github.com/berao609/Irminsul-codex/actions/runs/45584906490) succeeded for the milestone documentation update.
 - Physical-device verification: pending.
 
 ### Qualifications
