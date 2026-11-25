@@ -39,7 +39,7 @@ object AccountExportMapper {
         val dailyValue = when {
             daily?.status == SectionStatus.FAILED -> DataValue.Failed(daily.message ?: "Daily Note retrieval failed.")
             dailyData == null -> if (daily?.status == SectionStatus.SKIPPED) DataValue.Unavailable else DataValue.Missing
-            else -> DataValue.Available(mapDailyNote(dailyData, daily.retrievedAt), daily.retrievedAt)
+            else -> DataValue.Available(mapDailyNote(dailyData, daily?.retrievedAt), daily?.retrievedAt)
         }
 
         val characterMeta = sections["characters"]
