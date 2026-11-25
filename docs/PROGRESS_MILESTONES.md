@@ -633,7 +633,7 @@ Ensure normalized character records do not confuse missing equipment data with a
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Add deterministic validation for character progression, weapon properties, artifact stats, and character stat collections.  
-**Status:** Implementation in progress; CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Objective
 
@@ -651,8 +651,30 @@ Produce a machine-readable validation report for normalized character builds so 
 
 ### Verification
 
-- Source implementation and automated tests are committed; CI verification pending.
-- No investment scoring, recommendations, export schema change, Room persistence, UI integration, device install, or release is included.
+**Repository and source**
+- Branch: `main`
+- Implementation, tests, and initial milestone record: `d999eeb4591cff36344051b67c67dd329882102b`.
+
+**GitHub Actions**
+- Workflow: Build Debug APK
+- Run: [#117](https://github.com/berao609/Irminsul-codex/actions/runs/45522906104)
+- Run ID: `45522906104`
+- CI-triggering source commit: `d999eeb4591cff36344051b67c67dd329882102b`
+- Overall result: **Success**
+- Unit tests: **Success**
+- Debug APK build: **Success**
+- Persistent Debug signature verification: **Success**
+- Artifact upload: **Success**
+- Temporary Debug keystore cleanup: **Success**
+
+**Generated Debug artifact**
+- Artifact: `irminsul-codex-debug-v1.0.0-dev.117-vc119`
+- Artifact ID: `14980169357`
+- Size: `8,239,325` bytes
+- Expiry: 2026-12-09 01:05 UTC
+
+- Device verification: not required for this in-memory domain validation increment.
+- No investment scoring, recommendations, export schema change, Room persistence, UI integration, or release is included.
 
 ### Qualifications
 
