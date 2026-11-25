@@ -12,22 +12,35 @@ import java.time.Instant
 object OwnedCharacterInvestmentFactMapper {
 
     fun map(snapshot: AccountSnapshot): OwnedCharacterInvestmentFacts {
+        val section = snapshot.sections["characters"]
         val roster = when (val source = snapshot.characters) {
             is DataValue.Available -> OwnedCharacterInvestmentRosterFacts(
                 state = InvestmentFactState.AVAILABLE,
                 observedAt = source.retrievedAt,
+                sectionStatus = section?.status,
+                sectionSource = section?.source,
+                sectionRetrievedAt = section?.retrievedAt,
+                lastSuccessfulRetrievedAt = section?.lastSuccessfulRetrievalAt,
                 characters = source.value.map { mapCharacter(it, stale = false, source.retrievedAt) },
                 collectionIntegrity = snapshot.characterCollectionIntegrity
             )
             is DataValue.Stale -> OwnedCharacterInvestmentRosterFacts(
                 state = InvestmentFactState.STALE,
                 observedAt = source.lastRetrievedAt,
+                sectionStatus = section?.status,
+                sectionSource = section?.source,
+                sectionRetrievedAt = section?.retrievedAt,
+                lastSuccessfulRetrievedAt = section?.lastSuccessfulRetrievalAt,
                 characters = source.value.map { mapCharacter(it, stale = true, source.lastRetrievedAt) },
                 collectionIntegrity = snapshot.characterCollectionIntegrity
             )
             DataValue.Missing -> OwnedCharacterInvestmentRosterFacts(
                 state = InvestmentFactState.MISSING,
                 observedAt = null,
+                sectionStatus = section?.status,
+                sectionSource = section?.source,
+                sectionRetrievedAt = section?.retrievedAt,
+                lastSuccessfulRetrievedAt = section?.lastSuccessfulRetrievalAt,
                 collectionIntegrity = snapshot.characterCollectionIntegrity
             )
             DataValue.Unavailable -> OwnedCharacterInvestmentRosterFacts(
