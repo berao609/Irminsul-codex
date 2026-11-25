@@ -2751,6 +2751,12 @@ M50 may define a deterministic role/capability coverage assessment using only M4
 - `7da3902ed18340ebf4c69485b5d16e37203616d5` - Add source action permission regression test.
 - `3c7b542fc4767c3f4f3324ae4c822ba497ec27d7` - Specify source action permission in M49 trust gates.
 
-**Verification:** CI pending. Do not treat the correction as verified until unit tests and the Debug build pass.
+**Verification:**
+- CI #342 (implementation) passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup: https://github.com/berao609/Irminsul-codex/actions/runs/45616846889.
+- CI #343 (regression test) passed the same checks: https://github.com/berao609/Irminsul-codex/actions/runs/45616867195.
+- CI #344 (specification update) passed the same checks: https://github.com/berao609/Irminsul-codex/actions/runs/45616895927.
+- CI #342 Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.342-vc344`, artifact ID `15023390365`, size 9,004,198 bytes. Room schema artifact ID `15023510804`, size 985 bytes.
+- CI #344 Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.344-vc346`, artifact ID `15021364697`, size 9,004,213 bytes. Room schema artifact ID `15023695332`, size 985 bytes.
+- Room instrumentation tests were skipped because this correction changes no persistence code.
 
 **Boundary:** This is a trust-gate correction to M49. It adds no source adapters, scraping, content ingestion, AI, ranking, persistence, or UI.
