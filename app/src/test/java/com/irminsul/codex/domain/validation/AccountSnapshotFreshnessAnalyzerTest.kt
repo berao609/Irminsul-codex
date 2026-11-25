@@ -72,6 +72,7 @@ class AccountSnapshotFreshnessAnalyzerTest {
             SectionStatus.FAILED, "test", exportedAt, lastSuccess, "refresh failed"
         )
         val base = snapshot(null).copy(
+            accountCard = DataValue.Failed("refresh failed"),
             sections = mapOf("account_card" to failedMetadata)
         )
         val withCoverage = base.copy(sectionCoverage = AccountSnapshotCoverageAnalyzer.assess(base))
@@ -81,7 +82,7 @@ class AccountSnapshotFreshnessAnalyzerTest {
         )
         val card = report.sections.first()
         assertEquals(SectionFreshnessStatus.STALE, card.status)
-        assertEquals(SnapshotPayloadState.MISSING, card.payloadState)
+        assertEquals(SnapshotPayloadState.FAILED, card.payloadState)
         assertEquals(lastSuccess, card.lastSuccessfulRetrievedAt)
         assertEquals(lastSuccess, card.referenceAt)
         assertEquals(SectionFreshnessTimestampSource.LAST_SUCCESSFUL_RETRIEVAL, card.timestampSource)
