@@ -189,7 +189,7 @@ object CharacterCapabilityKnowledgeValidator {
                 "assertion" to claim.assertion.name,
                 "roles" to claim.roles.map { it.name }.sorted().joinToString(","),
                 "capabilities" to claim.capabilities.map { it.name }.sorted().joinToString(","),
-                "conditions" to claim.conditions.joinToString("\\n")
+                "conditions" to claim.conditions.joinToString("|")
             )
             if (expectedAttributes.any { (key, value) -> record.claim.attributes[key] != value }) {
                 issue(claim, CharacterCapabilityIssueCode.TYPED_PAYLOAD_MISMATCH, "Typed assertion must exactly match the canonical source record attributes.")
