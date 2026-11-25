@@ -15,10 +15,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.irminsul.codex.domain.model.CharacterSnapshot
 import com.irminsul.codex.domain.model.CharacterDevelopmentRecommendationType
 import com.irminsul.codex.domain.model.DataValue
@@ -954,6 +953,19 @@ private fun CodexScreen(
 }
 
 @Composable
+private fun CharacterAvatarFallback(symbol: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.size(76.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(symbol, fontSize = 30.sp)
+        }
+    }
+}
+
+@Composable
 private fun CharacterRecommendationCard(
     item: GoalAwareCharacterRecommendation,
     character: CharacterSnapshot?,
@@ -1017,28 +1029,16 @@ private fun CharacterRecommendationCard(
             verticalAlignment = Alignment.Top
         ) {
             if (!character?.avatarIcon.isNullOrBlank()) {
-                AsyncImage(
+                SubcomposeAsyncImage(
                     model = character?.avatarIcon,
                     contentDescription = "$name portrait",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(76.dp).clip(RoundedCornerShape(12.dp))
+                    modifier = Modifier.size(76.dp).clip(RoundedCornerShape(12.dp)),
+                    loading = { CharacterAvatarFallback(elementSymbol) },
+                    error = { CharacterAvatarFallback(elementSymbol) }
                 )
             } else {
-                Box(
-                    modifier = Modifier.size(76.dp).clip(RoundedCornerShape(12.dp))
-                        .then(Modifier),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.surface,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(elementSymbol, fontSize = 30.sp)
-                        }
-                    }
-                }
+                CharacterAvatarFallback(elementSymbol)
             }
             Column(
                 modifier = Modifier.weight(1f),
