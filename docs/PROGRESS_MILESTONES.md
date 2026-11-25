@@ -1044,7 +1044,7 @@ This decision does not authorize removing the existing JSON exporter, discarding
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 2 - Local Account Persistence  
 **Milestone scope:** Introduce Room and automatically persist successful account exports as immutable, historical raw JSON snapshots associated with an account UID and server.  
-**Status:** Implemented, unit-test and Android instrumentation-test verified, and Debug CI verified. Physical-device verification remains pending.
+**Status:** Implemented, unit-test and Android instrumentation-test verified, Debug CI verified, and physical-device verified (2026-11-25).
 
 ### Objective
 
@@ -1081,7 +1081,7 @@ Establish the first local persistence layer without prematurely duplicating the 
 - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.152-vc154`; artifact ID `14988374157`; size 8,456,536 bytes; artifact archive SHA-256 `866fb157a96d49aecc0cc38e7914a3a5c694ba67cc35457dc68cafc7d4ce7b78`; expires 2026-12-09 03:28:29 UTC.
 - APK signature verification passed using APK Signature Scheme v2; one signer was reported.
 - CI emitted a non-blocking notice that Gradle 8.14.8 is out of date. This did not fail the run. Gradle version modernization is not part of M20 and should be handled separately after checking plugin and Android Gradle Plugin compatibility.
-- Physical-device persistence and process-restart verification: pending.
+- **Physical-device verification (2026-11-25):** The user installed the Run #152 Debug APK as an update and reported that it works fine. This confirms the app's basic post-update runtime behavior on the user's Android device. The user did not separately report a specific process-kill/relaunch test or inspect database rows directly; direct persistence correctness remains supported by the passing Room instrumentation tests, not by a user-visible history screen (none exists yet).
 
 ### Qualifications
 
