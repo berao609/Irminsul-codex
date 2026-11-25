@@ -1924,3 +1924,49 @@ The guiding principle is:
 ---
 
 **End of specification.**
+
+
+### 3.16 M49 character role/capability knowledge and owned-roster join
+
+M49 adds a typed domain contract between reviewed character knowledge and the characters actually observed in an account roster. It does not change the M46 investment evaluator or create recommendations.
+
+#### Typed capability assertion
+
+`CharacterCapabilityKnowledgeClaim` is a versioned typed interpretation of one canonical `GameKnowledgeRecord`. It contains:
+- A schema version, unique claim ID, positive character ID, and referenced source knowledge-record ID.
+- An explicit assertion polarity: AFFIRMS or REFUTES.
+- Zero or more typed combat roles and zero or more typed capabilities; at least one must be present.
+- Optional human-readable conditions that qualify the assertion.
+
+The initial role vocabulary is on-field damage dealer, off-field damage dealer, support, enabler, driver, healer, shielder, buffer, debuffer, battery, and crowd control.
+
+The initial capability vocabulary covers on-/off-field damage, elemental application, reaction triggering/enabling, healing, shielding, damage/defense buffing, resistance reduction, energy generation, crowd control/grouping, interruption resistance, damage mitigation, and elemental infusion. These are explicit curated assertions, not deductions from element, weapon type, rarity, stats, or observed usage.
+
+The referenced `GameKnowledgeRecord` remains authoritative for publisher/source references, permission, evidence class, review state, confidence, timestamps, validity window, game version, patch phase, mode, difficulty, and encounter. The typed payload does not duplicate or override those fields.
+
+#### Trust and applicability gates
+
+A typed claim is eligible for joining only when:
+1. Its schema version is supported, claim ID is nonblank and unique, character ID is positive, and at least one typed role/capability is explicitly asserted.
+2. Its source record exists exactly once, has subject type CHARACTER, subject ID equal to the typed character ID, and claim type ROLE_CAPABILITY.
+3. The source record is VERIFIED and SUPPORTED, passes the existing source-registry and structural validator, has approved source permissions, and is within its validity window at evaluation time.
+4. Observed-usage evidence is not used to establish a role or capability.
+5. Every requested context dimension (game version, patch phase, game mode, difficulty, encounter) exactly matches a populated source-record context field. A missing context field is not a wildcard when that dimension is requested.
+
+AFFIRMS and REFUTES assertions are retained separately. If trusted assertions support and refute the same role/capability, the joined state is CONFLICTED. A refutation without an affirmative assertion is CONTRADICTED. No assertion is not proof that a role/capability is absent.
+
+#### Owned-roster join boundary
+
+`OwnedCharacterCapabilityJoiner`:
+- Emits profiles only for character IDs present in an AVAILABLE or STALE M48 roster.
+- Preserves the roster's AVAILABLE/STALE state and partial-coverage flag.
+- Does not create profiles for characters absent from the retrieved roster. In particular, an incomplete roster cannot prove that a character is unowned.
+- Does not join role/capability claims to duplicate character IDs; those profiles are marked ownership-ambiguous.
+- Retains source record IDs for each supporting and contradicting assertion and returns rejected-claim issues for inspection.
+- Does not interpret equipment investment, role coverage gaps, team synergy, patch strength, redundancy, material cost, affordability, or pull value.
+
+A profile with no accepted role/capability assertions has no role/capability evidence. This is UNKNOWN, not a negative role assessment.
+
+#### Explicit exclusions
+
+M49 is a domain contract and deterministic join only. It adds no platform adapters, automatic collection, copied third-party guide content, source ingestion, arbitrary numerical weighting, recommendation scoring, AI ranking, persistence, or UI. Source permissions and manual review remain mandatory under the M44/M45 source policy.
