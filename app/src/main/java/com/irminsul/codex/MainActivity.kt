@@ -698,6 +698,42 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
                     )
                 }
             }
+            accountExportState.snapshot?.let { snapshot ->
+                val rosterCount = when (val roster = snapshot.characters) {
+                    is com.irminsul.codex.domain.model.DataValue.Available -> roster.value.size
+                    is com.irminsul.codex.domain.model.DataValue.Stale -> roster.value.size
+                    else -> null
+                }
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text("Account snapshot", fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text = rosterCount?.let { "$it characters retrieved" } ?: "Character roster unavailable",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Last retrieved: ${snapshot.metadata.exportedAt}",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        TextButton(onClick = { selectedTab = CodexTab.INTELLIGENCE }) {
+                            Text("Analysis")
+                        }
+                    }
+                }
+            }
+
             if (dailyNote == null && !isLoading && uid.isNotBlank() && cookie.isNotBlank()) {
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
