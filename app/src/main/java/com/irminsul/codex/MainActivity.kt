@@ -1883,59 +1883,260 @@ private fun CharacterShowcaseSection(
     selectedCharacterId: Int?,
     onCharacterSelected: (Int) -> Unit
 ) {
+    var rosterExpanded by remember { mutableStateOf(false) }
+    var filtersExpanded by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var minimumLevel by remember { mutableStateOf("") }
+    var maximumLevel by remember { mutableStateOf("") }
+    var selectedElement by remember { mutableStateOf("All") }
+    var selectedWeaponType by remember { mutableStateOf("All") }
+    var selectedRarity by remember { mutableStateOf("All") }
+    var sortBy by remember { mutableStateOf("Name") }
+    var descending by remember { mutableStateOf(false) }
+
     val selected = characters.firstOrNull { it.id == selectedCharacterId } ?: characters.first()
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Character Showcase", fontSize = 21.sp, fontWeight = FontWeight.Bold)
-            Text(
-                "${characters.size} characters retrieved • Select a character to inspect their build.",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    val elements = listOf("All") + characters.map { it.element?.takeIf(String::isNotBlank) ?: "Unknown" }.distinct().sorted()
+    val weaponTypes = listOf("All") + characters.map { it.rosterWeaponType() ?: "Unknown" }.distinct().sorted()
+    val rarities = listOf("All", "5★", "4★", "3★", "2★", "1★", "Unknown")
+
+    val filteredCharacters = characters.filter { character ->
+        val name = character.name ?: "Character #${character.id}"
+        val level = character.level
+        val rarity = character.rarity
+        val weaponType = character.rosterWeaponType() ?: "Unknown"
+        val element = character.element?.takeIf(String::isNotBlank) ?: "Unknown"
+        val minLevel = minimumLevel.toIntOrNull()
+        val maxLevel = maximumLevel.toIntOrNull()
+        name.contains(searchQuery.trim(), ignoreCase = true) &&
+            (selectedElement == "All" || element.equals(selectedElement, ignoreCase = true)) &&
+            (selectedWeaponType == "All" || weaponType == selectedWeaponType) &&
+            (selectedRarity == "All" || if (selectedRarity == "Unknown") rarity == null else rarity?.let { "${it}★" == selectedRarity } == true) &&
+            (minLevel == null || level != null && level >= minLevel) &&
+            (maxLevel == null || level != null && level <= maxLevel)
+    }.let { matches ->
+        val sorted = when (sortBy) {
+            "Level" -> if (descending) matches.sortedByDescending { it.level ?: Int.MIN_VALUE } else matches.sortedBy { it.level ?: Int.MAX_VALUE }
+            "Rarity" -> if (descending) matches.sortedByDescending { it.rarity ?: Int.MIN_VALUE } else matches.sortedBy { it.rarity ?: Int.MAX_VALUE }
+            "Friendship" -> if (descending) matches.sortedByDescending { it.friendshipLevel ?: Int.MIN_VALUE } else matches.sortedBy { it.friendshipLevel ?: Int.MAX_VALUE }
+            else -> if (descending) matches.sortedByDescending { it.name ?: "Character #${it.id}" } else matches.sortedBy { it.name ?: "Character #${it.id}" }
         }
-        Row(
-            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        sorted
+    }
+
+    val hasActiveFilters = searchQuery.isNotBlank() || minimumLevel.isNotBlank() || maximumLevel.isNotBlank() ||
+        selectedElement != "All" || selectedWeaponType != "All" || selectedRarity != "All"
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Card(
+            onClick = { rosterExpanded = !rosterExpanded },
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            characters.forEach { character ->
-                val isSelected = character.id == selected.id
-                Card(
-                    onClick = { onCharacterSelected(character.id) },
-                    modifier = Modifier.width(112.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surface
-                    ),
-                    shape = RoundedCornerShape(14.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("Character Roster", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        if (rosterExpanded) "${filteredCharacters.size} of ${characters.size} characters shown"
+                        else "${characters.size} characters • Selected: ${selected.name ?: "Character #${selected.id}"}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Icon(
+                    if (rosterExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    contentDescription = if (rosterExpanded) "Collapse character roster" else "Expand character roster"
+                )
+            }
+        }
+
+        if (rosterExpanded) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    label = { Text("Search characters") },
+                    textStyle = MaterialTheme.typography.bodyMedium
+                )
+                TextButton(onClick = { filtersExpanded = !filtersExpanded }) {
+                    Text(if (filtersExpanded) "Hide filters" else "Filters")
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RosterChoiceMenu(
+                    label = "Sort: $sortBy",
+                    options = listOf("Name", "Level", "Rarity", "Friendship"),
+                    selected = sortBy,
+                    onSelected = { sortBy = it }
+                )
+                TextButton(onClick = { descending = !descending }) {
+                    Text(if (descending) "Descending ↓" else "Ascending ↑")
+                }
+            }
+
+            if (filtersExpanded) {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(9.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        ShowcaseArtwork(
-                            url = character.avatarIcon,
-                            description = "${character.name ?: "Character"} portrait",
-                            fallback = elementGlyph(character.element),
-                            modifier = Modifier.size(88.dp)
+                    Text("Filter roster", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        RosterChoiceMenu("Element: $selectedElement", elements, selectedElement) { selectedElement = it }
+                        RosterChoiceMenu("Weapon: $selectedWeaponType", weaponTypes, selectedWeaponType) { selectedWeaponType = it }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        RosterChoiceMenu("Rarity: $selectedRarity", rarities, selectedRarity) { selectedRarity = it }
+                    }
+                    Text("Character level", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = minimumLevel,
+                            onValueChange = { minimumLevel = it.filter(Char::isDigit).take(2) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            label = { Text("Minimum") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
-                        Text(
-                            character.name ?: "Character #${character.id}",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1
+                        OutlinedTextField(
+                            value = maximumLevel,
+                            onValueChange = { maximumLevel = it.filter(Char::isDigit).take(2) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            label = { Text("Maximum") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
-                        Text(
-                            "Lv. ${character.level ?: "—"}",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    }
+                    if (hasActiveFilters) {
+                        TextButton(
+                            onClick = {
+                                searchQuery = ""
+                                minimumLevel = ""
+                                maximumLevel = ""
+                                selectedElement = "All"
+                                selectedWeaponType = "All"
+                                selectedRarity = "All"
+                            },
+                            modifier = Modifier.align(Alignment.End)
+                        ) { Text("Clear filters") }
+                    }
+                }
+            }
+
+            if (filteredCharacters.isEmpty()) {
+                Text(
+                    "No characters match these filters. Adjust or clear the filters.",
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    filteredCharacters.chunked(3).forEach { rowCharacters ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            rowCharacters.forEach { character ->
+                                val isSelected = character.id == selected.id
+                                Card(
+                                    onClick = { onCharacterSelected(character.id) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.surface
+                                    ),
+                                    shape = RoundedCornerShape(13.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().padding(7.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        ShowcaseArtwork(
+                                            url = character.avatarIcon,
+                                            description = "${character.name ?: "Character"} portrait",
+                                            fallback = elementGlyph(character.element),
+                                            modifier = Modifier.size(66.dp)
+                                        )
+                                        Text(
+                                            character.name ?: "Character #${character.id}",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1
+                                        )
+                                        Text(
+                                            "Lv. ${character.level ?: "—"} • ${character.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "—"}",
+                                            fontSize = 10.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                            repeat(3 - rowCharacters.size) {
+                                Spacer(Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             }
         }
+
         CharacterShowcaseDetail(character = selected)
     }
+}
+
+@Composable
+private fun RosterChoiceMenu(
+    label: String,
+    options: List<String>,
+    selected: String,
+    onSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        OutlinedButton(onClick = { expanded = true }) {
+            Text(label, maxLines = 1)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onSelected(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+private fun CharacterSnapshot.rosterWeaponType(): String? {
+    val weapon = when (val value = weapon) {
+        is DataValue.Available -> value.value
+        is DataValue.Stale -> value.value
+        else -> null
+    } ?: return null
+    return weapon.typeName?.takeIf(String::isNotBlank)
+        ?: weapon.type?.let { "Type $it" }
 }
 
 @Composable
