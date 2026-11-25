@@ -2467,7 +2467,7 @@ M47 should validate how these contracts map to real account and game-domain inpu
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Validate the current normalized account model against the M46 investment-shortlist inputs. Define which facts can be extracted directly, which require reviewed game knowledge, and which require new account data.  
-**Status:** Mapping documented; CI verification pending. Documentation-only milestone. No runtime code, data schema, source collector, scoring logic, AI service, or UI changed.
+**Status:** Closed. Mapping documentation and milestone record passed CI #312 and #313. Documentation-only milestone. No runtime code, data schema, source collector, scoring logic, AI service, or UI changed.
 
 ### Objective
 
@@ -2529,8 +2529,11 @@ Confirmed M46 closure CI #310 and documentation CI #311 both succeeded before st
 
 - M46 implementation CI #310: success, https://github.com/berao609/Irminsul-codex/actions/runs/45604739493.
 - M46 closure documentation CI #311: success, https://github.com/berao609/Irminsul-codex/actions/runs/45605101295.
-- M47 documentation commit and CI verification: pending.
-- No runtime behavior changed. No APK or physical-device test is applicable to this documentation-only milestone.
+- M47 SPECS commit CI #312: success, https://github.com/berao609/Irminsul-codex/actions/runs/45605691281.
+- M47 milestone documentation CI #313: success, https://github.com/berao609/Irminsul-codex/actions/runs/45605805301.
+- CI #313 artifact: irminsul-codex-debug-v1.0.0-dev.313-vc315, artifact ID 15016769899, size 8,969,858 bytes. Room schema artifact ID 15016104549, size 985 bytes.
+- Both workflows passed unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped because the changes were documentation-only.
+- No runtime behavior changed. No physical-device test is applicable to this documentation-only milestone.
 
 ### Outcome
 
