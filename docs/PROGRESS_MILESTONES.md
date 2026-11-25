@@ -2760,3 +2760,73 @@ M50 may define a deterministic role/capability coverage assessment using only M4
 - Room instrumentation tests were skipped because this correction changes no persistence code.
 
 **Boundary:** This is a trust-gate correction to M49. It adds no source adapters, scraping, content ingestion, AI, ranking, persistence, or UI.
+
+## Milestone 050 - Deterministic Owned-Roster Role and Capability Coverage
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Aggregate M49 validated character role/capability evidence across M48 observed owned-character facts.  
+**Status:** Implemented; final CI verification pending.
+
+### Objective
+
+Establish which combat roles and capabilities have affirmative evidence among the characters observed in the account roster, while retaining contradictions and refusing to turn missing knowledge or incomplete account data into negative findings. This is a reusable evidence layer for the planned lineup simulator, not a team-performance simulator or investment recommendation engine.
+
+### Active Memory Recall and repository verification
+
+Rechecked the current AGENTS.md, README.md, docs/SPECS.md, docs/PROGRESS_MILESTONES.md, M48 owned-character fact model/mapper, M49 capability knowledge validator/joiner, M46 knowledge and investment contracts, and the latest M49 CI run before implementation.
+
+M49 latest progress-document commit 925143203cd382efd9f4b3e3608726717be56f69 was confirmed by CI #346: success. Run: https://github.com/berao609/Irminsul-codex/actions/runs/45617229133.
+
+### Work implemented
+
+1. Added RoleCapabilityCoverage.kt:
+   - Typed result models for role and capability coverage.
+   - States: COVERED, COVERED_WITH_CONFLICTS, CONFLICTED, NOT_ESTABLISHED, INCOMPLETE, and UNKNOWN.
+   - Supporting, conflicted, and contradicted character IDs.
+   - Supporting and contradicting source-record IDs.
+   - Preserved evaluation time, requested game context, roster state, partiality, and rejected M49 claims.
+2. Added RoleCapabilityCoverageAssessor.kt:
+   - Consumes only M49 OwnedCharacterCapabilityKnowledge; it cannot bypass M49 source, review, validity, or context validation.
+   - Aggregates each role and capability across unambiguous owned-character profiles.
+   - Any affirmative evidence from an unambiguous owned character establishes coverage.
+   - Conflicts remain visible. A refutation from one character does not cancel another character's affirmative evidence.
+   - Excludes ownership-ambiguous duplicate profiles and marks the result partial.
+   - Missing/unavailable/failed rosters produce UNKNOWN.
+   - Stale or partial rosters without affirmative evidence produce INCOMPLETE.
+   - No affirmative evidence in a complete roster produces NOT_ESTABLISHED, explicitly not a proven account gap.
+3. Added tests for multi-character aggregation, positive coverage plus conflicts, conflict-only evidence, refutation-only evidence, no-claim neutrality, partial and stale rosters, unavailable rosters, ambiguous duplicate profiles, context preservation, and rejected-claim preservation.
+4. Added SPECS section 3.17 defining the M50 contract and its limits.
+
+### Files changed
+
+- app/src/main/java/com/irminsul/codex/domain/model/RoleCapabilityCoverage.kt (new)
+- app/src/main/java/com/irminsul/codex/domain/analysis/RoleCapabilityCoverageAssessor.kt (new)
+- app/src/test/java/com/irminsul/codex/domain/analysis/RoleCapabilityCoverageAssessorTest.kt (new)
+- docs/SPECS.md
+
+### Implementation and specification commits
+
+- 4ca4bbc0b2a7665f30b988f0a0bbdcb2042ed398 - Add role/capability coverage result models.
+- 95cd022b455d19644e95f521c0de4eb1dd1865c6 - Add deterministic owned-roster coverage assessor.
+- 9e62f0e4cfeec177463c2aa102cba101dcfb84a8 - Add coverage aggregation tests.
+- 39a74dc39361b7cf6981db07dcba2f7954f93bd8 - Treat stale roster coverage as incomplete when no affirmative evidence exists.
+- 2bfd113c6cfe4013f60dd77631e8bc4fb952537d - Test stale-roster uncertainty.
+- a611856133f6f0c0f57c6658cbdbb3f18c358d45 - Specify M50 coverage contract and evidence boundaries.
+
+### Verification
+
+- Final combined implementation CI and M50 milestone-documentation CI are pending at the time of this entry.
+- No UI, persistence, source collector, external SDK, AI service, numerical score, or investment evaluator integration changed.
+- Physical-device testing is not applicable to this domain-only milestone.
+- Room instrumentation tests are not expected to run because no Room or persistence code changed; report the actual workflow decision after CI.
+
+### Boundaries and limitations
+
+- M50 does not establish that the external character-knowledge catalogue is complete. NOT_ESTABLISHED is neutral and cannot be presented as a proven roster deficiency.
+- Coverage does not imply team synergy, a valid four-character lineup, rotation quality, reaction performance, current meta strength, or investment value.
+- No team-synergy claims, material-cost tables, affordability calculations, lineup UI, or materials calculator are implemented here.
+
+### Next development checkpoint
+
+Proceed to M51 only after M50's final CI evidence is recorded. M51 should validate material-cost sources and define versioned character, talent, and weapon upgrade-cost records before implementing calculator arithmetic or farming estimates.
