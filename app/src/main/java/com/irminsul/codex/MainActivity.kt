@@ -6,6 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -156,6 +159,7 @@ private fun CodexScreen(
     var showWebLogin by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(CodexTab.HOME) }
     var showAllRecommendations by remember { mutableStateOf(false) }
+    var selectedCharacterId by remember { mutableStateOf<Int?>(null) }
 
     var dailyNote by remember { mutableStateOf<DailyNote?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -419,6 +423,36 @@ private fun CodexScreen(
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Text(if (accountExportState.isExporting) "Extracting..." else "Save JSON")
+                    }
+                }
+            }
+        }
+
+        if (selectedTab == CodexTab.VISUALS) {
+            val roster = when (val value = accountExportState.snapshot?.characters) {
+                is DataValue.Available -> value.value
+                is DataValue.Stale -> value.value
+                else -> emptyList()
+            }
+            if (roster.isNotEmpty()) {
+                CharacterShowcaseSection(
+                    characters = roster,
+                    selectedCharacterId = selectedCharacterId,
+                    onCharacterSelected = { selectedCharacterId = it }
+                )
+            } else {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Character Showcase", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Run Analyze Account to retrieve your character roster and open detailed character profiles here.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -950,6 +984,309 @@ private fun CodexScreen(
         }
     }
     }
+}
+
+@Composable
+private fun CharacterShowcaseSection(
+    characters: List<CharacterSnapshot>,
+    selectedCharacterId: Int?,
+    onCharacterSelected: (Int) -> Unit
+) {
+    val selected = characters.firstOrNull { it.id == selectedCharacterId } ?: characters.first()
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Character Showcase", fontSize = 21.sp, fontWeight = FontWeight.Bold)
+            Text(
+                "${characters.size} characters retrieved • Select a character to inspect their build.",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            characters.forEach { character ->
+                val isSelected = character.id == selected.id
+                Card(
+                    onClick = { onCharacterSelected(character.id) },
+                    modifier = Modifier.width(112.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(9.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        ShowcaseArtwork(
+                            url = character.avatarIcon,
+                            description = "${character.name ?: "Character"} portrait",
+                            fallback = elementGlyph(character.element),
+                            modifier = Modifier.size(88.dp)
+                        )
+                        Text(
+                            character.name ?: "Character #${character.id}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
+                        )
+                        Text(
+                            "Lv. ${character.level ?: "—"}",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+        CharacterShowcaseDetail(character = selected)
+    }
+}
+
+@Composable
+private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(18.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                ShowcaseArtwork(
+                    url = character.avatarIcon,
+                    description = "${character.name ?: "Character"} artwork",
+                    fallback = elementGlyph(character.element),
+                    modifier = Modifier.width(112.dp).height(142.dp)
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.weight(1f)) {
+                    Text(character.name ?: "Character #${character.id}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        "${character.element ?: "Element unavailable"} • ${character.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text("Level ${character.level ?: "—"}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Friendship ${character.friendshipLevel ?: "—"} • Constellations ${character.activeConstellationCount ?: "—"}/6",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            Text("Weapon", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            when (val weapon = character.weapon) {
+                is DataValue.Available -> WeaponShowcaseRow(weapon.value)
+                is DataValue.Stale -> WeaponShowcaseRow(weapon.value, stale = true)
+                DataValue.Missing -> ShowcaseUnavailable("Weapon data was not included.")
+                DataValue.Unavailable -> ShowcaseUnavailable("Weapon data is unavailable.")
+                is DataValue.Failed -> ShowcaseUnavailable("Weapon data could not be read.")
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            Text("Artifacts", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            when (val artifacts = character.artifacts) {
+                is DataValue.Available -> ArtifactShowcaseRow(artifacts.value)
+                is DataValue.Stale -> ArtifactShowcaseRow(artifacts.value, stale = true)
+                DataValue.Missing -> ShowcaseUnavailable("Artifact data was not included.")
+                DataValue.Unavailable -> ShowcaseUnavailable("Artifact data is unavailable.")
+                is DataValue.Failed -> ShowcaseUnavailable("Artifact data could not be read.")
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            Text("Attributes", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            if (character.selectedProperties.isEmpty()) {
+                ShowcaseUnavailable("Character attributes are not available.")
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    character.selectedProperties.take(8).forEach { stat ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(stat.statName ?: "Unknown stat", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stat.final ?: stat.value ?: stat.add ?: stat.base ?: "—", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            Text("Talents", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            if (character.skills.isEmpty()) {
+                ShowcaseUnavailable("Talent details are not available.")
+            } else {
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    character.skills.forEach { skill ->
+                        Column(
+                            modifier = Modifier.width(88.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            ShowcaseArtwork(
+                                skill.icon,
+                                skill.name ?: "Talent",
+                                "✦",
+                                Modifier.size(54.dp)
+                            )
+                            Text(skill.name ?: "Talent", fontSize = 10.sp, maxLines = 2)
+                            Text("Lv. ${skill.level ?: "—"}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            Text("Constellations", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            if (character.constellations.isEmpty()) {
+                ShowcaseUnavailable("Constellation details are not available.")
+            } else {
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    character.constellations.sortedBy { it.position ?: it.id }.forEach { constellation ->
+                        Column(
+                            modifier = Modifier.width(88.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            ShowcaseArtwork(
+                                constellation.icon,
+                                constellation.name ?: "Constellation",
+                                "C${constellation.position ?: constellation.id}",
+                                Modifier.size(54.dp)
+                            )
+                            Text(
+                                constellation.name ?: "Constellation ${constellation.position ?: constellation.id}",
+                                fontSize = 10.sp,
+                                maxLines = 2
+                            )
+                            Text(
+                                when (constellation.isActive) {
+                                    true -> "Unlocked"
+                                    false -> "Locked"
+                                    null -> "Unknown"
+                                },
+                                fontSize = 10.sp,
+                                color = if (constellation.isActive == true) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeaponShowcaseRow(weapon: com.irminsul.codex.domain.model.WeaponSnapshot, stale: Boolean = false) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        ShowcaseArtwork(weapon.icon, weapon.name ?: "Weapon", "⚔", Modifier.size(64.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(weapon.name ?: "Weapon #${weapon.id}", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                "Lv. ${weapon.level ?: "—"} • Refinement ${weapon.refinementLevel ?: "—"} • ${weapon.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"}",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (stale) Text("Using older account data", fontSize = 10.sp, color = MaterialTheme.colorScheme.error)
+        }
+    }
+}
+
+@Composable
+private fun ArtifactShowcaseRow(artifacts: List<com.irminsul.codex.domain.model.ArtifactSnapshot>, stale: Boolean = false) {
+    if (artifacts.isEmpty()) {
+        ShowcaseUnavailable("No equipped artifact entries were returned.")
+        return
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(9.dp)
+        ) {
+            artifacts.sortedBy { it.slot ?: Int.MAX_VALUE }.forEach { artifact ->
+                Column(
+                    modifier = Modifier.width(76.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    ShowcaseArtwork(artifact.icon, artifact.name ?: "Artifact", "◇", Modifier.size(62.dp))
+                    Text(artifact.slotName ?: artifact.name ?: "Artifact", fontSize = 10.sp, maxLines = 2)
+                    Text("+${artifact.level ?: "—"}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+        artifacts.sortedBy { it.slot ?: Int.MAX_VALUE }.forEach { artifact ->
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(artifact.name ?: artifact.slotName ?: "Artifact", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                artifact.mainProperty?.let { stat ->
+                    Text(
+                        "${stat.statName ?: "Main stat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                artifact.subProperties.forEach { stat ->
+                    Text(
+                        "${stat.statName ?: "Substat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+        if (stale) Text("Using older account data", fontSize = 10.sp, color = MaterialTheme.colorScheme.error)
+    }
+}
+
+@Composable
+private fun ShowcaseArtwork(url: String?, description: String, fallback: String, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        if (!url.isNullOrBlank()) {
+            SubcomposeAsyncImage(
+                model = url,
+                contentDescription = description,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+                loading = { Text(fallback, fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                error = { Text(fallback, fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            )
+        } else {
+            Text(fallback, fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun ShowcaseUnavailable(message: String) {
+    Text(message, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+private fun elementGlyph(element: String?): String = when (element?.lowercase()) {
+    "wind", "anemo" -> "🌪"
+    "fire", "pyro" -> "🔥"
+    "water", "hydro" -> "💧"
+    "ice", "cryo" -> "❄"
+    "electric", "electro" -> "⚡"
+    "rock", "geo" -> "🪨"
+    "grass", "dendro" -> "🌿"
+    else -> "✦"
 }
 
 @Composable
