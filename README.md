@@ -6,7 +6,7 @@ Irminsul Codex is an Android application designed to help Genshin Impact players
 
 The product's primary purpose is to turn account data into actionable in-app intelligence. Irminsul Codex aims to identify development priorities, analyze account weaknesses, optimize farming, evaluate potential pulls, and help players decide what to focus on next. Account retrieval supports this analysis; JSON export is an optional utility for third-party readers and backups.
 
-> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, and optional JSON file export. The account intelligence engine, local account history, integrated BYOAI assistant, and redesigned Account Command Center remain planned and are not yet implemented.
+> **Project Status:** Early development. The current application provides HoYoLAB connectivity, Daily Note synchronization, selected account data retrieval, optional JSON file export, and Room-backed persistence of retrieved account snapshots. The account intelligence engine, user-facing account history, integrated BYOAI assistant, and redesigned Account Command Center remain planned and are not yet implemented.
 
 ---
 
@@ -83,7 +83,8 @@ Screenshots will be added as the application interface develops.
 | Asynchronous Processing | Kotlin Coroutines |
 | Authentication | Android WebView |
 | Data Format | JSON |
-| Local Storage | SharedPreferences |
+| Structured Local Storage | Room (account records and raw historical snapshots) |
+| Preferences | SharedPreferences (including the current credential flow; not encrypted) |
 | Build System | Gradle |
 | Continuous Integration | GitHub Actions |
 
@@ -185,7 +186,7 @@ The current application follows a data retrieval workflow:
 
 * Daily Note information is displayed, and selected account data can be exported as JSON.
 
-The current implementation still focuses on HoYoLAB retrieval, Daily Note presentation, and selected account JSON export. The intended primary workflow is in-app account analysis with integrated AI assistance, but the intelligence engine, local persistence, BYOAI integration, and Account Command Center are not yet implemented.
+The current implementation still focuses on HoYoLAB retrieval, Daily Note presentation, and selected account JSON export. Successful account exports are also saved locally in Room as historical raw JSON snapshots. The intended primary workflow is in-app account analysis with integrated AI assistance; the intelligence engine, user-facing history, BYOAI integration, and Account Command Center are not yet implemented.
 
 ## Project Structure
 
@@ -263,6 +264,10 @@ Responsible for:
 * Running full account export through the domain repository contract.
 * Exposing export progress, errors, and the normalized AccountSnapshot as observable state.
 * Retaining the original JSON export for the Save JSON file action.
+
+### `data/local/`
+
+Contains the Room database, account and snapshot entities, DAO, and local snapshot-store implementation. Each successful account export is saved as an immutable raw JSON snapshot associated with its UID and server. HoYoLAB cookies and AI credentials are not stored in Room.
 
 ### `data/repository/HoYoLabAccountRepository.kt`
 

@@ -1037,3 +1037,39 @@ Prioritize, in order: reliable unified account data and local persistence; deter
 ### Scope and non-goals
 
 This decision does not authorize removing the existing JSON exporter, discarding raw source preservation, changing the account export schema, introducing a mandatory backend, or immediately building every AI and analytics feature. It does not change the native Android, local-first, layered architecture, BYOAI, or deterministic-first principles already agreed.
+
+
+## Milestone 020 - Room Account Snapshot Persistence Foundation
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 2 - Local Account Persistence  
+**Milestone scope:** Introduce Room and automatically persist successful account exports as immutable, historical raw JSON snapshots associated with an account UID and server.  
+**Status:** Implementation committed; CI and device verification pending.
+
+### Objective
+
+Establish the first local persistence layer without prematurely duplicating the complete domain model into relational tables. Preserve each exact source export so future features can remap it as the domain model evolves.
+
+### Work implemented
+
+1. Added Room 2.6.1 with KSP 2.0.0-1.0.21 and configured Room schema export to `app/schemas`, with CI verification and a dedicated schema artifact for the initial generated version.
+2. Added the initial Room database with two entities: an account identity keyed by UID and server, and an immutable account snapshot linked by a composite foreign key.
+3. Each snapshot stores a generated snapshot ID, export timestamp, export format version, overall retrieval status, source origin, and the exact original JSON string. No HoYoLAB cookies or AI credentials are stored in Room.
+4. Added transactional snapshot persistence. Account creation, last-updated timestamp maintenance, and snapshot insertion occur in one database transaction. Existing account creation timestamps are preserved.
+5. Added a domain `AccountSnapshotStore` contract and Room implementation supporting snapshot saving and history retrieval. History is ordered newest first.
+6. Connected successful ViewModel account retrieval to local persistence. A storage failure does not discard the fetched export or block the existing Save JSON flow; it is surfaced as a warning.
+7. Added Robolectric-backed Room tests for multiple snapshots, raw JSON preservation, account identity, timestamps, and history ordering. Added ViewModel coverage proving that local database failure does not discard a successfully retrieved export or block file saving.
+8. No destructive migration fallback was added. Database schema version starts at 1; future schema changes must introduce explicit migrations.
+
+### Verification
+
+- Implementation commit: pending.
+- Unit tests and Debug build: pending CI.
+- Room database runtime behavior: pending CI unit tests.
+- Physical-device persistence and process-restart verification: pending.
+
+### Qualifications
+
+- This milestone stores the exact selected-section export JSON as the canonical persisted source. It does not claim that the existing export is a complete account inventory or raw API archive.
+- The normalized `AccountSnapshot` is reconstructed from raw JSON when history is read; it is not yet duplicated into separate character, weapon, artifact, or resource tables.
+- User-facing account history, snapshot comparison, retention controls, encrypted credential storage, and migration beyond schema version 1 are outside this milestone.

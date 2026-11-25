@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.model.AccountSnapshot
 import com.irminsul.codex.domain.repository.AccountRepository
+import com.irminsul.codex.domain.repository.AccountSnapshotStore
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +27,8 @@ data class AccountExportUiState(
  * Android document saving remains in the Compose presentation layer.
  */
 class AccountViewModel(
-    private val repository: AccountRepository
+    private val repository: AccountRepository,
+    private val snapshotStore: AccountSnapshotStore
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AccountExportUiState())
     val uiState: StateFlow<AccountExportUiState> = _uiState.asStateFlow()
@@ -54,11 +56,19 @@ class AccountViewModel(
                 }
                 result.fold(
                     onSuccess = { export ->
+                        var persistenceError: String? = null
+                        try {
+                            snapshotStore.save(export)
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
+                        } catch (error: Exception) {
+                            persistenceError = "Account retrieved, but local saving failed: ${error.message ?: "unknown storage error"}"
+                        }
                         _uiState.update {
                             it.copy(
                                 isExporting = false,
                                 progress = null,
-                                errorMessage = null,
+                                errorMessage = persistenceError,
                                 snapshot = export.snapshot,
                                 pendingExport = export
                             )
@@ -93,12 +103,13 @@ class AccountViewModel(
     }
 
     class Factory(
-        private val repository: AccountRepository
+        private val repository: AccountRepository,
+        private val snapshotStore: AccountSnapshotStore
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(AccountViewModel::class.java)) {
-                return AccountViewModel(repository) as T
+                return AccountViewModel(repository, snapshotStore) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

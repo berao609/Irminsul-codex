@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModelStore
 import com.irminsul.codex.data.mapper.AccountExportMapper
 import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.repository.AccountRepository
+import com.irminsul.codex.domain.repository.AccountSnapshotStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -14,6 +15,11 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class AccountViewModelTest {
+    private class NoOpSnapshotStore : AccountSnapshotStore {
+        override suspend fun save(export: AccountExport) = Unit
+        override suspend fun getHistory(uid: String, server: String): List<AccountExport> = emptyList()
+    }
+
     private val rawJson = """
         {
           "export_format_version": 1,
@@ -48,7 +54,7 @@ class AccountViewModelTest {
                     return Result.success(export)
                 }
             }
-            val viewModel = AccountViewModel(repository)
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
             store.put("account", viewModel)
 
             viewModel.exportAccount("800000001", "test-cookie")
@@ -123,4 +129,35 @@ class AccountViewModelTest {
             Dispatchers.resetMain()
         }
     }
+    @Test
+    fun persistsSuccessfulExportWithoutBlockingJsonSaveWhenStorageFails() = runBlocking {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+        val store = ViewModelStore()
+        try {
+            val export = AccountExport(AccountExportMapper.map(JSONObject(rawJson)), rawJson)
+            var savedExport: AccountExport? = null
+            val snapshotStore = object : AccountSnapshotStore {
+                override suspend fun save(export: AccountExport) {
+                    savedExport = export
+                    throw IllegalStateException("database unavailable")
+                }
+                override suspend fun getHistory(uid: String, server: String): List<AccountExport> = emptyList()
+            }
+            val repository = object : AccountRepository {
+                override suspend fun fetchAccountExport(uid: String, cookie: String, onProgress: (String) -> Unit): Result<AccountExport> = Result.success(export)
+            }
+            val viewModel = AccountViewModel(repository, snapshotStore)
+            store.put("account", viewModel)
+            viewModel.exportAccount("800000001", "test-cookie")
+            assertSame(export, savedExport)
+            assertFalse(viewModel.uiState.value.isExporting)
+            assertEquals("800000001", viewModel.uiState.value.snapshot?.identity?.uid)
+            assertEquals(rawJson, viewModel.uiState.value.pendingExport?.rawJson)
+            assertEquals("Account retrieved, but local saving failed: database unavailable", viewModel.uiState.value.errorMessage)
+        } finally {
+            store.clear()
+            Dispatchers.resetMain()
+        }
+    }
+
 }
