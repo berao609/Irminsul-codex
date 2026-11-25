@@ -42,6 +42,14 @@ private val CodexColors = darkColorScheme(
     error = Color(0xFFEF5350)
 )
 
+private enum class CodexTab(val label: String, val symbol: String) {
+    HOME("Home", "⌂"),
+    INTELLIGENCE("Intel", "◈"),
+    VISUALS("Visuals", "▥"),
+    AI_CHAT("AI Chat", "✧"),
+    INFO("Info", "ⓘ")
+}
+
 class MainActivity : ComponentActivity() {
     private lateinit var accountViewModel: AccountViewModel
 
@@ -78,6 +86,7 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
     var cookie by remember { mutableStateOf(prefs.getString("cookie", "") ?: "") }
     var showCredentials by remember { mutableStateOf(uid.isBlank() || cookie.isBlank()) }
     var showWebLogin by remember { mutableStateOf(false) }
+    var selectedTab by remember { mutableStateOf(CodexTab.HOME) }
 
     var dailyNote by remember { mutableStateOf<DailyNote?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -192,10 +201,25 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
         )
     }
 
+    Scaffold(
+        bottomBar = {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                CodexTab.values().forEach { tab ->
+                    NavigationBarItem(
+                        selected = selectedTab == tab,
+                        onClick = { selectedTab = tab },
+                        icon = { Text(tab.symbol, fontSize = 19.sp) },
+                        label = { Text(tab.label, fontSize = 10.sp) },
+                        alwaysShowLabel = true
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .systemBarsPadding()
+            .padding(innerPadding)
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -220,12 +244,15 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
                     )
                 }
             }
-            TextButton(onClick = { showCredentials = !showCredentials }) {
-                Text(if (showCredentials) "Hide" else "Account")
+            TextButton(onClick = {
+                selectedTab = CodexTab.INFO
+                showCredentials = true
+            }) {
+                Text("Account")
             }
         }
 
-        if (showCredentials) {
+        if (showCredentials && (selectedTab == CodexTab.INFO || uid.isBlank() || cookie.isBlank())) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(14.dp)
@@ -272,7 +299,7 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
             }
         }
 
-        if (uid.isNotBlank() && cookie.isNotBlank()) {
+        if (selectedTab == CodexTab.INFO && uid.isNotBlank() && cookie.isNotBlank()) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(14.dp),
@@ -328,7 +355,7 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
             }
         }
 
-        if (uid.isNotBlank() && cookie.isNotBlank()) {
+        if (selectedTab == CodexTab.INTELLIGENCE && uid.isNotBlank() && cookie.isNotBlank()) {
             val overview = accountExportState.intelligenceOverview
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -524,6 +551,108 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
             }
         }
 
+        if (selectedTab == CodexTab.VISUALS) {
+            Text("Account visuals", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                "A visual overview of the latest deterministic account analysis.",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            val report = accountExportState.intelligenceOverview
+            if (report == null) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("No analysis available yet", fontWeight = FontWeight.SemiBold)
+                        Text("Run Account Analysis to populate the account dashboard.", fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Button(
+                            onClick = { accountViewModel.analyzeAccount(uid, cookie) },
+                            enabled = uid.isNotBlank() && cookie.isNotBlank() && !accountExportState.isExporting
+                        ) { Text("Analyze Account") }
+                    }
+                }
+            } else {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Character assessment", fontWeight = FontWeight.SemiBold)
+                        AssessmentBar("Needs attention", report.needsAttentionCount, report.assessedCharacterCount ?: 0)
+                        AssessmentBar("Review", report.reviewCharacterCount, report.assessedCharacterCount ?: 0)
+                        AssessmentBar("Clear", report.clearCharacterCount, report.assessedCharacterCount ?: 0)
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    MetricTile("Recommendations", report.recommendationCount.toString(), "Evidence-backed", Modifier.weight(1f))
+                    MetricTile("Confirmed gaps", report.confirmedAccountGapCount.toString(), "Roster / equipment", Modifier.weight(1f))
+                }
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Account data coverage", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "${report.presentAccountSectionCount} of ${report.accountSectionCount} sections present",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            "${report.missingAccountSectionCount} missing • ${report.unavailableAccountSectionCount} unavailable • ${report.failedAccountSectionCount} failed",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (report.hasDataConfidenceConcerns) {
+                            Text("Freshness or coverage needs review.", color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                        } else {
+                            Text("No reported coverage or freshness concerns.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+                OutlinedButton(onClick = { selectedTab = CodexTab.INTELLIGENCE }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Open detailed intelligence")
+                }
+            }
+        }
+
+        if (selectedTab == CodexTab.AI_CHAT) {
+            Text("AI Assistant", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Your account-aware assistant", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Ask about character builds, account findings, and progression decisions. The chat interface is planned, but an AI provider has not been connected yet.",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                    Text("Planned capabilities", fontWeight = FontWeight.SemiBold)
+                    Text("• Explain deterministic account findings\n• Compare character builds\n• Help interpret account data\n• Discuss progression priorities", fontSize = 13.sp)
+                    Text(
+                        "AI will be opt-in through your own provider. HoYoLAB cookies will never be sent to an AI provider.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text("AI chat is not active in this build.", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
+                }
+            }
+        }
+
+        if (selectedTab == CodexTab.INFO) {
+            Text("Info & settings", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Irminsul Codex", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Genshin Impact account intelligence", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("HoYoLAB account credentials are stored in the current app preferences. They are not encrypted by this implementation.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (uid.isNotBlank() && cookie.isNotBlank() && !showCredentials) {
+                        OutlinedButton(onClick = { showCredentials = true }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Manage HoYoLAB account")
+                        }
+                    }
+                    if (showCredentials && uid.isNotBlank() && cookie.isNotBlank()) {
+                        TextButton(onClick = { showCredentials = false }) { Text("Hide account credentials") }
+                    }
+                }
+            }
+        }
+
         if (errorMessage != null || accountExportState.errorMessage != null) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF2B1618)),
@@ -538,7 +667,7 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
             }
         }
 
-        if (isLoading && dailyNote == null) {
+        if (selectedTab == CodexTab.HOME && isLoading && dailyNote == null) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -549,7 +678,44 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
             }
         }
 
-        dailyNote?.let { note ->
+        if (selectedTab == CodexTab.HOME) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Adventurer account", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = if (uid.isNotBlank()) "UID ${uid.trim()}" else "No account configured",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = if (uid.isNotBlank()) HoYoLabClient.detectServer(uid) else "Connect your HoYoLAB account in Info",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            if (dailyNote == null && !isLoading && uid.isNotBlank() && cookie.isNotBlank()) {
+                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Daily activity not loaded", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Sync your Daily Note to see Resin, commissions, expeditions, and Realm Currency.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        OutlinedButton(
+                            onClick = { refreshData() },
+                            enabled = !isLoading && !accountExportState.isExporting,
+                            modifier = Modifier.fillMaxWidth()
+                        ) { Text("Sync Daily Note") }
+                    }
+                }
+            }
+            dailyNote?.let { note ->
             val resinProgress = if (note.currentResin != null && note.maxResin != null && note.maxResin > 0) {
                 (note.currentResin.toFloat() / note.maxResin).coerceIn(0f, 1f)
             } else null
@@ -654,6 +820,25 @@ fun CodexScreen(accountViewModel: AccountViewModel) {
                 Text(if (isLoading) "Refreshing..." else "Refresh")
             }
         }
+        }
+    }
+    }
+}
+
+@Composable
+private fun AssessmentBar(label: String, value: Int, total: Int) {
+    val fraction = if (total > 0) (value.toFloat() / total).coerceIn(0f, 1f) else 0f
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value.toString(), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        }
+        LinearProgressIndicator(
+            progress = { fraction },
+            modifier = Modifier.fillMaxWidth().height(7.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     }
 }
 
