@@ -2116,3 +2116,18 @@ M53 adds a usable manual planning workflow while no redistribution-approved prod
 - The UI labels manually entered requirements as unverified. It must not imply that the quantities came from HoYoverse or a trusted game-knowledge record.
 - The M52 verified-cost engine remains the future auto-population path. It is not wired to the UI until an approved, in-date, version-matched cost catalogue is available.
 - This milestone does not add inventory synchronization, automatic material costs, farming schedules, domain drop yields, Resin estimates, or AI-generated quantities.
+
+
+### 3.21 Navigation, Materials placement, and AI entry point
+
+The primary app navigation uses three destinations: Home, Visuals, and Account. Account is available both as the rightmost bottom-navigation destination and through the Account shortcut in the top app bar. Account contains appearance preferences, HoYoLAB account management, and optional JSON export; it is not a separate Info destination.
+
+The AI assistant is the prominent centered action in the bottom navigation. It is visually raised above the navigation bar and opens a modal bottom-sheet chat surface. The sheet is a presentation shell until an AI provider is connected. It must not imply that responses, message sending, or provider configuration are active before those capabilities are implemented. The existing privacy boundary remains: HoYoLAB authentication cookies are never sent to an AI provider.
+
+The Manual Materials Planner is not a bottom-navigation destination. It is a collapsible section within Visuals, alongside the character showcase, account analysis, and visual dashboard. Its existing target-specific local plan persistence and manual/unverified quantity labeling remain unchanged.
+
+Navigation uses consistent vector icons rather than text glyphs or emoji:
+- Home uses a door/entrance symbol.
+- Visuals uses an analytics/chart symbol.
+- AI uses a prominent sparkle symbol.
+- Account uses a profile symbol.
