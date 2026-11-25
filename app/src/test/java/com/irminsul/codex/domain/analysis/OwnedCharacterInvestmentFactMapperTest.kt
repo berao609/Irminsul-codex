@@ -50,14 +50,18 @@ class OwnedCharacterInvestmentFactMapperTest {
     )
 
     @Test fun mapsObservedCharacterAndEquipmentValuesWithoutAddingInterpretations() {
+        val weaponStat = StatValueSnapshot(2000, "ATK", "100", "20", "120", null, null)
+        val artifactStat = StatValueSnapshot(1, "HP", null, null, null, "4780", null)
         val weapon = WeaponSnapshot(
             id = 11501, name = "Favonius Sword", icon = null, type = 1, rarity = 4,
             level = 90, ascensionLevel = 6, typeName = "Sword", description = null,
-            refinementLevel = 3, mainProperty = null, subProperty = null
+            refinementLevel = 3, mainProperty = weaponStat, subProperty = null
         )
         val artifact = ArtifactSnapshot(
             id = 34501, name = "Flower", icon = null, slot = 1, slotName = "Flower",
-            rarity = 5, level = 20, set = null, mainProperty = null, subProperties = emptyList()
+            rarity = 5, level = 20,
+            set = StructuredData.ObjectValue(mapOf("set_id" to StructuredData.StringValue("set-1"))),
+            mainProperty = artifactStat, subProperties = listOf(weaponStat)
         )
         val skill = CharacterSkillSnapshot(
             id = 10, type = 1, name = "Normal Attack", level = 8, description = null,
@@ -87,8 +91,12 @@ class OwnedCharacterInvestmentFactMapperTest {
         assertEquals(11501, mapped.weapon.value?.id)
         assertEquals(90, mapped.weapon.value?.level?.value)
         assertEquals(3, mapped.weapon.value?.refinementLevel?.value)
+        assertEquals(weaponStat, mapped.weapon.value?.mainProperty?.value)
         assertEquals(34501, mapped.artifacts.value?.single()?.id)
         assertEquals(20, mapped.artifacts.value?.single()?.level?.value)
+        assertEquals(artifactStat, mapped.artifacts.value?.single()?.mainProperty?.value)
+        assertEquals(weaponStat, mapped.artifacts.value?.single()?.subProperties?.value?.single())
+        assertTrue(mapped.artifacts.value?.single()?.set?.value is StructuredData.ObjectValue)
         assertEquals(8, mapped.skills.value?.single()?.level?.value)
         assertEquals(true, mapped.constellations.value?.single()?.isActive?.value)
         assertEquals("Jean", mapped.name.value)
