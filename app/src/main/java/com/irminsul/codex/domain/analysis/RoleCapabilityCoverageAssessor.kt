@@ -50,7 +50,7 @@ object RoleCapabilityCoverageAssessor {
             CapabilityCoverageResult(
                 capability = capability,
                 state = state(
-                    usableRoster, knowledge.rosterIsPartial, supporting.isNotEmpty(),
+                    usableRoster, knowledge.rosterState, effectiveRosterIsPartial, supporting.isNotEmpty(),
                     conflicted.isNotEmpty(), evidence.isNotEmpty()
                 ),
                 supportingCharacterIds = supporting.map { it.first }.distinct().sorted(),
