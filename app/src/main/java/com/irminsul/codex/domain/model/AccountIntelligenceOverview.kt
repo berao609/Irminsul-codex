@@ -7,7 +7,8 @@ package com.irminsul.codex.domain.model
 data class AccountIntelligenceOverview(
     val characterAssessment: UnifiedCharacterAssessmentReport,
     val goalAwareDevelopment: GoalAwareCharacterDevelopmentReport,
-    val accountGaps: AccountGapAnalysisReport
+    val accountGaps: AccountGapAnalysisReport,
+    val dataConfidence: AccountDataConfidenceSummary
 ) {
     val selectedGoal: CharacterDevelopmentGoal
         get() = goalAwareDevelopment.selectedGoal
@@ -36,6 +37,48 @@ data class AccountIntelligenceOverview(
     val accountDataReviewCount: Int
         get() = accountGaps.dataReviewCount
 
+    val accountSectionCount: Int
+        get() = dataConfidence.sectionCount
+
+    val presentAccountSectionCount: Int
+        get() = dataConfidence.presentSectionCount
+
+    val staleAccountSectionCount: Int
+        get() = dataConfidence.staleCoverageSectionCount
+
+    val missingAccountSectionCount: Int
+        get() = dataConfidence.missingSectionCount
+
+    val unavailableAccountSectionCount: Int
+        get() = dataConfidence.unavailableSectionCount
+
+    val failedAccountSectionCount: Int
+        get() = dataConfidence.failedSectionCount
+
+    val freshAccountSectionCount: Int?
+        get() = dataConfidence.freshSectionCount
+
+    val staleFreshnessSectionCount: Int?
+        get() = dataConfidence.staleFreshnessCount
+
+    val unknownFreshnessSectionCount: Int?
+        get() = dataConfidence.unknownFreshnessCount
+
+    val invalidTimestampSectionCount: Int?
+        get() = dataConfidence.invalidTimestampCount
+
+    val hasIncompleteAccountData: Boolean
+        get() = dataConfidence.hasIncompleteSectionData
+
+    val hasUnassessedFreshness: Boolean
+        get() = !dataConfidence.freshnessAssessed
+
+    val hasAccountCoverageInconsistencies: Boolean
+        get() = dataConfidence.hasCoverageInconsistencies
+
+    val hasDataConfidenceConcerns: Boolean
+        get() = dataConfidence.hasDataConfidenceConcerns
+
     val hasStaleEvidence: Boolean
         get() =
             characterAssessment.availability == UnifiedCharacterAssessmentAvailability.STALE ||
@@ -43,7 +86,8 @@ data class AccountIntelligenceOverview(
                 goalAwareDevelopment.availability == CharacterDevelopmentRecommendationAvailability.STALE ||
                 goalAwareDevelopment.recommendations.any { it.recommendation.basedOnStaleData } ||
                 accountGaps.availability == AccountGapAnalysisAvailability.STALE ||
-                accountGaps.findings.any { it.basedOnStaleData }
+                accountGaps.findings.any { it.basedOnStaleData } ||
+                dataConfidence.hasStaleSections
 
     /**
      * True when at least one analysis source is missing, unavailable, or failed.
