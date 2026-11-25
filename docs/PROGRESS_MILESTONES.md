@@ -575,7 +575,7 @@ Run #111 and #112 exposed Kotlin compilation errors in the initial implementatio
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Preserve equipment availability states and validate character, weapon, artifact, slot, and stat-property relationships in the normalized in-memory model.  
-**Status:** Implementation in progress; CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Objective
 
@@ -595,8 +595,30 @@ Ensure normalized character records do not confuse missing equipment data with a
 
 ### Verification
 
-- Source implementation and automated tests are committed; CI verification pending.
-- No export schema change, Room persistence, UI integration, device install, or release is included in this milestone.
+**Repository and source**
+- Branch: `main`
+- Implementation, tests, and initial milestone record: `d7529dd889ecb99dc209801a7c421ef52e5bcbf9`.
+
+**GitHub Actions**
+- Workflow: Build Debug APK
+- Run: [#115](https://github.com/berao609/Irminsul-codex/actions/runs/45522097294)
+- Run ID: `45522097294`
+- CI-triggering source commit: `d7529dd889ecb99dc209801a7c421ef52e5bcbf9`
+- Overall result: **Success**
+- Unit tests: **Success**
+- Debug APK build: **Success**
+- Persistent Debug signature verification: **Success**
+- Artifact upload: **Success**
+- Temporary Debug keystore cleanup: **Success**
+
+**Generated Debug artifact**
+- Artifact: `irminsul-codex-debug-v1.0.0-dev.115-vc117`
+- Artifact ID: `14980741647`
+- Size: `8,225,380` bytes
+- Expiry: 2026-12-09 00:58 UTC
+
+- Device verification: not required for this in-memory domain-model and mapper increment.
+- No export schema change, Room persistence, UI integration, or release is included in this milestone.
 
 ### Qualifications
 
