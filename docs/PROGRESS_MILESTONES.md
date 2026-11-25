@@ -1812,3 +1812,41 @@ Give Irminsul Codex a clean, full-screen native-app structure rather than placin
 - Account identity currently displays the UID and detected server plus the retrieved character-roster count when available. Profile nickname, Adventure Rank, and World Level are not added because those fields are not currently exposed by the normalized snapshot model.
 - Detailed gap explanations, data-confidence causes, and full recommendation inspection remain follow-up work.
 - No paid runners, mandatory backend, release, or signing changes were introduced.
+
+## Milestone 035 - Consolidate Account Analysis into Visuals
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Remove the redundant Intel bottom-navigation destination and consolidate its account-analysis controls and detailed deterministic findings into the Visuals destination.  
+**Status:** Implemented and committed. Final combined CI and documentation CI verification pending. Physical-device verification pending.
+
+### Rationale
+
+The Intel destination and Visuals destination exposed two parts of the same account-intelligence workflow. Intel contained analysis execution, objective selection, and evidence-backed findings; Visuals showed aggregate assessment, recommendation, gap, and account-data metrics. Keeping them as separate top-level destinations made users switch pages to understand one analysis. The product does not need a separate Intel destination.
+
+### Work implemented
+
+1. Removed Intel from bottom navigation. The app now has four destinations: Home, Visuals, AI Chat, and Info.
+2. Moved the complete account-analysis section into Visuals, including Analyze Account / Refresh Analysis, the four development-goal selectors, assessment counts, recommendations, account gaps, account-section coverage, and stale/unverified warnings.
+3. Kept the visual assessment bars and account metric summaries in the same Visuals destination.
+4. Removed the redundant "Open detailed intelligence" navigation action.
+5. Updated the Visuals page heading and description to communicate that analysis and visual summaries are one integrated experience.
+6. Preserved Home, AI Chat, Info, account retrieval, Room persistence, Daily Note synchronization, and optional JSON export behavior.
+
+### Implementation
+
+- MainActivity consolidation: [a7d9b92](https://github.com/berao609/Irminsul-codex/commit/a7d9b92456c76b1f85781d60a4ba195dd1d0b1d5).
+- README update: [cfccec3](https://github.com/berao609/Irminsul-codex/commit/cfccec3e2786d74e085604a6eb896fcdb17f18f4).
+
+### Verification
+
+- Final combined implementation CI: pending.
+- README documentation CI: pending.
+- Milestone documentation CI: pending.
+- Physical-device verification: pending.
+
+### Qualifications
+
+- The existing Visuals screen still uses the current deterministic summary components. This milestone consolidates navigation and content; it does not yet add expanded interactive charts, full recommendation drill-down, or detailed gap explanations.
+- AI Chat remains an inactive placeholder pending BYOAI implementation.
+- No domain analysis logic, account data, persistence, credentials, or export behavior was changed.
