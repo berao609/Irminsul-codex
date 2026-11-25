@@ -2635,7 +2635,7 @@ M49 should define a typed, versioned character role/capability knowledge contrac
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Define a typed, versioned character role/capability assertion contract and safely join trusted assertions to characters observed in the M48 account roster.  
-**Status:** Implementation and tests committed. Final combined CI verification pending. Domain-only change; no UI, persistence, source collector, recommendation scoring, or AI integration.
+**Status:** Closed. Final implementation CI #339 and milestone documentation CI #340 succeeded. Domain-only change; no UI, persistence, source collector, recommendation scoring, or AI integration.
 
 ### Objective
 
@@ -2703,11 +2703,16 @@ Rechecked AGENTS.md, README.md, SPECS.md, PROGRESS_MILESTONES.md, M46 GameKnowle
 
 ### Verification
 
-- CI #333: source model, validator, and join compiled; unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact uploads passed. https://github.com/berao609/Irminsul-codex/actions/runs/45610405724
+- CI #333: initial source model, validator, and join compiled; unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact uploads passed. https://github.com/berao609/Irminsul-codex/actions/runs/45610405724
 - CI #334: capability-join unit tests passed; Debug APK build, Room schema verification, APK signature verification, and artifact uploads passed. https://github.com/berao609/Irminsul-codex/actions/runs/45610532811
+- CI #335: join-helper cleanup passed the unit tests and Debug APK build. https://github.com/berao609/Irminsul-codex/actions/runs/45610778949
 - CI #336: SPECS update passed unit tests and Debug APK build. https://github.com/berao609/Irminsul-codex/actions/runs/45610833596
-- CI #335, #337, #338, and #339 were triggered by subsequent source/test/doc commits; final outcomes are pending at the time this entry was written.
-- Room instrumentation tests are skipped because M49 changes no Room or persistence code.
+- CI #337 initially failed four new tests because the fixture's generic source records did not yet mirror the typed assertion attributes. The fixture was corrected in #338; #338 passed the complete unit-test suite, Debug APK build, Room schema verification, APK signature verification, and artifact uploads. https://github.com/berao609/Irminsul-codex/actions/runs/45611040236
+- Final implementation CI #339 passed the complete unit-test suite, Debug APK build, Room schema verification, APK signature verification, artifact uploads, and signing-key cleanup. https://github.com/berao609/Irminsul-codex/actions/runs/45611057722
+- M49 milestone documentation CI #340 passed the complete unit-test suite, Debug APK build, Room schema verification, APK signature verification, artifact uploads, and signing-key cleanup. https://github.com/berao609/Irminsul-codex/actions/runs/45611213103
+- Final implementation Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.339-vc341`, artifact ID `15018264965`, size 9,002,170 bytes. Room schema artifact `irminsul-room-schema-v1-run-339`, ID `15018469722`, size 985 bytes.
+- Documentation CI #340 Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.340-vc342`, artifact ID `15019444867`, size 9,003,155 bytes. Room schema artifact `irminsul-room-schema-v1-run-340`, ID `15019838687`, size 985 bytes.
+- Room instrumentation tests were skipped because M49 changes no Room or persistence code.
 - No user-facing runtime behavior changed. Physical-device testing is not applicable.
 
 ### Boundaries and limitations
