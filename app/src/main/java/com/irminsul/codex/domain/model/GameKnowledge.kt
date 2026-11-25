@@ -96,6 +96,8 @@ enum class KnowledgeRecordIssueCode {
     EMPTY_CLAIM,
     NO_SOURCE_REFERENCES,
     UNKNOWN_SOURCE_REFERENCE,
+    SOURCE_PERMISSION_NOT_APPROVED,
+    SOURCE_URL_HOST_MISMATCH,
     INVALID_SOURCE_URL,
     VERIFIED_WITHOUT_REVIEW,
     INVALID_TIMESTAMP_ORDER,
@@ -134,8 +136,18 @@ object GameKnowledgeRecordValidator {
 
         val sourcesById = sourceRegistry.associateBy { it.sourceId }
         record.sourceReferences.forEach { reference ->
-            if (reference.sourceId !in sourcesById) {
+            val source = sourcesById[reference.sourceId]
+            if (source == null) {
                 issue(KnowledgeRecordIssueCode.UNKNOWN_SOURCE_REFERENCE, "Unknown source registry ID: ${reference.sourceId}")
+            } else {
+                if (source.permissionState != KnowledgePermissionState.APPROVED) {
+                    issue(KnowledgeRecordIssueCode.SOURCE_PERMISSION_NOT_APPROVED, "Source ${reference.sourceId} is not approved for trusted use.")
+                }
+                val referenceHost = runCatching { java.net.URI(reference.canonicalUrl).host }.getOrNull()
+                val registryHost = runCatching { java.net.URI(source.canonicalSourceUrl).host }.getOrNull()
+                if (referenceHost != null && registryHost != null && !referenceHost.equals(registryHost, ignoreCase = true)) {
+                    issue(KnowledgeRecordIssueCode.SOURCE_URL_HOST_MISMATCH, "Source URL host does not match its registry entry.")
+                }
             }
             val validHttpsUrl = runCatching {
                 val uri = java.net.URI(reference.canonicalUrl)
