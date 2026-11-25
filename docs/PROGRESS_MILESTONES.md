@@ -930,7 +930,7 @@ Ensure a failed or unavailable refresh does not erase the temporal context of th
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Introduce a domain-facing account repository contract and a HoYoLAB-backed adapter that returns the unified AccountSnapshot.  
-**Status:** Implemented; unit-test and Debug CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Objective
 
@@ -946,8 +946,14 @@ Create the first repository boundary between application/domain consumers and th
 
 ### Verification
 
-- Implementation and tests commit: `9c1c890a5b07c3de083732d8129697055577cf21`.
-- Unit tests and Debug CI: pending for the implementation commit.
+- Implementation commit: `9c1c890a5b07c3de083732d8129697055577cf21`.
+- [GitHub Actions Run #138](https://github.com/berao609/Irminsul-codex/actions/runs/45528893954) succeeded for commit `6a32a99cfe32086a83751ba12aa79b6a0063e356`, which includes the M18 implementation and milestone record.
+- Verified steps: unit tests, Debug APK build, persistent Debug APK signature verification, artifact upload, and temporary Debug keystore cleanup.
+- Debug artifact: `irminsul-codex-debug-v1.0.0-dev.138-vc140`.
+- Artifact ID: `14983078837`.
+- Artifact size: 8,275,368 bytes.
+- SHA-256: `b9fe4dde1f5afde05583e48e0b75af59465b08fe660f40bcfe9e746542762a01`.
+- Artifact expiry: 2026-12-09 01:53:56 UTC.
 - Physical-device verification: not required because this increment adds an unused repository adapter and does not change the app's runtime path.
 
 ### Qualifications
