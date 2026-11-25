@@ -3023,7 +3023,7 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Add a usable local Materials Planner while no redistribution-approved production cost catalogue is available.  
-**Status:** Implemented; final CI verification pending.
+**Status:** Implemented; final CI #373 passed; physical-device verification pending.
 
 ### Objective and product boundary
 
@@ -3077,11 +3077,14 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 
 ### Verification
 
-- M53 implementation and documentation CI pending at time of this entry.
-- No automatic material-cost dataset, source collector, verified cost auto-population, domain calendar, drop-yield model, Resin estimate, AI, or backend added.
-- Manual plan persistence uses app preferences; no Room schema change was made.
-- Physical-device UI and persistence testing remains pending.
-- Record actual unit-test, Debug APK, schema, signature, artifact, and device evidence before closing M53.
+- Domain calculator CI #367 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45624659985.
+- Domain calculator test CI #368 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45624666219.
+- Initial UI CI #369 failed because the `@Composable` annotation was accidentally attached to a data class and the existing CharacterShowcaseSection annotation was displaced. README/SPECS/progress CI #370-#372 also failed because they built that same intermediate source state.
+- Corrected annotation placement in commit `4e0930342f075408219c04e34eb4e42f81413b00`.
+- Final combined CI #373 passed for the corrected code and all preceding M53 documentation: https://github.com/berao609/Irminsul-codex/actions/runs/45625322427.
+- CI #373 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. KVM and Room instrumentation tests were skipped because no persistence/Room code changed.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.373-vc375`, artifact ID `15026963431`, size 9,063,584 bytes. Room schema artifact ID `15026374284`, size 985 bytes.
+- Physical-device UI and persistence testing remains pending. Do not mark M53 fully closed until the user installs and tests the #373 build.
 
 ### Boundaries and next checkpoint
 
