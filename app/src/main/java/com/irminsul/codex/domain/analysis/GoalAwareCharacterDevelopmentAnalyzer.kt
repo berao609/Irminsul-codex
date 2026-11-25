@@ -4,7 +4,8 @@ import com.irminsul.codex.domain.model.*
 
 /**
  * Reorders existing evidence-backed recommendations for an explicit player goal.
- * Base recommendation priority, evidence, actions, and freshness are never modified.
+ * Each objective has a distinct category order. Base priority, evidence, actions,
+ * and freshness are never modified. Objectives cannot surface findings that do not exist.
  */
 object GoalAwareCharacterDevelopmentAnalyzer {
     fun prioritize(
