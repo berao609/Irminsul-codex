@@ -41,6 +41,18 @@ class AccountViewModel(
     val uiState: StateFlow<AccountExportUiState> = _uiState.asStateFlow()
 
     fun exportAccount(uid: String, cookie: String) {
+        retrieveAccount(uid, cookie, prepareJsonExport = true)
+    }
+
+    /**
+     * Retrieves and analyzes the account without opening the optional JSON-save flow.
+     * Account intelligence is a first-class in-app action, independent of export.
+     */
+    fun analyzeAccount(uid: String, cookie: String) {
+        retrieveAccount(uid, cookie, prepareJsonExport = false)
+    }
+
+    private fun retrieveAccount(uid: String, cookie: String, prepareJsonExport: Boolean) {
         if (uid.isBlank() || cookie.isBlank()) {
             _uiState.update { it.copy(errorMessage = "Sign in with HoYoLAB first.") }
             return
@@ -51,7 +63,7 @@ class AccountViewModel(
             _uiState.update {
                 it.copy(
                     isExporting = true,
-                    progress = "Starting extraction...",
+                    progress = if (prepareJsonExport) "Starting extraction..." else "Retrieving account for analysis...",
                     errorMessage = null,
                     pendingExport = null,
                     intelligenceOverview = null,
@@ -81,7 +93,7 @@ class AccountViewModel(
                                 progress = null,
                                 errorMessage = persistenceError,
                                 snapshot = export.snapshot,
-                                pendingExport = export
+                                pendingExport = if (prepareJsonExport) export else null
                             )
                         }
                         analyzeSnapshot(export.snapshot, goal)
@@ -91,7 +103,7 @@ class AccountViewModel(
                             it.copy(
                                 isExporting = false,
                                 progress = null,
-                                errorMessage = error.message ?: "JSON extraction failed.",
+                                errorMessage = error.message ?: "Account retrieval failed.",
                             )
                         }
                     }
@@ -103,7 +115,7 @@ class AccountViewModel(
                     it.copy(
                         isExporting = false,
                         progress = null,
-                        errorMessage = error.message ?: "JSON extraction failed.",
+                        errorMessage = error.message ?: "Account retrieval failed.",
                     )
                 }
             }
