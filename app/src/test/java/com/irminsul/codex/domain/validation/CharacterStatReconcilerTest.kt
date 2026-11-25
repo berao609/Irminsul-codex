@@ -31,10 +31,10 @@ class CharacterStatReconcilerTest {
 
     @Test fun finalValueWithinItsDisplayedRoundingPrecisionIsTolerated() {
         val result = CharacterStatReconciler.reconcile(
-            listOf(character(stat("100", "20", "120.04")))
+            listOf(character(stat("100", "20.04", "120.0")))
         ).characters.single().results.single()
         assertEquals(StatReconciliationStatus.WITHIN_ROUNDING_TOLERANCE, result.status)
-        assertEquals("0.04", result.difference)
+        assertEquals("-0.04", result.difference)
         assertEquals("0.05", result.roundingTolerance)
     }
 
