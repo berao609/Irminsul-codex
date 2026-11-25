@@ -3665,3 +3665,18 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 
 **Verification boundary:** Source change is committed. CI compilation and tests are pending. Physical-device verification must confirm tap targets, horizontal artifact scrolling, expanded stat readability, and Light/Dark appearance. The CI workflow does not by itself prove visual correctness on device.
 
+### Expandable character roster and collection controls
+
+**Status:** Compose implementation committed; CI and physical-device verification pending.
+
+- Replaced the always-visible horizontal character strip with a compact, expandable Character Roster header. The selected character's detailed showcase remains visible when the roster list is collapsed.
+- Expanded roster uses a compact three-column portrait grid and highlights the currently selected character.
+- Added name search and filters for element, weapon type, rarity, and minimum/maximum character level.
+- Added sorting by name, level, rarity, and friendship level, with ascending/descending order.
+- Filter choices are derived from the retrieved roster and weapon metadata. Missing weapon metadata is grouped as Unknown; numeric weapon type identifiers are displayed as source type codes rather than guessed weapon names.
+- Added a clear-filters action and an explicit no-results state.
+- Kept selection and character showcase details connected to the original character IDs. No account payload, persistence schema, networking, or dependencies were changed.
+
+**Commit:** `83ee34e5a997d7e036c58edc7178987ac1b1661a`
+
+**Verification boundary:** Source is committed. CI compilation/unit tests and physical-device layout/interaction checks are pending. Device checks should cover roster collapse/expand, portrait selection, all filter combinations, level boundaries, sort direction, empty results, and Light/Dark themes.
