@@ -5,8 +5,12 @@ import com.irminsul.codex.domain.analysis.UpgradeCostCalculationRequest
 import com.irminsul.codex.domain.analysis.UpgradeCostCalculationResult
 import com.irminsul.codex.domain.analysis.UpgradeCostCalculator
 import com.irminsul.codex.domain.analysis.CalculatedMaterialRequirement
+import com.irminsul.codex.domain.model.KnowledgePermissionState
+import com.irminsul.codex.domain.model.KnowledgeReviewState
+import com.irminsul.codex.domain.model.KnowledgeSourceReference
 import com.irminsul.codex.domain.model.KnowledgeSourceRegistryEntry
 import com.irminsul.codex.domain.model.UpgradeCostRecord
+import java.net.URI
 import java.time.Instant
 
 /**
@@ -33,15 +37,13 @@ data class MaterialCatalogueEntry(
     val displayName: String,
     val category: MaterialCategory,
     val rarity: Int? = null,
-    val iconUrl: String? = null
-) {
-    init {
-        require(itemId.isNotBlank())
-        require(displayName.isNotBlank())
-        require(rarity == null || rarity in 1..5)
-        require(iconUrl == null || iconUrl.startsWith("https://"))
-    }
-}
+    val iconUrl: String? = null,
+    val sourceReferences: List<KnowledgeSourceReference>,
+    val retrievedAt: Instant,
+    val reviewState: KnowledgeReviewState,
+    val reviewedAt: Instant?,
+    val reviewNotes: String?
+)
 
 data class MaterialRequirementDisplay(
     val itemId: String,
@@ -58,15 +60,72 @@ data class MaterialRequirementDisplay(
  * Immutable metadata lookup. Unknown IDs remain visible as explicit unknowns;
  * names from untrusted cost feeds are never silently promoted to catalogue data.
  */
-class MaterialCatalogue(entries: Collection<MaterialCatalogueEntry>) {
+class MaterialCatalogue(
+    entries: Collection<MaterialCatalogueEntry>,
+    sourceRegistry: List<KnowledgeSourceRegistryEntry>
+) {
     private val entriesById: Map<String, MaterialCatalogueEntry>
 
     init {
         require(entries.map { it.itemId }.distinct().size == entries.size) {
             "Material catalogue item IDs must be unique."
         }
+        entries.forEach { entry ->
+            require(validateEntry(entry, sourceRegistry).isEmpty()) {
+                "Material catalogue entry ${entry.itemId} has unapproved or incomplete provenance."
+            }
+        }
         entriesById = entries.associateBy { it.itemId }
     }
+
+    private fun validateEntry(
+        entry: MaterialCatalogueEntry,
+        sourceRegistry: List<KnowledgeSourceRegistryEntry>
+    ): List<String> {
+        val issues = mutableListOf<String>()
+        if (entry.itemId.isBlank() || entry.displayName.isBlank()) issues += "Missing material identity."
+        if (entry.rarity != null && entry.rarity !in 1..5) issues += "Invalid rarity."
+        if (entry.iconUrl != null && !isHttps(entry.iconUrl)) issues += "Invalid icon URL."
+        if (entry.sourceReferences.isEmpty()) issues += "Missing source references."
+        if (entry.sourceReferences.map { it.sourceId }.distinct().size != entry.sourceReferences.size) {
+            issues += "Duplicate source references."
+        }
+        val sources = sourceRegistry.associateBy { it.sourceId }
+        entry.sourceReferences.forEach { reference ->
+            val source = sources[reference.sourceId]
+            if (source == null) {
+                issues += "Unknown source: ${reference.sourceId}."
+            } else {
+                if (source.permissionState != KnowledgePermissionState.APPROVED ||
+                    UpgradeCostRecordValidator.REQUIRED_SOURCE_ACTION !in source.allowedActions
+                ) {
+                    issues += "Source ${reference.sourceId} is not approved for material-cost curation."
+                }
+                val referenceHost = runCatching { URI(reference.canonicalUrl).host }.getOrNull()
+                val sourceHost = runCatching { URI(source.canonicalSourceUrl).host }.getOrNull()
+                if (referenceHost == null || sourceHost == null ||
+                    !referenceHost.equals(sourceHost, ignoreCase = true)
+                ) {
+                    issues += "Source host mismatch: ${reference.sourceId}."
+                }
+            }
+            if (!isHttps(reference.canonicalUrl)) issues += "Source reference must use HTTPS."
+        }
+        if (entry.reviewState != KnowledgeReviewState.VERIFIED ||
+            entry.reviewedAt == null || entry.reviewNotes.isNullOrBlank()
+        ) {
+            issues += "Material metadata requires explicit human verification."
+        }
+        if (entry.reviewedAt != null && entry.reviewedAt.isAfter(entry.retrievedAt)) {
+            issues += "Review timestamp is later than retrieval."
+        }
+        return issues
+    }
+
+    private fun isHttps(value: String): Boolean = runCatching {
+        val uri = URI(value)
+        uri.scheme.equals("https", ignoreCase = true) && !uri.host.isNullOrBlank()
+    }.getOrDefault(false)
 
     fun find(itemId: String): MaterialCatalogueEntry? = entriesById[itemId]
 
