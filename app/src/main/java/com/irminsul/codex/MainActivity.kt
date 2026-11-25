@@ -1214,35 +1214,45 @@ private fun MaterialsPlannerSection(
 
     val characterId = selectedTargetId.takeIf { it.startsWith("character:") }
         ?.removePrefix("character:")
+    var normalTalentCurrent by remember(characterId) {
+        mutableStateOf(preferences.getString("material_talent_normal_current_$characterId", "") ?: "")
+    }
     var normalTalentTarget by remember(characterId) {
-        mutableStateOf(preferences.getString("material_talent_normal_$characterId", "") ?: "")
+        mutableStateOf(preferences.getString("material_talent_normal_target_$characterId", "") ?: "")
+    }
+    var skillTalentCurrent by remember(characterId) {
+        mutableStateOf(preferences.getString("material_talent_skill_current_$characterId", "") ?: "")
     }
     var skillTalentTarget by remember(characterId) {
-        mutableStateOf(preferences.getString("material_talent_skill_$characterId", "") ?: "")
+        mutableStateOf(preferences.getString("material_talent_skill_target_$characterId", "") ?: "")
+    }
+    var burstTalentCurrent by remember(characterId) {
+        mutableStateOf(preferences.getString("material_talent_burst_current_$characterId", "") ?: "")
     }
     var burstTalentTarget by remember(characterId) {
-        mutableStateOf(preferences.getString("material_talent_burst_$characterId", "") ?: "")
+        mutableStateOf(preferences.getString("material_talent_burst_target_$characterId", "") ?: "")
     }
     val talentValues = listOf(
-        Triple("normal", "Normal Attack", normalTalentTarget),
-        Triple("skill", "Elemental Skill", skillTalentTarget),
-        Triple("burst", "Elemental Burst", burstTalentTarget)
+        Triple("normal", "Normal Attack", normalTalentCurrent to normalTalentTarget),
+        Triple("skill", "Elemental Skill", skillTalentCurrent to skillTalentTarget),
+        Triple("burst", "Elemental Burst", burstTalentCurrent to burstTalentTarget)
     )
-    var plannedWeaponId by remember {
-        mutableStateOf(preferences.getString("material_planned_weapon_id", "custom") ?: "custom")
+    val weaponPlanKey = characterId ?: "global"
+    var plannedWeaponId by remember(weaponPlanKey) {
+        mutableStateOf(preferences.getString("material_planned_weapon_id_$weaponPlanKey", "custom") ?: "custom")
     }
-    var plannedWeaponName by remember {
-        mutableStateOf(preferences.getString("material_planned_weapon_name", "") ?: "")
+    var plannedWeaponName by remember(weaponPlanKey) {
+        mutableStateOf(preferences.getString("material_planned_weapon_name_$weaponPlanKey", "") ?: "")
     }
     val plannedWeapon = targetOptions.firstOrNull { it.id == plannedWeaponId }
-    var plannedWeaponCurrent by remember(plannedWeaponId) {
+    var plannedWeaponCurrent by remember(weaponPlanKey, plannedWeaponId) {
         mutableStateOf(
-            preferences.getString("material_planned_weapon_current_$plannedWeaponId", null)
+            preferences.getString("material_planned_weapon_current_$weaponPlanKey-$plannedWeaponId", null)
                 ?: plannedWeapon?.currentLevel?.toString().orEmpty()
         )
     }
-    var plannedWeaponTarget by remember(plannedWeaponId) {
-        mutableStateOf(preferences.getString("material_planned_weapon_target_$plannedWeaponId", "") ?: "")
+    var plannedWeaponTarget by remember(weaponPlanKey, plannedWeaponId) {
+        mutableStateOf(preferences.getString("material_planned_weapon_target_$weaponPlanKey-$plannedWeaponId", "") ?: "")
     }
     var weaponMenuExpanded by remember { mutableStateOf(false) }
 
@@ -1267,25 +1277,31 @@ private fun MaterialsPlannerSection(
             .putString("material_target_level", targetLevel)
             .apply()
     }
-    LaunchedEffect(characterId, normalTalentTarget, skillTalentTarget, burstTalentTarget) {
+    LaunchedEffect(
+        characterId, normalTalentCurrent, normalTalentTarget,
+        skillTalentCurrent, skillTalentTarget, burstTalentCurrent, burstTalentTarget
+    ) {
         if (characterId != null) {
             preferences.edit()
-                .putString("material_talent_normal_$characterId", normalTalentTarget)
-                .putString("material_talent_skill_$characterId", skillTalentTarget)
-                .putString("material_talent_burst_$characterId", burstTalentTarget)
+                .putString("material_talent_normal_current_$characterId", normalTalentCurrent)
+                .putString("material_talent_normal_target_$characterId", normalTalentTarget)
+                .putString("material_talent_skill_current_$characterId", skillTalentCurrent)
+                .putString("material_talent_skill_target_$characterId", skillTalentTarget)
+                .putString("material_talent_burst_current_$characterId", burstTalentCurrent)
+                .putString("material_talent_burst_target_$characterId", burstTalentTarget)
                 .apply()
         }
     }
-    LaunchedEffect(plannedWeaponId, plannedWeaponName) {
+    LaunchedEffect(weaponPlanKey, plannedWeaponId, plannedWeaponName) {
         preferences.edit()
-            .putString("material_planned_weapon_id", plannedWeaponId)
-            .putString("material_planned_weapon_name", plannedWeaponName)
+            .putString("material_planned_weapon_id_$weaponPlanKey", plannedWeaponId)
+            .putString("material_planned_weapon_name_$weaponPlanKey", plannedWeaponName)
             .apply()
     }
-    LaunchedEffect(plannedWeaponId, plannedWeaponCurrent, plannedWeaponTarget) {
+    LaunchedEffect(weaponPlanKey, plannedWeaponId, plannedWeaponCurrent, plannedWeaponTarget) {
         preferences.edit()
-            .putString("material_planned_weapon_current_$plannedWeaponId", plannedWeaponCurrent)
-            .putString("material_planned_weapon_target_$plannedWeaponId", plannedWeaponTarget)
+            .putString("material_planned_weapon_current_$weaponPlanKey-$plannedWeaponId", plannedWeaponCurrent)
+            .putString("material_planned_weapon_target_$weaponPlanKey-$plannedWeaponId", plannedWeaponTarget)
             .apply()
     }
 
@@ -1376,22 +1392,40 @@ private fun MaterialsPlannerSection(
             ) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Talent levels", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                    talentValues.forEach { (track, label, value) ->
-                        OutlinedTextField(
-                            value = value,
-                            onValueChange = { next ->
-                                val level = next.filter(Char::isDigit).take(2)
-                                when (track) {
-                                    "normal" -> normalTalentTarget = level
-                                    "skill" -> skillTalentTarget = level
-                                    "burst" -> burstTalentTarget = level
-                                }
-                            },
-                            label = { Text("$label target level") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                    talentValues.forEach { (track, label, levels) ->
+                        Text(label, fontWeight = FontWeight.Medium, fontSize = 13.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedTextField(
+                                value = levels.first,
+                                onValueChange = { next ->
+                                    val level = next.filter(Char::isDigit).take(2)
+                                    when (track) {
+                                        "normal" -> normalTalentCurrent = level
+                                        "skill" -> skillTalentCurrent = level
+                                        "burst" -> burstTalentCurrent = level
+                                    }
+                                },
+                                label = { Text("Current") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.weight(1f)
+                            )
+                            OutlinedTextField(
+                                value = levels.second,
+                                onValueChange = { next ->
+                                    val level = next.filter(Char::isDigit).take(2)
+                                    when (track) {
+                                        "normal" -> normalTalentTarget = level
+                                        "skill" -> skillTalentTarget = level
+                                        "burst" -> burstTalentTarget = level
+                                    }
+                                },
+                                label = { Text("Target") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                     Text(
                         "Talent targets are saved separately for each character.",
