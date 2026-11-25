@@ -1456,3 +1456,48 @@ Create a deterministic account-level gap report from the available character ros
 - No artifact/weapon farming requirements, Mora or Resin costs, build-strength scores, meta rankings, pull advice, or automatic account changes are produced.
 - The report is a domain foundation and is not yet connected to a user-facing account intelligence screen.
 
+## Milestone 028 - Unified Account Intelligence Overview Composition
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Compose the existing unified character assessment, goal-aware character development recommendations, and account roster/equipment gap report into one account-level overview without recalculating or altering their source findings.  
+**Status:** Implemented, unit-test verified, and Debug CI verified (Runs #195-197). Domain foundation only; not yet surfaced in the app UI.
+
+### Objective
+
+Provide one deterministic domain object for a future Account Command Center to consume. The overview exposes selected player goal, existing assessment and recommendation counts, account gap counts, stale-evidence presence, and whether any source remains unverified. Each source report remains available in full and retains its own availability state and evidence.
+
+### Work implemented
+
+1. Added `AccountIntelligenceOverview`, retaining the original `UnifiedCharacterAssessmentReport`, `GoalAwareCharacterDevelopmentReport`, and `AccountGapAnalysisReport` objects.
+2. Exposed the selected development goal and existing summary values: assessed character count, needs-attention/review/clear counts, recommendation and affected-character counts, confirmed account-gap count, and data-review count.
+3. Added a stale-evidence indicator that checks source report availability and stale markers on their underlying assessments, recommendations, and gap findings.
+4. Added an unverified-source indicator for missing, unavailable, or failed reports. Stale remains a separate state rather than being collapsed into missing/unverified.
+5. Added a composition analyzer that only assembles the supplied reports. It does not filter, recalculate, reorder, or reclassify their findings.
+6. Preserved available evidence from successful sources when another source is missing, unavailable, or failed.
+7. Added five unit tests for report composition and counts, stale evidence, missing/unavailable/failed sources, available empty reports, and partial source failure.
+
+### Implementation
+
+- Overview model commit: [3545e97](https://github.com/berao609/Irminsul-codex/commit/3545e97ed416a42e3f10925548154a8c64572bf1).
+- Composition analyzer commit: [b04aefb](https://github.com/berao609/Irminsul-codex/commit/b04aefba1b29065f91fca8abadfd4f30c91416cc).
+- Unit-test commit: [c82a7fb](https://github.com/berao609/Irminsul-codex/commit/c82a7fbad08d809b9419f0517708cb1a5945296b).
+- Added `app/src/main/java/com/irminsul/codex/domain/model/AccountIntelligenceOverview.kt`.
+- Added `app/src/main/java/com/irminsul/codex/domain/analysis/AccountIntelligenceOverviewAnalyzer.kt`.
+- Added `app/src/test/java/com/irminsul/codex/domain/analysis/AccountIntelligenceOverviewAnalyzerTest.kt`.
+
+### Verification
+
+- GitHub Actions Runs #195, #196, and #197 passed for the overview model, composition analyzer, and unit tests respectively, as confirmed by the project owner.
+- Documentation CI Runs #198 and #199 also passed, as confirmed by the project owner.
+- Five unit tests cover source-report retention, summary counts, stale-data signaling, missing/unavailable/failed states, empty available reports, and preservation of valid results when another source is unusable.
+- Physical-device verification: not required; this milestone adds domain composition and JVM tests without changing UI or runtime workflows.
+
+### Qualifications and non-goals
+
+- This is a composed domain overview, not a user-facing dashboard or Account Command Center.
+- It combines the existing M24 unified character assessment, M26 goal-aware recommendations, and M27 roster/equipment gap report. It does not imply complete account-wide gameplay, team-coverage, or progression analysis.
+- Source reports remain authoritative. The overview does not create an overall account score, combat-strength ranking, meta ranking, farming plan, resource cost, pull recommendation, or AI-generated conclusion.
+- A stale or unverified source is surfaced as such; it is not treated as a clean result.
+- No device installation or UI behavior was verified in this milestone.
+
