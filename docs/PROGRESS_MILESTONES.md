@@ -2249,3 +2249,64 @@ This milestone defines requirements only. It does not add external-source collec
 ### Next development checkpoint
 
 M44 should define and validate the initial external knowledge source set and its permitted update/access mechanisms before implementing a collector or importing community data. In parallel, the deterministic investment-ranking criteria should be specified against the current account model before implementation.
+
+
+## Milestone 044 - External Knowledge Source Validation and Investment Input Boundary
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Validate the initial community and structured-data source candidates, document permitted access boundaries, and define the evidence dimensions required for deterministic account-relative investment prioritization.  
+**Status:** Research and requirements documented; no external source collector, dataset import, AI service, investment scoring implementation, or new UI added. CI verification pending.
+
+### Objective
+
+Establish which external sources can safely support future investment intelligence and identify what the current account model can and cannot support. Avoid building an automated collector or ranking engine on unverified source rights or missing account evidence.
+
+### Source review and decisions
+
+1. **KeqingMains (KQM):** The TCL repository describes community-submitted knowledge vetted by KQM Theorycrafting Editors. The public repository's root does not expose a LICENSE file. KQM is retained as a linked research reference, but guide/TCL content is not approved for automated ingestion, copying, or redistribution without an applicable content license or explicit permission. Metadata-only revision monitoring may be evaluated separately.
+2. **Prydwen:** Its Terms of Service, last updated March 2026, prohibit scraping, crawling, and bulk extraction. Prydwen remains link-only unless a supported API, license, or written permission is obtained.
+3. **genshin-db:** The repository declares MIT and supplies structured static game records, but its README identifies Fandom Wiki and GenshinData as upstream sources. The package license does not by itself establish rights to every upstream record, text, or asset. It remains a technical/schema evaluation candidate only until those rights and attribution requirements are checked.
+4. **genshin.dev:** The API repository declares OSL-3.0. Its redistribution and external-deployment conditions require compatibility review, and the software license does not independently clear third-party game data or assets. It is not selected for the initial integration.
+5. **Official HoYoverse content/assets:** No general redistribution permission was established. M44 does not authorize scraping or bundling official site/game assets.
+
+No third-party community guide, ranking, or game-asset dataset is approved for automated content ingestion or redistribution by this milestone. Public accessibility is not permission to republish. The source register and reference links are recorded in `docs/SPECS.md` section 3.10.
+
+### Current account-model assessment
+
+The existing normalized model already exposes owned character identity, level, rarity, element, constellation count, weapons, artifacts, stats, talents, equipment integrity, build validation, stat reconciliation, section coverage, and freshness where returned by the account source.
+
+The current normalized model does not yet provide explicit, validated records for character roles, team/rotation synergy, patch- and mode-specific relevance, user resource inventory and investment costs, or observed-usage methodology. Those dimensions cannot be inferred reliably from character level, rarity, or tier labels.
+
+### Deterministic ranking criteria established
+
+Future account-relative investment ranking must consider:
+
+1. Incremental account value and role/capability coverage.
+2. Synergy with owned characters and validated team/rotation evidence.
+3. Current relevance for identified game modes and patch context.
+4. Redundancy against owned alternatives and existing investment.
+5. Investment cost and efficiency relative to actual resource constraints.
+6. Evidence confidence, provenance, freshness, and source disagreement.
+
+Theorycrafting, editorial evaluations, calculated comparisons, and observed usage must remain distinct evidence types. Missing inputs remain unknown and reduce confidence; they must not become negative character ratings. Do not introduce arbitrary numerical weights or a universal tier score before normalized evidence supports them.
+
+### Files changed
+
+- `docs/SPECS.md): added the initial external source validation register and the deterministic investment-ranking input boundary.
+- `docs/PROGRESS_MILESTONES.md): recorded M44 research findings and the next checkpoint.
+
+### Verification
+
+- M43 SPECS CI #292: success.
+- M43 milestone documentation CI #293: success.
+- M44 documentation commits and CI verification: pending.
+- No runtime behavior changed. No APK or device test is applicable to this research/documentation-only milestone.
+
+### Outcome
+
+The project now has a conservative source-access boundary and an evidence-based definition of what the current account model can support. KQM and Prydwen remain useful linked references, but neither is approved for automated content ingestion. Structured game-data candidates require upstream rights review. Investment prioritization has defined factors, but implementation must wait until missing knowledge and account inputs can be represented explicitly.
+
+### Next development checkpoint
+
+M45 should define the smallest versioned, source-attributed game-knowledge record and deterministic investment-shortlist contract. It must preserve unknown inputs and separate account diagnostics from investment recommendations. Do not add a crawler, paid backend, mandatory cloud AI, or unsupported source imports.
