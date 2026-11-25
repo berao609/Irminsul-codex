@@ -3107,7 +3107,7 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Simplify the primary navigation, relocate Materials Planner into Visuals, and introduce a centered AI action with a chat-style bottom sheet.  
-**Status:** Implementation and documentation CI-verified; physical-device verification pending.
+**Status:** Closed. Implementation, documentation CI, and physical-device verification passed.
 
 ### Active Memory Recall and repository verification
 
@@ -3164,7 +3164,7 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 - Final outlined-icon implementation CI #392 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45632185584.
 - CI #392 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. Room instrumentation tests were skipped because no Room/persistence schema changed.
 - Final Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.392-vc394`, artifact ID `15030547596`, size 15,866,909 bytes, SHA-256 `77afd91035f15442a4dd9ab3f9d957baf2d0f41486cfa9d908989d2f9698d28d`. Room schema artifact ID `15031916116`, size 985 bytes.
-- No M54 physical-device test has been performed yet.
+- User installed and tested the final CI #392 APK and confirmed success on 2026-11-25. The user accepted the current navigation and AI-sheet design, with further UI polish deferred until their separate UI Design Logic document is ready.
 
 ### Boundaries and next checkpoint
 
