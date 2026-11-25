@@ -1720,3 +1720,45 @@ Make the existing deterministic intelligence engine useful inside the applicatio
 - Physical-device verification of the corrected entry point and visible card: pending.
 
 **Updated M32 status:** Implementation and final combined CI verified. Physical-device verification remains pending. The initial M32 build's integration defect is documented here rather than treated as a successful user-facing delivery.
+
+## Milestone 033 - Rounding-Aware Character Stat Reconciliation
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Account for the displayed precision of the reported base, additive, and final stat values when deciding whether a reconciliation difference is explainable by independent rounding.  
+**Status:** Implemented, regression-test verified, and full Debug CI verified (Run #234). Physical-device verification is not required for this deterministic domain change.
+
+### Objective
+
+Investigate repeated ±1 stat mismatches observed in the Account Intelligence screen. The previous reconciler based its tolerance only on the reported final value's displayed precision. It did not account for rounding in the base and additive inputs. This could classify independently rounded displayed values as genuine mismatches.
+
+### Work implemented
+
+1. Changed the reconciliation tolerance to the sum of the half-unit precision allowances for the reported base, additive, and final values.
+2. Preserved the original expected-value calculation and difference. Only the tolerance/status decision changed.
+3. Added regression coverage proving an integer ±1 difference can fall within the combined rounding interval.
+4. Added boundary coverage proving differences beyond the combined interval remain mismatches.
+5. Updated analyzer tests to verify a rounding-tolerated difference does not produce a stat-mismatch insight.
+6. Updated the model documentation to describe the combined precision allowance.
+
+### Implementation
+
+- Reconciler commit: [5185263](https://github.com/berao609/Irminsul-codex/commit/51852636edf35c4cd2245936d99e5e5380283af8).
+- Reconciler regression tests: [f0ab36e](https://github.com/berao609/Irminsul-codex/commit/f0ab36ef46480d3fb730a65e1a5f55fce94f2fb4).
+- Analyzer regression tests: [c262b69](https://github.com/berao609/Irminsul-codex/commit/c262b6900e948fa0981f26adb5f18570280aaaa8).
+- Model documentation: [6a92bae](https://github.com/berao609/Irminsul-codex/commit/6a92bae7b67e6357b6844ad67547e5dd315fa909).
+
+### Verification
+
+- Runs #231 and #232 failed on intermediate commits while tests still expected the old tolerance behavior.
+- [Run #233](https://github.com/berao609/Irminsul-codex/actions/runs/45563395999) passed the updated unit tests and Debug build for the combined analyzer/test state.
+- [Run #234](https://github.com/berao609/Irminsul-codex/actions/runs/45563509042) passed the final combined tree, including JVM unit tests, Room emulator instrumentation, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.234-vc236`, artifact ID `14998832885`, size 8,524,955 bytes.
+- Room schema artifact: `irminsul-room-schema-v1-run-234`, artifact ID `14998573459`, size 985 bytes.
+
+### Qualifications and non-goals
+
+- The combined tolerance is derived from the decimal precision represented by the three source strings. It does not claim to model every possible game-side calculation or data-source transformation.
+- The change does not hide arbitrary differences: discrepancies beyond the combined precision interval remain mismatches.
+- The observed account's actual mismatch counts have not yet been rechecked on a newly installed APK.
+- No physical-device verification has been performed for the updated displayed findings.
