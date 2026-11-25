@@ -3378,3 +3378,11 @@ Confirmed that M56 stored the complete raw export in `AccountSnapshotEntity.rawJ
 2. Install the resulting APK over the existing installation without clearing app data.
 3. Confirm the app restores the existing account analysis after a full close and reopen, without downloading the account JSON again.
 4. Keep M56/M57 open until migration and physical-device restoration are confirmed.
+
+### CI workflow correction (2026-11-25)
+
+- CI run #432 failed at the Room schema snapshot check because the workflow still required database schema version 1 after the database had been upgraded to version 2.
+- Confirmed `IrminsulDatabase` declares `version = 2` and KSP exports Room schemas to `app/schemas`.
+- Updated `.github/workflows/build.yml` to verify and upload `com.irminsul.codex.data.local.IrminsulDatabase/2.json`, with the artifact named for schema version 2.
+- Fix commit: `50c5f981b14e9940599a80f5f981c7aee188762a`.
+- The corrected workflow has not yet been verified by a completed CI run. The next CI result must confirm schema generation, instrumentation tests, APK build, and signature verification.
