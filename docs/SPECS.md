@@ -202,6 +202,39 @@ Use package boundaries to establish separation. Introduce additional Gradle modu
 
 Do not create every package or abstraction in advance without a real implementation need.
 
+### 3.7 Account-first investment intelligence
+
+Investment recommendations must be account-relative rather than a blanket list of every unbuilt or underinvested character.
+
+- Keep account diagnostics separate from investment recommendations. Diagnostics report genuine data-integrity, retrieval, build-validation, and stat-reconciliation issues. They must not automatically imply that a character deserves more resources.
+- Evaluate investment candidates against the user's actual roster, owned weapons, current development, team options, role coverage, and known constraints.
+- Consider team synergy, account value, role redundancy, current game-mode relevance, character/build requirements, and estimated investment cost when evidence is available.
+- Produce a selective, explainable shortlist. A character can be underbuilt without being a current priority. "Low priority" means other account investments offer greater value now; it is not a judgement that the character is bad.
+- Explain why a candidate is recommended, which owned teams it improves or enables, what is required to make it effective, and why it ranks ahead of alternatives.
+- Recalculate when relevant account state or trusted game knowledge changes. Do not change priorities merely to create activity when the evidence has not changed.
+
+The recommendation engine remains deterministic for explicit account facts, rule evaluation, and ranking inputs. AI can synthesize evidence, explain trade-offs, and assist with ambiguous comparisons, but it must not invent account state or become the authority for numerical calculations.
+
+### 3.8 Hybrid external game-knowledge lifecycle
+
+The selected direction is hybrid: automatically discover and collect updates from supported community/game sources, then verify and curate knowledge before it can influence trusted recommendations.
+
+1. **Discover and collect:** Detect source revisions, new guides, relevant patch information, and other supported updates using permitted access methods.
+2. **Stage:** Store candidate information separately from trusted knowledge. Preserve source identity, original URL, retrieval time, game version/patch when known, content type, and relevant assumptions.
+3. **Verify and curate:** Validate source access and redistribution permissions, attribution, freshness, evidence quality, and conflicts. Unverified or conflicting material must not silently become trusted recommendation input.
+4. **Publish trusted knowledge:** Promote verified records into a versioned knowledge set. Preserve provenance and distinguish theorycrafting, editorial guidance, calculated comparisons, and observed usage.
+5. **Recalculate:** Re-evaluate affected account recommendations when trusted knowledge changes or new account data is received. Retain enough prior context to explain what changed and why.
+
+Automatic collection does not mean automatic trust or unrestricted scraping. Source terms, licensing, rate limits, technical stability, and permitted redistribution must be checked before integration. Candidate sources such as KeqingMains and Prydwen are not guaranteed integrations.
+
+The hybrid lifecycle does not by itself authorize a mandatory cloud backend. Begin with the simplest permitted local-first approach. Any hosted collector, publishing service, or backend requires a separate focused architecture and operating-cost decision. Core account viewing and deterministic analysis must remain useful without cloud AI. External AI receives account context only with explicit user configuration and consent, and must never receive HoYoLAB authentication cookies.
+
+### 3.9 AI responsibility in the hybrid system
+
+AI may assist with extracting candidate claims from permitted source material, identifying possible changes, comparing evidence, and generating user-facing explanations. Candidate extraction is not verification. A human-review or otherwise explicitly validated publishing gate must exist before AI-processed knowledge becomes trusted input.
+
+The system must retain the original source and evidence for every trusted claim. If sources disagree, are stale, or do not support a conclusion, represent that uncertainty instead of forcing a confident ranking. AI output must be constrained by the trusted knowledge records and the current account model.
+
 ---
 
 ## 4. Existing Application Baseline
