@@ -196,7 +196,7 @@ The current application follows a data retrieval workflow:
 
 * Daily Note information is displayed, and selected account data can be exported as JSON.
 
-The application retrieves selected account data through the dedicated Analyze Account action, saves the resulting snapshot in Room, and runs the deterministic account-intelligence pipeline from the normalized snapshot. This flow does not require or launch JSON export. The ViewModel exposes the unified overview and the Visuals page displays an analysis summary with up to five recommendations alongside visual account metrics. The user can select one of four explicit development goals; Balanced Development is the initial default. The goal changes recommendation ordering only. User-facing account history, integrated BYOAI assistance, expanded analysis, and the complete Account Command Center remain planned.
+The application retrieves selected account data through the dedicated Analyze Account action, saves the resulting snapshot in Room, and runs the deterministic account-intelligence pipeline from the normalized snapshot. This flow does not require or launch JSON export. The ViewModel exposes the unified overview and the Visuals page displays an analysis summary with a five-item recommendation preview alongside visual account metrics. Users can expand the list to inspect every available recommendation, including its reason, supporting evidence, and stale-data indicator. The user can select one of four explicit development goals; Balanced Development is the initial default. The goal changes recommendation ordering only. User-facing account history, integrated BYOAI assistance, expanded analysis, and the complete Account Command Center remain planned.
 
 ## Project Structure
 
