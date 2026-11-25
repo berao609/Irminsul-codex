@@ -2839,7 +2839,7 @@ Proceed to M51 only after M50's final CI evidence is recorded. M51 should valida
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Validate potential material-cost sources and define a provenance-bound, versioned domain contract for future character/talent/weapon calculations.  
-**Status:** Implemented; final CI verification pending.
+**Status:** Closed; implementation and documentation CI #362-#366 passed.
 
 ### Objective
 
@@ -3004,14 +3004,88 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 
 ### Verification
 
-- Implementation and documentation CI pending at time of this entry.
-- No persistence, inventory editing UI, external data collector, bundled cost dataset, artifact enhancement costs, domain/drop schedule, resin estimate, AI, or backend added.
-- No physical-device test is applicable to this domain-only calculation milestone.
-- Room instrumentation tests are expected to be skipped because no Room or persistence code changed; record the actual workflow result after CI.
+- Implementation CI #362 and calculator-test CI #363 passed; SPECS CI #364, README CI #365, and milestone documentation CI #366 passed.
+- Workflow runs: https://github.com/berao609/Irminsul-codex/actions/runs/45622796686, https://github.com/berao609/Irminsul-codex/actions/runs/45622898477, https://github.com/berao609/Irminsul-codex/actions/runs/45622990001, https://github.com/berao609/Irminsul-codex/actions/runs/45623005045, https://github.com/berao609/Irminsul-codex/actions/runs/45623159208.
+- CI #362 Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.362-vc364`, artifact ID `15025597510`, size 9,033,548 bytes. CI #363 Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.363-vc365`, artifact ID `15026221996`, size 9,033,558 bytes. Room schema artifacts were also uploaded.
+- Unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup passed. Room instrumentation tests were skipped because no persistence code changed.
+- No physical-device test was applicable to this domain-only calculation milestone.
 
 ### Boundaries and next checkpoint
 
 - The calculator currently has no approved production cost dataset. It is ready to calculate only when verified, permitted M51 records are supplied.
-- Manual inventory is a domain input only; persistence and a user-facing editor remain future work.
+- Manual inventory in the verified calculation engine is a domain input. M53 adds a separate manual planning UI and local preference storage, but does not claim user-entered requirements are verified.
 - Artifact enhancement/feeding costs, farming calendars, drop yields, resin, and farming-time estimates remain excluded.
-- Next useful step is a Materials Calculator UI that lets the player select a character/weapon upgrade target, inspect required materials, and enter inventory quantities manually. Do not build an automatic inventory integration.
+- M53 adds the user-facing manual Materials Planner; automatic verified cost population remains pending source approval.
+
+
+## Milestone 053 - Manual Materials Planner UI
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Add a usable local Materials Planner while no redistribution-approved production cost catalogue is available.  
+**Status:** Implemented; final CI verification pending.
+
+### Objective and product boundary
+
+M52 delivered the deterministic engine for verified, versioned cost records. M51 source review did not approve any source for automated ingestion or bundled cost-data redistribution. Rather than inventing costs or blocking the feature entirely, M53 adds a clearly labeled manual planning mode.
+
+The user can select an observed owned character or an equipped weapon, set a level range, enter material requirements manually, enter owned quantities, and see remaining quantities. Manual requirements are not represented as trusted game data.
+
+### Active Memory Recall and repository verification
+
+Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.md`, current `MainActivity.kt`, M52 `UpgradeCostCalculator.kt`, M51 `UpgradeCostKnowledge.kt`, and account snapshot character/weapon models. Confirmed M52 CI #362-#366 all passed.
+
+### Implemented
+
+1. Added a dedicated **Materials** bottom-navigation destination.
+2. Added target selection:
+   - Characters from the retrieved roster.
+   - Weapons observed as equipped on retrieved characters.
+   - Custom target for an item not present in the retrieved roster.
+   - Current level prefilled when observed; current and target levels remain editable.
+3. Added manual material rows:
+   - Material name.
+   - Required quantity.
+   - Owned quantity.
+   - Remaining quantity calculated from the two entered quantities.
+   - Add and remove row controls.
+4. Added explicit states:
+   - Blank owned quantity means inventory not entered and remaining stays unknown.
+   - Entered zero means the player owns none.
+   - Invalid quantities do not produce a result.
+   - Owned quantities above requirements yield zero remaining, never a negative number.
+5. Persisted the manual plan, target, and level range locally in app preferences.
+6. Added `ManualMaterialPlanCalculator.kt` and tests for valid subtraction, explicit zero versus not-entered, inventory above requirement, missing required amount, negative/malformed values, and numeric overflow.
+7. The screen clearly states that required quantities are manually entered and not game-verified because no redistribution-approved production cost catalogue is connected.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/domain/analysis/ManualMaterialPlanCalculator.kt` (new)
+- `app/src/test/java/com/irminsul/codex/domain/analysis/ManualMaterialPlanCalculatorTest.kt` (new)
+- `README.md`
+- `docs/SPECS.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation and documentation commits
+
+- `030fc947d8dc73ba41ef2a68ccc43fc553bb026f` - Add manual material plan calculation.
+- `f78c1ff3d1f412e9f5d46f0012c20a3b3eaaa345` - Test manual material plan quantities.
+- `a99689bfe0845379393f6226dec82f15aadb5f7f` - Add manual Materials Planner screen.
+- `0f18d25299bb7295b04d12f57911e79e4ee65639` - Describe manual Materials Planner in README.
+- `78a8c3d62f52ae8af234c0d02e999d62491805e7` - Specify M53 UI behavior and trust boundary.
+
+### Verification
+
+- M53 implementation and documentation CI pending at time of this entry.
+- No automatic material-cost dataset, source collector, verified cost auto-population, domain calendar, drop-yield model, Resin estimate, AI, or backend added.
+- Manual plan persistence uses app preferences; no Room schema change was made.
+- Physical-device UI and persistence testing remains pending.
+- Record actual unit-test, Debug APK, schema, signature, artifact, and device evidence before closing M53.
+
+### Boundaries and next checkpoint
+
+- This is a manual planning interface, not yet a fully automatic game-cost calculator.
+- M52's verified-cost engine is not wired into this UI until an approved, in-date, version-matched cost catalogue is available.
+- The user can manually enter required quantities from a source they trust and enter owned quantities without any in-game inventory integration.
+- Next planned feature remains the four-character Lineup Simulator foundation. Do not add combat simulation or unverified team synergy claims.
