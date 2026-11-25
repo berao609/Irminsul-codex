@@ -91,7 +91,8 @@ class OwnedCharacterInvestmentFactMapperTest {
         assertEquals(20, mapped.artifacts.value?.single()?.level?.value)
         assertEquals(8, mapped.skills.value?.single()?.level?.value)
         assertEquals(true, mapped.constellations.value?.single()?.isActive?.value)
-        assertEquals(InvestmentFactState.NOT_REPORTED, mapped.name.let { InvestmentFactState.NOT_REPORTED.takeIf { _ -> false } } ?: InvestmentFactState.NOT_REPORTED)
+        assertEquals("Jean", mapped.name.value)
+        assertEquals(InvestmentFactState.AVAILABLE, mapped.name.state)
     }
 
     @Test fun missingFieldsRemainNotReportedInsteadOfBecomingZeroOrFalse() {
