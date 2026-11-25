@@ -34,7 +34,9 @@ data class WeaponInvestmentFacts(
     val rarity: InvestmentObservedFact<Int>,
     val level: InvestmentObservedFact<Int>,
     val ascensionLevel: InvestmentObservedFact<Int>,
-    val refinementLevel: InvestmentObservedFact<Int>
+    val refinementLevel: InvestmentObservedFact<Int>,
+    val mainProperty: InvestmentObservedFact<StatValueSnapshot>,
+    val subProperty: InvestmentObservedFact<StatValueSnapshot>
 )
 
 data class ArtifactInvestmentFacts(
@@ -43,7 +45,10 @@ data class ArtifactInvestmentFacts(
     val slot: InvestmentObservedFact<Int>,
     val slotName: InvestmentObservedFact<String>,
     val rarity: InvestmentObservedFact<Int>,
-    val level: InvestmentObservedFact<Int>
+    val level: InvestmentObservedFact<Int>,
+    val set: InvestmentObservedFact<StructuredData>,
+    val mainProperty: InvestmentObservedFact<StatValueSnapshot>,
+    val subProperties: InvestmentObservedFact<List<StatValueSnapshot>>
 )
 
 data class SkillInvestmentFacts(
