@@ -2852,18 +2852,21 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 ### Source validation findings and decisions
 
 1. **HoYoverse Help Center / HoYoWiki**
+   - References: https://support.hoyoverse.com/hc/en-us/articles/50333964005913-How-can-I-farm-materials-to-upgrade-my-weapons and https://www.hoyolab.com/article/1680746.
    - Official help guidance identifies weapon ascension materials, enemy drops, enhancement ores, Mora, and domain rotation.
    - HoYoLAB's official tools overview documents the Enhancement Progression Calculator and HoYoWiki material calendar.
    - No public structured material-cost API or third-party structured-data redistribution permission was established in this review.
    - Decision: canonical manual reference only, pending API/permission verification. No automated collection or republishing.
 
 2. **genshin-db**
+   - Reference: https://github.com/theBowja/genshin-db. Its README identifies Fandom Wiki and GenshinData as upstream data sources; GenshinData reference: https://github.com/potsh/GenshinData; Fandom licensing: https://www.fandom.com/licensing.
    - Technically useful structured catalog for characters, weapons, materials, talents, and other game data.
    - Repository advertises MIT licensing for the package, but README identifies upstream content from both Genshin Impact Fandom Wiki and GenshinData.
    - The package's software license does not independently establish redistribution rights for all underlying game-derived/upstream data. Fandom text is generally CC BY-SA unless otherwise specified; media assets have separate licenses. GenshinData README requests credit but provides no clear dataset license.
    - Decision: technical candidate for schema/reference evaluation only. Not approved for automated bulk ingestion or bundled cost-data redistribution.
 
 3. **HoyoWhatpeon planner**
+   - Reference: https://hoyowhatpeon.com/en/genshin/planner.
    - Public planner documents using a pinned genshin-db snapshot and explicitly describes excluded EXP categories and unsupported cases.
    - Decision: reference for calculator coverage and transparent limitation handling only, not an authorized data source.
 
