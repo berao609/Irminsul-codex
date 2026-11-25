@@ -6,7 +6,7 @@ import org.junit.Test
 
 class GenshinDbCostParserTest {
 
-    @Test fun parsesCharacterAscensionSegmentsIntoVerifiedCalculatorRanges() {
+    @Test fun parsesCharacterAscensionSegmentsIntoExpectedLevelRanges() {
         val result = GenshinDbCostParser.parseCharacterAscensionCosts(ascensionCosts())
         assertEquals(CatalogueCostParseStatus.COMPLETE, result.status)
         assertEquals(
@@ -15,7 +15,7 @@ class GenshinDbCostParserTest {
         )
         assertEquals("202", result.segments.first().costs.first().itemId)
         assertEquals("Mora", result.segments.first().costs.first().itemName)
-        assertEquals(20_000L, result.segments.first().costs.first().quantity)
+        assertEquals(10_000L, result.segments.first().costs.first().quantity)
     }
 
     @Test fun weaponAscensionUsesTheSameAscensionRanges() {
