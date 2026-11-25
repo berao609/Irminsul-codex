@@ -47,7 +47,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Expeditions | Displays current and maximum expedition counts. |
 | Account Data Retrieval | Retrieves selected account information for the existing app workflow. |
 | Optional JSON Export | Exports selected account data for third-party readers and backups. |
-| Local Snapshot Persistence | Saves each successful account export in Room and restores the latest saved snapshot and deterministic analysis on app startup without downloading the account JSON again. |
+| Local Snapshot Persistence | Saves account exports in bounded JSON chunks in Room, migrates existing snapshots, and restores the latest saved snapshot and deterministic analysis on app startup without downloading the account JSON again. |
 | Account Intelligence | Provides a dedicated Analyze Account action and displays character assessment, recommendations, account gaps, and data coverage independently of JSON export, within the Visuals page. |
 | Artifact Equipment State | Unequipped or partially equipped artifact slots are valid player choices and do not generate completeness recommendations by themselves; unavailable artifact data remains distinguishable. |
 | Recommendation Prioritization | Presents evidence-backed findings in one consistent balanced order; the current analysis does not offer selectable analysis modes. |
