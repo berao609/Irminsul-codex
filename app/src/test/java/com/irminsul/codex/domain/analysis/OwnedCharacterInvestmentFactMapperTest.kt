@@ -12,7 +12,8 @@ class OwnedCharacterInvestmentFactMapperTest {
 
     private fun snapshot(
         characters: DataValue<List<CharacterSnapshot>>,
-        integrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity()
+        integrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity(),
+        sections: Map<String, AccountSectionMetadata> = emptyMap()
     ) = AccountSnapshot(
         identity = AccountIdentity("800000001", "os_asia"),
         metadata = SnapshotMetadata(exportedAt, 1),
@@ -26,7 +27,7 @@ class OwnedCharacterInvestmentFactMapperTest {
         spiralAbyssCurrent = DataValue.Missing,
         spiralAbyssPrevious = DataValue.Missing,
         imaginariumTheater = DataValue.Missing,
-        sections = emptyMap(),
+        sections = sections,
         characterCollectionIntegrity = integrity
     )
 
@@ -217,6 +218,28 @@ class OwnedCharacterInvestmentFactMapperTest {
         assertEquals(InvestmentFactState.FAILED, failed.state)
         assertEquals("roster request failed", failed.failureReason)
         assertTrue(failed.characters.isEmpty())
+    }
+
+    @Test fun partialSectionStatusAndSourceTimestampsRemainVisible() {
+        val sectionTime = Instant.parse("2026-11-25T09:58:00Z")
+        val lastSuccess = Instant.parse("2026-11-24T09:58:00Z")
+        val result = OwnedCharacterInvestmentFactMapper.map(
+            snapshot(
+                DataValue.Available(listOf(character()), retrievedAt),
+                sections = mapOf("characters" to AccountSectionMetadata(
+                    status = SectionStatus.PARTIAL,
+                    source = "character-details",
+                    retrievedAt = sectionTime,
+                    lastSuccessfulRetrievalAt = lastSuccess,
+                    message = "Some detail batches were unavailable"
+                ))
+            )
+        )
+        assertEquals(SectionStatus.PARTIAL, result.roster.sectionStatus)
+        assertEquals("character-details", result.roster.sectionSource)
+        assertEquals(sectionTime, result.roster.sectionRetrievedAt)
+        assertEquals(lastSuccess, result.roster.lastSuccessfulRetrievedAt)
+        assertTrue(result.roster.isPartial)
     }
 
     @Test fun collectionIntegrityIsPreservedWithoutDiscardingMappedCharacters() {
