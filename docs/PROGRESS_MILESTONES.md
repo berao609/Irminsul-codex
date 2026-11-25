@@ -3240,3 +3240,70 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 - Element counts are descriptive only. Do not infer reactions or team quality from element co-occurrence.
 - M50 role/capability coverage remains roster-level evidence, not a team synergy score.
 - Next milestone should add evidence-backed team synergy and improvement suggestions only when verified team interaction claims and required source permissions exist.
+
+
+## Milestone 056 - Restore Saved Account Analysis on Startup
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Restore the latest locally saved account snapshot and rebuild its deterministic analysis when the app opens, without repeating account JSON retrieval.  
+**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+
+### Active Memory Recall and repository verification
+
+Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.md`, `MainActivity.kt`, `AccountViewModel.kt`, the Room snapshot DAO/store, and ViewModel tests. Confirmed M55 documentation CI #403 succeeded and the user confirmed device testing.
+
+### Product decisions
+
+1. Restore the latest successful Room snapshot for the signed-in UID during app startup.
+2. Rebuild the deterministic account-intelligence overview locally from that snapshot. Do not call the account-export endpoint during restoration.
+3. Keep Daily Note synchronization independent from account snapshot restoration.
+4. Keep account refresh explicit. A successful refresh stores a new snapshot; a failed refresh must not erase the cached snapshot or existing overview.
+5. If no snapshot exists for the current UID, retain the existing Analyze Account empty state.
+6. Do not persist credentials in Room or add credentials to the snapshot-store contract.
+
+### Implemented
+
+- Added `getLatest(uid)` to the snapshot-store boundary.
+- Added a Room query that selects the newest snapshot for the UID.
+- Added `RoomAccountSnapshotStore.getLatest` to map the persisted raw JSON back into the normalized snapshot.
+- Added `AccountViewModel.restoreLatestSnapshot`, which restores the cached snapshot and rebuilds deterministic analysis without calling the network repository.
+- Added a regression test that fails if cache restoration attempts a network retrieval.
+- Triggered cache restoration when the signed-in UID becomes available.
+- Added a restoring state to the Analyze/Refresh control and disabled the control while restoration is in progress.
+- Preserved existing snapshot and overview while an explicit refresh is running or fails.
+- Closed M55 after CI #403 and user device verification.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/repository/AccountSnapshotStore.kt`
+- `app/src/main/java/com/irminsul/codex/data/local/dao/AccountSnapshotDao.kt`
+- `app/src/main/java/com/irminsul/codex/data/local/repository/RoomAccountSnapshotStore.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/viewmodel/AccountViewModel.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/viewmodel/AccountViewModelTest.kt`
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `README.md`
+- `docs/SPECS.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- `91081197d2810e4ee2ae3143682944730d3487d5` - Extend the snapshot-store boundary with latest-snapshot lookup.
+- `918589beebb1273ae50442e5716c4a69e79a7a43` - Query the newest saved snapshot by UID.
+- `8954274fc525b3eb743fcaeaff56331638aae5c1` - Restore normalized exports from Room.
+- `9bd7ff835cc5885a6862be02052e706477769e84` - Restore cached account analysis in the ViewModel.
+- `e490ee9c58b11d43f84147f44c97cbd5b87134c5` - Test restoration without a network call.
+- `6235fd3e53e45fbfdfd05b90d815466ed221e540` - Restore the cached snapshot when the signed-in UID is available.
+- `347255df4712b0e23fdb8eef4f2cfb07c8e84807` - Show the saved-analysis restoration state in the UI.
+
+### Verification
+
+- M55 final documentation CI #403 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45635363391. User confirmed device testing of the #403 milestone build.
+- M56 CI and APK artifact verification are pending.
+- Physical-device verification of cached restoration is pending.
+
+### Boundaries and next checkpoint
+
+- Restoration reads the newest snapshot for the UID; it does not fetch or refresh the full account JSON.
+- Daily Note remains a separate network request and is not part of the cached character/account analysis.
+- Material Calculator redesign remains a separate active task. The current manual-row planner has no approved production material catalogue, so it must not invent costs or material identities.
