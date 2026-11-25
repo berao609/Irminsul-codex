@@ -2730,3 +2730,27 @@ M49 establishes a provenance-bound, patch/mode-aware typed capability contract a
 ### Next development checkpoint
 
 M50 may define a deterministic role/capability coverage assessment using only M49 accepted claims and M48 observed owned-character facts. It should keep each coverage result tied to explicit game-mode/context requirements and report UNKNOWN when roster or knowledge coverage is incomplete. Do not infer team synergy, assign numerical weights, rank investments, or add UI until the coverage contract is independently tested.
+
+### M49 follow-up - Enforce source action permissions
+
+**Date recorded:** 2026-11-25  
+**Reason:** A post-implementation trust-boundary review found that the M49 validator checked `permissionState == APPROVED` through `GameKnowledgeRecordValidator`, but did not enforce the source registry's `allowedActions`. An otherwise approved source restricted to link-only use could therefore pass the typed capability-claim gate.
+
+**Correction:** `CharacterCapabilityKnowledgeValidator` now requires every referenced source registry entry to explicitly include `manual_claim_curation` in `allowedActions`. Otherwise the claim is rejected with `SOURCE_ACTION_NOT_APPROVED`. The M49 specification now records this additional gate.
+
+**Regression test:** An APPROVED source whose only allowed action is `canonical_link` must not contribute a role/capability assertion.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/domain/model/CharacterCapabilityKnowledge.kt`
+- `app/src/test/java/com/irminsul/codex/domain/model/CharacterCapabilityKnowledgeTest.kt`
+- `docs/SPECS.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Commits:**
+- `0bf13d8e131695923cf771e1c63a0acf25da70c2` - Enforce source action permission for capability curation.
+- `7da3902ed18340ebf4c69485b5d16e37203616d5` - Add source action permission regression test.
+- `3c7b542fc4767c3f4f3324ae4c822ba497ec27d7` - Specify source action permission in M49 trust gates.
+
+**Verification:** CI pending. Do not treat the correction as verified until unit tests and the Debug build pass.
+
+**Boundary:** This is a trust-gate correction to M49. It adds no source adapters, scraping, content ingestion, AI, ranking, persistence, or UI.
