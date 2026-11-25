@@ -2912,19 +2912,106 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 
 ### Verification
 
-- Final implementation and milestone-documentation CI are pending at the time of this entry.
-- No source adapter, automated scraping, bundled cost dataset, persistence, calculator arithmetic, inventory mapping, UI, AI, or backend was introduced.
-- No physical-device test is applicable to this domain-only contract milestone.
-- Room instrumentation tests should be skipped by the workflow because no Room or persistence code changed; record the actual workflow result after CI.
+- Implementation CI #357 and validator-test CI #358 passed; specification CI #359 passed; milestone-documentation CI #360 passed; canonical-source-reference CI #361 passed.
+- Workflow runs: https://github.com/berao609/Irminsul-codex/actions/runs/45621399922, https://github.com/berao609/Irminsul-codex/actions/runs/45621448168, https://github.com/berao609/Irminsul-codex/actions/runs/45621508638, https://github.com/berao609/Irminsul-codex/actions/runs/45621544513, https://github.com/berao609/Irminsul-codex/actions/runs/45621647880.
+- Unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and signing-key cleanup passed in the final implementation workflow; Room instrumentation tests were skipped because no persistence code changed.
+- No physical-device test was applicable to this domain-only contract milestone.
 
 ### Boundaries and limitations
 
 - No external source is approved yet for automated material-cost ingestion or bundled redistribution.
-- The M48 account snapshot does not expose actual player material inventory. Remaining-to-farm calculation therefore requires a separately validated inventory input source or explicit manual inventory entry.
+- The M48 account snapshot does not expose actual player material inventory. M52 resolves this by accepting explicit manual inventory input; it is not account-synced or independently verified.
 - Artifact enhancement/feeding costs are excluded from this contract.
 - Domain availability calendars, drop yields, resin estimates, and farming-time forecasts are not implemented.
 - M51 does not calculate costs. It defines the trusted data required before a calculator can safely do so.
 
 ### Next development checkpoint
 
-Proceed to M52 only after M51 CI passes. M52 should implement deterministic aggregation of complete, trusted, same-version cost segments. Inventory subtraction and farming estimates should remain out of scope until their inputs are validated.
+M51 is closed. M52 implements deterministic aggregation and manual inventory subtraction; see the M52 entry below.
+
+
+## Milestone 052 - Deterministic Upgrade-Cost Aggregation and Manual Inventory
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Calculate complete upgrade requirements from M51 trusted cost segments and subtract manually entered material inventory.  
+**Status:** Implemented; final CI verification pending.
+
+### Objective and user decision
+
+The user confirmed that in-game inventory access is not required. The Materials Calculator must let the player enter owned material quantities manually. The app must distinguish an explicit zero from a material whose inventory has not been entered.
+
+### Active Memory Recall and repository verification
+
+Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.md`, M51 `UpgradeCostKnowledge.kt` and validator tests, M48 `OwnedCharacterInvestmentFacts.kt`, and M46 `GameKnowledge.kt` source registry. Confirmed M51 final CI #357-#361 all passed:
+- #357 implementation: https://github.com/berao609/Irminsul-codex/actions/runs/45621399922
+- #358 validator tests: https://github.com/berao609/Irminsul-codex/actions/runs/45621448168
+- #359 specification: https://github.com/berao609/Irminsul-codex/actions/runs/45621508638
+- #360 milestone documentation: https://github.com/berao609/Irminsul-codex/actions/runs/45621544513
+- #361 canonical source references: https://github.com/berao609/Irminsul-codex/actions/runs/45621647880
+
+### Implemented domain calculation
+
+1. Added `UpgradeCostCalculator.kt`:
+   - Explicit request identity: character/weapon subject, subject ID, upgrade track, level range, exact game version, and talent slot where applicable.
+   - Selects only matching cost records and revalidates M51 source permission, review, and validity gates at calculation time.
+   - Requires exact contiguous segment coverage from requested start to requested target.
+   - Aggregates by stable material item ID with checked integer addition.
+   - Preserves the record IDs used by the result.
+   - Returns explicit statuses for invalid request, incomplete cost data, invalid/untrusted data, overlapping segments, and integer overflow.
+   - Never fills missing segments with zero or falls back to another game version.
+
+2. Added manual inventory input:
+   - `ManualMaterialInventory` stores user-entered item quantities and an update timestamp.
+   - Explicit zero is valid and distinct from not entered.
+   - Blank IDs, negative quantities, and duplicate IDs are invalid.
+   - Valid entered inventory produces `max(required - owned, 0)` remaining quantities.
+   - Items not entered retain unknown owned and remaining quantities (null), rather than being treated as zero.
+   - Invalid inventory does not corrupt verified required totals, but owned/remaining values are withheld until corrected.
+   - Inventory is explicitly manual, not account-retrieved or verified.
+
+3. Added `UpgradeCostCalculatorTest.kt` covering:
+   - Multi-segment aggregation and per-item totals.
+   - Missing segments and overlap/duplicate range rejection.
+   - Unverified and expired records.
+   - Exact version, subject, and track matching.
+   - Manual inventory not-entered versus explicit zero.
+   - Remaining quantities and owned quantities exceeding requirements.
+   - Invalid manual inventory.
+   - Integer overflow.
+   - Invalid requests and explicit talent-slot requirements.
+
+### Documentation
+
+- SPECS section 3.19 defines the calculation and manual inventory contract.
+- README roadmap now identifies a Materials Calculator with manual inventory input as planned.
+- M51 verification record corrected to reflect successful CI #357-#361.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/analysis/UpgradeCostCalculator.kt` (new)
+- `app/src/test/java/com/irminsul/codex/domain/analysis/UpgradeCostCalculatorTest.kt` (new)
+- `docs/SPECS.md`
+- `README.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation and documentation commits
+
+- `79bbb5edb1eab5484494db8302b9f0645961bddd` - Add deterministic upgrade-cost calculator.
+- `1d9dc00e854e9bdbc29376a92f21e1e38c7651dc` - Test aggregation and manual inventory.
+- `5fc524fda77db6e04ce8b88fc9486e1d5c16c72c` - Define M52 aggregation and manual inventory in SPECS.
+- `86ffd6f7a278390cd12b37ad48e4619bc476f11a` - Update README roadmap.
+
+### Verification
+
+- Implementation and documentation CI pending at time of this entry.
+- No persistence, inventory editing UI, external data collector, bundled cost dataset, artifact enhancement costs, domain/drop schedule, resin estimate, AI, or backend added.
+- No physical-device test is applicable to this domain-only calculation milestone.
+- Room instrumentation tests are expected to be skipped because no Room or persistence code changed; record the actual workflow result after CI.
+
+### Boundaries and next checkpoint
+
+- The calculator currently has no approved production cost dataset. It is ready to calculate only when verified, permitted M51 records are supplied.
+- Manual inventory is a domain input only; persistence and a user-facing editor remain future work.
+- Artifact enhancement/feeding costs, farming calendars, drop yields, resin, and farming-time estimates remain excluded.
+- Next useful step is a Materials Calculator UI that lets the player select a character/weapon upgrade target, inspect required materials, and enter inventory quantities manually. Do not build an automatic inventory integration.
