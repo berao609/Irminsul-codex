@@ -66,6 +66,7 @@ enum class CharacterCapabilityIssueCode {
     INVALID_CHARACTER_ID,
     EMPTY_SOURCE_RECORD_ID,
     EMPTY_ASSERTION,
+    TYPED_PAYLOAD_MISMATCH,
     DUPLICATE_CLAIM_ID,
     DUPLICATE_SOURCE_RECORD_ID,
     UNKNOWN_SOURCE_RECORD,
@@ -183,6 +184,15 @@ object CharacterCapabilityKnowledgeValidator {
             }
             if (record.claimType != KnowledgeClaimType.ROLE_CAPABILITY) {
                 issue(claim, CharacterCapabilityIssueCode.WRONG_CLAIM_TYPE, "Source record must be a ROLE_CAPABILITY claim.")
+            }
+            val expectedAttributes = mapOf(
+                "assertion" to claim.assertion.name,
+                "roles" to claim.roles.map { it.name }.sorted().joinToString(","),
+                "capabilities" to claim.capabilities.map { it.name }.sorted().joinToString(","),
+                "conditions" to claim.conditions.joinToString("\\n")
+            )
+            if (expectedAttributes.any { (key, value) -> record.claim.attributes[key] != value }) {
+                issue(claim, CharacterCapabilityIssueCode.TYPED_PAYLOAD_MISMATCH, "Typed assertion must exactly match the canonical source record attributes.")
             }
 
             val structurallyTrusted = record.reviewState == KnowledgeReviewState.VERIFIED &&
