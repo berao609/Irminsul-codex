@@ -2131,3 +2131,34 @@ Navigation uses consistent vector icons rather than text glyphs or emoji:
 - Visuals uses an analytics/chart symbol.
 - AI uses a prominent sparkle symbol.
 - Account uses a profile symbol.
+
+### 3.22 M55 four-character lineup sandbox
+
+M55 introduces a local four-character team-building sandbox using only characters observed in the latest available account roster.
+
+#### Selection behavior
+
+- The player can select up to four distinct owned character IDs.
+- Selection order is preserved and represents the current lineup slot order.
+- Selecting an unselected character adds it when fewer than four are selected.
+- Selecting an already selected character removes it.
+- A fifth character cannot be added until a slot is freed.
+- If the account roster is refreshed and a selected ID is no longer present in the available roster, that ID is ignored by the current lineup view.
+- Selection is temporary UI state in this foundation; no lineup persistence, saved team profiles, or sharing is introduced.
+
+#### Displayed facts and trust boundary
+
+The first version displays the four selected characters using account-provided names and portrait URLs where available, with existing fallbacks. It may summarize the observed element labels/counts as descriptive roster facts only.
+
+A stale roster is explicitly identified as previously retrieved data. A partial character section is explicitly identified as incomplete; the user must not interpret the selection list as the complete owned roster.
+
+The sandbox does not calculate or claim:
+- Role/capability coverage from M50 as a team effectiveness score.
+- Elemental reaction quality or damage.
+- Team synergy, rotations, or encounter suitability.
+- A recommended best team or team ranking.
+- Current meta strength or investment value.
+
+Those conclusions require verified, permitted, in-date team and interaction knowledge. The next milestone may add evidence-backed team synergy only after the required claims and source permissions are available. A lack of evidence must remain unknown, not a negative rating.
+
+M55 is a UI and selection-foundation milestone. It does not change the existing account-analysis or investment-priority outputs and does not add AI, a backend, source collectors, or combat simulation.
