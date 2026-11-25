@@ -420,3 +420,31 @@ Make the existing selected-section account export more reliable and auditable wi
 - The file-size increase is measured, but size alone is not a preservation guarantee.
 - The metadata inspection verified timestamp parseability and presence, not historical freshness across separate exports.
 - The export remains selected-section account data, not a complete raw API archive or complete inventory.
+
+## Milestone 007 - Unified Account Domain Model Foundation
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Introduce the initial pure Kotlin account snapshot model and map the existing versioned export into it.  
+**Status:** Implemented in source and tests; CI verification pending.
+
+### Work implemented
+
+1. Added domain types for account identity, snapshot metadata, section metadata/status, and explicit data availability states.
+2. Added typed Daily Note and character snapshot models for the first normalized account sections.
+3. Added an export mapper that converts the existing JSON export into the domain model without mutating or replacing the raw export.
+4. Preserved missing, null, malformed, and valid zero/false distinctions in mapped Daily Note values.
+5. Added mapper tests for identity, timestamp, zero/false, missing fields, character mapping, and invalid identity.
+
+### Files added
+
+- `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
+- `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
+
+### Verification
+
+- Source commits: `d121a02c7859a41d348ba97c59d61fd22c82f8fe`, `504110bb23348c698cacc5fc74385e6d9f059cbf`, `3a9c24ad1a988f0b661c9e916f6da3d2c77d14aa`.
+- Unit tests and Debug build: pending GitHub Actions.
+- Device verification: not yet required for this in-memory model foundation.
+- No Room database, UI integration, export schema change, or release was included.
