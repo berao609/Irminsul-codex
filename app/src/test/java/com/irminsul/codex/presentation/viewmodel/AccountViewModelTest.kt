@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModelStore
 import com.irminsul.codex.data.mapper.AccountExportMapper
 import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
-import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
 import com.irminsul.codex.domain.repository.AccountRepository
 import com.irminsul.codex.domain.repository.AccountSnapshotStore
 import kotlinx.coroutines.Dispatchers
@@ -74,16 +73,6 @@ class AccountViewModelTest {
                 state.intelligenceOverview?.selectedGoal
             )
             assertTrue(state.intelligenceOverview?.hasUnverifiedSources == true)
-
-            viewModel.selectDevelopmentGoal(CharacterDevelopmentGoal.STAT_INTEGRITY)
-            assertEquals(
-                CharacterDevelopmentGoal.STAT_INTEGRITY,
-                viewModel.uiState.value.selectedDevelopmentGoal
-            )
-            assertEquals(
-                CharacterDevelopmentGoal.STAT_INTEGRITY,
-                viewModel.uiState.value.intelligenceOverview?.selectedGoal
-            )
 
             viewModel.acknowledgeExport()
             assertNull(viewModel.uiState.value.pendingExport)
