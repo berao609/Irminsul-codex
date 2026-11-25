@@ -807,3 +807,38 @@ Establish a deterministic stat-property catalog that distinguishes canonical ide
 - Flat/percentage classification describes the property semantic, not a transformation to apply to its stored value.
 - The catalog does not infer whether a stat is optimal for a specific character or build.
 - Some internal/derived properties are intentionally not catalogued in this increment.
+
+
+## Milestone 015 - Account Snapshot Coverage and Consistency Assessment
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Derive a deterministic section-level coverage and metadata/payload consistency report from the unified account snapshot.  
+**Status:** Implemented; unit-test and Debug CI verification pending.
+
+### Objective
+
+Give downstream account analytics a reliable way to distinguish which selected export sections contain usable payloads and detect contradictions between section metadata and the normalized payload state.
+
+### Work implemented
+
+1. Added explicit payload-state classifications for present, stale, missing, unavailable, and failed sections.
+2. Added a deterministic assessment across the nine currently modeled export sections.
+3. Detects four metadata/payload contradictions: successful status without payload, failed status with payload, skipped status with payload, and payload without section metadata.
+4. Preserves section source and retrieval timestamp in the coverage result.
+5. Exposes aggregate section counts and a consistency flag without modifying the original export or treating selected-section coverage as complete account coverage.
+6. Added unit tests for metadata preservation, successful-but-missing payloads, untracked payloads, skipped contradictions, and distinct unavailable/failed/stale states.
+
+### Verification
+
+- Implementation commit: pending.
+- GitHub Actions: pending.
+- Debug artifact: pending.
+- Device verification: not required for this pure in-memory domain assessment and mapper integration.
+
+### Qualifications
+
+- The report covers only the nine sections currently represented by AccountSnapshot; it does not imply that every Genshin account domain or inventory is retrieved.
+- PRESENT means the export contains a payload object/array/value, not that every field inside it is populated or valid.
+- A consistency issue identifies disagreement between export metadata and retained payload state; it does not determine which side is authoritative.
+- No UI, persistence, new HoYoLAB endpoint, export schema change, investment scoring, recommendation, or AI behavior is included.

@@ -263,6 +263,38 @@ sealed interface StructuredData {
     data object NullValue : StructuredData
 }
 
+
+enum class SnapshotPayloadState { PRESENT, STALE, MISSING, UNAVAILABLE, FAILED }
+
+enum class SnapshotCoverageIssueCode {
+    SUCCESS_WITHOUT_PAYLOAD,
+    FAILED_WITH_PAYLOAD,
+    SKIPPED_WITH_PAYLOAD,
+    PAYLOAD_WITHOUT_METADATA
+}
+
+data class SnapshotCoverageIssue(val code: SnapshotCoverageIssueCode, val sectionName: String)
+
+data class AccountSectionCoverage(
+    val sectionName: String,
+    val declaredStatus: SectionStatus?,
+    val payloadState: SnapshotPayloadState,
+    val source: String?,
+    val retrievedAt: Instant?,
+    val issues: List<SnapshotCoverageIssue>
+)
+
+data class AccountSnapshotCoverageReport(val sections: List<AccountSectionCoverage>) {
+    val sectionCount: Int get() = sections.size
+    val presentCount: Int get() = sections.count { it.payloadState == SnapshotPayloadState.PRESENT }
+    val staleCount: Int get() = sections.count { it.payloadState == SnapshotPayloadState.STALE }
+    val missingCount: Int get() = sections.count { it.payloadState == SnapshotPayloadState.MISSING }
+    val unavailableCount: Int get() = sections.count { it.payloadState == SnapshotPayloadState.UNAVAILABLE }
+    val failedCount: Int get() = sections.count { it.payloadState == SnapshotPayloadState.FAILED }
+    val issueCount: Int get() = sections.sumOf { it.issues.size }
+    val isConsistent: Boolean get() = issueCount == 0
+}
+
 data class AccountSnapshot(
     val identity: AccountIdentity,
     val metadata: SnapshotMetadata,
@@ -280,5 +312,6 @@ data class AccountSnapshot(
     val characterCollectionIntegrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity(),
     val characterBuildValidation: DataValue<CharacterBuildValidationReport> = DataValue.Missing,
     val characterStatReconciliation: DataValue<CharacterStatReconciliationReport> = DataValue.Missing,
-    val characterStatClassification: DataValue<CharacterStatClassificationReport> = DataValue.Missing
+    val characterStatClassification: DataValue<CharacterStatClassificationReport> = DataValue.Missing,
+    val sectionCoverage: AccountSnapshotCoverageReport = AccountSnapshotCoverageReport(emptyList())
 )
