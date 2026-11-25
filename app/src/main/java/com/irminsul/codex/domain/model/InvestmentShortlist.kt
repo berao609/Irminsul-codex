@@ -92,6 +92,7 @@ object InvestmentShortlistEvaluator {
             val evidenceIds = candidate.supportingKnowledgeRecordIds
                 .distinct()
                 .filter { it in trustedDecisionEvidence || it in trustedUsageEvidenceIds }
+            val independentDecisionEvidenceIds = evidenceIds.filter { it in trustedDecisionEvidence }
             if (candidate.alreadySufficient) {
                 return@mapNotNull InvestmentRecommendation(
                     characterId = candidate.characterId,
@@ -110,7 +111,7 @@ object InvestmentShortlistEvaluator {
 
             if (candidate.accountBenefit == InvestmentAccountBenefit.NONE ||
                 candidate.accountBenefit == InvestmentAccountBenefit.UNKNOWN ||
-                evidenceIds.isEmpty()
+                independentDecisionEvidenceIds.isEmpty()
             ) return@mapNotNull null
 
             val reasons = mutableListOf<InvestmentReasonCode>()
