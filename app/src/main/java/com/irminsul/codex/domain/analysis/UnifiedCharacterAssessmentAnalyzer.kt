@@ -145,9 +145,7 @@ object UnifiedCharacterAssessmentAnalyzer {
                 DataValue.Unavailable -> missing += "Artifact data unavailable"
                 is DataValue.Failed -> missing += "Artifact retrieval failed"
                 is DataValue.Stale -> missing += "Artifact data stale"
-                is DataValue.Available -> if (character.artifacts.value.size < 5) {
-                    missing += "Artifact collection has fewer than five entries"
-                }
+                is DataValue.Available -> Unit
             }
             if (character.selectedProperties.isEmpty() && character.baseProperties.isEmpty() &&
                 character.extraProperties.isEmpty() && character.elementProperties.isEmpty()) {
