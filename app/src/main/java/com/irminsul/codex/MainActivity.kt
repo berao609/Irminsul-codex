@@ -772,7 +772,7 @@ private fun CodexScreen(
         }
 
         if (selectedTab == CodexTab.ACCOUNT) {
-            Text("Info & settings", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Text("Account & settings", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text("Appearance", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
@@ -1038,12 +1038,14 @@ private fun CodexScreen(
                         TextButton(onClick = { showAiSheet = false }) { Text("Close") }
                     }
                     Card(
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 280.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Column(
                             modifier = Modifier.fillMaxWidth().padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalAlignment = Alignment.Start
                         ) {
                             Text("Your account-aware assistant", fontWeight = FontWeight.SemiBold)
                             Text(
