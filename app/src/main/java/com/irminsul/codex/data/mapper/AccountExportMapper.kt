@@ -1,6 +1,7 @@
 package com.irminsul.codex.data.mapper
 
 import com.irminsul.codex.domain.model.*
+import com.irminsul.codex.domain.validation.CharacterBuildValidator
 import org.json.JSONArray
 import org.json.JSONObject
 import java.time.Instant
@@ -55,6 +56,14 @@ object AccountExportMapper {
             else -> DataValue.Available(characterMapping!!.first, characterMeta?.retrievedAt)
         }
 
+        val buildValidation: DataValue<CharacterBuildValidationReport> = when (val value = characterValue) {
+            is DataValue.Available -> DataValue.Available(CharacterBuildValidator.validate(value.value), value.retrievedAt)
+            is DataValue.Stale -> DataValue.Stale(CharacterBuildValidator.validate(value.value), value.lastRetrievedAt)
+            is DataValue.Failed -> value
+            DataValue.Missing -> DataValue.Missing
+            DataValue.Unavailable -> DataValue.Unavailable
+        }
+
         return AccountSnapshot(
             identity = identity,
             metadata = SnapshotMetadata(exportedAt, root.optInt("export_format_version", 0)),
@@ -69,7 +78,8 @@ object AccountExportMapper {
             spiralAbyssPrevious = mapStructuredSection(root, "spiral_abyss_previous", sections),
             imaginariumTheater = mapStructuredSection(root, "imaginarium_theater", sections),
             sections = sections,
-            characterCollectionIntegrity = characterMapping?.second ?: CharacterCollectionIntegrity()
+            characterCollectionIntegrity = characterMapping?.second ?: CharacterCollectionIntegrity(),
+            characterBuildValidation = buildValidation
         )
     }
 

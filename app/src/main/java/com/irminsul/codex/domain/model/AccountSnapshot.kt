@@ -144,6 +144,33 @@ data class CharacterCollectionIntegrity(
     val duplicateCharacterIds: List<Int> = emptyList()
 )
 
+enum class BuildIssueSeverity { WARNING, ERROR }
+
+data class BuildValidationIssue(
+    val code: String,
+    val severity: BuildIssueSeverity,
+    val fieldPath: String,
+    val message: String
+)
+
+data class CharacterBuildValidation(
+    val characterId: Int,
+    val issues: List<BuildValidationIssue>
+) {
+    val errorCount: Int get() = issues.count { it.severity == BuildIssueSeverity.ERROR }
+    val warningCount: Int get() = issues.count { it.severity == BuildIssueSeverity.WARNING }
+    val isValid: Boolean get() = errorCount == 0
+}
+
+data class CharacterBuildValidationReport(
+    val characters: List<CharacterBuildValidation>
+) {
+    val totalErrors: Int get() = characters.sumOf { it.errorCount }
+    val totalWarnings: Int get() = characters.sumOf { it.warningCount }
+    val validCharacterCount: Int get() = characters.count { it.isValid }
+    val invalidCharacterCount: Int get() = characters.size - validCharacterCount
+}
+
 sealed interface StructuredData {
     data class ObjectValue(val fields: Map<String, StructuredData>) : StructuredData
     data class ArrayValue(val items: List<StructuredData>) : StructuredData
@@ -167,5 +194,6 @@ data class AccountSnapshot(
     val spiralAbyssPrevious: DataValue<StructuredData>,
     val imaginariumTheater: DataValue<StructuredData>,
     val sections: Map<String, AccountSectionMetadata>,
-    val characterCollectionIntegrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity()
+    val characterCollectionIntegrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity(),
+    val characterBuildValidation: DataValue<CharacterBuildValidationReport> = DataValue.Missing
 )

@@ -253,4 +253,21 @@ class AccountExportMapperTest {
         assertTrue(AccountExportMapper.map(source).characters is DataValue.Failed)
     }
 
+
+    @Test fun mapperAttachesBuildValidationAndPreservesCharacterSectionState() {
+        val source = export().put("characters", org.json.JSONArray().put(JSONObject()
+            .put("base", JSONObject().put("id", 1).put("level", 90).put("rarity", 5)
+                .put("fetter", 10).put("actived_constellation_num", 6))
+            .put("weapon", JSONObject().put("id", 11501).put("level", 90).put("rarity", 5)
+                .put("promote_level", 6).put("affix_level", 1))
+            .put("relics", org.json.JSONArray())))
+        val report = (AccountExportMapper.map(source).characterBuildValidation as DataValue.Available).value
+        assertEquals(1, report.characters.size)
+        assertEquals(0, report.totalErrors)
+        assertTrue(report.characters.single().warningCount == 0)
+        val failed = export().put("export_status", JSONObject().put("overall_status", "partial")
+            .put("sections", JSONObject().put("characters", JSONObject().put("status", "failed").put("message", "offline"))))
+        assertTrue(AccountExportMapper.map(failed).characterBuildValidation is DataValue.Failed)
+    }
+
 }

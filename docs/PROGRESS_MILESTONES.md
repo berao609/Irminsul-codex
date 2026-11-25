@@ -627,3 +627,38 @@ Ensure normalized character records do not confuse missing equipment data with a
 - Stat values remain in their original string representation. This milestone does not parse, score, or infer artifact rolls.
 - These checks validate the supplied export structure, not the completeness or correctness of HoYoLAB's upstream data.
 
+
+## Milestone 012 - Character Build Data Validation
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Add deterministic validation for character progression, weapon properties, artifact stats, and character stat collections.  
+**Status:** Implementation in progress; CI verification pending.
+
+### Objective
+
+Produce a machine-readable validation report for normalized character builds so later investment and comparison features can distinguish structurally valid data from missing, malformed, or out-of-range values.
+
+### Work implemented
+
+1. Added a pure domain validation component with no JSON or Android dependencies.
+2. Validates known progression ranges for character level, rarity, friendship, constellation count, weapon level, rarity, ascension, refinement, artifact level, rarity, and slot.
+3. Validates stat property identifiers, numeric stat strings (including percentage-form values), and nonnegative roll counts.
+4. Checks artifact main-stat presence, duplicate substat property types, main-stat/substat collisions, and excessive substat counts.
+5. Surfaces existing M11 equipment-integrity diagnostics in the character build report.
+6. Attaches the report to the unified account snapshot while preserving missing, unavailable, failed, and stale character-section states.
+7. Validation reports issues without mutating or normalizing the source values.
+
+### Verification
+
+- Source implementation and automated tests are committed; CI verification pending.
+- No investment scoring, recommendations, export schema change, Room persistence, UI integration, device install, or release is included.
+
+### Qualifications
+
+- The validator checks the supplied export representation, not whether HoYoLAB returned every possible field or whether an upstream value is authoritative.
+- Known game progression bounds are explicit validation rules; missing values are warnings rather than invented defaults.
+- Numeric stat text is checked for parseability only. This milestone does not recompute displayed totals, infer artifact roll quality, or calculate build scores.
+- Empty artifact arrays are accepted as valid source data. Unoccupied slots are not automatically treated as errors.
+- A clean report means no detected validation errors, not proof that the build is optimal or complete.
+
