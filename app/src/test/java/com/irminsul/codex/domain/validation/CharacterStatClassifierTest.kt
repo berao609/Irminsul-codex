@@ -21,7 +21,7 @@ class CharacterStatClassifierTest {
             elementProperties = listOf(stat(40))
         )
         val report = CharacterStatClassifier.classify(listOf(character))
-        assertEquals(5, report.classifiedCount)
+        assertEquals(6, report.classifiedCount)
         assertEquals(0, report.unknownCount)
         assertEquals(0, report.conflictCount)
         assertEquals("artifacts[0].mainProperty", report.characters.single().results[4].fieldPath)
