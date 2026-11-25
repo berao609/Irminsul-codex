@@ -3107,7 +3107,7 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Simplify the primary navigation, relocate Materials Planner into Visuals, and introduce a centered AI action with a chat-style bottom sheet.  
-**Status:** Implementation committed; code CI #384 passed; README/specification/progress-document CI pending; physical-device verification pending.
+**Status:** Implementation and documentation CI-verified; physical-device verification pending.
 
 ### Active Memory Recall and repository verification
 
@@ -3126,11 +3126,11 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 
 - Added the Compose Material extended vector-icon dependency.
 - Replaced the five-item text-glyph navigation with Home, Visuals, and Account plus a raised center AI action.
-- Added a modal bottom-sheet AI interface with a clear provider-not-connected state and existing cookie privacy statement.
+- Added a modal bottom-sheet AI interface with a larger conversation area, a clear provider-not-connected state, and the existing cookie privacy statement.
 - Removed the dedicated Materials and AI Chat navigation destinations.
 - Integrated Materials Planner into Visuals behind a collapsible section; planner calculation and persistence logic are unchanged.
 - Kept Account and settings accessible from the top app bar and the Account navigation item.
-- Updated README and product specification to match the new navigation model.
+- Renamed the Account page heading and updated README and product specification to match the new navigation model.
 
 ### Files changed
 
@@ -3149,14 +3149,17 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 - `66422a272fc26b17b1d68cc79021bc1e14067e5f` - Add required Material 3 experimental API opt-in.
 - `a73dca4fd0ec41004d6f53a162d896b4b8085100` - Update README.
 - `275ee7525260db41910301130f108d7315d913f4` - Update product specification.
+- `0cac21d05a6e1bf28dbdd89ac4c0fa16f0622703` - Refine Account page heading and AI chat conversation area.
 
 ### Verification
 
+- CI #381 and #382 passed the icon catalog and dependency changes.
 - Initial navigation CI #383 failed at Kotlin compilation because the new Material 3 bottom-sheet API required an experimental API opt-in. This was corrected in commit `66422a272fc26b17b1d68cc79021bc1e14067e5f`.
 - Final implementation CI #384 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45630588460.
-- CI #384 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. Room instrumentation tests were skipped because no Room/persistence schema changed.
-- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.384-vc386`, artifact ID `15030109511`, size 15,866,763 bytes, SHA-256 `227227f0912058d2f71d4c150cf419154750e006b9ed6f08b838baac0cd5767c`. Room schema artifact ID `15029939756`, size 985 bytes.
-- README CI #385, specification CI #386, and progress-document CI #387 are still in progress.
+- CI #385 README, #386 SPECS, #387 progress documentation, and #388 follow-up progress documentation all passed.
+- Final UI refinement CI #389 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45631311189.
+- CI #389 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. Room instrumentation tests were skipped because no Room/persistence schema changed.
+- Final Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.389-vc391`, artifact ID `15030498243`, size 15,866,899 bytes, SHA-256 `ef9ef9a4ad57c259547fb25852c90564c0cf9ae87a0a00d15bf5eb791f5057c5`. Room schema artifact ID `15030348572`, size 985 bytes.
 - No M54 physical-device test has been performed yet.
 
 ### Boundaries and next checkpoint
