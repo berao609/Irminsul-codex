@@ -8,5 +8,6 @@ import com.irminsul.codex.domain.model.AccountExport
  */
 interface AccountSnapshotStore {
     suspend fun save(export: AccountExport)
+    suspend fun getLatest(uid: String): AccountExport?
     suspend fun getHistory(uid: String, server: String): List<AccountExport>
 }
