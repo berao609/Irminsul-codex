@@ -2,6 +2,7 @@ package com.irminsul.codex.data.mapper
 
 import com.irminsul.codex.domain.model.DataValue
 import com.irminsul.codex.domain.model.SectionStatus
+import com.irminsul.codex.domain.model.StructuredData
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -45,6 +46,48 @@ class AccountExportMapperTest {
         assertEquals(10000002, chars.single().id)
         assertEquals(90, chars.single().level)
         assertTrue(source.has("characters"))
+    }
+
+    @Test fun mapsProfileAbyssAndTheaterAsJsonIndependentStructuredData() {
+        val source = export()
+            .put("profile_and_exploration", JSONObject()
+                .put("exploration", org.json.JSONArray().put(JSONObject().put("exploration_percentage", 100)))
+                .put("achievement_number", 500)
+                .put("optional_null", JSONObject.NULL))
+            .put("spiral_abyss_current", JSONObject()
+                .put("floors", org.json.JSONArray().put(JSONObject().put("star", 9))))
+            .put("spiral_abyss_previous", JSONObject().put("total_battle_times", 12))
+            .put("imaginarium_theater", JSONObject().put("difficulty", "hard"))
+        val model = AccountExportMapper.map(source)
+
+        val profile = (model.profileAndExploration as DataValue.Available).value
+        assertTrue(profile is StructuredData.ObjectValue)
+        val profileFields = (profile as StructuredData.ObjectValue).fields
+        assertEquals(StructuredData.NumberValue("500"), profileFields["achievement_number"])
+        assertEquals(StructuredData.NullValue, profileFields["optional_null"])
+        val exploration = profileFields["exploration"] as StructuredData.ArrayValue
+        assertEquals(1, exploration.items.size)
+
+        val currentAbyss = (model.spiralAbyssCurrent as DataValue.Available).value
+        assertTrue(currentAbyss is StructuredData.ObjectValue)
+        val previousAbyss = (model.spiralAbyssPrevious as DataValue.Available).value
+        assertTrue(previousAbyss is StructuredData.ObjectValue)
+        val theater = (model.imaginariumTheater as DataValue.Available).value
+        assertTrue(theater is StructuredData.ObjectValue)
+        assertTrue(source.has("profile_and_exploration"))
+    }
+
+    @Test fun failedAndSkippedStructuredSectionsKeepTheirAvailabilityState() {
+        val source = export()
+            .put("export_status", JSONObject()
+                .put("overall_status", "partial")
+                .put("sections", JSONObject()
+                    .put("profile_and_exploration", JSONObject().put("status", "failed").put("message", "request failed"))
+                    .put("spiral_abyss_current", JSONObject().put("status", "skipped"))))
+        val model = AccountExportMapper.map(source)
+        assertTrue(model.profileAndExploration is DataValue.Failed)
+        assertEquals(DataValue.Unavailable, model.spiralAbyssCurrent)
+        assertEquals(DataValue.Missing, model.spiralAbyssPrevious)
     }
 
     @Test fun rejectsMissingIdentityOrInvalidExportTimestamp() {
