@@ -771,6 +771,8 @@ private fun CodexScreen(
                 LineupSimulatorSection(
                     characters = lineupCharacters,
                     selectedCharacterIds = activeLineupIds,
+                    rosterIsStale = accountExportState.snapshot?.characters is DataValue.Stale,
+                    rosterIsPartial = accountExportState.snapshot?.sections?.get("characters")?.status?.name == "PARTIAL",
                     onToggleCharacter = { characterId ->
                         selectedLineupCharacterIds = LineupSelectionRules.toggle(activeLineupIds, characterId)
                     }
@@ -1478,6 +1480,8 @@ private fun saveManualMaterialPlanRows(rows: List<ManualMaterialPlanRow>): Strin
 private fun LineupSimulatorSection(
     characters: List<CharacterSnapshot>,
     selectedCharacterIds: List<Int>,
+    rosterIsStale: Boolean,
+    rosterIsPartial: Boolean,
     onToggleCharacter: (Int) -> Unit
 ) {
     val selectedCharacters = selectedCharacterIds.mapNotNull { id ->
@@ -1495,6 +1499,20 @@ private fun LineupSimulatorSection(
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        if (rosterIsStale) {
+            Text(
+                "This lineup uses a previously retrieved roster. Refresh account data before relying on it as current.",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+        if (rosterIsPartial) {
+            Text(
+                "The retrieved character roster is marked partial. Some owned characters may be missing.",
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
         Row(
             modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
