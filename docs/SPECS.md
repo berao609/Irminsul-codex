@@ -385,6 +385,54 @@ The first useful shortlist should be small and selective. It should explain why 
 
 **M45 implementation boundary:** define and test the record/shortlist contract before adding network collectors, social-platform SDKs, AI services, or a scoring engine. Initial source references may be curated manually. External-source adapters must be independently permission-checked and optional; core account analysis remains local-first and usable without cloud AI.
 
+
+### 3.15 M47 account-input mapping and evidence boundary
+
+M47 inspected the current normalized `AccountSnapshot`, its nested character/equipment models, account-data mapper, existing account-gap/build/stat analyzers, and the M46 shortlist contract. The current account model supports a limited set of reliable account facts. It does not yet support a complete account-relative investment decision by itself.
+
+#### Facts derivable from the current account snapshot
+
+| Input area | Current source fields | What can be derived safely | Required caveats |
+|---|---|---|---|
+| Owned character inventory | `AccountSnapshot.characters`, `CharacterSnapshot.id/name/rarity/element`, `CharacterCollectionIntegrity` | Which character IDs are present in the retrieved roster; mapped roster count; duplicate/invalid source entries; known name, rarity, and element | Only the retrieved roster is known. Missing, unavailable, failed, stale, partial, or malformed roster data must remain distinct. Do not infer ownership of absent characters from an incomplete roster. |
+| Character investment state | `CharacterSnapshot.level`, `activeConstellationCount`, `skills.level`, weapon level/ascension/refinement, artifact rarity/level | Observed current character, talent, weapon, constellation, and artifact investment values when populated | These are state observations, not quality scores. Missing values remain unknown. Do not infer build quality, combat role, or that a character is sufficiently invested from level/constellation alone. |
+| Equipped weapon | `weapon: DataValue<WeaponSnapshot>` and weapon ID/type/rarity/level/ascension/refinement/stats | Whether the weapon payload is available, missing, unavailable, failed, or stale; known equipped weapon and its observed state | Weapon suitability, rankings, and comparative value require reviewed game-knowledge claims. |
+| Equipped artifacts | `artifacts: DataValue<List<ArtifactSnapshot>>`, artifact slot/set/stat fields, and `EquipmentIntegritySnapshot` | Observed equipped pieces, empty slots, known main/sub-stats, duplicate or invalid slots/IDs, malformed entries | Empty or partial equipment is a valid player choice, not an investment deficiency by itself. Artifact set data is retained as `StructuredData`, not a normalized set-bonus model. |
+| Build and stat diagnostics | `characterBuildValidation`, `characterStatReconciliation`, `characterStatClassification`, and existing analyzers | Existing deterministic validation errors/warnings, stat mismatches, classification unknowns/conflicts | These are account diagnostics. They must not automatically become investment priority or imply meta weakness. |
+| Account data quality | `DataValue`, `sections`, `sectionCoverage`, `sectionFreshness`, collection integrity | Available/stale/missing/unavailable/failed state, retrieval times, freshness and coverage issues | Any derived candidate input must retain the relevant source state and timestamp. Unknown data cannot become zero, false, or a negative character rating. |
+| Combat-mode source payloads | `spiralAbyssCurrent`, `spiralAbyssPrevious`, `imaginariumTheater` as `DataValue<StructuredData>` | Presence/state of the section and access to retained structured payload for future schema-specific analysis | These payloads are not normalized into validated team compositions, rotations, encounter-level character performance, or comparable usage observations. Do not infer team synergy or performance until a versioned parser and tests establish the exact fields and semantics. |
+
+#### Inputs requiring curated game knowledge or additional account data
+
+| Investment factor | Required source | Why the current snapshot is insufficient |
+|---|---|---|
+| Character roles and capabilities | Versioned, reviewed character/role/capability knowledge | Element, weapon type, rarity, and stats do not establish a complete combat role, application pattern, defensive utility, or capability. |
+| Team synergy and team enablement | Reviewed character interaction, team, rotation, and encounter claims, plus a reliable owned-roster match | The current snapshot has no normalized team-composition or rotation model. Opaque Abyss/Theater payloads are not yet validated for this use. |
+| Role/capability gaps | Role/capability taxonomy and supported coverage rules, applied to the owned roster | A roster list alone cannot determine whether an account lacks a role or whether a character fills that gap. |
+| Current patch and mode relevance | Versioned knowledge with explicit game version, mode, encounter, validity, and source provenance | Account snapshot does not provide validated meta relevance or source-backed patch conclusions. |
+| Redundancy and alternatives | Comparable role/capability claims for owned characters plus their observed investment state | Ownership and level can be read, but functional overlap and relative effectiveness require curated capability evidence. |
+| Build suitability and target investment | Reviewed build guidance tied to character, mode, patch, weapon/artifact context | Current build validation checks data integrity and stat arithmetic; it is not a build guide or a damage-performance evaluator. |
+| Investment cost | Versioned game-reference data for character/weapon/talent/artifact upgrade requirements | Current snapshot contains current levels and equipment but no authoritative material-cost model. |
+| Account-specific affordability | Actual user inventory and resource balances, retrieved with clear freshness semantics | Current account model does not contain the full ascension/talent/artifact material inventory needed to calculate affordability. Daily Note resin is not a substitute for material inventory. |
+| Already-sufficient judgment | Explicit target criteria for a stated account objective/mode, supported by knowledge, compared with observed investment | High level, high rarity, or constellation count alone cannot establish sufficiency. |
+| Pull recommendations | Banner availability, unowned character knowledge, account role gaps, and pull constraints/preferences | Current roster is an owned-character snapshot, not a banner, pity, guarantee, or user pull-preference model. Pull advice is outside the first owned-character shortlist input mapper. |
+
+#### M47 mapping rules
+
+1. The first account-input mapper may emit only directly observed facts from the current snapshot: owned character identity, known element/rarity, observed character/weapon/talent/artifact investment, equipment state, and provenance/freshness.
+2. Each fact must preserve its source state and applicable retrieval timestamp. A stale roster or stale equipment component remains stale in the derived input.
+3. A missing, unavailable, failed, malformed, or unknown field remains an explicit unknown/unavailable state. It is never defaulted to zero, false, empty-success, or a negative assessment.
+4. Existing build/stat/equipment findings remain account diagnostics. They may be linked as evidence context but cannot alone create an investment-priority recommendation.
+5. Curated knowledge must supply role/capability, team synergy, patch/mode relevance, and build suitability. Knowledge claims must match the character subject and be verified, supported, permitted, and within their validity window before use.
+6. Team synergy cannot be inferred from element combinations, weapon types, or co-occurrence in an unvalidated raw mode payload.
+7. Usage observations remain contextual evidence only and must retain the M45 denominator, sample, mode, encounter, ownership, methodology, and period requirements. They cannot establish character strength or independently qualify investment priority.
+8. Redundancy requires comparable role/capability evidence for the candidate and the owned alternatives. A second character of the same element or weapon type is not automatically redundant.
+9. Investment cost and affordability remain unknown until game-reference costs and current player material inventory are both available. Do not estimate affordability from Resin alone.
+10. The initial shortlist covers owned characters only. Pull evaluation, unowned-character opportunity analysis, banner state, pity, and pull preferences require a separate later input contract.
+
+**M47 conclusion:** the current snapshot can describe what the player owns and how those characters are currently invested. It cannot, by itself, determine what those characters do for a team, which role the account lacks, whether a candidate is meta-relevant, or whether an upgrade is worth its resource cost. The next implementation should extract observed account facts without manufacturing those missing conclusions, then join them to separately verified game knowledge.
+
+
 ## 4. Existing Application Baseline
 
 The following describes the existing implementation as previously inspected. It is a working baseline to preserve and improve, not a complete code-quality or runtime audit.
