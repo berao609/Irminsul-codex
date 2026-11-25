@@ -3268,9 +3268,10 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 - Added a Room query that selects the newest snapshot for the UID.
 - Added `RoomAccountSnapshotStore.getLatest` to map the persisted raw JSON back into the normalized snapshot.
 - Added `AccountViewModel.restoreLatestSnapshot`, which restores the cached snapshot and rebuilds deterministic analysis without calling the network repository.
-- Added a regression test that fails if cache restoration attempts a network retrieval.
+- Added regression tests that fail if cache restoration attempts a network retrieval and verify that a failed explicit refresh preserves the previously restored snapshot and overview.
 - Triggered cache restoration when the signed-in UID becomes available.
-- Added a restoring state to the Analyze/Refresh control and disabled the control while restoration is in progress.
+- Added a restoring state to the Analyze/Refresh control, disabled the control while restoration is in progress, and hid the empty-analysis placeholder during restoration.
+- Guarded against overlapping restoration/refresh operations and rejected a cached record whose UID does not match the signed-in account.
 - Preserved existing snapshot and overview while an explicit refresh is running or fails.
 - Closed M55 after CI #403 and user device verification.
 
@@ -3299,7 +3300,9 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 ### Verification
 
 - M55 final documentation CI #403 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45635363391. User confirmed device testing of the #403 milestone build.
-- M56 CI and APK artifact verification are pending.
+- Intermediate CI #404-#414 exposed incomplete states between sequential interface, Room, ViewModel, test, UI, and documentation commits. #404-#405 failed while the interface and Room implementation were not yet both present; #406-#410 failed because the test double had not yet implemented the new store method; #411-#414 were also built from those intermediate states.
+- CI #415 passed unit tests on the then-current implementation; APK build was still running when recorded.
+- Final combined code CI #418 is pending: https://github.com/berao609/Irminsul-codex/actions/runs/45643514735.
 - Physical-device verification of cached restoration is pending.
 
 ### Boundaries and next checkpoint
