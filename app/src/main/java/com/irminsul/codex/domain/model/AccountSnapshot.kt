@@ -281,6 +281,7 @@ data class AccountSectionCoverage(
     val payloadState: SnapshotPayloadState,
     val source: String?,
     val retrievedAt: Instant?,
+    val lastSuccessfulRetrievedAt: Instant?,
     val issues: List<SnapshotCoverageIssue>
 )
 
@@ -298,10 +299,16 @@ data class AccountSnapshotCoverageReport(val sections: List<AccountSectionCovera
 
 enum class SectionFreshnessStatus { FRESH, STALE, UNKNOWN, INVALID_TIMESTAMP }
 
+enum class SectionFreshnessTimestampSource { CURRENT_RETRIEVAL, LAST_SUCCESSFUL_RETRIEVAL, NONE }
+
 data class SectionFreshnessAssessment(
     val sectionName: String,
     val status: SectionFreshnessStatus,
+    val payloadState: SnapshotPayloadState,
     val retrievedAt: Instant?,
+    val lastSuccessfulRetrievedAt: Instant?,
+    val referenceAt: Instant?,
+    val timestampSource: SectionFreshnessTimestampSource,
     val assessedAt: Instant,
     val ageSeconds: Long?,
     val thresholdSeconds: Long?

@@ -47,6 +47,17 @@ class AccountSnapshotCoverageAnalyzerTest {
         assertTrue(report.isConsistent)
     }
 
+    @Test fun preservesLastSuccessfulRetrievalTimestamp() {
+        val lastSuccess = exportedAt.minusSeconds(7200)
+        val sectionMetadata = AccountSectionMetadata(
+            SectionStatus.FAILED, "test-source", exportedAt, lastSuccess, "temporary failure"
+        )
+        val base = snapshot().copy(sections = mapOf("account_card" to sectionMetadata))
+        val report = AccountSnapshotCoverageAnalyzer.assess(base)
+        assertEquals(lastSuccess, report.sections.first().lastSuccessfulRetrievedAt)
+        assertEquals(exportedAt, report.sections.first().retrievedAt)
+    }
+
     @Test fun detectsSuccessfulSectionWithoutPayload() {
         val report = AccountSnapshotCoverageAnalyzer.assess(snapshot(status = SectionStatus.SUCCESS))
         val card = report.sections.first()

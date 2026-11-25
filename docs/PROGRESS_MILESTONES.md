@@ -881,3 +881,36 @@ Expose section retrieval age and freshness without assuming every account sectio
 - An explicit DataValue.Stale state remains stale regardless of configured threshold.
 - A future retrieval timestamp is flagged relative to the assessment time; it is not silently clamped or rewritten.
 - This increment does not add historical persistence, UI, synchronization scheduling, export schema changes, investment scoring, recommendations, or AI behavior.
+
+## Milestone 017 - Last Successful Retrieval Provenance
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Preserve last-successful retrieval timestamps through section coverage and use them as the freshness reference when a current payload is unavailable.  
+**Status:** Implemented; unit-test and Debug CI verification pending.
+
+### Objective
+
+Ensure a failed or unavailable refresh does not erase the temporal context of the last successful section retrieval. Keep current retrieval-attempt time distinct from last-successful payload time.
+
+### Work implemented
+
+1. Extended section coverage records to retain both retrieved_at and last_successful_retrieval_at.
+2. Added an explicit freshness timestamp source: current retrieval, last successful retrieval, or none.
+3. Freshness assessment uses the current retrieval timestamp when a current payload is present. If no current payload is present, it prefers the last successful retrieval timestamp and retains the payload state separately.
+4. Exposes the current retrieval time, last-successful retrieval time, selected reference time, payload state, and age together so a recent failed attempt cannot be mistaken for a recent successful payload.
+5. Added tests for coverage metadata preservation, failed-refresh fallback, current-payload timestamp selection, and absence of any usable timestamp.
+
+### Verification
+
+- Implementation commit: pending.
+- GitHub Actions: pending.
+- Debug artifact: pending.
+- Device verification: not required for this in-memory domain assessment.
+
+### Qualifications
+
+- Freshness remains policy-driven; no default thresholds are introduced.
+- A freshness status describes the age of its selected timestamp, not whether the current refresh succeeded. Consumers must inspect payloadState and timestampSource together.
+- The selected sections and export schema are unchanged.
+- This increment does not add historical storage, retry scheduling, UI, investment scoring, recommendations, or AI behavior.

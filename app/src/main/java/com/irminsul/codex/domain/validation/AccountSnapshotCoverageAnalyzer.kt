@@ -51,6 +51,6 @@ object AccountSnapshotCoverageAnalyzer {
             is DataValue.Stale<*> -> value.lastRetrievedAt
             else -> null
         }
-        return AccountSectionCoverage(input.name, status, state, input.metadata?.source, retrievedAt, issues)
+        return AccountSectionCoverage(input.name, status, state, input.metadata?.source, retrievedAt, input.metadata?.lastSuccessfulRetrievalAt, issues)
     }
 }

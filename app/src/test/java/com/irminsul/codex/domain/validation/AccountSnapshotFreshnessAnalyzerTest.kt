@@ -66,6 +66,41 @@ class AccountSnapshotFreshnessAnalyzerTest {
         assertNull(future.sections.first().ageSeconds)
     }
 
+    @Test fun usesLastSuccessfulRetrievalWhenCurrentPayloadIsUnavailable() {
+        val lastSuccess = exportedAt.minusSeconds(7200)
+        val failedMetadata = AccountSectionMetadata(
+            SectionStatus.FAILED, "test", exportedAt, lastSuccess, "refresh failed"
+        )
+        val base = snapshot(null).copy(
+            sections = mapOf("account_card" to failedMetadata)
+        )
+        val withCoverage = base.copy(sectionCoverage = AccountSnapshotCoverageAnalyzer.assess(base))
+        val report = AccountSnapshotFreshnessAnalyzer.assess(
+            withCoverage,
+            mapOf("account_card" to Duration.ofHours(1))
+        )
+        val card = report.sections.first()
+        assertEquals(SectionFreshnessStatus.STALE, card.status)
+        assertEquals(SnapshotPayloadState.MISSING, card.payloadState)
+        assertEquals(lastSuccess, card.lastSuccessfulRetrievedAt)
+        assertEquals(lastSuccess, card.referenceAt)
+        assertEquals(SectionFreshnessTimestampSource.LAST_SUCCESSFUL_RETRIEVAL, card.timestampSource)
+        assertEquals(7200L, card.ageSeconds)
+    }
+
+    @Test fun usesCurrentTimestampForPresentPayloadAndReportsNoReferenceWhenNoneExists() {
+        val present = AccountSnapshotFreshnessAnalyzer.assess(
+            snapshot(exportedAt.minusSeconds(60)),
+            mapOf("account_card" to Duration.ofMinutes(5))
+        ).sections.first()
+        assertEquals(SectionFreshnessTimestampSource.CURRENT_RETRIEVAL, present.timestampSource)
+        assertEquals(SnapshotPayloadState.PRESENT, present.payloadState)
+
+        val missing = AccountSnapshotFreshnessAnalyzer.assess(snapshot(null)).sections.first()
+        assertEquals(SectionFreshnessTimestampSource.NONE, missing.timestampSource)
+        assertNull(missing.referenceAt)
+    }
+
     @Test fun preservesExplicitStaleStateAndRejectsNegativeThresholds() {
         val base = snapshot(exportedAt.minusSeconds(1))
         val stale = base.copy(
