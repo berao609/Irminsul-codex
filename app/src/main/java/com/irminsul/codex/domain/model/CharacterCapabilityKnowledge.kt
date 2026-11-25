@@ -74,6 +74,7 @@ enum class CharacterCapabilityIssueCode {
     SUBJECT_ID_MISMATCH,
     WRONG_CLAIM_TYPE,
     UNTRUSTED_KNOWLEDGE_RECORD,
+    SOURCE_ACTION_NOT_APPROVED,
     USAGE_EVIDENCE_NOT_ALLOWED,
     KNOWLEDGE_CONTEXT_MISMATCH
 }
@@ -203,6 +204,18 @@ object CharacterCapabilityKnowledgeValidator {
             if (!structurallyTrusted) {
                 issue(claim, CharacterCapabilityIssueCode.UNTRUSTED_KNOWLEDGE_RECORD, "Source record is not verified, supported, permitted, structurally valid, and current.")
             }
+            val sourceEntries = sourceRegistry.associateBy { it.sourceId }
+            val permitsManualCuration = record.sourceReferences.all { reference ->
+                sourceEntries[reference.sourceId]?.allowedActions?.contains("manual_claim_curation") == true
+            }
+            if (!permitsManualCuration) {
+                issue(
+                    claim,
+                    CharacterCapabilityIssueCode.SOURCE_ACTION_NOT_APPROVED,
+                    "Every referenced source must explicitly permit manual capability-claim curation."
+                )
+            }
+
             if (record.evidenceClass == KnowledgeEvidenceClass.OBSERVED_USAGE ||
                 record.claimType == KnowledgeClaimType.USAGE_OBSERVATION
             ) {
