@@ -1768,7 +1768,7 @@ Investigate repeated ±1 stat mismatches observed in the Account Intelligence sc
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Replace the single long home screen with focused bottom-navigation destinations, make Home an account and Daily Note dashboard, move JSON export into Info, and establish dedicated destinations for intelligence, visuals, and AI chat.  
-**Status:** Implemented. Final combined Debug CI verification pending (Run #237). Physical-device verification pending.
+**Status:** Implemented, final combined Debug CI verified (Run #237), README and milestone documentation CI verified (Runs #238-239). Physical-device verification pending.
 
 ### Objective
 
@@ -1796,8 +1796,12 @@ Give Irminsul Codex a clean, full-screen native-app structure rather than placin
 ### Verification
 
 - [Run #236](https://github.com/berao609/Irminsul-codex/actions/runs/45565734113) completed JVM unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and signing-key cleanup successfully for the initial navigation commit.
-- [Run #237](https://github.com/berao609/Irminsul-codex/actions/runs/45565899838) is the final combined implementation run for commit `027a88b53b39a0e3334234023ee6c7ce57ef6c72`; final result pending at the time of this record.
-- Documentation CI for the README and milestone record is pending.
+- [Run #237](https://github.com/berao609/Irminsul-codex/actions/runs/45565899838) passed for commit `027a88b53b39a0e3334234023ee6c7ce57ef6c72`: JVM unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. Room emulator instrumentation was skipped by the existing path filter because the changes did not affect Room-sensitive code.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.237-vc239`, artifact ID `14999962669`, size 8,547,739 bytes.
+- Room schema artifact: `irminsul-room-schema-v1-run-237`, artifact ID `14999867965`, size 985 bytes.
+- [Run #238](https://github.com/berao609/Irminsul-codex/actions/runs/45565975108) passed for README commit `1c11e591afe80c1603206e7094aeaf1dbe5f2eb8`.
+- [Run #239](https://github.com/berao609/Irminsul-codex/actions/runs/45566032822) passed for this milestone record's prior commit `e420850a6309099f963af153973da8b79d582a7b`.
+- Physical-device verification remains pending.
 - Physical-device verification: pending.
 
 ### Qualifications and next work
