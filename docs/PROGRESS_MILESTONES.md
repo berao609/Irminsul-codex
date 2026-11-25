@@ -774,6 +774,7 @@ Establish a deterministic stat-property catalog that distinguishes canonical ide
 ### Verification
 
 - Source implementation and automated tests are committed; CI verification pending.
+- A follow-up milestone-record commit is being used to trigger the repository's push-based Debug CI workflow for this source commit.
 - No stat scoring, build recommendations, damage simulation, value conversion, source JSON mutation, export schema change, Room persistence, UI integration, device install, or release is included.
 
 ### Qualifications
