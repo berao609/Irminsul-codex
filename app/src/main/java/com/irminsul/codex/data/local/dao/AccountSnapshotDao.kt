@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.irminsul.codex.data.local.entity.AccountEntity
 import com.irminsul.codex.data.local.entity.AccountSnapshotEntity
+import com.irminsul.codex.data.local.entity.AccountSnapshotJsonChunkEntity
 
 @Dao
 interface AccountSnapshotDao {
@@ -21,6 +22,16 @@ interface AccountSnapshotDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSnapshot(snapshot: AccountSnapshotEntity)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertJsonChunks(chunks: List<AccountSnapshotJsonChunkEntity>)
+
+    @Query("""
+        SELECT content FROM account_snapshot_json_chunks
+        WHERE snapshotId = :snapshotId
+        ORDER BY chunkIndex ASC
+    """)
+    suspend fun getJsonChunks(snapshotId: String): List<String>
 
     @Query("""
         SELECT * FROM account_snapshots
