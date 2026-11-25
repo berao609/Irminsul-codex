@@ -46,11 +46,19 @@ object OwnedCharacterInvestmentFactMapper {
             DataValue.Unavailable -> OwnedCharacterInvestmentRosterFacts(
                 state = InvestmentFactState.UNAVAILABLE,
                 observedAt = null,
+                sectionStatus = section?.status,
+                sectionSource = section?.source,
+                sectionRetrievedAt = section?.retrievedAt,
+                lastSuccessfulRetrievedAt = section?.lastSuccessfulRetrievalAt,
                 collectionIntegrity = snapshot.characterCollectionIntegrity
             )
             is DataValue.Failed -> OwnedCharacterInvestmentRosterFacts(
                 state = InvestmentFactState.FAILED,
                 observedAt = null,
+                sectionStatus = section?.status,
+                sectionSource = section?.source,
+                sectionRetrievedAt = section?.retrievedAt,
+                lastSuccessfulRetrievedAt = section?.lastSuccessfulRetrievalAt,
                 collectionIntegrity = snapshot.characterCollectionIntegrity,
                 failureReason = source.reason
             )
