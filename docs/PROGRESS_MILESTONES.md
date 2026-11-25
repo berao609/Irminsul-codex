@@ -3648,3 +3648,20 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 
 **Verification boundary:** The code change is committed. CI compilation/unit tests and a physical-device check are still required. The existing manual material rows and previously saved plan values must be checked on device after installing the new build.
 
+### Character Showcase progressive inspection pass
+
+**Status:** Compose implementation committed; CI and physical-device verification pending.
+
+- Replaced the always-expanded weapon, five-artifact stat dump, and full attribute list with tap-to-inspect interactions.
+- Weapon summary is compact by default. Tapping it reveals the weapon description, main/secondary stat, level, ascension, and refinement details.
+- Artifacts remain a compact horizontal five-slot row. Tapping one artifact reveals only that artifact's set item identity, slot, rarity, level, main stat, and substats. Other artifacts stay collapsed.
+- Attributes are collapsed behind a summary row and expand only when selected.
+- Talent and constellation icons remain compact and reveal their descriptions/effects when selected.
+- One shared selection state is used per character. Opening a different item switches the detail panel; tapping the active item again collapses it. Changing characters resets the open detail.
+- Stale equipment indicators and unavailable/missing data states remain visible.
+- No account model, source data, persistence schema, network behavior, or dependencies were changed.
+
+**Commit:** `d697496c312b6157d8b876463fe0147cea5896af`
+
+**Verification boundary:** Source change is committed. CI compilation and tests are pending. Physical-device verification must confirm tap targets, horizontal artifact scrolling, expanded stat readability, and Light/Dark appearance. The CI workflow does not by itself prove visual correctness on device.
+
