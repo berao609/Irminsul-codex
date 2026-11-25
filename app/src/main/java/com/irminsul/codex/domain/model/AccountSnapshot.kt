@@ -115,14 +115,33 @@ data class CharacterSnapshot(
     val element: String?,
     val friendshipLevel: Int?,
     val activeConstellationCount: Int?,
-    val weapon: WeaponSnapshot? = null,
-    val artifacts: List<ArtifactSnapshot> = emptyList(),
+    val weapon: DataValue<WeaponSnapshot> = DataValue.Missing,
+    val artifacts: DataValue<List<ArtifactSnapshot>> = DataValue.Missing,
+    val equipmentIntegrity: EquipmentIntegritySnapshot = EquipmentIntegritySnapshot(),
     val constellations: List<ConstellationSnapshot> = emptyList(),
     val skills: List<CharacterSkillSnapshot> = emptyList(),
     val selectedProperties: List<StatValueSnapshot> = emptyList(),
     val baseProperties: List<StatValueSnapshot> = emptyList(),
     val extraProperties: List<StatValueSnapshot> = emptyList(),
     val elementProperties: List<StatValueSnapshot> = emptyList()
+)
+
+data class EquipmentIntegritySnapshot(
+    val artifactSourceEntryCount: Int? = null,
+    val mappedArtifactCount: Int = 0,
+    val invalidArtifactEntryIndexes: List<Int> = emptyList(),
+    val duplicateArtifactIds: List<Int> = emptyList(),
+    val duplicateArtifactSlots: List<Int> = emptyList(),
+    val invalidArtifactSlots: List<Int> = emptyList(),
+    val unoccupiedArtifactSlots: List<Int> = (1..5).toList(),
+    val invalidSubPropertyEntryIndexes: List<Int> = emptyList()
+)
+
+data class CharacterCollectionIntegrity(
+    val sourceEntryCount: Int? = null,
+    val mappedEntryCount: Int = 0,
+    val invalidCharacterEntryIndexes: List<Int> = emptyList(),
+    val duplicateCharacterIds: List<Int> = emptyList()
 )
 
 sealed interface StructuredData {
@@ -147,5 +166,6 @@ data class AccountSnapshot(
     val spiralAbyssCurrent: DataValue<StructuredData>,
     val spiralAbyssPrevious: DataValue<StructuredData>,
     val imaginariumTheater: DataValue<StructuredData>,
-    val sections: Map<String, AccountSectionMetadata>
+    val sections: Map<String, AccountSectionMetadata>,
+    val characterCollectionIntegrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity()
 )

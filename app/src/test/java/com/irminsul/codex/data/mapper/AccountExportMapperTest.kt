@@ -163,11 +163,15 @@ class AccountExportMapperTest {
             .put("selected_properties", org.json.JSONArray().put(JSONObject().put("property_type", 2000).put("final", "120")))))
         val mapped = (AccountExportMapper.map(source).characters as DataValue.Available).value.single()
         assertEquals(10000002, mapped.id)
-        assertEquals(11501, mapped.weapon?.id)
-        assertEquals("120", mapped.weapon?.mainProperty?.final)
-        assertEquals(1, mapped.artifacts.size)
-        assertEquals(0, mapped.artifacts.single().mainProperty?.rolls)
-        assertEquals(2, mapped.artifacts.single().subProperties.single().rolls)
+        val weapon = (mapped.weapon as DataValue.Available).value
+        assertEquals(11501, weapon.id)
+        assertEquals("120", weapon.mainProperty?.final)
+        val artifacts = (mapped.artifacts as DataValue.Available).value
+        assertEquals(1, artifacts.size)
+        assertEquals(0, artifacts.single().mainProperty?.rolls)
+        assertEquals(2, artifacts.single().subProperties.single().rolls)
+        assertEquals(listOf(2, 3, 4, 5), mapped.equipmentIntegrity.unoccupiedArtifactSlots)
+        assertEquals(0, mapped.equipmentIntegrity.invalidArtifactEntryIndexes.size)
         assertTrue(mapped.constellations.single().isActive == true)
         assertEquals(8, mapped.skills.single().level)
         assertEquals("120", mapped.selectedProperties.single().final)
@@ -180,8 +184,73 @@ class AccountExportMapperTest {
             .put("weapon", JSONObject().put("name", "Unknown weapon"))
             .put("relics", org.json.JSONArray().put(JSONObject().put("name", "Unknown artifact")))))
         val mapped = (AccountExportMapper.map(source).characters as DataValue.Available).value.single()
-        assertNull(mapped.weapon)
-        assertTrue(mapped.artifacts.isEmpty())
+        assertTrue(mapped.weapon is DataValue.Failed)
+        assertTrue(mapped.artifacts is DataValue.Available)
+        assertTrue((mapped.artifacts as DataValue.Available).value.isEmpty())
+    }
+
+
+    @Test fun preservesWeaponToCharacterAssociationsAcrossMultipleCharacters() {
+        val source = export().put("characters", org.json.JSONArray()
+            .put(JSONObject().put("base", JSONObject().put("id", 10000002))
+                .put("weapon", JSONObject().put("id", 11501)))
+            .put(JSONObject().put("base", JSONObject().put("id", 10000003))
+                .put("weapon", JSONObject().put("id", 12501))))
+        val chars = (AccountExportMapper.map(source).characters as DataValue.Available).value
+        assertEquals(2, chars.size)
+        assertEquals(11501, ((chars[0].weapon as DataValue.Available).value).id)
+        assertEquals(12501, ((chars[1].weapon as DataValue.Available).value).id)
+    }
+
+    @Test fun distinguishesMissingEmptyAndMalformedEquipmentCollections() {
+        val source = export().put("characters", org.json.JSONArray()
+            .put(JSONObject().put("base", JSONObject().put("id", 1)))
+            .put(JSONObject().put("base", JSONObject().put("id", 2)).put("relics", org.json.JSONArray()))
+            .put(JSONObject().put("base", JSONObject().put("id", 3)).put("relics", "not-an-array"))
+            .put(JSONObject().put("base", JSONObject().put("id", 4)).put("weapon", "not-an-object")))
+        val chars = (AccountExportMapper.map(source).characters as DataValue.Available).value
+        assertEquals(DataValue.Missing, chars[0].artifacts)
+        assertEquals(DataValue.Missing, chars[0].weapon)
+        assertEquals(DataValue.Available(emptyList<Any>(), null)::class, (chars[1].artifacts as DataValue.Available).let { it::class })
+        assertTrue(chars[2].artifacts is DataValue.Failed)
+        assertTrue(chars[3].weapon is DataValue.Failed)
+    }
+
+    @Test fun reportsDuplicateArtifactSlotsIdsAndUnoccupiedSlotsWithoutDroppingRecords() {
+        val relics = org.json.JSONArray()
+            .put(JSONObject().put("id", 10).put("pos", 1)
+                .put("sub_property_list", org.json.JSONArray().put(JSONObject().put("value", "3.5"))))
+            .put(JSONObject().put("id", 10).put("pos", 1))
+            .put(JSONObject().put("name", "missing id").put("pos", 8))
+        val source = export().put("characters", org.json.JSONArray().put(JSONObject()
+            .put("base", JSONObject().put("id", 10000002)).put("relics", relics)))
+        val character = (AccountExportMapper.map(source).characters as DataValue.Available).value.single()
+        val mapped = (character.artifacts as DataValue.Available).value
+        assertEquals(2, mapped.size)
+        assertEquals(listOf(10), character.equipmentIntegrity.duplicateArtifactIds)
+        assertEquals(listOf(1), character.equipmentIntegrity.duplicateArtifactSlots)
+        assertEquals(listOf(2, 3, 4, 5), character.equipmentIntegrity.unoccupiedArtifactSlots)
+        assertEquals(listOf(2), character.equipmentIntegrity.invalidArtifactEntryIndexes)
+        assertEquals(listOf(0), character.equipmentIntegrity.invalidSubPropertyEntryIndexes)
+    }
+
+    @Test fun reportsMalformedAndDuplicateCharacterEntries() {
+        val source = export().put("characters", org.json.JSONArray()
+            .put(JSONObject().put("base", JSONObject().put("id", 7)))
+            .put(JSONObject().put("base", JSONObject().put("id", 7)))
+            .put(JSONObject().put("base", JSONObject().put("name", "missing id")))
+            .put("not-an-object"))
+        val model = AccountExportMapper.map(source)
+        assertEquals(2, (model.characters as DataValue.Available).value.size)
+        assertEquals(4, model.characterCollectionIntegrity.sourceEntryCount)
+        assertEquals(2, model.characterCollectionIntegrity.mappedEntryCount)
+        assertEquals(listOf(2, 3), model.characterCollectionIntegrity.invalidCharacterEntryIndexes)
+        assertEquals(listOf(7), model.characterCollectionIntegrity.duplicateCharacterIds)
+    }
+
+    @Test fun malformedCharacterContainerIsFailedRatherThanMissing() {
+        val source = export().put("characters", "not-an-array")
+        assertTrue(AccountExportMapper.map(source).characters is DataValue.Failed)
     }
 
 }

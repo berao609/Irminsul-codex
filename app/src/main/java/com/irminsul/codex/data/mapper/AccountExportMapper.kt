@@ -44,10 +44,15 @@ object AccountExportMapper {
 
         val characterMeta = sections["characters"]
         val characterArray = root.optJSONArray("characters")
+        val characterMapping = characterArray?.let(::mapCharacters)
         val characterValue: DataValue<List<CharacterSnapshot>> = when {
             characterMeta?.status == SectionStatus.FAILED -> DataValue.Failed(characterMeta.message ?: "Character retrieval failed.")
-            characterArray == null -> if (characterMeta?.status == SectionStatus.SKIPPED) DataValue.Unavailable else DataValue.Missing
-            else -> DataValue.Available(mapCharacters(characterArray), characterMeta?.retrievedAt)
+            characterArray == null -> when {
+                characterMeta?.status == SectionStatus.SKIPPED -> DataValue.Unavailable
+                root.has("characters") && !root.isNull("characters") -> DataValue.Failed("Character section has an invalid container type.")
+                else -> DataValue.Missing
+            }
+            else -> DataValue.Available(characterMapping!!.first, characterMeta?.retrievedAt)
         }
 
         return AccountSnapshot(
@@ -63,7 +68,8 @@ object AccountExportMapper {
             spiralAbyssCurrent = mapStructuredSection(root, "spiral_abyss_current", sections),
             spiralAbyssPrevious = mapStructuredSection(root, "spiral_abyss_previous", sections),
             imaginariumTheater = mapStructuredSection(root, "imaginarium_theater", sections),
-            sections = sections
+            sections = sections,
+            characterCollectionIntegrity = characterMapping?.second ?: CharacterCollectionIntegrity()
         )
     }
 
@@ -103,29 +109,83 @@ object AccountExportMapper {
         maxHomeCurrency = intValue(data, "max_home_coin", at)
     )
 
-    private fun mapCharacters(array: JSONArray): List<CharacterSnapshot> =
-        (0 until array.length()).mapNotNull { index ->
-            val item = array.optJSONObject(index) ?: return@mapNotNull null
+    private fun mapCharacters(array: JSONArray): Pair<List<CharacterSnapshot>, CharacterCollectionIntegrity> {
+        val mapped = mutableListOf<CharacterSnapshot>()
+        val invalidIndexes = mutableListOf<Int>()
+        val ids = mutableListOf<Int>()
+
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index)
+            if (item == null) {
+                invalidIndexes += index
+                continue
+            }
             val base = item.optJSONObject("base") ?: item
-            val id = base.intOrNull("id") ?: return@mapNotNull null
-            CharacterSnapshot(
-                id = id,
-                name = base.stringOrNull("name"),
-                level = base.intOrNull("level"),
-                rarity = base.intOrNull("rarity"),
-                element = base.stringOrNull("element"),
-                friendshipLevel = base.intOrNull("fetter"),
-                activeConstellationCount = base.intOrNull("actived_constellation_num"),
-                weapon = item.optJSONObject("weapon")?.let(::mapWeapon),
-                artifacts = item.optJSONArray("relics")?.let(::mapArtifacts).orEmpty(),
-                constellations = item.optJSONArray("constellations")?.let(::mapConstellations).orEmpty(),
-                skills = item.optJSONArray("skills")?.let(::mapSkills).orEmpty(),
-                selectedProperties = item.optJSONArray("selected_properties")?.let(::mapStats).orEmpty(),
-                baseProperties = item.optJSONArray("base_properties")?.let(::mapStats).orEmpty(),
-                extraProperties = item.optJSONArray("extra_properties")?.let(::mapStats).orEmpty(),
-                elementProperties = item.optJSONArray("element_properties")?.let(::mapStats).orEmpty()
-            )
+            val id = base.intOrNull("id")
+            if (id == null) {
+                invalidIndexes += index
+                continue
+            }
+            ids += id
+            mapped += mapCharacter(item, base, id)
         }
+
+        val duplicates = ids.groupingBy { it }.eachCount()
+            .filterValues { it > 1 }.keys.sorted()
+        return mapped to CharacterCollectionIntegrity(
+            sourceEntryCount = array.length(),
+            mappedEntryCount = mapped.size,
+            invalidCharacterEntryIndexes = invalidIndexes,
+            duplicateCharacterIds = duplicates
+        )
+    }
+
+    private fun mapCharacter(item: JSONObject, base: JSONObject, id: Int): CharacterSnapshot {
+        val weapon = when {
+            !item.has("weapon") || item.isNull("weapon") -> DataValue.Missing
+            item.opt("weapon") !is JSONObject -> DataValue.Failed("Character weapon has an invalid object shape.")
+            else -> mapWeapon(item.optJSONObject("weapon")!!)
+                ?.let { DataValue.Available(it, null) }
+                ?: DataValue.Failed("Character weapon is missing a valid identifier.")
+        }
+
+        val relicValue: DataValue<List<ArtifactSnapshot>>
+        val equipmentIntegrity: EquipmentIntegritySnapshot
+        when {
+            !item.has("relics") || item.isNull("relics") -> {
+                relicValue = DataValue.Missing
+                equipmentIntegrity = EquipmentIntegritySnapshot()
+            }
+            item.opt("relics") !is JSONArray -> {
+                relicValue = DataValue.Failed("Character artifact collection has an invalid array shape.")
+                equipmentIntegrity = EquipmentIntegritySnapshot()
+            }
+            else -> {
+                val (artifacts, integrity) = mapArtifacts(item.optJSONArray("relics")!!)
+                relicValue = DataValue.Available(artifacts, null)
+                equipmentIntegrity = integrity
+            }
+        }
+
+        return CharacterSnapshot(
+            id = id,
+            name = base.stringOrNull("name"),
+            level = base.intOrNull("level"),
+            rarity = base.intOrNull("rarity"),
+            element = base.stringOrNull("element"),
+            friendshipLevel = base.intOrNull("fetter"),
+            activeConstellationCount = base.intOrNull("actived_constellation_num"),
+            weapon = weapon,
+            artifacts = relicValue,
+            equipmentIntegrity = equipmentIntegrity,
+            constellations = item.optJSONArray("constellations")?.let(::mapConstellations).orEmpty(),
+            skills = item.optJSONArray("skills")?.let(::mapSkills).orEmpty(),
+            selectedProperties = item.optJSONArray("selected_properties")?.let(::mapStats).orEmpty(),
+            baseProperties = item.optJSONArray("base_properties")?.let(::mapStats).orEmpty(),
+            extraProperties = item.optJSONArray("extra_properties")?.let(::mapStats).orEmpty(),
+            elementProperties = item.optJSONArray("element_properties")?.let(::mapStats).orEmpty()
+        )
+    }
 
     private fun mapWeapon(json: JSONObject): WeaponSnapshot? {
         val id = json.intOrNull("id") ?: return null
@@ -145,11 +205,29 @@ object AccountExportMapper {
         )
     }
 
-    private fun mapArtifacts(array: JSONArray): List<ArtifactSnapshot> =
-        (0 until array.length()).mapNotNull { i ->
-            val json = array.optJSONObject(i) ?: return@mapNotNull null
-            val id = json.intOrNull("id") ?: return@mapNotNull null
-            ArtifactSnapshot(
+    private fun mapArtifacts(array: JSONArray): Pair<List<ArtifactSnapshot>, EquipmentIntegritySnapshot> {
+        val mapped = mutableListOf<ArtifactSnapshot>()
+        val invalidIndexes = mutableListOf<Int>()
+        val invalidSubPropertyIndexes = mutableListOf<Int>()
+
+        for (index in 0 until array.length()) {
+            val json = array.optJSONObject(index)
+            val id = json?.intOrNull("id")
+            if (json == null || id == null) {
+                invalidIndexes += index
+                continue
+            }
+            val subProperties = json.optJSONArray("sub_property_list")
+            if (subProperties != null) {
+                for (subIndex in 0 until subProperties.length()) {
+                    val stat = subProperties.optJSONObject(subIndex)
+                    if (stat == null || stat.intOrNull("property_type") == null) {
+                        invalidSubPropertyIndexes += index
+                        break
+                    }
+                }
+            }
+            mapped += ArtifactSnapshot(
                 id = id,
                 name = json.stringOrNull("name"),
                 icon = json.stringOrNull("icon"),
@@ -159,9 +237,31 @@ object AccountExportMapper {
                 level = json.intOrNull("level"),
                 set = json.opt("set")?.takeUnless { it == JSONObject.NULL }?.let(::toStructuredData),
                 mainProperty = json.optJSONObject("main_property")?.let(::mapStat),
-                subProperties = json.optJSONArray("sub_property_list")?.let(::mapStats).orEmpty()
+                subProperties = subProperties?.let(::mapStats).orEmpty()
             )
         }
+
+        val duplicateIds = mapped.groupingBy { it.id }.eachCount()
+            .filterValues { it > 1 }.keys.sorted()
+        val validSlots = mapped.mapNotNull { it.slot?.takeIf { slot -> slot in 1..5 } }
+        val duplicateSlots = validSlots.groupingBy { it }.eachCount()
+            .filterValues { it > 1 }.keys.sorted()
+        val invalidSlots = mapped.mapNotNull { artifact ->
+            artifact.slot?.takeIf { it !in 1..5 } ?: if (artifact.slot == null) -1 else null
+        }.distinct().sorted()
+        val presentSlots = validSlots.toSet()
+
+        return mapped to EquipmentIntegritySnapshot(
+            artifactSourceEntryCount = array.length(),
+            mappedArtifactCount = mapped.size,
+            invalidArtifactEntryIndexes = invalidIndexes,
+            duplicateArtifactIds = duplicateIds,
+            duplicateArtifactSlots = duplicateSlots,
+            invalidArtifactSlots = invalidSlots,
+            unoccupiedArtifactSlots = (1..5).filterNot { it in presentSlots },
+            invalidSubPropertyEntryIndexes = invalidSubPropertyIndexes.distinct().sorted()
+        )
+    }
 
     private fun mapConstellations(array: JSONArray): List<ConstellationSnapshot> =
         (0 until array.length()).mapNotNull { i ->

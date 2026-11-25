@@ -568,3 +568,40 @@ Run #111 and #112 exposed Kotlin compilation errors in the initial implementatio
 - The raw source sections remain the preservation path for fields not yet modeled.
 - This milestone does not implement artifact scoring, build evaluation, weapon investment analysis, or account recommendations.
 
+
+
+## Milestone 011 - Character-to-Equipment Relationship Integrity
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Preserve equipment availability states and validate character, weapon, artifact, slot, and stat-property relationships in the normalized in-memory model.  
+**Status:** Implementation in progress; CI verification pending.
+
+### Objective
+
+Ensure normalized character records do not confuse missing equipment data with a valid empty equipment collection, and expose structural inconsistencies without silently discarding the remaining valid records.
+
+### Work implemented
+
+1. Changed the typed weapon and artifact collection fields to explicit `DataValue` states:
+   - Missing or explicit null source fields remain `Missing`.
+   - A valid empty artifact array remains `Available(emptyList())`.
+   - Wrong container shapes and weapons without valid identifiers become `Failed`.
+2. Kept each weapon nested in its source character mapping, with tests covering multiple characters and distinct weapon IDs.
+3. Added artifact integrity diagnostics for invalid source entries, duplicate artifact IDs, duplicate slots, invalid slot values, unoccupied slots among the five standard positions, and malformed sub-property entries.
+4. Kept valid artifact records even when another artifact entry is malformed; the original raw source remains available in the export source sections.
+5. Added character collection diagnostics for malformed entries and duplicate character IDs while retaining valid character records.
+6. Treats a malformed top-level character container as failed rather than silently missing.
+
+### Verification
+
+- Source implementation and automated tests are committed; CI verification pending.
+- No export schema change, Room persistence, UI integration, device install, or release is included in this milestone.
+
+### Qualifications
+
+- Slot positions 1 through 5 are treated as the five standard artifact slots. Unoccupied slots are reported, not automatically treated as errors, because a character may legitimately have fewer than five equipped artifacts.
+- Duplicate IDs or slots are surfaced as integrity diagnostics; records are not silently deduplicated.
+- Stat values remain in their original string representation. This milestone does not parse, score, or infer artifact rolls.
+- These checks validate the supplied export structure, not the completeness or correctness of HoYoLAB's upstream data.
+
