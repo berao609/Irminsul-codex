@@ -991,17 +991,18 @@ private fun MaterialsPlannerSection(
     characters: List<CharacterSnapshot>,
     preferences: SharedPreferences
 ) {
-    val rows = remember {
-        mutableStateListOf<ManualMaterialPlanRow>().apply {
-            addAll(loadManualMaterialPlanRows(preferences))
-        }
-    }
     var selectedTargetId by remember {
         mutableStateOf(preferences.getString("material_target_id", "custom") ?: "custom")
     }
     var customTargetName by remember {
         mutableStateOf(preferences.getString("material_custom_target", "") ?: "")
     }
+    val planStorageKey = remember(selectedTargetId, customTargetName) {
+        "manual_material_plan_rows_" + selectedTargetId +
+            if (selectedTargetId == "custom") ":" + customTargetName.trim().lowercase() else ""
+    }
+    val rows = remember { mutableStateListOf<ManualMaterialPlanRow>() }
+    var loadedPlanKey by remember { mutableStateOf<String?>(null) }
     var currentLevel by remember {
         mutableStateOf(preferences.getString("material_current_level", "") ?: "")
     }
@@ -1039,8 +1040,15 @@ private fun MaterialsPlannerSection(
     }
     val selectedTarget = targetOptions.firstOrNull { it.id == selectedTargetId }
 
-    LaunchedEffect(rows.toList()) {
-        preferences.edit().putString("manual_material_plan_rows", saveManualMaterialPlanRows(rows)).apply()
+    LaunchedEffect(planStorageKey) {
+        rows.clear()
+        rows.addAll(loadManualMaterialPlanRows(preferences, planStorageKey))
+        loadedPlanKey = planStorageKey
+    }
+    LaunchedEffect(planStorageKey, rows.toList(), loadedPlanKey) {
+        if (loadedPlanKey == planStorageKey) {
+            preferences.edit().putString(planStorageKey, saveManualMaterialPlanRows(rows)).apply()
+        }
     }
     LaunchedEffect(selectedTargetId, customTargetName, currentLevel, targetLevel) {
         preferences.edit()
@@ -1091,6 +1099,7 @@ private fun MaterialsPlannerSection(
                                 onClick = {
                                     selectedTargetId = option.id
                                     currentLevel = option.currentLevel?.toString() ?: ""
+                                    targetLevel = ""
                                     targetMenuExpanded = false
                                 }
                             )
@@ -1100,6 +1109,7 @@ private fun MaterialsPlannerSection(
                             onClick = {
                                 selectedTargetId = "custom"
                                 currentLevel = ""
+                                targetLevel = ""
                                 targetMenuExpanded = false
                             }
                         )
@@ -1279,8 +1289,8 @@ private fun MaterialsPlannerSection(
     }
 }
 
-private fun loadManualMaterialPlanRows(preferences: SharedPreferences): List<ManualMaterialPlanRow> {
-    val raw = preferences.getString("manual_material_plan_rows", null) ?: return emptyList()
+private fun loadManualMaterialPlanRows(preferences: SharedPreferences, storageKey: String): List<ManualMaterialPlanRow> {
+    val raw = preferences.getString(storageKey, null) ?: return emptyList()
     return runCatching {
         val array = JSONArray(raw)
         buildList {
