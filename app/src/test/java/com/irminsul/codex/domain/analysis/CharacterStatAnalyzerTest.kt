@@ -29,7 +29,7 @@ class CharacterStatAnalyzerTest {
         CharacterStatReconciler.reconcile(characters.toList())
 
     @Test fun mismatchBecomesExplainableFindingWithOriginalEvidence() {
-        val character = character(stats = *arrayOf(stat("100", "20", "120.2")))
+        val character = character(stats = *arrayOf(stat("100", "20", "122.2")))
         val reconciliation = report(character)
         val result = CharacterStatAnalyzer.analyze(
             DataValue.Available(reconciliation, null),
@@ -45,10 +45,10 @@ class CharacterStatAnalyzerTest {
         assertEquals("selectedProperties[0]", finding.fieldPath)
         assertEquals("100", finding.base)
         assertEquals("20", finding.additive)
-        assertEquals("120.2", finding.reportedFinal)
+        assertEquals("122.2", finding.reportedFinal)
         assertEquals("120", finding.expectedFinal)
-        assertEquals("0.2", finding.difference)
-        assertEquals("0.05", finding.roundingTolerance)
+        assertEquals("2.2", finding.difference)
+        assertEquals("1.05", finding.roundingTolerance)
         assertTrue(finding.explanation.contains("100 + 20 = 120"))
         assertTrue(finding.recommendedAction.contains("in-game"))
         assertFalse(finding.basedOnStaleData)
@@ -72,6 +72,18 @@ class CharacterStatAnalyzerTest {
         assertTrue(result.insights.isEmpty())
     }
 
+    @Test fun onePointIntegerDifferenceDoesNotBecomeAStatMismatchFinding() {
+        val character = character(stats = *arrayOf(stat("747", "1", "747")))
+        val result = CharacterStatAnalyzer.analyze(
+            DataValue.Available(report(character), null),
+            DataValue.Available(listOf(character), null)
+        )
+
+        assertEquals(0, result.mismatchCount)
+        assertEquals(1, result.withinToleranceCount)
+        assertTrue(result.insights.isEmpty())
+    }
+
     @Test fun notCheckedValuesRemainCountedButAreNotPresentedAsMismatches() {
         val character = character(stats = *arrayOf(stat(null, "20", "120")))
         val result = CharacterStatAnalyzer.analyze(
@@ -85,7 +97,7 @@ class CharacterStatAnalyzerTest {
     }
 
     @Test fun staleReconciliationAndStaleCharacterDataAreMarked() {
-        val character = character(stats = *arrayOf(stat("100", "20", "120.2")))
+        val character = character(stats = *arrayOf(stat("100", "20", "122.2")))
         val reconciliation = report(character)
         val timestamp = Instant.parse("2026-11-25T00:00:00Z")
 
@@ -130,11 +142,11 @@ class CharacterStatAnalyzerTest {
 
     @Test fun findingsHaveStableCharacterAndFieldOrdering() {
         val first = character(id = 200, name = "Second", stats = *arrayOf(
-            stat("100", "20", "120.2"),
-            stat("100", "20", "120.3")
+            stat("100", "20", "122.2"),
+            stat("100", "20", "122.3")
         ))
         val second = character(id = 100, name = "First", stats = *arrayOf(
-            stat("100", "20", "120.2")
+            stat("100", "20", "122.2")
         ))
         val result = CharacterStatAnalyzer.analyze(
             DataValue.Available(report(first, second), null),
