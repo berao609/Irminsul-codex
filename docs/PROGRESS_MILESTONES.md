@@ -1894,3 +1894,34 @@ Address the request for a full-screen presentation and user-selectable appearanc
 - Edge-to-edge means the app's surfaces extend behind the Android status and navigation bars; it does not hide Android's system indicators or enable immersive mode.
 - The three theme choices are applied to the Material 3 application color scheme and system-bar icon contrast. Further component-by-component visual refinement may be needed after device testing.
 - No new dependencies, backend services, release configuration, or signing changes were introduced.
+
+## Milestone 037 - Remove Duplicate Analyze Account Action
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Remove the duplicate Analyze Account button from the Visuals page while retaining the primary analysis action.  
+**Status:** Implemented and committed. CI verification pending. Physical-device verification pending.
+
+### Finding
+
+The Visuals page rendered the primary Analyze Account / Refresh Analysis button in its account-analysis section. When no overview existed, the Visual Dashboard empty-state card rendered a second Analyze Account button. Both invoked the same `accountViewModel.analyzeAccount(uid, cookie)` action.
+
+### Change
+
+- Removed the duplicate button from the empty-state card.
+- Kept the primary Analyze Account / Refresh Analysis action.
+- Updated the empty-state instruction to direct the user to the primary button above.
+- No analysis logic, account data, navigation, appearance settings, or other actions changed.
+
+### Implementation
+
+- MainActivity fix: [3e9be98](https://github.com/berao609/Irminsul-codex/commit/3e9be98158c6150d22fb7ef76ee5725acd2434ae).
+
+### Verification
+
+- CI verification: pending.
+- Physical-device verification: pending.
+
+### User feedback
+
+- User confirmed the edge-to-edge full-screen presentation and dark/system theme behavior are acceptable.
