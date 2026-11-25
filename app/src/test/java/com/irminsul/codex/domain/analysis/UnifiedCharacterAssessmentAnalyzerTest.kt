@@ -16,7 +16,7 @@ class UnifiedCharacterAssessmentAnalyzerTest {
         CharacterBuildAnalysisAvailability.AVAILABLE, 1, insights.toList()
     )
     private fun stats(vararg insights: CharacterStatInsight) = CharacterStatAnalysisReport(
-        CharacterStatAnalysisAvailability.AVAILABLE, 1, insights.toList()
+        CharacterStatAnalysisAvailability.AVAILABLE, 1, insights = insights.toList()
     )
     private fun buildFinding(id:Int,severity:CharacterBuildInsightSeverity) = CharacterBuildInsight(
         id,"Character$id","test",severity,"field","issue","action",false
