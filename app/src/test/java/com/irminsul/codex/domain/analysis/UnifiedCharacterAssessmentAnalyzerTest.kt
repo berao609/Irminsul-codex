@@ -32,11 +32,19 @@ class UnifiedCharacterAssessmentAnalyzerTest {
             stats(statFinding(2)),DataValue.Available(listOf(char(1),char(2)),null)
         )
         assertEquals(2,result.assessedCharacterCount)
-        assertEquals(1,result.needsAttentionCount)
-        assertEquals(1,result.reviewCount)
+        assertEquals(2,result.needsAttentionCount)
+        assertEquals(0,result.reviewCount)
         assertEquals(listOf(1,2),result.assessments.map{it.characterId})
         assertEquals(CharacterAttentionStatus.NEEDS_ATTENTION,result.assessments[0].attentionStatus)
         assertEquals(CharacterAttentionStatus.NEEDS_ATTENTION,result.assessments[1].attentionStatus)
+    }
+
+    @Test fun warningOnlyCharacterIsReview() {
+        val result=UnifiedCharacterAssessmentAnalyzer.assess(
+            build(buildFinding(3,CharacterBuildInsightSeverity.WARNING)),stats(),DataValue.Available(listOf(char(3)),null)
+        )
+        assertEquals(CharacterAttentionStatus.REVIEW,result.assessments.single().attentionStatus)
+        assertEquals(1,result.reviewCount)
     }
 
     @Test fun incompleteCharacterIsReviewAndCompletenessEvidenceIsExplicit() {
