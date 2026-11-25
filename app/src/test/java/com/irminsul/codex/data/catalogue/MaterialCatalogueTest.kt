@@ -2,6 +2,7 @@ package com.irminsul.codex.data.catalogue
 
 import com.irminsul.codex.domain.analysis.CalculatedMaterialRequirement
 import com.irminsul.codex.domain.analysis.ManualMaterialInventory
+import com.irminsul.codex.domain.analysis.ManualMaterialInventoryEntry
 import com.irminsul.codex.domain.analysis.MaterialInventoryEntryState
 import com.irminsul.codex.domain.analysis.UpgradeCostCalculationRequest
 import com.irminsul.codex.domain.analysis.UpgradeCostCalculationStatus
@@ -11,6 +12,8 @@ import com.irminsul.codex.domain.model.KnowledgeReviewState
 import com.irminsul.codex.domain.model.KnowledgeSourcePlatform
 import com.irminsul.codex.domain.model.KnowledgeSourceReference
 import com.irminsul.codex.domain.model.KnowledgeSourceRegistryEntry
+import com.irminsul.codex.domain.model.UpgradeCostItem
+import com.irminsul.codex.domain.model.UpgradeCostRecord
 import com.irminsul.codex.domain.model.UpgradeCostSubjectType
 import com.irminsul.codex.domain.model.UpgradeCostTrack
 import org.junit.Assert.assertEquals
@@ -132,6 +135,73 @@ class MaterialCatalogueTest {
                 permissionState = KnowledgePermissionState.PENDING_REVIEW
             )))
         }
+    }
+
+    @Test
+    fun verifiedCostRecordFlowsThroughExistingCalculatorAndCatalogue() {
+        val now = Instant.parse("2026-11-26T00:00:00Z")
+        val registry = approvedRegistry()
+        val record = UpgradeCostRecord(
+            schemaVersion = 1,
+            recordId = "character-10000002-ascension-1-20",
+            revision = 1,
+            subjectType = UpgradeCostSubjectType.CHARACTER,
+            subjectId = "10000002",
+            track = UpgradeCostTrack.CHARACTER_ASCENSION,
+            fromLevel = 1,
+            toLevel = 20,
+            gameVersion = "6.2",
+            costs = listOf(UpgradeCostItem(itemId = "202", quantity = 20_000L)),
+            sourceReferences = listOf(
+                KnowledgeSourceReference("approved-test", "https://example.org/materials/character-ascension")
+            ),
+            retrievedAt = now,
+            reviewState = KnowledgeReviewState.VERIFIED,
+            reviewedAt = now,
+            reviewNotes = "Verified against the approved source."
+        )
+        val catalogue = MaterialCatalogue(
+            listOf(
+                MaterialCatalogueEntry(
+                    itemId = "202",
+                    displayName = "Mora",
+                    category = MaterialCategory.CURRENCY,
+                    sourceReferences = listOf(
+                        KnowledgeSourceReference("approved-test", "https://example.org/materials/mora")
+                    ),
+                    retrievedAt = now,
+                    reviewState = KnowledgeReviewState.VERIFIED,
+                    reviewedAt = now,
+                    reviewNotes = "Material identity and category manually verified."
+                )
+            ),
+            registry
+        )
+        val result = CatalogueUpgradeCostCalculator.calculate(
+            request = UpgradeCostCalculationRequest(
+                subjectType = UpgradeCostSubjectType.CHARACTER,
+                subjectId = "10000002",
+                track = UpgradeCostTrack.CHARACTER_ASCENSION,
+                fromLevel = 1,
+                toLevel = 20,
+                gameVersion = "6.2"
+            ),
+            records = listOf(record),
+            sourceRegistry = registry,
+            evaluatedAt = now,
+            catalogue = catalogue,
+            inventory = ManualMaterialInventory(
+                entries = listOf(ManualMaterialInventoryEntry("202", 5_000L)),
+                updatedAt = now
+            )
+        )
+
+        assertEquals(UpgradeCostCalculationStatus.COMPLETE, result.calculation.status)
+        assertEquals(1, result.materials.size)
+        assertEquals("Mora", result.materials.single().displayName)
+        assertEquals(20_000L, result.materials.single().requiredQuantity)
+        assertEquals(5_000L, result.materials.single().ownedQuantity)
+        assertEquals(15_000L, result.materials.single().remainingQuantity)
     }
 
     private fun approvedRegistry() = listOf(
