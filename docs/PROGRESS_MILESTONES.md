@@ -2542,3 +2542,89 @@ The current account snapshot can reliably describe what the player owns and how 
 ### Next development checkpoint
 
 M48 should implement and unit-test a small snapshot-to-observed-facts mapper for owned characters. It should preserve source availability/freshness, map only fields already present in the current domain model, and explicitly represent unknown facts. It must not infer roles, team synergy, meta priority, material cost, affordability, or pull value. Keep this mapper separate from account diagnostics and from the M46 investment evaluator until the mapping tests establish a safe join boundary.
+## Milestone 048 - Owned Character Investment Fact Mapper
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Extract directly observed owned-character investment facts from the normalized account snapshot, preserving source availability, freshness, section provenance, and collection integrity.  
+**Status:** Implementation and unit tests passed CI #330. Milestone documentation CI pending. Domain-only change; no UI, persistence, knowledge collector, recommendation scoring, or shortlist integration.
+
+### Objective
+
+Implement the first safe bridge between retrieved account data and future account-relative investment intelligence. The mapper must describe what is observed without turning raw attributes into combat or investment conclusions.
+
+### Repository retrieval
+
+Rechecked AGENTS.md, README.md, SPECS.md, PROGRESS_MILESTONES.md, AccountSnapshot.kt, AccountExportMapper.kt, M46 GameKnowledge.kt and InvestmentShortlist.kt, and existing mapper/model test conventions. Confirmed M47 closure CI #314 succeeded before M48 implementation.
+
+### Implementation
+
+1. Added `OwnedCharacterInvestmentFacts.kt` with:
+   - Explicit fact states: AVAILABLE, STALE, NOT_REPORTED, MISSING, UNAVAILABLE, and FAILED.
+   - Generic observed facts with optional value, source timestamp, and failure reason.
+   - Character, weapon, artifact, talent, constellation, and roster fact models.
+   - Roster source-section status, source label, retrieval timestamps, and collection integrity.
+   - An `isPartial` indicator when section status is PARTIAL, malformed source entries were omitted, duplicate character IDs exist, or source and mapped entry counts differ.
+2. Added `OwnedCharacterInvestmentFactMapper.kt`, a pure mapper over `AccountSnapshot.characters`.
+3. Mapped observed character identity/level/rarity/element/constellation count; weapon ID/type/rarity/level/ascension/refinement and available stat properties; artifact ID/slot/rarity/level/set payload/main/sub-stats; and reported talent/constellation levels and states.
+4. Preserved roster and nested weapon/artifact missing, unavailable, failed, and stale states. A stale roster propagates stale status to known nested values. Nested stale equipment retains its own last-retrieved timestamp.
+5. Preserved raw artifact set payload as `StructuredData`; no set-bonus or build interpretation was introduced.
+6. Kept empty equipped-artifact lists as AVAILABLE. Empty talent, constellation, and artifact-substat lists become NOT_REPORTED because the existing normalized model uses `orEmpty()` and cannot distinguish an explicitly empty source array from an omitted source field.
+7. Preserved collection integrity without dropping mapped entries from the fact output. Invalid source indexes and duplicate IDs remain visible through the roster integrity object and `isPartial`.
+
+### Tests
+
+`OwnedCharacterInvestmentFactMapperTest.kt` covers:
+- Direct mapping of owned-character, weapon, artifact, talent, constellation, and stat facts.
+- Null/unreported fields remaining NOT_REPORTED rather than becoming zero or false.
+- Empty equipped artifacts remaining AVAILABLE and retaining all five unoccupied slots.
+- Stale roster propagation and nested stale timestamps.
+- Nested weapon/artifact MISSING, UNAVAILABLE, and FAILED states with failure reasons.
+- Roster MISSING, UNAVAILABLE, and FAILED states.
+- Partial source-section metadata and retrieval timestamps.
+- Partial/malformed/duplicate roster integrity while preserving mapped entries.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/domain/model/OwnedCharacterInvestmentFacts.kt`
+- `app/src/main/java/com/irminsul/codex/domain/analysis/OwnedCharacterInvestmentFactMapper.kt`
+- `app/src/test/java/com/irminsul/codex/domain/analysis/OwnedCharacterInvestmentFactMapperTest.kt`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- `e029cf3f2868e3648eac8275390471aa0cca3bdd` - Add observed owned-character investment fact models.
+- `a4440b35cb0b8cc62570d3032e80766d106499a7` - Add snapshot-to-facts mapper.
+- `cd28c8d1dace6ba0d518f851b04bf098066995e4` and `caa5aaa33b8efd36d401e3ffd072d2e346197847` - Add mapper tests and correct the character fixture.
+- `a423d2b7bf75ea06fabc2ec7cb175eb372f8cb47` - Include observed weapon and artifact stat facts.
+- `1091909880601b9b681db6de02a07d8b961e26be` - Map weapon and artifact stat observations.
+- `79d8ebf957606dad222b5ecd66ff41a6f5ba5068` - Test mapped weapon and artifact stat observations.
+- `8bc31f5fd5742b7f8ef9a0f392ed16bec0e2d079` - Fix the character test fixture.
+- `acab7ef33890fa295f8f19e57cd290372cf83896` - Test unavailable nested equipment states.
+- `296aabc7d1c005c613d5ed63a39dd74730ce3a46` and `66f6946cf101aaee7c4d3f39080523f291e38b69` - Expose and test partial roster integrity.
+- `53d02d3452bb1e67e7bcfeef24df91ebc4650dbd`, `57adf69a724348358bd659ef278a06e8c3acf56c`, `38b0d2d4d07fa154d69b684479b88233f3f9129d`, `168b3d9bf7381e42183da009f4f06da9a41e3f6f`, and `5d253d54dbe605b566b4badda7a707e7d8a8391c` - Preserve and test source-section metadata across roster availability states.
+
+### Verification
+
+- Final combined implementation CI #330: success, https://github.com/berao609/Irminsul-codex/actions/runs/45607745288.
+- CI #330 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact uploads, and temporary signing-key cleanup.
+- Room instrumentation tests were skipped by the workflow because M48 did not change Room or persistence code.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.330-vc332`, artifact ID `15018157177`, size 8,984,220 bytes.
+- Room schema artifact: `irminsul-room-schema-v1-run-330`, artifact ID `15019620069`, size 985 bytes.
+- Intermediate runs #317-#321 failed while the implementation and test fixture were being updated in separate commits. The failures were missing fixture data and temporarily unmatched model/mapper constructor fields. These were corrected; the final combined CI #330 passed.
+- No UI or persistence behavior changed. Physical-device testing is not applicable to this domain-only milestone.
+
+### Boundaries and limitations
+
+- The fact mapper is not connected to `InvestmentShortlistEvaluator` or the existing account diagnostics.
+- It does not infer roles, capabilities, team synergy, role gaps, patch/meta relevance, build quality, redundancy, target sufficiency, investment cost, affordability, or pull value.
+- Empty talent/constellation/substat lists remain NOT_REPORTED because the current `CharacterSnapshot` normalization does not preserve whether those source arrays were absent or explicitly empty.
+- The raw Abyss and Theater payloads remain unparsed for team/performance inference.
+
+### Outcome
+
+M48 establishes a tested, provenance-aware account-fact boundary. The app can now expose observed owned-character investment state without conflating missing information with a valid zero/false value or treating incomplete retrieval as a complete roster. The result is intentionally not yet a recommendation.
+
+### Next development checkpoint
+
+M49 should define a typed, versioned character role/capability knowledge contract and a safe join against these owned-character facts. It should cover only evidence-backed capabilities needed to reason about account role coverage, preserve game-version/mode applicability and provenance, and reject unknown or unsupported claims. Do not add platform collectors, arbitrary weights, AI ranking, or UI at this stage.
