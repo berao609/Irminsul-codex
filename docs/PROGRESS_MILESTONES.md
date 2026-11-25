@@ -3107,7 +3107,7 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Simplify the primary navigation, relocate Materials Planner into Visuals, and introduce a centered AI action with a chat-style bottom sheet.  
-**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+**Status:** Implementation committed; code CI #384 passed; README/specification/progress-document CI pending; physical-device verification pending.
 
 ### Active Memory Recall and repository verification
 
@@ -3152,9 +3152,12 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 
 ### Verification
 
-- CI runs #381-#383 were started for the dependency and navigation changes; their results must be checked before claiming a successful build.
-- The follow-up source commit `66422a2` and documentation commits are awaiting their own CI results.
-- No new APK or device test has been verified for M54.
+- Initial navigation CI #383 failed at Kotlin compilation because the new Material 3 bottom-sheet API required an experimental API opt-in. This was corrected in commit `66422a272fc26b17b1d68cc79021bc1e14067e5f`.
+- Final implementation CI #384 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45630588460.
+- CI #384 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. Room instrumentation tests were skipped because no Room/persistence schema changed.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.384-vc386`, artifact ID `15030109511`, size 15,866,763 bytes, SHA-256 `227227f0912058d2f71d4c150cf419154750e006b9ed6f08b838baac0cd5767c`. Room schema artifact ID `15029939756`, size 985 bytes.
+- README CI #385, specification CI #386, and progress-document CI #387 are still in progress.
+- No M54 physical-device test has been performed yet.
 
 ### Boundaries and next checkpoint
 
