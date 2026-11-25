@@ -3177,7 +3177,7 @@ Rechecked `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILESTONES.m
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Add a collapsible four-character lineup sandbox inside Visuals, using the observed owned roster and preserving uncertainty.  
-**Status:** Implementation CI #402 passed; final documentation CI pending; physical-device verification pending.
+**Status:** Closed. Implementation CI #402 and documentation CI #403 passed; user confirmed physical-device testing.
 
 ### Active Memory Recall and repository verification
 
@@ -3231,8 +3231,8 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 - Final combined implementation CI #402 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45634948651.
 - CI #402 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. Room instrumentation tests were skipped because no Room/persistence schema changed.
 - Final Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.402-vc404`, artifact ID `15032876933`, size 15,880,772 bytes, SHA-256 `cc58b4ad3d83955b421e0ba612181923bf3776027b75bbda82489e5507e0bf72`. Room schema artifact ID `15032652360`, size 985 bytes.
-- Final M55 progress-document CI is pending.
-- No M55 physical-device verification has been confirmed yet.
+- Final M55 progress-document CI #403 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45635363391.
+- User confirmed the #403 milestone build was device-tested. M55 is closed.
 
 ### Boundaries and next checkpoint
 
