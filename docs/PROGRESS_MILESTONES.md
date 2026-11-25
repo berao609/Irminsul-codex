@@ -1596,3 +1596,49 @@ Make account-section coverage and freshness evidence available through the same 
 - The combined reports do not establish complete account-wide gameplay, team-coverage, or progression analysis.
 - No physical-device installation or UI behavior was verified.
 
+
+## Milestone 031 - Deterministic Account Intelligence Pipeline
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Provide one domain entry point that runs the existing deterministic account-analysis stages from an `AccountSnapshot` and an explicitly selected character-development goal, then composes their reports into the unified account intelligence overview.  
+**Status:** Implemented, unit-test verified, and Debug CI verified (final implementation/test Run #216). Domain orchestration foundation only; not yet connected to the ViewModel or user interface.
+
+### Objective
+
+Make the existing analysis capabilities consumable through one deterministic domain entry point. The caller supplies the account snapshot and selected development goal. The engine orchestrates the existing analyzers and returns the unified overview without introducing new scoring, reinterpretation, or inferred findings.
+
+### Work implemented
+
+1. Added `AccountIntelligenceEngine` as the orchestration entry point.
+2. Runs the existing character build and stat analysis stages using the supplied snapshot.
+3. Builds the unified character assessment, then evidence-backed recommendations, then goal-aware recommendation ordering using the explicitly supplied goal.
+4. Runs account roster/equipment gap analysis using the snapshot's character data and collection-integrity evidence.
+5. Summarizes account section coverage and freshness using the existing account data-confidence analyzer.
+6. Composes the four source report groups through `AccountIntelligenceOverviewAnalyzer`, preserving the source reports and their established availability/evidence semantics.
+7. Added pipeline tests for successful composition, preservation of missing-source states, and failed analysis evidence remaining visible as unverified character evidence.
+
+### Implementation
+
+- Engine commit: [80fe3a5](https://github.com/berao609/Irminsul-codex/commit/80fe3a50c64a959ce1e9cc22c5c7e2929abe6266).
+- Initial pipeline test commit: [4de6e8e](https://github.com/berao609/Irminsul-codex/commit/4de6e8eade4ef4844a494f669df2de4d19835e23).
+- Test-fixture and failed-source assertion refinements: [82971ff](https://github.com/berao609/Irminsul-codex/commit/82971ffba4855757bf80f1a544d92d4969095d85) and [495ddb8](https://github.com/berao609/Irminsul-codex/commit/495ddb8d21020e7af96e6e7f15ec54387f08bbf6).
+- Final test expectation correction: [885481a](https://github.com/berao609/Irminsul-codex/commit/885481a1d5a0938cfe7778fa02f5973b9cfd310e).
+- Added `app/src/main/java/com/irminsul/codex/domain/analysis/AccountIntelligenceEngine.kt`.
+- Added `app/src/test/java/com/irminsul/codex/domain/analysis/AccountIntelligenceEngineTest.kt`.
+
+### Verification
+
+- [GitHub Actions Run #216](https://github.com/berao609/Irminsul-codex/actions/runs/45558137695) passed for final commit `885481a1d5a0938cfe7778fa02f5973b9cfd310e`.
+- Verified workflow steps: JVM unit tests, Debug APK build, Room schema snapshot verification/upload, APK signature verification, APK artifact upload, and temporary signing-key cleanup all passed.
+- Room emulator instrumentation was skipped by the workflow because this domain-only change did not modify Room-sensitive paths.
+- Physical-device verification: not required; no UI, persistence, or runtime workflow was changed.
+
+### Qualifications and non-goals
+
+- This milestone orchestrates existing deterministic analyzers. It does not add new account facts, alter source findings, or replace the underlying analyzers' authority.
+- The development goal is supplied explicitly by the caller; the engine does not infer player intent.
+- Missing, unavailable, failed, and stale source states remain governed by the existing analysis components. They are not converted into clean results or zero findings.
+- The engine is not yet called by `AccountViewModel` or surfaced in the application UI. The account intelligence experience remains a domain foundation.
+- No account score, combat-strength ranking, meta ranking, resource-cost estimate, farming plan, pull recommendation, or AI-generated conclusion is introduced.
+- No device installation or user-facing behavior was verified.
