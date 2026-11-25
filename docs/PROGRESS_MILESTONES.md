@@ -2366,7 +2366,7 @@ The initial ruleset is deterministic and explainable. It must not use an LLM-gen
 
 - M44 SPECS CI #294: success, https://github.com/berao609/Irminsul-codex/actions/runs/45602354271.
 - M44 milestone documentation CI #295: success, https://github.com/berao609/Irminsul-codex/actions/runs/45602387221.
-- M45 documentation commits and CI verification: pending.
+- M45 SPECS CI #296 and milestone documentation CI #297: success; both runs completed successfully on 2026-11-25.
 - No runtime behavior changed. No APK or physical-device test is applicable to this documentation-only milestone.
 
 ### Outcome
@@ -2443,8 +2443,10 @@ Retrieved the current root `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROG
 
 - M45 CI #296: success, https://github.com/berao609/Irminsul-codex/actions/runs/45603259730.
 - M45 CI #297: success, https://github.com/berao609/Irminsul-codex/actions/runs/45603302548.
-- M46 implementation commits are pushed to `main`; final CI verification pending.
-- Intermediate runs #301-#306 exposed test-contract issues during incremental commits: usage observations were incorrectly allowed to satisfy the independent-evidence gate, the test helper needed the expanded source-registry argument, and the usage-only test required a distinct non-usage evidence check. These were corrected in the subsequent implementation commits. The final head must pass before M46 can close.
+- M46 implementation CI #310: success, https://github.com/berao609/Irminsul-codex/actions/runs/45604739493. Unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact uploads passed. Room instrumentation tests were skipped because no Room/persistence code changed.
+- M46 closure-documentation CI #311: success, https://github.com/berao609/Irminsul-codex/actions/runs/45605101295.
+- The final M46 Debug APK artifact was irminsul-codex-debug-v1.0.0-dev.310-vc312, artifact ID 15015884126, size 8,969,856 bytes. The Room schema artifact was irminsul-room-schema-v1-run-310, artifact ID 15017312621, size 985 bytes.
+- Intermediate runs #301-#306 exposed test-contract issues during incremental commits. These were corrected in subsequent commits; final CI #310 passed.
 - No APK-facing behavior changed. Physical-device verification is not applicable to these domain-only changes.
 
 ### Boundaries and limitations
@@ -2459,3 +2461,81 @@ Retrieved the current root `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROG
 ### Next development checkpoint
 
 M47 should validate how these contracts map to real account and game-domain inputs. Identify which candidate facts can be derived reliably from the current account snapshot and which require curated knowledge or explicit unknown states. Do not add source collectors, platform SDKs, AI services, arbitrary scoring weights, or UI until the input boundary is validated.
+
+## Milestone 047 - Account and Game-Knowledge Input Mapping
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - Account Intelligence Experience  
+**Milestone scope:** Validate the current normalized account model against the M46 investment-shortlist inputs. Define which facts can be extracted directly, which require reviewed game knowledge, and which require new account data.  
+**Status:** Mapping documented; CI verification pending. Documentation-only milestone. No runtime code, data schema, source collector, scoring logic, AI service, or UI changed.
+
+### Objective
+
+Prevent the investment engine from treating raw account attributes as combat conclusions. Establish a defensible boundary between observed account facts, curated game knowledge, and currently unavailable information before implementing a snapshot-to-investment input mapper.
+
+### Repository retrieval
+
+Retrieved current AGENTS.md, README.md, docs/SPECS.md, docs/PROGRESS_MILESTONES.md, AccountSnapshot.kt, account export mapping, account-gap/build/stat analyzers, AccountIntelligenceEngine.kt, M46 GameKnowledge.kt and InvestmentShortlist.kt, and their relevant tests.
+
+Confirmed M46 closure CI #310 and documentation CI #311 both succeeded before starting M47.
+
+### Mapping results
+
+**Directly derivable from the current account snapshot:**
+
+- Retrieved owned-character IDs and known names, elements, rarities, and levels.
+- Observed character constellation count and talent levels when populated.
+- Equipped weapon identity, type, rarity, level, ascension, refinement, and available stats.
+- Equipped artifact entries, slots, levels, rarity, main/sub-stats, and source-retained set payload.
+- Explicit missing, unavailable, failed, stale, and available equipment states.
+- Roster/equipment integrity, build validation, stat classification/reconciliation, section coverage, and freshness.
+- Current/previous Abyss and Theater section presence and retained structured payload, without assuming its internal schema is normalized for team analysis.
+
+**Requires reviewed game knowledge:**
+
+- Character roles and capabilities.
+- Team synergy, rotations, and team enablement.
+- Role/capability coverage and account gaps.
+- Patch- and mode-specific relevance.
+- Build suitability and target investment criteria.
+- Functional redundancy against owned alternatives.
+
+**Requires additional account or game-reference data:**
+
+- Material-cost tables for character, weapon, talent, and artifact investment.
+- Actual player material inventory and resource balances for affordability.
+- Validated normalized team/performance observations from mode payloads.
+- Banner, pity, guarantee, and pull-preference data for future pull advice.
+
+### Decisions and safeguards
+
+1. The first mapper may emit only observed facts: owned character identity, known element/rarity, current character and equipment investment, equipment state, and source provenance/freshness.
+2. Derived facts retain the relevant DataValue availability and retrieval timestamp. Stale inputs remain stale.
+3. Missing, unavailable, failed, malformed, or unknown values remain explicit. They are not converted into zero, false, empty-success, or negative character assessments.
+4. Existing build/stat/equipment findings remain account diagnostics. They can be attached as context but cannot alone generate an investment-priority recommendation.
+5. Role, capability, team synergy, patch/mode relevance, and build suitability require verified, supported, permitted, in-date knowledge records.
+6. Element combinations, weapon types, and co-occurrence in opaque Abyss/Theater payloads do not prove team synergy.
+7. Usage statistics remain contextual evidence and cannot independently qualify an investment recommendation.
+8. Redundancy requires comparable role/capability evidence for the candidate and owned alternatives. Same element or weapon type is not sufficient.
+9. Investment cost and affordability remain unknown until upgrade-cost reference data and actual player material inventory are available. Resin alone is not a material inventory.
+10. The first shortlist input mapper covers owned characters only. Pull evaluation and unowned-character opportunities require a separate later contract.
+
+### Files changed
+
+- docs/SPECS.md: added section 3.15, recording the M47 account-input mapping matrix and safeguards.
+- docs/PROGRESS_MILESTONES.md: corrected stale M45/M46 verification status and recorded the M47 mapping outcome.
+
+### Verification
+
+- M46 implementation CI #310: success, https://github.com/berao609/Irminsul-codex/actions/runs/45604739493.
+- M46 closure documentation CI #311: success, https://github.com/berao609/Irminsul-codex/actions/runs/45605101295.
+- M47 documentation commit and CI verification: pending.
+- No runtime behavior changed. No APK or physical-device test is applicable to this documentation-only milestone.
+
+### Outcome
+
+The current account snapshot can reliably describe what the player owns and how those characters are currently invested. It cannot independently determine role coverage, team synergy, meta relevance, redundancy, target investment sufficiency, or resource affordability. These conclusions must come from separately reviewed game knowledge and, where necessary, additional account data.
+
+### Next development checkpoint
+
+M48 should implement and unit-test a small snapshot-to-observed-facts mapper for owned characters. It should preserve source availability/freshness, map only fields already present in the current domain model, and explicitly represent unknown facts. It must not infer roles, team synergy, meta priority, material cost, affordability, or pull value. Keep this mapper separate from account diagnostics and from the M46 investment evaluator until the mapping tests establish a safe join boundary.
