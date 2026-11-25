@@ -3574,3 +3574,44 @@ The existing `UpgradeCostCalculator` and `UpgradeCostRecordValidator` remain the
 - The catalogue bridge has a positive integration test using a synthetic, explicitly approved source registry entry. This proves the governed adapter path, not that a real upstream game-data source has been approved.
 - Review Kotlin compilation and unit tests in CI. Fix any failures before asking for device verification.
 
+
+
+### M58 CI verification update - Builds #469 and #470
+
+The parser test correction is now CI-verified.
+
+**Build #469**
+- Run: https://github.com/berao609/Irminsul-codex/actions/runs/45688783781
+- Run ID: `45688783781`
+- Tested commit: `f404f723772f42081ec8c947d146e3dfb7ce2aa4`
+- Result: **Success**
+- Unit tests: **Success**
+- Debug APK build: **Success**
+- Room schema snapshot verification and upload: **Success**
+- Debug APK signature verification and artifact upload: **Success**
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.469-vc471` (artifact ID `15057986214`)
+- Room schema artifact: `irminsul-room-schema-v2-run-469` (artifact ID `15057093573`)
+
+**Build #470**
+- Run: https://github.com/berao609/Irminsul-codex/actions/runs/45688801385
+- Run ID: `45688801385`
+- Tested commit: `35c611a65e871a631c35f03d15b8a02dcfee4257`
+- Result: **Success**
+- Unit tests: **Success**
+- Debug APK build: **Success**
+- Room schema snapshot verification and upload: **Success**
+- Debug APK signature verification and artifact upload: **Success**
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.470-vc472` (artifact ID `15056449871`)
+- Room schema artifact: `irminsul-room-schema-v2-run-470` (artifact ID `15056734729`)
+
+Room instrumentation tests were skipped in both runs because the workflow determined they were not required for these changes. Do not describe them as having passed.
+
+**Verification boundary**
+- The corrected parser tests and full configured JVM unit-test task passed in CI.
+- Debug APKs were built, signature-verified, and uploaded successfully.
+- No physical-device installation or Materials Planner runtime test has yet been reported.
+- Existing M53 saved-plan preservation still requires an on-device regression test.
+- M58 remains open pending device verification and the remaining automatic-cost/catalogue work described above.
+
+**Next action**
+Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and test independent character levels, all three talent tracks, each character's planned weapon and weapon levels, and an existing saved manual material plan. Confirm that saved values remain after leaving and reopening the planner and after restarting the app.
