@@ -91,8 +91,32 @@ The long-term product vision includes:
 9. **Historical Analytics** — Compare snapshots and show account development over time.
 10. **AI Assistant** — Let users ask natural-language questions about their account through their chosen AI provider.
 11. **Account Command Center** — Present account information through an interactive dashboard and relationship explorer.
+12. **External Game Knowledge** — Combine the user's account data with current, source-attributed Genshin character meta, build guidance, weapon rankings, team information, and observed player usage so recommendations can explain both general game context and account-specific value.
 
 These are product goals, not claims that all features are already implemented.
+
+### 2.3 External game-knowledge sources
+
+External game knowledge is an agreed product direction. It complements, but does not replace, deterministic analysis of the user's own account.
+
+The intended information includes:
+
+- Character rankings and meta relevance, separated by game mode and role where the source supports that distinction.
+- Character build recommendations: weapons, artifact sets, main stats, substat priorities, talent priorities, teams, and rotations.
+- Character-specific weapon comparisons, including refinement and team assumptions where available.
+- Community theorycrafting and observed player usage, presented as different kinds of evidence rather than blended into one unexplained score.
+- Patch-aware pull context and account-specific evaluations of whether a character or weapon fills a meaningful roster need.
+- Guidance for prioritizing characters the user already owns but has not developed.
+
+Initial candidate community sources include KeqingMains (KQM) and Prydwen. They are candidates, not approved or guaranteed integrations. Before importing or redistributing data, validate each source's available API or permitted access method, terms, licensing, attribution requirements, update cadence, and technical stability. Do not assume unrestricted scraping or republication is permitted.
+
+Every external recommendation or ranking should retain, where available, its source, original link, retrieval/update date, game version or patch, role or game mode, and relevant assumptions such as team composition, weapon refinement, or constellation. Preserve whether a claim is theorycrafting, editorial ranking, calculated comparison, or observed usage. Do not present popularity as proof of optimal performance, or a tier placement as a universal measure of account value.
+
+Personalized recommendations should compare external guidance with the user's actual roster, owned weapons, character development, and team needs. A high general ranking alone is not sufficient reason to recommend a pull. Missing, stale, conflicting, or unavailable source data must remain visible rather than being silently treated as current fact.
+
+The initial implementation should remain local-first and avoid a mandatory backend or paid service. External source integration can begin with source-linked information and permitted structured data. Any future caching, synchronization, or provider service requires a focused design decision; no source credentials or HoYoLAB authentication cookies may be exposed to third parties.
+
+These capabilities are planned product scope, not claims that external meta data is currently integrated.
 
 ### 2.2 Product positioning and feature priority
 
