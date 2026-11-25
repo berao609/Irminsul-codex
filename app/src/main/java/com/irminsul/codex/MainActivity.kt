@@ -309,7 +309,7 @@ private fun CodexScreen(
                     NavigationBarItem(
                         selected = selectedTab == CodexTab.VISUALS,
                         onClick = { selectedTab = CodexTab.VISUALS },
-                        icon = { Icon(Icons.Outlined.BarChart, contentDescription = "Visuals") },
+                        icon = { Icon(Icons.Outlined.InsertChart, contentDescription = "Visuals") },
                         label = { Text("Visuals", fontSize = 10.sp) },
                         alwaysShowLabel = true
                     )
