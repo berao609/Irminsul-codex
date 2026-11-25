@@ -298,6 +298,93 @@ Keep source evidence types separate: theorycrafting, editorial evaluation, calcu
 
 The first implementation should be a small, explainable shortlist with reason codes and evidence references, not a universal character tier list. The app must continue to distinguish account diagnostics from investment recommendations. This section defines the decision boundary; it does not claim the ranking engine is implemented.
 
+
+### 3.12 Versioned game-knowledge record contract
+
+The first game-knowledge record must be small, typed, attributable, and independently reviewable. It is not a copy of a guide, social post, video transcript, or third-party database.
+
+A trusted knowledge record must carry the following logical fields:
+
+| Field | Requirement |
+|---|---|
+| `schemaVersion` | Version of the record schema. |
+| `recordId` | Stable identifier for this specific claim or observation. |
+| `subjectType` / `subjectId` | Character, weapon, artifact, team, mechanic, game mode, or other explicitly supported subject. |
+| `claimType` | Controlled type such as role/capability, team synergy, build guidance, weapon comparison, mechanic, mode relevance, or usage observation. |
+| `claim` | Minimal structured fact or normalized claim. Do not store copied guide prose or full social content by default. |
+| `evidenceClass` | Theorycrafting, editorial evaluation, calculated comparison, observed usage, game reference, or creator demonstration. |
+| `sourceRefs` | One or more source-registry IDs and canonical URLs supporting the claim. |
+| `gameContext` | Game version/patch, phase when known, game mode, difficulty, encounter/boss where relevant, and observation period. Unknown values remain explicitly unknown. |
+| `publishedAt` / `observedAt` / `retrievedAt` | Distinct source publication, underlying observation, and app retrieval timestamps. Do not substitute one for another. |
+| `validFrom` / `expiresAt` | Effective period and review/expiry boundary. Expiry means review required, not that the claim is automatically false. |
+| `reviewState` | Candidate, verified, rejected, superseded, or expired-review-required. |
+| `reviewedAt` / `reviewNotes` | Human curation record and the reason the claim was accepted, rejected, or superseded. |
+| `confidenceState` | Supported, limited, conflicted, or unknown, with a short reason. This is not an invented probability. |
+
+A separate source-registry entry must describe the publisher/platform, source category, canonical source location, access method, current terms/license/permission state, attribution requirements, allowed fields/actions, retention/deletion constraints, rate limits or quotas, and the date the terms were last checked. Source permission is evaluated independently from claim quality.
+
+Records are immutable by version: a changed claim or changed evidence context creates a new record version or superseding record. Preserve the prior record and its provenance so a recommendation change can be explained. A record must never become trusted solely because an AI model extracted it.
+
+### 3.13 Usage observations and social-source policy
+
+Usage observations are a distinct evidence class, not a character-strength score. A usage observation must preserve, where the publisher supplies them:
+
+- Game mode and exact cycle/version, including Abyss cycle or Stygian Onslaught cycle.
+- Difficulty, encounter/boss, and eligible stage.
+- Sample size and what the sample represents.
+- Numerator and denominator, including the denominator's exact population.
+- Ownership/holding-rate context when supplied.
+- Collection period, publication date, and retrieval date.
+- Region/server or other population filters when supplied.
+- Source publisher and methodology notes.
+- Whether the figure is preliminary, still updating, finalized, or otherwise qualified.
+
+Never compare or combine two usage percentages unless their populations, denominators, game modes, difficulty, and observation windows are compatible. Do not interpret a high usage rate as proof of superior theoretical performance. Selection effects matter: clear-only samples, ownership filters, high-investment accounts, and encounter-specific buffs can materially change the result. Missing methodology means the observation is limited or unknown, not a precise universal ranking.
+
+Initial channel decisions:
+
+| Channel | Useful candidate evidence | Access and reuse boundary | M45 policy |
+|---|---|---|---|
+| HoYoLAB community posts | Abyss/Stygian reports, creator guides, links to underlying datasets | Public visibility is not an API or permission to scrape, download, mirror, or redistribute. HoYoLAB terms restrict unauthorized exploitation and reproduction of its services/content. | Keep canonical links and manually curated claim references. Do not build an automated HoYoLAB scraper or treat HoYoLAB as the authoritative origin when a report identifies another data publisher. |
+| Original usage-data publishers (e.g. YSHelper, HxG) | Structured usage observations and methodology | Access depends on an actual supported API, published license, or explicit permission from the publisher. A repost on HoYoLAB does not grant rights to the underlying dataset. | Preferred source to evaluate for usage metrics. Seek publisher-origin data and document sample/methodology and reuse permission before automation. |
+| YouTube | Public video/channel metadata, creator guides, demonstrations, and official playback links | Use the official YouTube Data API and comply with its Developer Policies, quota, metadata display, retention, and playback requirements. API search is quota-limited; default allocation currently includes 100 search calls per day. Do not assume video transcripts/captions may be harvested or republished. | Candidate discovery through permitted metadata and official video links/embeds. Claims from videos remain candidates until independently reviewed. |
+| X | Public posts, creator announcements, patch discussion, guide links | Programmatic access requires an X developer application/API access and compliance with current API plan, developer terms, content display, deletion, and redistribution rules. Availability and cost can change. | Possible future discovery adapter only after current access tier, costs, and policy obligations are verified. Otherwise use links/manual curation. |
+| TikTok | Public creator videos and build demonstrations | Research API access is limited to approved eligible researchers and organizations/regions; it is not a generally available commercial content-search API. Public videos do not grant unrestricted extraction or reuse rights. | No automated collection in the initial app. Use links or authorized embeds; manually curate claims with provenance. Reassess only if a supported eligible API or permission becomes available. |
+| Facebook | Public Page posts, creator guides, discussion links | Graph API access to public Page content can require Page Public Content Access and app review/permissions. Meta Content Library/API is restricted to qualified research organizations and approved research programs. | No broad Facebook scraper. Use links/manual curation; evaluate official permissioned Page API access only for a narrowly scoped source. |
+| KQM and Prydwen | Theorycrafting and editorial guides | Existing M44 decisions remain in force: KQM guide/TCL content is link-only absent a suitable content license or permission; Prydwen prohibits scraping/crawling/bulk extraction under its reviewed terms. | Link-only research references unless permissions change. |
+| Licensed game-reference datasets | Character, weapon, artifact, talent, and mechanics metadata | Verify both package license and upstream data/asset rights. Software license alone does not clear third-party game content or artwork. | Separate technical and rights review before importing. |
+
+For all social channels, store the minimum metadata needed to identify and revisit a source: canonical URL, platform, creator/publisher identifier when permitted, title or short neutral label, publication timestamp when available, retrieval timestamp, and the specific claim being evaluated. Do not mirror full posts, images, videos, comments, transcripts, or personal profile histories by default. Respect source deletion, access revocation, rate limits, and platform-required embeds/attribution. No private, follower-only, login-gated, or otherwise restricted content may be collected by bypassing access controls.
+
+AI may assist with candidate discovery, classification, and claim extraction only when the source's terms and permitted access method allow that processing. AI output remains candidate evidence. A human or separately validated deterministic process must verify the source, patch context, methodology, and claim before promotion to trusted knowledge. Never send HoYoLAB cookies or platform credentials to AI.
+
+### 3.14 Deterministic investment-shortlist contract
+
+The first investment output is an account-relative shortlist, not a universal character tier list and not a warning list of every unbuilt character.
+
+Each recommendation result must include:
+
+- `ruleSetVersion` and `evaluatedAt`.
+- Character identity and current account snapshot reference.
+- Priority band: High priority, Worth investing, Situational, Low priority for now, or Already sufficient.
+- One or more stable reason codes.
+- Account-specific benefit: role/capability gap addressed or team meaningfully improved/enabled.
+- Owned-character synergy and the evidence supporting the proposed team interaction.
+- Current mode/patch context and whether it is supported, limited, conflicted, or unknown.
+- Redundancy/alternative comparison against the user's owned and already-invested characters.
+- Investment requirements and cost only when supported by game-reference data and, for account-specific affordability, actual user resource inventory.
+- Supporting trusted knowledge-record IDs and canonical evidence links.
+- Unknown or conflicting factors that materially limit the recommendation.
+- A concise explanation of why this candidate ranks ahead of the next alternatives.
+
+The first ruleset must be deterministic, versioned, and testable. It uses explicit reason-code and eligibility rules, not an LLM-generated score. The default ordering is balanced and account-first. Usage rate is contextual evidence only; it cannot independently promote a character to High priority. Editorial tier labels cannot independently determine account priority.
+
+Do not calculate a numeric aggregate score or invent fixed factor weights until the required inputs and validation dataset exist. If a critical factor is unknown, the result must expose that uncertainty and may remain Situational or unranked. Do not convert missing data into a negative character assessment. Account diagnostics (missing, stale, malformed, or failed data) remain separate from investment recommendations.
+
+The first useful shortlist should be small and selective. It should explain why a character is valuable to this account, which owned teams benefit, what is required to make the investment effective, and why that investment is preferable to competing uses of resources. If the evidence cannot justify a recommendation, return no recommendation rather than filling the list.
+
+**M45 implementation boundary:** define and test the record/shortlist contract before adding network collectors, social-platform SDKs, AI services, or a scoring engine. Initial source references may be curated manually. External-source adapters must be independently permission-checked and optional; core account analysis remains local-first and usable without cloud AI.
+
 ## 4. Existing Application Baseline
 
 The following describes the existing implementation as previously inspected. It is a working baseline to preserve and improve, not a complete code-quality or runtime audit.
