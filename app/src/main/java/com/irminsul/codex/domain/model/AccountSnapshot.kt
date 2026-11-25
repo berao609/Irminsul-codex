@@ -295,6 +295,28 @@ data class AccountSnapshotCoverageReport(val sections: List<AccountSectionCovera
     val isConsistent: Boolean get() = issueCount == 0
 }
 
+
+enum class SectionFreshnessStatus { FRESH, STALE, UNKNOWN, INVALID_TIMESTAMP }
+
+data class SectionFreshnessAssessment(
+    val sectionName: String,
+    val status: SectionFreshnessStatus,
+    val retrievedAt: Instant?,
+    val assessedAt: Instant,
+    val ageSeconds: Long?,
+    val thresholdSeconds: Long?
+)
+
+data class AccountSnapshotFreshnessReport(
+    val assessedAt: Instant,
+    val sections: List<SectionFreshnessAssessment>
+) {
+    val freshCount: Int get() = sections.count { it.status == SectionFreshnessStatus.FRESH }
+    val staleCount: Int get() = sections.count { it.status == SectionFreshnessStatus.STALE }
+    val unknownCount: Int get() = sections.count { it.status == SectionFreshnessStatus.UNKNOWN }
+    val invalidTimestampCount: Int get() = sections.count { it.status == SectionFreshnessStatus.INVALID_TIMESTAMP }
+}
+
 data class AccountSnapshot(
     val identity: AccountIdentity,
     val metadata: SnapshotMetadata,
@@ -313,5 +335,6 @@ data class AccountSnapshot(
     val characterBuildValidation: DataValue<CharacterBuildValidationReport> = DataValue.Missing,
     val characterStatReconciliation: DataValue<CharacterStatReconciliationReport> = DataValue.Missing,
     val characterStatClassification: DataValue<CharacterStatClassificationReport> = DataValue.Missing,
-    val sectionCoverage: AccountSnapshotCoverageReport = AccountSnapshotCoverageReport(emptyList())
+    val sectionCoverage: AccountSnapshotCoverageReport = AccountSnapshotCoverageReport(emptyList()),
+    val sectionFreshness: AccountSnapshotFreshnessReport? = null
 )

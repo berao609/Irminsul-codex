@@ -2,6 +2,7 @@ package com.irminsul.codex.data.mapper
 
 import com.irminsul.codex.domain.model.*
 import com.irminsul.codex.domain.validation.AccountSnapshotCoverageAnalyzer
+import com.irminsul.codex.domain.validation.AccountSnapshotFreshnessAnalyzer
 import com.irminsul.codex.domain.validation.CharacterBuildValidator
 import com.irminsul.codex.domain.validation.CharacterStatReconciler
 import com.irminsul.codex.domain.validation.CharacterStatClassifier
@@ -102,7 +103,8 @@ object AccountExportMapper {
             characterStatReconciliation = statReconciliation,
             characterStatClassification = statClassification
         )
-        return snapshot.copy(sectionCoverage = AccountSnapshotCoverageAnalyzer.assess(snapshot))
+        val withCoverage = snapshot.copy(sectionCoverage = AccountSnapshotCoverageAnalyzer.assess(snapshot))
+        return withCoverage.copy(sectionFreshness = AccountSnapshotFreshnessAnalyzer.assess(withCoverage))
     }
 
     private fun mapStructuredSection(root: JSONObject, key: String, sections: Map<String, AccountSectionMetadata>): DataValue<StructuredData> {

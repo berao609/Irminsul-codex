@@ -843,3 +843,39 @@ Give downstream account analytics a reliable way to distinguish which selected e
 - PRESENT means the export contains a payload object/array/value, not that every field inside it is populated or valid.
 - A consistency issue identifies disagreement between export metadata and retained payload state; it does not determine which side is authoritative.
 - No UI, persistence, new HoYoLAB endpoint, export schema change, investment scoring, recommendation, or AI behavior is included.
+
+
+## Milestone 016 - Section Freshness and Temporal Assessment
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Add deterministic, policy-driven age assessment for the nine modeled account sections.  
+**Status:** Implemented; unit-test and Debug CI verification pending.
+
+### Objective
+
+Expose section retrieval age and freshness without assuming every account section has the same update cadence or inventing a universal stale threshold.
+
+### Work implemented
+
+1. Added per-section freshness assessment with FRESH, STALE, UNKNOWN, and INVALID_TIMESTAMP outcomes.
+2. Calculates section age against an explicit assessment time, defaulting to the snapshot export timestamp.
+3. Accepts caller-supplied nonnegative thresholds per section. A section with no configured threshold remains UNKNOWN while still exposing its age.
+4. Preserves explicit stale payload state as STALE and identifies retrieval timestamps later than the assessment time as invalid.
+5. Attaches the report to the mapped AccountSnapshot without changing raw export data.
+6. Added tests for configured and unconfigured thresholds, fresh/stale/missing/future timestamps, and invalid negative policy values.
+
+### Verification
+
+- Implementation commit: pending.
+- GitHub Actions: pending.
+- Debug artifact: pending.
+- Device verification: not required for this pure in-memory domain assessment and mapper integration.
+
+### Qualifications
+
+- No default freshness durations are asserted; product-specific thresholds remain a policy decision.
+- Age is measured from section retrieved_at metadata, falling back to the typed payload retrieval timestamp already represented by the M15 coverage report.
+- An explicit DataValue.Stale state remains stale regardless of configured threshold.
+- A future retrieval timestamp is flagged relative to the assessment time; it is not silently clamped or rewritten.
+- This increment does not add historical persistence, UI, synchronization scheduling, export schema changes, investment scoring, recommendations, or AI behavior.
