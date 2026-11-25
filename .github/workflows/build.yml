@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v6
@@ -88,10 +90,46 @@ jobs:
           echo "artifact_name=irminsul-codex-debug-v${debug_version_name}-vc${debug_version_code}" >> "$GITHUB_OUTPUT"
           echo "Debug version: ${debug_version_name} (${debug_version_code})"
 
+      - name: Determine whether Room instrumentation tests are required
+        id: room_tests
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          # Manual runs always execute the complete test suite.
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # A missing/initial base commit must never cause tests to be skipped.
+          if [[ -z "${BEFORE_SHA:-}" || "$BEFORE_SHA" =~ ^0+$ ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed_files="$(git diff --name-only "$BEFORE_SHA" "$GITHUB_SHA")"
+          run_room_tests=false
+
+          while IFS= read -r path; do
+            case "$path" in
+              app/src/androidTest/*|              app/src/main/java/com/irminsul/codex/data/local/*|              app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt|              app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt|              app/src/main/java/com/irminsul/codex/domain/repository/AccountSnapshotStore.kt|              app/build.gradle.kts|              gradle/libs.versions.toml|              build.gradle.kts|              settings.gradle.kts|              gradle.properties|              .github/workflows/build.yml)
+                run_room_tests=true
+                break
+                ;;
+            esac
+          done <<< "$changed_files"
+
+          echo "run=$run_room_tests" >> "$GITHUB_OUTPUT"
+          echo "Room instrumentation tests required: $run_room_tests"
+
       - name: Run unit tests
         run: gradle testDebugUnitTest --no-daemon
 
       - name: Run Room instrumentation tests
+        if: steps.room_tests.outputs.run == 'true'
         uses: reactivecircus/android-emulator-runner@v2
         env:
           ANDROID_I_WANT_MY_TCG: "yes"
