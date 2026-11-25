@@ -60,6 +60,7 @@ object ProgressionMaterialCalculator {
     fun calculate(
         currentLevel: Int,
         targetLevel: Int,
+        requiredMilestoneLevels: List<Int>,
         costSteps: List<UpgradeCostStep>,
         inventoryByMaterialId: Map<Int, Long> = emptyMap()
     ): ProgressionMaterialCalculation {
@@ -74,12 +75,17 @@ object ProgressionMaterialCalculator {
             )
         }
 
-        val stepsByLevel = costSteps.groupBy { it.targetLevel }
-        val requiredLevels = if (targetLevel == currentLevel) {
-            emptyList()
-        } else {
-            (currentLevel + 1..targetLevel).toList()
+        if (requiredMilestoneLevels.any { it < 0 } ||
+            requiredMilestoneLevels.distinct().size != requiredMilestoneLevels.size
+        ) {
+            return ProgressionMaterialCalculation(
+                status = ProgressionCalculationStatus.INVALID_COST_DATA
+            )
         }
+        val stepsByLevel = costSteps.groupBy { it.targetLevel }
+        val requiredLevels = requiredMilestoneLevels
+            .filter { it > currentLevel && it <= targetLevel }
+            .sorted()
         val missingLevels = requiredLevels.filter { stepsByLevel[it].isNullOrEmpty() }
         if (missingLevels.isNotEmpty()) {
             return ProgressionMaterialCalculation(
