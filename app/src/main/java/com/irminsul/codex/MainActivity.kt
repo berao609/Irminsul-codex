@@ -2178,62 +2178,6 @@ private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Build inspection", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            when (val weapon = character.weapon) {
-                is DataValue.Available -> WeaponShowcaseRow(
-                    weapon.value,
-                    expanded = expandedDetailKey == "weapon",
-                    onClick = { toggleDetail("weapon") }
-                )
-                is DataValue.Stale -> WeaponShowcaseRow(
-                    weapon.value,
-                    stale = true,
-                    expanded = expandedDetailKey == "weapon",
-                    onClick = { toggleDetail("weapon") }
-                )
-                DataValue.Missing -> ShowcaseUnavailable("Weapon data was not included.")
-                DataValue.Unavailable -> ShowcaseUnavailable("Weapon data is unavailable.")
-                is DataValue.Failed -> ShowcaseUnavailable("Weapon data could not be read.")
-            }
-
-            when (val artifacts = character.artifacts) {
-                is DataValue.Available -> ArtifactShowcaseRow(
-                    artifacts.value,
-                    expandedDetailKey = expandedDetailKey,
-                    onArtifactSelected = ::toggleDetail
-                )
-                is DataValue.Stale -> ArtifactShowcaseRow(
-                    artifacts.value,
-                    stale = true,
-                    expandedDetailKey = expandedDetailKey,
-                    onArtifactSelected = ::toggleDetail
-                )
-                DataValue.Missing -> ShowcaseUnavailable("Artifact data was not included.")
-                DataValue.Unavailable -> ShowcaseUnavailable("Artifact data is unavailable.")
-                is DataValue.Failed -> ShowcaseUnavailable("Artifact data could not be read.")
-            }
-
-            ShowcaseExpandableSection(
-                title = "Attributes",
-                summary = if (character.selectedProperties.isEmpty()) "No attribute data" else "${character.selectedProperties.size} stats",
-                expanded = expandedDetailKey == "attributes",
-                onClick = { toggleDetail("attributes") }
-            ) {
-                if (character.selectedProperties.isEmpty()) {
-                    ShowcaseUnavailable("Character attributes are not available.")
-                } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                        character.selectedProperties.take(12).forEach { stat ->
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(stat.statName ?: "Unknown stat", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(stat.final ?: stat.value ?: stat.add ?: stat.base ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-                    }
-                }
-            }
-
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Talents", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 if (character.skills.isEmpty()) {
@@ -2277,10 +2221,10 @@ private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             skill.description?.takeIf { it.isNotBlank() }?.let {
-                                Text(it, style = MaterialTheme.typography.bodySmall)
+                                Text(formatGameDescription(it), style = MaterialTheme.typography.bodySmall)
                             }
                             skill.enhancedDescription?.takeIf { it.isNotBlank() }?.let {
-                                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                                Text(formatGameDescription(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
@@ -2361,6 +2305,63 @@ private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
             }
         }
     }
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            Text("Build inspection", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            when (val weapon = character.weapon) {
+                is DataValue.Available -> WeaponShowcaseRow(
+                    weapon.value,
+                    expanded = expandedDetailKey == "weapon",
+                    onClick = { toggleDetail("weapon") }
+                )
+                is DataValue.Stale -> WeaponShowcaseRow(
+                    weapon.value,
+                    stale = true,
+                    expanded = expandedDetailKey == "weapon",
+                    onClick = { toggleDetail("weapon") }
+                )
+                DataValue.Missing -> ShowcaseUnavailable("Weapon data was not included.")
+                DataValue.Unavailable -> ShowcaseUnavailable("Weapon data is unavailable.")
+                is DataValue.Failed -> ShowcaseUnavailable("Weapon data could not be read.")
+            }
+
+            when (val artifacts = character.artifacts) {
+                is DataValue.Available -> ArtifactShowcaseRow(
+                    artifacts.value,
+                    expandedDetailKey = expandedDetailKey,
+                    onArtifactSelected = ::toggleDetail
+                )
+                is DataValue.Stale -> ArtifactShowcaseRow(
+                    artifacts.value,
+                    stale = true,
+                    expandedDetailKey = expandedDetailKey,
+                    onArtifactSelected = ::toggleDetail
+                )
+                DataValue.Missing -> ShowcaseUnavailable("Artifact data was not included.")
+                DataValue.Unavailable -> ShowcaseUnavailable("Artifact data is unavailable.")
+                is DataValue.Failed -> ShowcaseUnavailable("Artifact data could not be read.")
+            }
+
+            ShowcaseExpandableSection(
+                title = "Attributes",
+                summary = if (character.selectedProperties.isEmpty()) "No attribute data" else "${character.selectedProperties.size} stats",
+                expanded = expandedDetailKey == "attributes",
+                onClick = { toggleDetail("attributes") }
+            ) {
+                if (character.selectedProperties.isEmpty()) {
+                    ShowcaseUnavailable("Character attributes are not available.")
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                        character.selectedProperties.take(12).forEach { stat ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stat.statName ?: "Unknown stat", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stat.final ?: stat.value ?: stat.add ?: stat.base ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
+            }
+
+
 }
 
 @Composable
@@ -2387,6 +2388,19 @@ private fun ShowcaseExpandableSection(
         }
         if (expanded) ShowcaseDetailSurface(content)
     }
+}
+
+private fun formatGameDescription(raw: String): String {
+    return raw
+        .replace("\\r\\n", "\\n")
+        .replace("\\n", "\n")
+        .replace(Regex("<color=[^>]*>", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("</color>", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("<[^>]+>"), "")
+        .replace(Regex("\\{LINK#[^}]+}"), "")
+        .replace(Regex("\\{/LINK}"), "")
+        .replace(Regex("\\n{3,}"), "\\n\\n")
+        .trim()
 }
 
 @Composable
