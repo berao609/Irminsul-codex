@@ -134,7 +134,21 @@ Feature screens must compose from these shared primitives in `lib/core/widgets/`
 
 ---
 
-## 10. Verification, Flutter Analyzer & Blind-Coding Workflow
+## 10. Asset & Token Sourcing (Debug-Only WebView Extractor)
+
+Mirroring the app's existing Battle Chronicle JSON extraction, Irminsul Codex may include an in-app **developer utility** inside the authenticated HoYoLAB WebView to dump static UI assets and reference tokens.
+
+* **Strictly `kDebugMode` Only:** Any UI/DOM extraction trigger (button, menu action, or JS runner via `runJavaScriptReturningResult` / `evaluateJavascript`) **must** be guarded behind `if (kDebugMode)` so it never appears or executes in profile/release builds.
+* **What the Extractor Captures:**
+  * **Inline SVGs:** `<svg>` markup for subtle archival motifs (e.g., the `✦` 4-point star) and static UI glyphs.
+  * **Static Asset URLs:** `<img>` sources and CSS `background-image` URLs for static icons not returned in Battle Chronicle JSON (e.g., Original Resin icon, Spiral Abyss / Imaginarium Theater / Stygian Onslaught emblems, elemental crests).
+  * **Reference Tokens:** Computed colors and font stacks exported as a single copyable/shareable JSON dump for offline Light/Dark token curation.
+* **Curate & Bundle Once:** Extracted SVGs and static icons are reviewed manually, cleaned up into monochrome assets where appropriate, and committed under `assets/icons/`.
+* **Zero Runtime DOM Styling:** Never parse or apply scraped HoYoLAB HTML/CSS at runtime to style Flutter screens, and never import HoYoLAB's mismatched web gradients or parchment blocks wholesale. Dynamic game art (characters, weapons, artifacts) must always come from the Battle Chronicle JSON URLs.
+
+---
+
+## 11. Verification, Flutter Analyzer & Blind-Coding Workflow
 
 Because AI coding agents cannot visually inspect a live device screen, every UI change must pass automated static analysis and headless layout checks before being considered complete.
 
