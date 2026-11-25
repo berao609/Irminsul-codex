@@ -1501,3 +1501,51 @@ Provide one deterministic domain object for a future Account Command Center to c
 - A stale or unverified source is surfaced as such; it is not treated as a clean result.
 - No device installation or UI behavior was verified in this milestone.
 
+## Milestone 029 - Account Data Confidence Summary
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 3 - First Deterministic Account Analysis  
+**Milestone scope:** Summarize account snapshot section coverage and freshness evidence while preserving their distinct states and avoiding unsupported confidence claims.  
+**Status:** Implemented, unit-test verified, and Debug CI verified (Runs #202-204). Domain foundation only; not yet surfaced in the app UI.
+
+### Objective
+
+Give the future account intelligence experience a concise, explainable view of how much account-section data is present and whether its freshness has been assessed. Coverage and freshness remain separate evidence sources. Unknown freshness is not stale, and an absent freshness report is not proof that data is fresh.
+
+### Work implemented
+
+1. Added `AccountDataConfidenceSummary`, retaining the original `AccountSnapshotCoverageReport` and nullable `AccountSnapshotFreshnessReport`.
+2. Exposed coverage counts for total, present, stale, missing, unavailable, and failed sections, plus coverage inconsistency count.
+3. Exposed freshness assessment state and nullable counts for fresh, stale, unknown, and invalid-timestamp sections. Nullable counts preserve the distinction between no freshness assessment and an assessed report with zero findings.
+4. Added explicit indicators for stale sections, incomplete section data, freshness uncertainty, coverage inconsistencies, and overall data-confidence concerns.
+5. Added a pure summarizer that wraps the supplied source reports without merging their states or inferring new findings.
+6. Preserved unknown freshness as uncertainty rather than counting it as stale. A missing freshness report remains unassessed and raises freshness uncertainty.
+7. Added five unit tests covering source-report retention and counts, coverage inconsistencies, unknown freshness, missing freshness assessment, and fully present/consistent/fresh data.
+
+### Implementation
+
+- Summary model commit: [18b9d96](https://github.com/berao609/Irminsul-codex/commit/18b9d9657db362bfb00d3a1b299ff5518b206e90).
+- Summarizer commit: [b5ee2d2](https://github.com/berao609/Irminsul-codex/commit/b5ee2d22074b33474837db4c18238850ca3670f5).
+- Unit-test commit: [a17dbc4](https://github.com/berao609/Irminsul-codex/commit/a17dbc4f23d20201699cfeb1a5c15a2b2da3cf72).
+- Added `app/src/main/java/com/irminsul/codex/domain/model/AccountDataConfidenceSummary.kt`.
+- Added `app/src/main/java/com/irminsul/codex/domain/analysis/AccountDataConfidenceAnalyzer.kt`.
+- Added `app/src/test/java/com/irminsul/codex/domain/analysis/AccountDataConfidenceAnalyzerTest.kt`.
+
+### Verification
+
+- [GitHub Actions Run #202](https://github.com/berao609/Irminsul-codex/actions/runs/45556348344) passed for the summary model commit.
+- [GitHub Actions Run #203](https://github.com/berao609/Irminsul-codex/actions/runs/45556359607) passed for the summarizer commit.
+- [GitHub Actions Run #204](https://github.com/berao609/Irminsul-codex/actions/runs/45556394451) passed for the unit-test commit.
+- Five unit tests cover source-report retention and counts, coverage inconsistencies, unknown freshness, missing freshness assessment, and fully present/consistent/fresh data.
+- The applicable CI workflow verified the JVM unit-test and Debug build pipeline, including its configured signature/artifact/cleanup steps.
+- Physical-device verification: not required; this milestone adds domain models, deterministic summary logic, and JVM tests without changing UI or runtime workflows.
+
+### Qualifications and non-goals
+
+- This summary does not independently validate the correctness of the underlying HoYoLAB data or guarantee that every relevant account section is retrieved.
+- Coverage and freshness counts describe their respective source reports; they are not merged into a single completeness score.
+- Unknown freshness is not stale. A null freshness report means freshness has not been assessed.
+- No account quality score, combat-strength score, progression ranking, farming plan, resource estimate, pull recommendation, or AI-generated conclusion is introduced.
+- This is a domain foundation and is not yet connected to the user-facing account intelligence experience.
+- No physical-device installation or UI behavior was verified.
+
