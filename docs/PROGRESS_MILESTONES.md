@@ -684,3 +684,44 @@ Produce a machine-readable validation report for normalized character builds so 
 - Empty artifact arrays are accepted as valid source data. Unoccupied slots are not automatically treated as errors.
 - A clean report means no detected validation errors, not proof that the build is optimal or complete.
 
+
+## Milestone 013 - Deterministic Character Stat Reconciliation
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Reconcile source-reported base, additive, and final character/weapon stat values using decimal arithmetic.  
+**Status:** Implementation in progress; CI verification pending.
+
+### Objective
+
+Provide a deterministic report showing whether reported final stat values agree with the sum of their base and additive components, without changing the preserved source values.
+
+### Work implemented
+
+1. Added a pure domain reconciler using `BigDecimal`, avoiding binary floating-point arithmetic.
+2. Reconciles character selected, base, extra, and element property collections, plus weapon main and sub properties when available.
+3. Reports exact matches, differences within the displayed precision tolerance, mismatches, and values that cannot be checked.
+4. Keeps original stat strings and reports the calculated expected final, signed difference, and tolerance separately.
+5. Requires base, add, and final values to be present, parseable, and expressed in consistent units. Missing or malformed values are not replaced with zero.
+6. Attaches the reconciliation report to the account snapshot while preserving missing, unavailable, failed, and stale character-section states.
+
+### Rounding policy
+
+- Tolerance is half of the smallest displayed unit in the reported `final` value.
+- Example: `120` has tolerance `0.5`; `120.0` has tolerance `0.05`.
+- This policy accounts for rounding of the reported final value only. It does not assume or compensate for rounding in the base or additive source values.
+- Percentage values are compared only when all three components carry the percentage suffix.
+
+### Verification
+
+- Source implementation and automated tests are committed; CI verification pending.
+- No investment scoring, recommendation logic, export schema change, Room persistence, UI integration, device install, or release is included.
+
+### Qualifications
+
+- Reconciliation checks arithmetic consistency of supplied fields; it does not establish that the upstream source values are complete or correct.
+- A mismatch is a detected arithmetic difference under the documented precision policy, not proof of a game-data defect.
+- Artifact main/substats expose a single `value` in the observed export shape and are not reconciled as base/add/final triplets.
+- A not-checked result means the available fields do not support a safe comparison.
+- The report does not mutate source JSON or normalized source strings.
+

@@ -171,6 +171,44 @@ data class CharacterBuildValidationReport(
     val invalidCharacterCount: Int get() = characters.size - validCharacterCount
 }
 
+enum class StatReconciliationStatus { MATCH, WITHIN_ROUNDING_TOLERANCE, MISMATCH, NOT_CHECKED }
+
+data class StatReconciliationResult(
+    val characterId: Int,
+    val fieldPath: String,
+    val propertyType: Int?,
+    val statName: String?,
+    val base: String?,
+    val add: String?,
+    val final: String?,
+    val expectedFinal: String?,
+    /** Signed difference: reported final minus calculated base + add. */
+    val difference: String?,
+    /** Half of the smallest displayed unit in the reported final value. */
+    val roundingTolerance: String?,
+    val status: StatReconciliationStatus,
+    val reason: String? = null
+)
+
+data class CharacterStatReconciliation(
+    val characterId: Int,
+    val results: List<StatReconciliationResult>
+) {
+    val checkedCount: Int get() = results.count { it.status != StatReconciliationStatus.NOT_CHECKED }
+    val mismatchCount: Int get() = results.count { it.status == StatReconciliationStatus.MISMATCH }
+    val withinToleranceCount: Int get() = results.count { it.status == StatReconciliationStatus.WITHIN_ROUNDING_TOLERANCE }
+}
+
+data class CharacterStatReconciliationReport(
+    val characters: List<CharacterStatReconciliation>
+) {
+    val checkedCount: Int get() = characters.sumOf { it.checkedCount }
+    val matchCount: Int get() = characters.sumOf { c -> c.results.count { it.status == StatReconciliationStatus.MATCH } }
+    val withinToleranceCount: Int get() = characters.sumOf { it.withinToleranceCount }
+    val mismatchCount: Int get() = characters.sumOf { it.mismatchCount }
+    val notCheckedCount: Int get() = characters.sumOf { c -> c.results.count { it.status == StatReconciliationStatus.NOT_CHECKED } }
+}
+
 sealed interface StructuredData {
     data class ObjectValue(val fields: Map<String, StructuredData>) : StructuredData
     data class ArrayValue(val items: List<StructuredData>) : StructuredData
@@ -195,5 +233,6 @@ data class AccountSnapshot(
     val imaginariumTheater: DataValue<StructuredData>,
     val sections: Map<String, AccountSectionMetadata>,
     val characterCollectionIntegrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity(),
-    val characterBuildValidation: DataValue<CharacterBuildValidationReport> = DataValue.Missing
+    val characterBuildValidation: DataValue<CharacterBuildValidationReport> = DataValue.Missing,
+    val characterStatReconciliation: DataValue<CharacterStatReconciliationReport> = DataValue.Missing
 )

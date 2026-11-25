@@ -254,6 +254,21 @@ class AccountExportMapperTest {
     }
 
 
+    @Test fun mapperAttachesStatReconciliationAndPreservesCharacterSectionState() {
+        val source = export().put("characters", org.json.JSONArray().put(JSONObject()
+            .put("base", JSONObject().put("id", 10000002).put("level", 90).put("rarity", 5))
+            .put("selected_properties", org.json.JSONArray()
+                .put(JSONObject().put("property_type", 2000).put("stat_name", "ATK")
+                    .put("base", "100").put("add", "20").put("final", "120")))))
+        val model = AccountExportMapper.map(source)
+        val report = (model.characterStatReconciliation as DataValue.Available).value
+        assertEquals(1, report.matchCount)
+        assertEquals(0, report.mismatchCount)
+        val failed = export().put("export_status", JSONObject().put("overall_status", "partial")
+            .put("sections", JSONObject().put("characters", JSONObject().put("status", "failed").put("message", "offline"))))
+        assertTrue(AccountExportMapper.map(failed).characterStatReconciliation is DataValue.Failed)
+    }
+
     @Test fun mapperAttachesBuildValidationAndPreservesCharacterSectionState() {
         val source = export().put("characters", org.json.JSONArray().put(JSONObject()
             .put("base", JSONObject().put("id", 1).put("level", 90).put("rarity", 5)
