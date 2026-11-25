@@ -1940,14 +1940,19 @@ private fun CharacterShowcaseSection(
 
 @Composable
 private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
+    var expandedDetailKey by remember(character.id) { mutableStateOf<String?>(null) }
+    fun toggleDetail(key: String) {
+        expandedDetailKey = if (expandedDetailKey == key) null else key
+    }
+
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 ShowcaseArtwork(
@@ -1957,120 +1962,198 @@ private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
                     modifier = Modifier.width(112.dp).height(142.dp)
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.weight(1f)) {
-                    Text(character.name ?: "Character #${character.id}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(character.name ?: "Character #${character.id}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text(
                         "${character.element ?: "Element unavailable"} • ${character.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"}",
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Text("Level ${character.level ?: "—"}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Level ${character.level ?: "—"}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     Text(
                         "Friendship ${character.friendshipLevel ?: "—"} • Constellations ${character.activeConstellationCount ?: "—"}/6",
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Weapon", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Text("Build inspection", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             when (val weapon = character.weapon) {
-                is DataValue.Available -> WeaponShowcaseRow(weapon.value)
-                is DataValue.Stale -> WeaponShowcaseRow(weapon.value, stale = true)
+                is DataValue.Available -> WeaponShowcaseRow(
+                    weapon.value,
+                    expanded = expandedDetailKey == "weapon",
+                    onClick = { toggleDetail("weapon") }
+                )
+                is DataValue.Stale -> WeaponShowcaseRow(
+                    weapon.value,
+                    stale = true,
+                    expanded = expandedDetailKey == "weapon",
+                    onClick = { toggleDetail("weapon") }
+                )
                 DataValue.Missing -> ShowcaseUnavailable("Weapon data was not included.")
                 DataValue.Unavailable -> ShowcaseUnavailable("Weapon data is unavailable.")
                 is DataValue.Failed -> ShowcaseUnavailable("Weapon data could not be read.")
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Artifacts", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
             when (val artifacts = character.artifacts) {
-                is DataValue.Available -> ArtifactShowcaseRow(artifacts.value)
-                is DataValue.Stale -> ArtifactShowcaseRow(artifacts.value, stale = true)
+                is DataValue.Available -> ArtifactShowcaseRow(
+                    artifacts.value,
+                    expandedDetailKey = expandedDetailKey,
+                    onArtifactSelected = ::toggleDetail
+                )
+                is DataValue.Stale -> ArtifactShowcaseRow(
+                    artifacts.value,
+                    stale = true,
+                    expandedDetailKey = expandedDetailKey,
+                    onArtifactSelected = ::toggleDetail
+                )
                 DataValue.Missing -> ShowcaseUnavailable("Artifact data was not included.")
                 DataValue.Unavailable -> ShowcaseUnavailable("Artifact data is unavailable.")
                 is DataValue.Failed -> ShowcaseUnavailable("Artifact data could not be read.")
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Attributes", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            if (character.selectedProperties.isEmpty()) {
-                ShowcaseUnavailable("Character attributes are not available.")
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    character.selectedProperties.take(8).forEach { stat ->
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(stat.statName ?: "Unknown stat", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(stat.final ?: stat.value ?: stat.add ?: stat.base ?: "—", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            ShowcaseExpandableSection(
+                title = "Attributes",
+                summary = if (character.selectedProperties.isEmpty()) "No attribute data" else "${character.selectedProperties.size} stats",
+                expanded = expandedDetailKey == "attributes",
+                onClick = { toggleDetail("attributes") }
+            ) {
+                if (character.selectedProperties.isEmpty()) {
+                    ShowcaseUnavailable("Character attributes are not available.")
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                        character.selectedProperties.take(12).forEach { stat ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stat.statName ?: "Unknown stat", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stat.final ?: stat.value ?: stat.add ?: stat.base ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                            }
                         }
                     }
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Talents", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            if (character.skills.isEmpty()) {
-                ShowcaseUnavailable("Talent details are not available.")
-            } else {
-                Row(
-                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    character.skills.forEach { skill ->
-                        Column(
-                            modifier = Modifier.width(88.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            ShowcaseArtwork(
-                                skill.icon,
-                                skill.name ?: "Talent",
-                                "✦",
-                                Modifier.size(54.dp)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Talents", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                if (character.skills.isEmpty()) {
+                    ShowcaseUnavailable("Talent details are not available.")
+                } else {
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(9.dp)
+                    ) {
+                        character.skills.forEach { skill ->
+                            val key = "talent:${skill.id}"
+                            Column(
+                                modifier = Modifier
+                                    .width(78.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (expandedDetailKey == key) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .clickable { toggleDetail(key) }
+                                    .padding(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                ShowcaseArtwork(skill.icon, skill.name ?: "Talent", "✦", Modifier.size(48.dp))
+                                Text(skill.name ?: "Talent", style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                                Text("Lv. ${skill.level ?: "—"}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                    character.skills.firstOrNull { "talent:${it.id}" == expandedDetailKey }?.let { skill ->
+                        ShowcaseDetailSurface {
+                            Text(skill.name ?: "Talent", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                when {
+                                    skill.isUnlocked == false -> "Locked"
+                                    skill.isUnlocked == true -> "Unlocked • Level ${skill.level ?: "—"}"
+                                    else -> "Level ${skill.level ?: "—"}"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Text(skill.name ?: "Talent", fontSize = 10.sp, maxLines = 2)
-                            Text("Lv. ${skill.level ?: "—"}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                            skill.description?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = MaterialTheme.typography.bodySmall)
+                            }
+                            skill.enhancedDescription?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Constellations", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            if (character.constellations.isEmpty()) {
-                ShowcaseUnavailable("Constellation details are not available.")
-            } else {
-                Row(
-                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    character.constellations.sortedBy { it.position ?: it.id }.forEach { constellation ->
-                        Column(
-                            modifier = Modifier.width(88.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            ShowcaseArtwork(
-                                constellation.icon,
-                                constellation.name ?: "Constellation",
-                                "C${constellation.position ?: constellation.id}",
-                                Modifier.size(54.dp)
-                            )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Constellations", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                if (character.constellations.isEmpty()) {
+                    ShowcaseUnavailable("Constellation details are not available.")
+                } else {
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(9.dp)
+                    ) {
+                        character.constellations.sortedBy { it.position ?: it.id }.forEach { constellation ->
+                            val key = "constellation:${constellation.id}"
+                            Column(
+                                modifier = Modifier
+                                    .width(72.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (expandedDetailKey == key) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .clickable { toggleDetail(key) }
+                                    .padding(7.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                ShowcaseArtwork(
+                                    constellation.icon,
+                                    constellation.name ?: "Constellation",
+                                    "C${constellation.position ?: constellation.id}",
+                                    Modifier.size(46.dp)
+                                )
+                                Text("C${constellation.position ?: constellation.id}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    when (constellation.isActive) {
+                                        true -> "Unlocked"
+                                        false -> "Locked"
+                                        null -> "Unknown"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (constellation.isActive == true) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                    character.constellations.firstOrNull {
+                        "constellation:${it.id}" == expandedDetailKey
+                    }?.let { constellation ->
+                        ShowcaseDetailSurface {
                             Text(
                                 constellation.name ?: "Constellation ${constellation.position ?: constellation.id}",
-                                fontSize = 10.sp,
-                                maxLines = 2
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 when (constellation.isActive) {
                                     true -> "Unlocked"
                                     false -> "Locked"
-                                    null -> "Unknown"
+                                    null -> "Unlock status unavailable"
                                 },
-                                fontSize = 10.sp,
-                                color = if (constellation.isActive == true) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            constellation.effect?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = MaterialTheme.typography.bodySmall)
+                            }
+                            constellation.enhancedEffect?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }
@@ -2080,64 +2163,167 @@ private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
 }
 
 @Composable
-private fun WeaponShowcaseRow(weapon: com.irminsul.codex.domain.model.WeaponSnapshot, stale: Boolean = false) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        ShowcaseArtwork(weapon.icon, weapon.name ?: "Weapon", "⚔", Modifier.size(64.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(weapon.name ?: "Weapon #${weapon.id}", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-            Text(
-                "Lv. ${weapon.level ?: "—"} • Refinement ${weapon.refinementLevel ?: "—"} • ${weapon.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"}",
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+private fun ShowcaseExpandableSection(
+    title: String,
+    summary: String,
+    expanded: Boolean,
+    onClick: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick).padding(vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(summary, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(
+                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                contentDescription = if (expanded) "Collapse $title" else "Expand $title"
             )
-            if (stale) Text("Using older account data", fontSize = 10.sp, color = MaterialTheme.colorScheme.error)
+        }
+        if (expanded) ShowcaseDetailSurface(content)
+    }
+}
+
+@Composable
+private fun ShowcaseDetailSurface(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
+        content = content
+    )
+}
+
+@Composable
+private fun WeaponShowcaseRow(
+    weapon: com.irminsul.codex.domain.model.WeaponSnapshot,
+    stale: Boolean = false,
+    expanded: Boolean,
+    onClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                .background(if (expanded) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                .clickable(onClick = onClick)
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ShowcaseArtwork(weapon.icon, weapon.name ?: "Weapon", "⚔", Modifier.size(58.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.weight(1f)) {
+                Text(weapon.name ?: "Weapon #${weapon.id}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "Lv. ${weapon.level ?: "—"} • R${weapon.refinementLevel ?: "—"} • ${weapon.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (stale) Text("Using older account data", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+            }
+            Icon(
+                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                contentDescription = if (expanded) "Collapse weapon details" else "Expand weapon details"
+            )
+        }
+        if (expanded) {
+            ShowcaseDetailSurface {
+                weapon.typeName?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                weapon.description?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                weapon.mainProperty?.let { stat ->
+                    Text(
+                        "${stat.statName ?: "Main stat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                weapon.subProperty?.let { stat ->
+                    Text(
+                        "${stat.statName ?: "Secondary stat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Text(
+                    "Ascension ${weapon.ascensionLevel ?: "—"} • Level ${weapon.level ?: "—"} • Refinement ${weapon.refinementLevel ?: "—"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun ArtifactShowcaseRow(artifacts: List<com.irminsul.codex.domain.model.ArtifactSnapshot>, stale: Boolean = false) {
+private fun ArtifactShowcaseRow(
+    artifacts: List<com.irminsul.codex.domain.model.ArtifactSnapshot>,
+    stale: Boolean = false,
+    expandedDetailKey: String?,
+    onArtifactSelected: (String) -> Unit
+) {
     if (artifacts.isEmpty()) {
         ShowcaseUnavailable("No equipped artifact entries were returned.")
         return
     }
+    val orderedArtifacts = artifacts.sortedBy { it.slot ?: Int.MAX_VALUE }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Artifacts", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(9.dp)
         ) {
-            artifacts.sortedBy { it.slot ?: Int.MAX_VALUE }.forEach { artifact ->
+            orderedArtifacts.forEach { artifact ->
+                val key = "artifact:${artifact.id}"
                 Column(
-                    modifier = Modifier.width(76.dp),
+                    modifier = Modifier
+                        .width(72.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (expandedDetailKey == key) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .clickable { onArtifactSelected(key) }
+                        .padding(7.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    ShowcaseArtwork(artifact.icon, artifact.name ?: "Artifact", "◇", Modifier.size(62.dp))
-                    Text(artifact.slotName ?: artifact.name ?: "Artifact", fontSize = 10.sp, maxLines = 2)
-                    Text("+${artifact.level ?: "—"}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    ShowcaseArtwork(artifact.icon, artifact.name ?: "Artifact", "◇", Modifier.size(48.dp))
+                    Text(artifact.slotName ?: artifact.name ?: "Artifact", style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                    Text("+${artifact.level ?: "—"}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
-        artifacts.sortedBy { it.slot ?: Int.MAX_VALUE }.forEach { artifact ->
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(artifact.name ?: artifact.slotName ?: "Artifact", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+        orderedArtifacts.firstOrNull { "artifact:${it.id}" == expandedDetailKey }?.let { artifact ->
+            ShowcaseDetailSurface {
+                Text(artifact.name ?: artifact.slotName ?: "Artifact", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "${artifact.slotName ?: "Artifact slot"} • ${artifact.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"} • +${artifact.level ?: "—"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 artifact.mainProperty?.let { stat ->
                     Text(
                         "${stat.statName ?: "Main stat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
-                artifact.subProperties.forEach { stat ->
-                    Text(
-                        "${stat.statName ?: "Substat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                if (artifact.subProperties.isNotEmpty()) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    artifact.subProperties.forEach { stat ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(stat.statName ?: "Substat", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stat.value ?: stat.final ?: stat.base ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                        }
+                    }
                 }
             }
         }
-        if (stale) Text("Using older account data", fontSize = 10.sp, color = MaterialTheme.colorScheme.error)
+        if (stale) Text("Using older account data", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
     }
 }
 
