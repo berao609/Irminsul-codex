@@ -42,6 +42,7 @@ class OwnedCharacterInvestmentFactMapperTest {
         level = level,
         rarity = 5,
         element = "Wind",
+        friendshipLevel = 10,
         activeConstellationCount = 2,
         weapon = weapon,
         artifacts = artifacts,
