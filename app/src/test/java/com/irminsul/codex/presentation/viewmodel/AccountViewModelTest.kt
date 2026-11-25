@@ -220,6 +220,7 @@ class AccountViewModelTest {
                     savedExport = export
                     throw IllegalStateException("database unavailable")
                 }
+                override suspend fun getLatest(uid: String): AccountExport? = null
                 override suspend fun getHistory(uid: String, server: String): List<AccountExport> = emptyList()
             }
             val repository = object : AccountRepository {
