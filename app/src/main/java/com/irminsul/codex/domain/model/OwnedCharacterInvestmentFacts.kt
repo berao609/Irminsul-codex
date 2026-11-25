@@ -84,13 +84,18 @@ data class OwnedCharacterInvestmentFact(
 data class OwnedCharacterInvestmentRosterFacts(
     val state: InvestmentFactState,
     val observedAt: Instant?,
+    val sectionStatus: SectionStatus? = null,
+    val sectionSource: String? = null,
+    val sectionRetrievedAt: Instant? = null,
+    val lastSuccessfulRetrievedAt: Instant? = null,
     val characters: List<OwnedCharacterInvestmentFact> = emptyList(),
     val collectionIntegrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity(),
     val failureReason: String? = null
 ) {
-    /** True when the retrieved roster contains omitted or duplicate source entries. */
+    /** True when the source section or mapped roster reports incomplete coverage. */
     val isPartial: Boolean
-        get() = collectionIntegrity.invalidCharacterEntryIndexes.isNotEmpty() ||
+        get() = sectionStatus == SectionStatus.PARTIAL ||
+            collectionIntegrity.invalidCharacterEntryIndexes.isNotEmpty() ||
             collectionIntegrity.duplicateCharacterIds.isNotEmpty() ||
             (collectionIntegrity.sourceEntryCount != null &&
                 collectionIntegrity.sourceEntryCount != collectionIntegrity.mappedEntryCount)
