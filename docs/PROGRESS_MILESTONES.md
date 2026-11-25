@@ -2080,7 +2080,7 @@ The Visuals page previously showed character portraits only inside recommendatio
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Validate the four recommendation-ordering objectives, correct misleading player-facing labels and explanations, and make each recommendation's selected-goal rationale visible.  
-**Status:** Implemented, committed, and CI verified; physical-device verification pending.
+**Status:** Initial implementation CI verified; user device testing exposed a product/UX flaw. Corrective revision implemented and committed; CI and device verification pending.
 
 ### Objective
 
@@ -2142,3 +2142,21 @@ This milestone also records the user's explicit requirement to integrate externa
 - Data completeness refers to the existing character-level data review recommendation category. Account-wide section coverage and freshness remain displayed separately.
 - External meta/build/weapon/pull knowledge is planned, not implemented. External sources must not be scraped or republished without checking their permitted access and terms.
 - No account data, credentials, persistence schema, network behavior, or recommendation-generation rules were changed.
+
+
+### Post-device-test correction: remove ineffective analysis modes
+
+The user tested the M41 build and confirmed that switching from Balanced to Build quality left the same Jean artifact-data finding, evidence, and next action on screen. Only the explanatory sentence changed. This exposed that the four controls did not provide four useful analyses.
+
+**Product decision:** The current app does not need selectable analysis objectives. Its analyzers generate one shared set of findings, and the four objectives only reorder categories. That distinction is too small and data-dependent to justify four prominent analysis controls.
+
+**Corrective work implemented:**
+
+1. Remove the four objective chips and their changing explanatory text from the Account Analysis screen.
+2. Present one consistent balanced recommendation order.
+3. Remove the goal-specific rationale sentence from each recommendation card. Keep the actual finding, explanation, action, priority, evidence, and stale-data warning.
+4. Remove objective-selection state and its ViewModel action. The application always requests the existing balanced order.
+5. Retain the domain analyzer's objective-ordering tests as internal coverage for possible future use, but do not expose these modes in the current product.
+6. Revisit user-selectable priorities only when they lead to genuinely different useful recommendations or views. Filters for concrete account areas may be considered separately.
+
+The user's device verification of the corrected build remains required before M41 can close.
