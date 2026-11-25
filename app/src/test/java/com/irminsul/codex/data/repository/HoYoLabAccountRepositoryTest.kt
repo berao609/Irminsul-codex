@@ -34,14 +34,16 @@ class HoYoLabAccountRepositoryTest {
             }
         )
 
-        val result = repository.fetchAccountSnapshot(
+        val result = repository.fetchAccountExport(
             uid = "800000001",
             cookie = "test-cookie",
             onProgress = progressMessages::add
         )
 
         assertTrue(result.isSuccess)
-        val snapshot = result.getOrThrow()
+        val accountExport = result.getOrThrow()
+        val snapshot = accountExport.snapshot
+        assertEquals(validExport, accountExport.rawJson)
         assertEquals("800000001", snapshot.identity.uid)
         assertEquals("os_asia", snapshot.identity.server)
         assertEquals("800000001", receivedUid)

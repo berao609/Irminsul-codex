@@ -2,7 +2,9 @@ package com.irminsul.codex.data.repository
 
 import com.irminsul.codex.api.HoYoLabClient
 import com.irminsul.codex.data.mapper.AccountExportMapper
+import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.model.AccountSnapshot
+import kotlinx.coroutines.CancellationException
 import com.irminsul.codex.domain.repository.AccountRepository
 import org.json.JSONObject
 
@@ -25,12 +27,23 @@ class HoYoLabAccountRepository(
     }
 ) : AccountRepository {
 
-    override suspend fun fetchAccountSnapshot(
+    override suspend fun fetchAccountExport(
         uid: String,
         cookie: String,
         onProgress: (String) -> Unit
-    ): Result<AccountSnapshot> {
+    ): Result<AccountExport> {
         val exportResult = exportJson(uid, cookie, onProgress)
-        return exportResult.mapCatching(mapExport)
+        return exportResult.fold(
+            onSuccess = { json ->
+                try {
+                    Result.success(AccountExport(snapshot = mapExport(json), rawJson = json))
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (error: Exception) {
+                    Result.failure(error)
+                }
+            },
+            onFailure = { error -> Result.failure(error) }
+        )
     }
 }

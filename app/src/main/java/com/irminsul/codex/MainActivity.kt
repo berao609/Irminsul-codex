@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.ViewModelProvider
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,9 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.irminsul.codex.api.DailyNote
 import com.irminsul.codex.api.HoYoLabClient
+import com.irminsul.codex.data.repository.HoYoLabAccountRepository
+import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 private val CodexColors = darkColorScheme(
     primary = Color(0xFF80CBC4),
@@ -40,15 +42,21 @@ private val CodexColors = darkColorScheme(
 )
 
 class MainActivity : ComponentActivity() {
+    private lateinit var accountViewModel: AccountViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        accountViewModel = ViewModelProvider(
+            this,
+            AccountViewModel.Factory(HoYoLabAccountRepository())
+        )[AccountViewModel::class.java]
         setContent {
             MaterialTheme(colorScheme = CodexColors) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    CodexScreen()
+                    CodexScreen(accountViewModel)
                 }
             }
         }
@@ -56,10 +64,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun CodexScreen() {
+fun CodexScreen(accountViewModel: AccountViewModel) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("irminsul_prefs", Context.MODE_PRIVATE) }
     val scope = rememberCoroutineScope()
+    val accountExportState by accountViewModel.uiState.collectAsState()
 
     var uid by remember { mutableStateOf(prefs.getString("uid", "") ?: "") }
     var cookie by remember { mutableStateOf(prefs.getString("cookie", "") ?: "") }
@@ -70,8 +79,6 @@ fun CodexScreen() {
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    var isExporting by remember { mutableStateOf(false) }
-    var exportProgress by remember { mutableStateOf<String?>(null) }
     var exportedJson by remember { mutableStateOf<String?>(null) }
     var exportStatus by remember { mutableStateOf<String?>(null) }
 
@@ -122,41 +129,31 @@ fun CodexScreen() {
             errorMessage = "Sign in with HoYoLAB first."
             return
         }
-        scope.launch {
-            isExporting = true
-            errorMessage = null
-            exportStatus = null
-            exportProgress = "Starting extraction..."
+        errorMessage = null
+        exportStatus = null
+        accountViewModel.exportAccount(uid, cookie, saveImmediately)
+    }
 
-            HoYoLabClient.exportFullAccountJson(uid, cookie) { step ->
-                scope.launch { exportProgress = step }
-            }.onSuccess { json ->
-                exportedJson = json
-                val kb = (json.toByteArray(Charsets.UTF_8).size / 1024).coerceAtLeast(1)
-                val overallExportStatus = JSONObject(json)
-                    .optJSONObject("export_status")
-                    ?.optString("overall_status", "unknown")
-                val exportLabel = when (overallExportStatus) {
-                    "complete" -> "Complete export"
-                    "partial" -> "Partial export. Some sections are unavailable."
-                    "failed" -> "Export contains no successfully retrieved account sections."
-                    else -> "Export status unavailable. Check export_status in the JSON."
-                }
-                exportProgress = null
-                if (saveImmediately) {
-                    exportStatus = "$exportLabel ($kb KB). Choose where to save."
-                    saveFileLauncher.launch("genshin_${uid.trim()}.json")
-                } else {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(ClipData.newPlainText("Irminsul Codex JSON", json))
-                    exportStatus = "Copied $exportLabel ($kb KB) to clipboard."
-                }
-            }.onFailure { err ->
-                exportProgress = null
-                errorMessage = err.message ?: "JSON extraction failed."
-            }
-            isExporting = false
+    LaunchedEffect(accountExportState.pendingExport) {
+        val completedExport = accountExportState.pendingExport ?: return@LaunchedEffect
+        val json = completedExport.rawJson
+        exportedJson = json
+        val kb = (json.toByteArray(Charsets.UTF_8).size / 1024).coerceAtLeast(1)
+        val exportLabel = when (completedExport.snapshot.overallStatus.name) {
+            "SUCCESS" -> "Complete export"
+            "PARTIAL" -> "Partial export. Some sections are unavailable."
+            "FAILED" -> "Export contains no successfully retrieved account sections."
+            else -> "Export status unavailable. Check export_status in the JSON."
         }
+        if (accountExportState.saveImmediately) {
+            exportStatus = "$exportLabel ($kb KB). Choose where to save."
+            saveFileLauncher.launch("genshin_${uid.trim()}.json")
+        } else {
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("Irminsul Codex JSON", json))
+            exportStatus = "Copied $exportLabel ($kb KB) to clipboard."
+        }
+        accountViewModel.acknowledgeExport()
     }
 
     fun handleWebLoginSuccess(capturedCookie: String) {
@@ -240,7 +237,7 @@ fun CodexScreen() {
                 ) {
                     Button(
                         onClick = { showWebLogin = true },
-                        enabled = !isLoading && !isExporting,
+                        enabled = !isLoading && !accountExportState.isExporting,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
                     ) {
@@ -266,7 +263,7 @@ fun CodexScreen() {
                     )
                     OutlinedButton(
                         onClick = { refreshData() },
-                        enabled = !isLoading && !isExporting,
+                        enabled = !isLoading && !accountExportState.isExporting,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
                     ) {
@@ -298,7 +295,7 @@ fun CodexScreen() {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-                    if (exportProgress != null) {
+                    if (accountExportState.progress != null) {
                         LinearProgressIndicator(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -306,7 +303,7 @@ fun CodexScreen() {
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = exportProgress!!,
+                            text = accountExportState.progress!!,
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -326,15 +323,15 @@ fun CodexScreen() {
                     ) {
                         Button(
                             onClick = { extractAccountJson(saveImmediately = true) },
-                            enabled = !isExporting,
+                            enabled = !accountExportState.isExporting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text(if (isExporting) "Extracting..." else "Save JSON")
+                            Text(if (accountExportState.isExporting) "Extracting..." else "Save JSON")
                         }
                         OutlinedButton(
                             onClick = { extractAccountJson(saveImmediately = false) },
-                            enabled = !isExporting,
+                            enabled = !accountExportState.isExporting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(10.dp)
                         ) {
@@ -345,13 +342,13 @@ fun CodexScreen() {
             }
         }
 
-        if (errorMessage != null) {
+        if (errorMessage != null || accountExportState.errorMessage != null) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF2B1618)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = errorMessage!!,
+                    text = (errorMessage ?: accountExportState.errorMessage)!!,
                     color = MaterialTheme.colorScheme.error,
                     fontSize = 13.sp,
                     modifier = Modifier.padding(14.dp)
@@ -468,7 +465,7 @@ fun CodexScreen() {
 
             OutlinedButton(
                 onClick = { refreshData() },
-                enabled = !isLoading && !isExporting,
+                enabled = !isLoading && !accountExportState.isExporting,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
             ) {

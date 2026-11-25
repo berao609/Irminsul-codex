@@ -961,3 +961,36 @@ Create the first repository boundary between application/domain consumers and th
 - The repository currently accepts UID and cookie as arguments because credential ownership remains in the existing presentation layer. This is transitional and must be replaced by a dedicated credential/session boundary before broader repository use.
 - The adapter currently wraps the existing full JSON export operation; it does not introduce a new HoYoLAB endpoint or local persistence.
 - MainActivity still calls HoYoLabClient directly. UI migration, ViewModel introduction, credential security, Room, historical snapshots, and release work are outside this increment.
+ 
+## Milestone 019 - Account Export ViewModel Integration
+
+**Date recorded:** 2026-11-25  
+**Development phase:** Phase 1 - Establish the Unified Account Model  
+**Milestone scope:** Route the existing full account export action through AccountRepository and an Android ViewModel while preserving the original JSON save/copy behavior.  
+**Status:** Implemented; unit-test and Debug CI verification pending. Physical-device verification pending.
+
+### Objective
+
+Move full account export orchestration and normalized snapshot state out of the Compose screen. Keep the current user-facing Save JSON and Copy JSON actions, progress feedback, and export status messages intact. Avoid duplicate HoYoLAB requests by returning the normalized snapshot and exact original JSON from the same repository operation.
+
+### Work implemented
+
+1. Added domain `AccountExport`, containing the normalized `AccountSnapshot` and the exact original JSON string.
+2. Updated `AccountRepository` and `HoYoLabAccountRepository` to return both representations from one export request. Mapping failures become repository failures, and `CancellationException` is rethrown.
+3. Added `AccountViewModel` with observable StateFlow state for loading, progress, errors, the latest normalized snapshot, and a pending raw export for the UI to consume.
+4. Connected MainActivity to the ViewModel. Save JSON and Copy JSON continue using the exact raw export string; document and clipboard operations remain in the Android UI layer.
+5. Added ViewModel tests for successful state publication, raw JSON preservation, repository failure, and blank-credential rejection. Updated repository tests for the combined export result.
+6. Added AndroidX ViewModel and kotlinx-coroutines-test dependencies.
+7. Kept Daily Note synchronization, login, and credential handling unchanged. This increment does not yet migrate those paths to repositories or move credentials out of the current presentation code.
+
+### Verification
+
+- Implementation commit: pending.
+- Unit tests and Debug CI: pending.
+- Physical-device verification: pending. After CI, verify both Save JSON and Copy JSON actions, export progress/status feedback, and that Daily Note sync/login still work.
+
+### Qualifications
+
+- The ViewModel receives UID and cookie as arguments because credential ownership remains in the existing activity/presentation flow. This is transitional and does not constitute secure credential storage.
+- Account export still uses the existing HoYoLAB endpoints and selected-section JSON format.
+- No Room persistence, historical snapshots, new analytics, new UI screens, or official Release changes are included.

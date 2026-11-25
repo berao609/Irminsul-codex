@@ -345,3 +345,13 @@ data class AccountSnapshot(
     val sectionCoverage: AccountSnapshotCoverageReport = AccountSnapshotCoverageReport(emptyList()),
     val sectionFreshness: AccountSnapshotFreshnessReport? = null
 )
+
+
+/**
+ * One retrieved account export, retaining both the normalized domain snapshot and
+ * the exact JSON document so the user can still save or copy the original export.
+ */
+data class AccountExport(
+    val snapshot: AccountSnapshot,
+    val rawJson: String
+)

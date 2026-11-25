@@ -1,6 +1,6 @@
 package com.irminsul.codex.domain.repository
 
-import com.irminsul.codex.domain.model.AccountSnapshot
+import com.irminsul.codex.domain.model.AccountExport
 
 /**
  * Domain boundary for retrieving a normalized account snapshot.
@@ -10,9 +10,9 @@ import com.irminsul.codex.domain.model.AccountSnapshot
  * provider can replace it in a later architecture increment without changing consumers.
  */
 interface AccountRepository {
-    suspend fun fetchAccountSnapshot(
+    suspend fun fetchAccountExport(
         uid: String,
         cookie: String,
         onProgress: (String) -> Unit = {}
-    ): Result<AccountSnapshot>
+    ): Result<AccountExport>
 }

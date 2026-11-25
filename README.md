@@ -197,15 +197,24 @@ Irminsul-codex/
 │   │       ├── java/
 │   │       │   └── com/irminsul/codex/
 │   │       │       ├── MainActivity.kt
-│   │       │       │
 │   │       │       ├── api/
 │   │       │       │   └── HoYoLabClient.kt
-│   │       │       │
+│   │       │       ├── data/
+│   │       │       │   ├── mapper/
+│   │       │       │   │   └── AccountExportMapper.kt
+│   │       │       │   └── repository/
+│   │       │       │       └── HoYoLabAccountRepository.kt
+│   │       │       ├── domain/
+│   │       │       │   ├── model/
+│   │       │       │   │   └── AccountSnapshot.kt
+│   │       │       │   └── repository/
+│   │       │       │       └── AccountRepository.kt
+│   │       │       ├── presentation/
+│   │       │       │   └── viewmodel/
+│   │       │       │       └── AccountViewModel.kt
 │   │       │       └── ui/
 │   │       │           └── HoYoLabLoginDialog.kt
-│   │       │
 │   │       └── AndroidManifest.xml
-│   │
 │   └── build.gradle.kts
 │
 ├── gradle/
@@ -230,48 +239,38 @@ Irminsul-codex/
 
 Responsible for:
 
-* Main application interface.
-
-* Application state.
-
-* Credential handling.
-
-* Synchronization actions.
-
-* JSON export interactions.
-
-* Displaying retrieved account information.
+* Main application interface and existing Daily Note presentation.
+* Credential entry and the current SharedPreferences handling.
+* Daily Note synchronization actions.
+* Save and clipboard actions for account JSON exports.
 
 ### `api/HoYoLabClient.kt`
 
 Responsible for:
 
-* HoYoLAB API communication.
-
-* HTTP requests and headers.
-
-* DS signature generation.
-
+* HoYoLAB API communication, HTTP requests, headers, and DS signatures.
 * UID and server handling.
+* Daily Note retrieval and selected account-data retrieval.
+* Character detail requests and JSON export generation.
 
-* Daily Note retrieval.
+### `presentation/viewmodel/AccountViewModel.kt`
 
-* Account information retrieval.
+Responsible for:
 
-* Character detail requests.
+* Running full account export through the domain repository contract.
+* Exposing export progress, errors, and the normalized AccountSnapshot as observable state.
+* Retaining the original JSON export for the existing save and clipboard actions.
 
-* JSON response processing and export.
+### `data/repository/HoYoLabAccountRepository.kt`
+
+Adapts the existing HoYoLAB JSON export operation and AccountExportMapper to the domain repository contract.
 
 ### `ui/HoYoLabLoginDialog.kt`
 
 Responsible for:
 
 * Embedded HoYoLAB authentication.
-
-* WebView login.
-
-* Authentication cookie capture.
-
+* WebView login and authentication cookie capture.
 * WebView browsing-data cleanup.
 
 ### `.github/workflows/build.yml`
