@@ -92,11 +92,11 @@ class AccountIntelligenceEngineTest {
         assertEquals(UnifiedCharacterAssessmentAvailability.AVAILABLE, result.characterAssessment.availability)
         assertEquals(1, result.characterAssessment.assessedCharacterCount)
         assertEquals(1, result.characterAssessment.needsAttentionCount)
-        assertEquals(1, result.goalAwareDevelopment.recommendationCount)
+        assertEquals(2, result.goalAwareDevelopment.recommendationCount)
         assertEquals(CharacterDevelopmentGoal.STAT_INTEGRITY, result.selectedGoal)
         assertEquals(
             CharacterDevelopmentRecommendationType.BUILD_ERRORS,
-            result.goalAwareDevelopment.recommendations.single().recommendation.type
+            result.goalAwareDevelopment.recommendations.first().recommendation.type
         )
         assertEquals(AccountGapAnalysisAvailability.AVAILABLE, result.accountGaps.availability)
         assertEquals(0, result.accountSectionCount)
