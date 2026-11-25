@@ -887,7 +887,7 @@ Expose section retrieval age and freshness without assuming every account sectio
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 1 - Establish the Unified Account Model  
 **Milestone scope:** Preserve last-successful retrieval timestamps through section coverage and use them as the freshness reference when a current payload is unavailable.  
-**Status:** Implemented; unit-test and Debug CI verification pending.
+**Status:** Implemented, unit-test verified, and Debug CI verified.
 
 ### Objective
 
@@ -903,9 +903,19 @@ Ensure a failed or unavailable refresh does not erase the temporal context of th
 
 ### Verification
 
+**Implementation**
 - Implementation commit: `e5b4be8c9007cc5e8ee6aeb26ae6110dcee283be`.
-- GitHub Actions Run #134: [in progress](https://github.com/berao609/Irminsul-codex/actions/runs/45527887445), testing commit `e5b4be8c9007cc5e8ee6aeb26ae6110dcee283be`.
-- Debug artifact: pending CI completion.
+- The implementation commit was tested directly by [GitHub Actions Run #134](https://github.com/berao609/Irminsul-codex/actions/runs/45527887445), which completed successfully.
+
+**Final repository state and CI**
+- Documentation update commit: `3e8db49f149d4086febbc34f1583cbcf3142eb3f`.
+- [GitHub Actions Run #135](https://github.com/berao609/Irminsul-codex/actions/runs/45528169763) completed successfully for that commit.
+- Verified steps: unit tests, Debug APK build, persistent Debug APK signature verification, artifact upload, and temporary Debug keystore cleanup.
+- Debug artifact: `irminsul-codex-debug-v1.0.0-dev.135-vc137`.
+- Artifact ID: `14983622326`.
+- Artifact size: 8,272,070 bytes.
+- SHA-256: `ef4616d46a8b8ab9ac9f801e4c0a59d35193dfe03806c36d3c35cb6d20468e38`.
+- Artifact expiry: 2026-12-09 01:47:50 UTC.
 - Device verification: not required for this in-memory domain assessment.
 
 ### Qualifications
