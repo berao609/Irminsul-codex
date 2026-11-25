@@ -237,6 +237,67 @@ The system must retain the original source and evidence for every trusted claim.
 
 ---
 
+
+### 3.10 External source validation register
+
+The following is the initial source-access decision from M44 research conducted on 2026-11-25. These decisions are conservative and must be revisited if a source publishes new terms, licenses, APIs, or permissions.
+
+| Source | Intended role | Observed access/licensing position | Initial decision |
+|---|---|---|---|
+| KeqingMains (KQM) character guides and Theorycrafting Library (TCL) | Vetted theorycrafting, character builds, teams, rotations, and mechanics | KQM states that TCL content is reviewed by its Theorycrafting Editors. The public TCL repository's root currently exposes no LICENSE file. Public visibility and editor review do not grant redistribution rights. | Approved as an outbound research/reference link only. Do not bulk ingest, copy, mirror, or redistribute guide/TCL content unless KQM grants permission or publishes an applicable content license. Metadata-only revision monitoring may be evaluated separately and must not retrieve or republish protected content. |
+| Prydwen | Editorial character evaluations, tier lists, guides, and databases | Its Terms of Service, last updated March 2026, prohibit scraping, crawling, and bulk extraction. Its rankings and guides are editorial analysis and may not always be current. | No automated collection or bulk extraction. Link to relevant pages only. Reconsider only with explicit written permission or a documented supported API/license. |
+| genshin-db | Structured static game reference data such as characters, weapons, artifacts, talents, and constellations | Repository declares MIT. Its README says data is sourced from Fandom Wiki and GenshinData; the package license alone does not establish that all upstream material, text, or assets are available for redistribution under MIT. Its data format may change between versions. | Candidate for technical/schema evaluation only. Do not bundle, mirror, or redistribute its dataset until upstream data and asset rights, attribution, and update terms are separately verified. |
+| genshin.dev API | Structured static game reference data | Repository declares Open Software License 3.0. That license carries source, attribution, and external-deployment obligations. The API's software license does not by itself clear HoYoverse-owned game names, artwork, or other third-party content. | Not selected for the initial integration. Reconsider only after legal/compatibility review of OSL-3.0 obligations and the underlying data/assets. |
+| HoYoverse official game content and assets | Canonical game facts and visual assets | Game content and assets remain subject to HoYoverse intellectual-property and service terms. No general redistribution license was established in this review. | Do not scrape or bundle official site/game assets as part of M44. Existing account-source URLs remain governed by their current retrieval behavior and are not a new asset-ingestion permission. |
+
+Source references reviewed:
+
+- KQM TCL repository and README: https://github.com/KQM-git/TCL
+- KQM Theorycrafting Library: https://library.keqingmains.com/
+- KQM source/editor team description: https://keqingmains.com/apply/
+- Prydwen Terms of Service: https://www.prydwen.gg/terms
+- genshin-db repository and README: https://github.com/theBowja/genshin-db
+- genshin-db MIT license: https://github.com/theBowja/genshin-db/blob/main/LICENSE
+- genshin.dev API repository: https://github.com/genshindev/api
+- genshin.dev OSL-3.0 license: https://github.com/genshindev/api/blob/mistress/LICENSE
+
+This register is a technical planning record, not legal advice or a legal determination. A source is not approved for content reuse merely because it is publicly accessible or its software repository has an open-source license.
+
+**M44 source decision:** no third-party community guide, ranking, or game-asset dataset is approved for automated content ingestion or redistribution at this time. KQM and Prydwen may be linked as research references. Any future automated source adapter must be scoped to a documented permitted API, license, written permission, or metadata-only mechanism whose terms and rate limits have been checked.
+
+### 3.11 Deterministic investment-ranking input boundary
+
+The current normalized `AccountSnapshot` and `CharacterSnapshot` provide useful account evidence:
+
+- Owned character identity, level, rarity, element, friendship, and active constellation count.
+- Character weapon, artifact, stat, talent, and constellation details when returned by the account source.
+- Character collection integrity, build validation, stat classification/reconciliation, section coverage, and freshness.
+- Explicit missing, unavailable, failed, stale, and available states for important account data.
+
+The current normalized model does not yet provide a sufficiently explicit, validated basis for a complete account-relative investment ranking. In particular, it does not yet provide normalized records for:
+
+- Character roles and capabilities mapped to the game's current combat/team context.
+- Validated team compositions, rotations, and character-to-character synergy evidence.
+- Patch- and game-mode-specific relevance records with source provenance and expiry/freshness rules.
+- Character, weapon, talent, and artifact investment costs linked to the player's actual material inventory and resource constraints.
+- Distinct observed-usage statistics with population, sample period, game mode, and methodology.
+- An explicit user objective or account constraint model for prioritizing different forms of account value.
+
+Do not infer these missing dimensions from character level, rarity, tier labels, or unstructured text. Do not publish a numerical investment score or fixed weights until the required evidence and normalized inputs exist.
+
+The initial deterministic ranking design must evaluate, as evidence becomes available:
+
+1. Incremental account value and missing role/capability coverage.
+2. Compatibility with owned characters and validated team/rotation synergy.
+3. Current relevance for explicitly identified game modes and patch context.
+4. Redundancy against owned alternatives and the user's existing investment.
+5. Expected investment cost and efficiency relative to available resources.
+6. Evidence confidence, provenance, freshness, and disagreement between sources.
+
+Keep source evidence types separate: theorycrafting, editorial evaluation, calculated comparison, and observed usage are not interchangeable. Missing evidence must reduce confidence or leave a factor unknown; it must not be silently treated as a negative character rating.
+
+The first implementation should be a small, explainable shortlist with reason codes and evidence references, not a universal character tier list. The app must continue to distinguish account diagnostics from investment recommendations. This section defines the decision boundary; it does not claim the ranking engine is implemented.
+
 ## 4. Existing Application Baseline
 
 The following describes the existing implementation as previously inspected. It is a working baseline to preserve and improve, not a complete code-quality or runtime audit.
