@@ -831,7 +831,7 @@ Give downstream account analytics a reliable way to distinguish which selected e
 
 ### Verification
 
-- Implementation commit: pending.
+- Implementation, tests, and initial milestone record: `a8450278ecff6b57c6cdf2b6df65863d0a94ff77`.
 - GitHub Actions: pending.
 - Debug artifact: pending.
 - Device verification: not required for this pure in-memory domain assessment and mapper integration.
