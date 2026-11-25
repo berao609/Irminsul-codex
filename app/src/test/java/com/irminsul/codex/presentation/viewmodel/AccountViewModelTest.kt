@@ -155,6 +155,42 @@ class AccountViewModelTest {
     }
 
     @Test
+    fun failedRefreshKeepsPreviouslyRestoredSnapshotAndOverview() = runBlocking {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+        val store = ViewModelStore()
+        try {
+            val export = AccountExport(
+                snapshot = AccountExportMapper.map(JSONObject(rawJson)),
+                rawJson = rawJson
+            )
+            val repository = object : AccountRepository {
+                override suspend fun fetchAccountExport(
+                    uid: String,
+                    cookie: String,
+                    onProgress: (String) -> Unit
+                ): Result<AccountExport> = Result.failure(IllegalStateException("network unavailable"))
+            }
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(export))
+            store.put("account", viewModel)
+
+            viewModel.restoreLatestSnapshot("800000001")
+            val restoredSnapshot = viewModel.uiState.value.snapshot
+            val restoredOverview = viewModel.uiState.value.intelligenceOverview
+            assertNotNull(restoredSnapshot)
+            assertNotNull(restoredOverview)
+
+            viewModel.analyzeAccount("800000001", "test-cookie")
+
+            assertSame(restoredSnapshot, viewModel.uiState.value.snapshot)
+            assertSame(restoredOverview, viewModel.uiState.value.intelligenceOverview)
+            assertEquals("network unavailable", viewModel.uiState.value.errorMessage)
+        } finally {
+            store.clear()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
     fun exposesRepositoryFailureWithoutCreatingSnapshot() = runBlocking {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         val store = ViewModelStore()
