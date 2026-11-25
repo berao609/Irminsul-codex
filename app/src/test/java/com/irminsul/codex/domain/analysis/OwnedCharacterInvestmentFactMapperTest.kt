@@ -208,15 +208,33 @@ class OwnedCharacterInvestmentFactMapperTest {
             InvestmentFactState.MISSING,
             OwnedCharacterInvestmentFactMapper.map(snapshot(DataValue.Missing)).roster.state
         )
-        assertEquals(
-            InvestmentFactState.UNAVAILABLE,
-            OwnedCharacterInvestmentFactMapper.map(snapshot(DataValue.Unavailable)).roster.state
+        val unavailableSection = AccountSectionMetadata(
+            status = SectionStatus.SKIPPED,
+            source = "character-roster",
+            retrievedAt = retrievedAt,
+            lastSuccessfulRetrievalAt = staleAt
+        )
+        val unavailable = OwnedCharacterInvestmentFactMapper.map(
+            snapshot(DataValue.Unavailable, sections = mapOf("characters" to unavailableSection))
+        ).roster
+        assertEquals(InvestmentFactState.UNAVAILABLE, unavailable.state)
+        assertEquals(SectionStatus.SKIPPED, unavailable.sectionStatus)
+        assertEquals("character-roster", unavailable.sectionSource)
+
+        val failedSection = AccountSectionMetadata(
+            status = SectionStatus.FAILED,
+            source = "character-roster",
+            retrievedAt = retrievedAt,
+            lastSuccessfulRetrievalAt = staleAt
         )
         val failed = OwnedCharacterInvestmentFactMapper.map(
-            snapshot(DataValue.Failed("roster request failed"))
+            snapshot(DataValue.Failed("roster request failed"), sections = mapOf("characters" to failedSection))
         ).roster
         assertEquals(InvestmentFactState.FAILED, failed.state)
         assertEquals("roster request failed", failed.failureReason)
+        assertEquals(SectionStatus.FAILED, failed.sectionStatus)
+        assertEquals(retrievedAt, failed.sectionRetrievedAt)
+        assertEquals(staleAt, failed.lastSuccessfulRetrievedAt)
         assertTrue(failed.characters.isEmpty())
     }
 
