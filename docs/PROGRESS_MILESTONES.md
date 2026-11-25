@@ -3023,7 +3023,7 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Add a usable local Materials Planner while no redistribution-approved production cost catalogue is available.  
-**Status:** Implemented; final CI #373 passed; physical-device verification pending.
+**Status:** Implemented; code CI #373, #375, and #376 passed; final documentation verification and physical-device testing pending.
 
 ### Objective and product boundary
 
@@ -3054,7 +3054,7 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
    - Entered zero means the player owns none.
    - Invalid quantities do not produce a result.
    - Owned quantities above requirements yield zero remaining, never a negative number.
-5. Persisted the manual plan, target, and level range locally in app preferences.
+5. Persisted material rows locally under target-specific preference keys, so switching characters/weapons does not mix their plans. The selected target and level range are also stored locally. Custom-target editing keeps its active plan stable.
 6. Added `ManualMaterialPlanCalculator.kt` and tests for valid subtraction, explicit zero versus not-entered, inventory above requirement, missing required amount, negative/malformed values, and numeric overflow.
 7. The screen clearly states that required quantities are manually entered and not game-verified because no redistribution-approved production cost catalogue is connected.
 
@@ -3071,9 +3071,13 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 
 - `030fc947d8dc73ba41ef2a68ccc43fc553bb026f` - Add manual material plan calculation.
 - `f78c1ff3d1f412e9f5d46f0012c20a3b3eaaa345` - Test manual material plan quantities.
-- `a99689bfe0845379393f6226dec82f15aadb5f7f` - Add manual Materials Planner screen.
+- `a99689bfe0845379393f6226dec82f15aadb5f7f` - Add manual Materials Planner screen (initial compile attempt).
+- `4e0930342f075408219c04e34eb4e42f81413b00` - Correct Compose annotation placement.
+- `47af2f99d28a17e2a0bfefe3b63dbe8799d8fbde` - Isolate saved material rows by selected target.
+- `cad00cd42d5e2dea2b881b2c5390e16834304181` - Keep custom-target plan storage stable while editing its name.
 - `0f18d25299bb7295b04d12f57911e79e4ee65639` - Describe manual Materials Planner in README.
 - `78a8c3d62f52ae8af234c0d02e999d62491805e7` - Specify M53 UI behavior and trust boundary.
+- `b8f9ee111817418861e2749df3e80c2ce9eda629` - Specify target-isolated local material plans.
 
 ### Verification
 
@@ -3081,10 +3085,14 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 - Domain calculator test CI #368 passed: https://github.com/berao609/Irminsul-codex/actions/runs/45624666219.
 - Initial UI CI #369 failed because the `@Composable` annotation was accidentally attached to a data class and the existing CharacterShowcaseSection annotation was displaced. README/SPECS/progress CI #370-#372 also failed because they built that same intermediate source state.
 - Corrected annotation placement in commit `4e0930342f075408219c04e34eb4e42f81413b00`.
-- Final combined CI #373 passed for the corrected code and all preceding M53 documentation: https://github.com/berao609/Irminsul-codex/actions/runs/45625322427.
-- CI #373 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. KVM and Room instrumentation tests were skipped because no persistence/Room code changed.
-- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.373-vc375`, artifact ID `15026963431`, size 9,063,584 bytes. Room schema artifact ID `15026374284`, size 985 bytes.
-- Physical-device UI and persistence testing remains pending. Do not mark M53 fully closed until the user installs and tests the #373 build.
+- Combined CI #373 passed after the annotation correction: https://github.com/berao609/Irminsul-codex/actions/runs/45625322427.
+- CI #374 passed the milestone-documentation update: https://github.com/berao609/Irminsul-codex/actions/runs/45625719165.
+- CI #375 passed the target-specific plan persistence refinement: https://github.com/berao609/Irminsul-codex/actions/runs/45625825955.
+- CI #376 passed the final custom-target storage correction: https://github.com/berao609/Irminsul-codex/actions/runs/45625965817.
+- CI #376 passed unit tests, Debug APK build, Room schema verification, APK signature verification, artifact upload, and temporary signing-key cleanup. KVM and Room instrumentation tests were skipped because no Room/persistence schema code changed.
+- Final Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.376-vc378`, artifact ID `15026489813`, size 9,064,766 bytes. Room schema artifact ID `15028935149`, size 985 bytes.
+- Final SPECS target-isolation update CI #377 and this progress-document update's CI remain pending.
+- Physical-device UI and persistence testing remains pending. Do not mark M53 fully closed until the user installs and tests the final #376 build.
 
 ### Boundaries and next checkpoint
 
