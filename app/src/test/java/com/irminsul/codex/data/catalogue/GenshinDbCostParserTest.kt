@@ -14,6 +14,7 @@ class GenshinDbCostParserTest {
             result.segments.map { it.fromLevel to it.toLevel }
         )
         assertEquals("202", result.segments.first().costs.first().itemId)
+        assertEquals("Mora", result.segments.first().costs.first().itemName)
         assertEquals(20_000L, result.segments.first().costs.first().quantity)
     }
 
