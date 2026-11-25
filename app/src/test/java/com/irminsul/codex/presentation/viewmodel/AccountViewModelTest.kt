@@ -94,6 +94,39 @@ class AccountViewModelTest {
     }
 
     @Test
+    fun analyzeAccountPublishesIntelligenceWithoutPreparingJsonExport() = runBlocking {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+        val store = ViewModelStore()
+        try {
+            val export = AccountExport(
+                snapshot = AccountExportMapper.map(JSONObject(rawJson)),
+                rawJson = rawJson
+            )
+            val repository = object : AccountRepository {
+                override suspend fun fetchAccountExport(
+                    uid: String,
+                    cookie: String,
+                    onProgress: (String) -> Unit
+                ): Result<AccountExport> = Result.success(export)
+            }
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
+            store.put("account", viewModel)
+
+            viewModel.analyzeAccount("800000001", "test-cookie")
+
+            val state = viewModel.uiState.value
+            assertFalse(state.isExporting)
+            assertNotNull(state.snapshot)
+            assertNotNull(state.intelligenceOverview)
+            assertNull("Analysis must not trigger the optional JSON-save flow.", state.pendingExport)
+            assertNull(state.intelligenceErrorMessage)
+        } finally {
+            store.clear()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
     fun exposesRepositoryFailureWithoutCreatingSnapshot() = runBlocking {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         val store = ViewModelStore()
