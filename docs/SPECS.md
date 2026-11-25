@@ -2058,3 +2058,45 @@ A profile with no accepted role/capability assertions has no role/capability evi
 #### Explicit exclusions
 
 M49 is a domain contract and deterministic join only. It adds no platform adapters, automatic collection, copied third-party guide content, source ingestion, arbitrary numerical weighting, recommendation scoring, AI ranking, persistence, or UI. Source permissions and manual review remain mandatory under the M44/M45 source policy.
+
+
+### 3.19 M52 deterministic upgrade-cost aggregation and manual inventory
+
+M52 consumes M51 trusted cost records and produces deterministic requirements for one explicitly requested subject, upgrade track, level range, and exact game version. It does not add a built-in external cost dataset or infer missing costs.
+
+#### Calculation request and segment coverage
+
+A calculation request identifies subject type and stable subject ID, track, from/to level, exact game version, and (for talent upgrades) an explicit talent slot. The calculator:
+- Selects only records matching the complete request identity and exact game version.
+- Revalidates source registry permission, review state, source references, and validity window at the evaluation time.
+- Requires a contiguous, non-overlapping sequence of cost segments beginning exactly at the requested starting level and ending exactly at the requested target level.
+- Aggregates quantities by stable material item ID using checked integer addition.
+- Preserves the IDs of all cost records used in the result.
+
+A missing segment produces an incomplete result with the first uncovered level. An overlapping or duplicate revision segment is rejected rather than arbitrarily selected. Unverified, expired, malformed, or permission-ineligible matching records block the calculation. A different game version is not a fallback. Missing cost data is never interpreted as zero. Integer overflow produces an explicit failure.
+
+#### Manual inventory input
+
+Actual material inventory is not available from the current account retrieval model. M52 therefore supports user-entered inventory quantities:
+- Each entry binds one stable material item ID to a non-negative integer quantity.
+- An explicit quantity of zero means the user entered zero.
+- An absent item entry means inventory was not entered for that item; it is not zero.
+- Duplicate item IDs, blank IDs, and negative quantities are invalid.
+- Invalid inventory input does not corrupt or suppress the verified required-cost total, but owned and remaining quantities are withheld until the inventory input is corrected.
+- For a valid manually entered quantity, remaining quantity is max(required - owned, 0).
+- If inventory is absent or an individual material was not entered, remaining quantity is unknown, not the full requirement.
+- Inventory is labeled as manually entered and timestamped. It is not represented as account-retrieved, synced, or independently verified.
+
+Manual inventory entry is a calculation input only in this milestone. Persistence, inventory editing UI, and account synchronization are not included.
+
+#### Scope and exclusions
+
+M52 implements domain calculation and tests only. It does not implement:
+- A character/weapon selection screen or Materials Calculator UI.
+- Persistent storage or synchronization of manual inventory.
+- A bundled material-cost dataset or automatic source collector.
+- Artifact enhancement/feeding costs.
+- Domain schedules, drop yields, resin requirements, farming-time estimates, or daily farming plans.
+- AI-generated quantities or AI authority over numerical results.
+
+A future UI must expose incomplete/invalid cost-data states and must never present unknown remaining quantities as zero.
