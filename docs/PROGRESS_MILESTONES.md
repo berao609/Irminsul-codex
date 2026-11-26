@@ -4033,3 +4033,36 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 5. Expand and collapse each Chronicle section and confirm the page remains responsive.
 
 **Boundary:** This is a structural extraction, not a UI redesign or performance optimization claim.
+
+
+## Milestone 068 - Extract Lineup Simulator Presentation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Continue AUD-002 by separating the Lineup Simulator UI from the oversized MainActivity source file.
+
+**Implemented:**
+- Moved the Lineup Simulator composable into `presentation/LineupSimulatorSection.kt`.
+- Kept selection state, active-roster filtering, stale/partial status derivation, and toggle callbacks in `CodexScreen`.
+- Kept `LineupSelectionRules` unchanged in the domain layer.
+- Moved lineup-specific artwork and element fallback helpers with the extracted presentation.
+- Preserved the four-slot layout, selection order, full-team behavior, roster warnings, and descriptive-only element summary.
+- No account data, persistence, navigation, or analysis behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/LineupSimulatorSection.kt`
+
+**Commits:**
+- `e2e21c3703f733448e7918ea7be7ad2de3b52636`
+- `21b68f750a54fce3f5115146225cfca1638bda7b`
+
+**Verification status:** CI pending. Physical-device verification pending.
+
+**Device checklist:**
+1. Expand Lineup Simulator on the Visuals page.
+2. Add four characters, remove one, and add a different character.
+3. Confirm slot order and the four-character limit.
+4. Confirm stale/partial roster warnings and empty-roster messaging.
+5. Collapse and reopen the section; confirm selections remain intact.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed.
