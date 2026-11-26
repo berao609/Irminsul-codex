@@ -4120,3 +4120,23 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 **Result:** Character Showcase extraction is cleared. Continue AUD-002 with one focused presentation extraction at a time.
 
 **Boundary:** No measured performance improvement is claimed.
+
+
+## Milestone 071 - Extract Materials Planner Presentation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Continue AUD-002 by separating the Materials Planner UI and its presentation-local persistence helpers from MainActivity.
+
+**Implemented:**
+- Moved Materials Planner composable, target option/row models, preference-backed state, and manual material JSON serialization helpers into `presentation/MaterialsPlannerSection.kt`.
+- Kept MainActivity's existing call site and supplied the extracted composable through an import.
+- Preserved existing SharedPreferences keys, saved-row serialization, and domain calculation logic.
+- No intentional behavior or persistence format change.
+
+**Commits:**
+- `1336b1de15c3920fcd3fd34409743efec8135cd0`
+- `9f19650b11a6180696b988c5baaa01c9d7cccf26`
+
+**Verification status:** CI runs #584 and #585 are pending. Physical-device verification is pending.
+
+**Boundary:** Structural extraction only; no measured performance improvement is claimed.
