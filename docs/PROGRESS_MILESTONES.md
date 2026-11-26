@@ -4085,10 +4085,14 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `96628ec862051308703c0a90e783bf77bbcac8c6`
 - `f3ca764cfb0c22291cd92baeceb753679369e5cc`
 - `177c74737e4097d1187499784ff5fd253f15d551`
+- `6aa462c0743264f2a48311d20ed6b17c181ea59c`
+- `6ab25a876e7aed9e7db4f92e1cad7743ab5a0fc9`
 
 **Static source verification:** MainActivity imports and calls the extracted composable; its previous private implementation is absent; selected-character ownership remains in CodexScreen; roster and detail components are present in the new presentation file.
 
 **Verification status:** CI pending. Physical-device verification pending.
+
+**CI correction record:** Initial Debug CI attempts found missing coroutine imports in the extracted file and a shared avatar fallback still referenced by the recommendation card in MainActivity. Both issues were corrected in commits `6aa462c` and `6ab25a8`. Subsequent CI reruns are pending; do not treat the earlier failed runs as passing.
 
 **Device checklist:**
 1. Open Visuals and expand Character Roster.
