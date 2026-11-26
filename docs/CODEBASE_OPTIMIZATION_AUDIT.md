@@ -7,7 +7,7 @@
 - **Record purpose:** Track the phased codebase optimization audit independently of the development milestone history.
 - **Audit mode:** Read-only investigation until the consolidated audit plan is reviewed and the user separately authorizes implementation.
 - **Overall status:** In progress
-- **Current phase:** Part 5 - Data processing and local-first design
+- **Current phase:** Part 6 - Gradle, dependencies, build, and CI
 - **Last updated:** 2026-11-26
 
 ## 1. Objective
@@ -392,11 +392,11 @@ When resuming after a pause:
 - **Overall audit status:** In progress.
 - **Current phase:** Part 4 - Jetpack Compose performance and UI architecture.
 - **Completed audit parts:** Parts 1, 2, and 3.
-- **In-progress audit parts:** Part 5.
+- **In-progress audit parts:** Part 6.
 - **Blocked items:** None.
 - **Application source changes made by this audit:** None.
-- **Current stopping point:** Part 4 static Compose review completed. No runtime profiling or device performance measurements were performed.
-- **Next action:** Inspect account retrieval, parsing, persistence, cache/restore, and offline analysis data flow for Part 5.
+- **Current stopping point:** Part 5 static data-flow review completed. No large-account profiling or offline-mode device test was performed.
+- **Next action:** Inspect Gradle configuration, dependency graph, build variants, build tasks, and CI workflows for Part 6.
 
 ## 9. Audit completion criteria
 
@@ -482,3 +482,35 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Part 4 activity log
 - 2026-11-26: Reviewed Compose state collection, tab content conditions, root scrolling, roster filtering/sorting and eager grid construction, character detail rendering, and collection sorting. Recorded AUD-004 and AUD-005. Part 4 completed as a static review with runtime profiling limitations stated. No app source/config/tests/workflows modified.
+
+
+## Part 5 - Data processing and local-first design (completed)
+
+### Evidence inspected
+- `HoYoLabClient.kt`: seven initial account endpoints launched concurrently; character detail retrieved in sequential batches of eight with a 200 ms inter-batch delay; raw response preservation; JSON export assembly.
+- `AccountExportDataPreserver.kt`: recursive deep-copy of JSONObject/JSONArray values, preserving source fields and nulls while adding property names.
+- `AccountExportMapper.kt`: conversion from raw JSON into normalized domain models, structured data, coverage/freshness, and character integrity.
+- `RoomAccountSnapshotStore.kt` and `SnapshotJsonChunks.kt`: chunked raw JSON persistence, transaction boundary, retrieval and legacy fallback.
+- `AccountViewModel.kt`: local snapshot restore, persistence, analysis scheduling, and UI state flow.
+- `AccountIntelligenceEngine.kt`: deterministic analysis stages over normalized snapshots.
+
+### Finding AUD-006 - CPU-heavy mapping and analysis are not explicitly dispatched off the main thread
+- **Classification:** High-priority responsiveness risk; requires measurement.
+- **Evidence:** `HoYoLabAccountRepository.fetchAccountExport` calls `exportJson` then immediately calls `mapExport(json)` in the caller context. The default network exporter uses `withContext(Dispatchers.IO)`, but that context is restored when it returns. The repository mapper therefore runs in the original caller context. The ViewModel is normally invoked from Compose/main and calls `analyzeSnapshot` synchronously; `AccountIntelligenceEngine.analyze` runs multiple analyzers synchronously. `RoomAccountSnapshotStore.save` also performs raw JSON chunk splitting and entity-list construction before its first Room suspend operation; `getLatest` maps the restored JSON after the DAO suspend call returns.
+- **Impact:** Mapping a full export, running all deterministic analyzers, splitting a large raw JSON export into chunks, and mapping restored snapshots may occupy the main thread and cause UI stalls/ANRs for large account data.
+- **Confidence:** High for the execution-context path by static inspection; actual duration and user-visible jank not measured.
+- **Recommendation:** Move CPU-bound mapping, chunk preparation, and deterministic analysis to an injected/default `Dispatchers.Default` (or an appropriate IO dispatcher for serialization/storage preparation). Keep database operations on Room's managed dispatchers. Make dispatcher ownership explicit and injectable for tests; avoid indiscriminately wrapping all suspend operations.
+- **Verification:** Profile cold import, cached restore, and analysis with a full roster; inspect main-thread traces and frame timing. Confirm cancellation and UI progress/error behavior remain correct.
+- **Implementation status:** None.
+
+### Data-flow observations (no confirmed defect)
+- The network exporter performs seven independent initial requests concurrently, then serially batches character details in groups of eight with a short delay. This is a reasonable balance between parallelism and endpoint/request limits; do not increase concurrency without rate-limit evidence.
+- Raw source data is deliberately preserved and stored alongside normalized domain models. This supports the local-first archive and future analysis, but creates expected memory/CPU overhead from JSON deep-copying, serialization, parsing, and normalized mapping. Preserve raw export fidelity unless product requirements explicitly change.
+- Room persistence stores large raw JSON in 32 KiB chunks, avoids oversized SQLite text values, writes snapshot metadata/chunks transactionally, and supports legacy unchunked rows.
+- Snapshot restoration reads local Room data and runs deterministic analysis without contacting HoYoLAB. This is a key local-first behavior to preserve.
+- `getHistory` currently loads and maps every history record into full `AccountExport` objects. No call-site evidence or large history size was established in this review; investigate usage before changing the API or loading strategy.
+- The JSON data preserver recursively copies source objects. This is intentional lossless preservation, not automatically redundant copying. Any optimization must retain unknown fields, nulls, and nested values.
+- No remote AI dependency is required for the deterministic analysis path inspected.
+
+### Part 5 activity log
+- 2026-11-26: Reviewed network fan-out/detail batching, raw JSON preservation, mapper transformations, chunked Room persistence, snapshot restoration, and deterministic analysis execution context. Recorded AUD-006. Part 5 completed as static review; no app source/config/tests/workflows modified.
