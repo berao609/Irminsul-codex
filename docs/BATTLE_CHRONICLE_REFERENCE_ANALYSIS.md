@@ -336,7 +336,9 @@ This section records a separate HoYoLAB calculator page explored after the Battl
    - Serenitea Pot: select furnishings; replica importing is supported.
    - Artifact: select 1–5 artifacts.
 
-These are labels and options visible in the captured HTML. Their calculation logic and full subsequent screens have not yet been verified.
+**Irminsul scope decision:** Exclude Artifact and Serenitea Pot custom calculations. The user explicitly does not want these modules included. The observed HoYoLAB options are reference-page features only, not requirements for Irminsul.
+
+These are labels and options visible in the captured HTML. Their calculation logic and full subsequent screens have not been verified.
 
 ### 8.3 Interaction observations
 
@@ -392,16 +394,26 @@ The exact material categories, per-material inventory balance, and whether the w
 
 ### 8.7 External item and material reference
 
-**Product decision:** Irminsul Codex may use the Genshin Impact Wiki as an external reference for explaining game resources, enhancement materials, and their uses. The app does not need to reproduce the Wiki's encyclopedia content locally.
+**Product decision:** Use **HoYoWiki as the primary external reference** for explaining characters, weapons, materials, and their uses. Offer the community-maintained Genshin Impact Wiki as a fallback when a HoYoWiki entry is missing or insufficient. The app does not need to reproduce either Wiki's encyclopedia content locally.
 
-**Suggested interaction:** Make a material/resource name or its detail affordance open the corresponding Genshin Impact Wiki page. Prefer a direct item-specific page when the mapping is known; use a relevant category or general reference page only as a fallback. Keep the calculator's required quantities and inventory arithmetic inside Irminsul.
+**Suggested interaction:** Make a material/resource name or its detail affordance open the corresponding HoYoWiki entry. Prefer a direct item-specific page when the mapping is known; use the community Wiki as a fallback. Keep the calculator's required quantities and inventory arithmetic inside Irminsul.
 
-**Boundary:** The Wiki is explanatory reference content, not a calculation engine or a runtime data dependency. Do not require live Wiki access for character/weapon material calculations. If a page cannot be opened, the calculator must still work.
+**Boundary:** Wikis are explanatory reference content, not a calculation engine or runtime data dependency. Do not require live Wiki access for character/weapon material calculations. If a page cannot be opened, the calculator must still work.
 
-**Reference checked:** The Genshin Impact Wiki provides item/material classification and dedicated material pages, including character talent materials and character/weapon enhancement materials:
+**Reference checked:** The community Genshin Impact Wiki provides item/material classification and dedicated material pages, including character talent materials and character/weapon enhancement materials:
 - [Genshin Impact Wiki](https://genshin-impact.fandom.com/wiki/Genshin_Impact_Wiki)
 - [Material](https://genshin-impact.fandom.com/wiki/Material)
 - [Character Talent Material](https://genshin-impact.fandom.com/wiki/Character_Talent_Material)
 - [Character and Weapon Enhancement Materials](https://genshin-impact.fandom.com/wiki/Category:Character_and_Weapon_Enhancement_Materials)
 
 These pages confirm the Wiki is suitable as an explanatory reference. Exact URL resolution for each in-app resource should be handled deliberately and tested; do not construct arbitrary URLs from untrusted display strings.
+
+
+### 8.8 Explicitly excluded custom calculation modules
+
+The user explicitly decided to exclude the following HoYoLAB calculator modules from Irminsul Codex:
+
+- **Artifact custom calculation** (the option to select 1–5 artifacts).
+- **Serenitea Pot furnishing calculation** (including replica importing).
+
+Do not implement or plan these as part of the Irminsul enhancement calculator unless the user later changes this scope decision. Character and weapon enhancement calculations remain in scope.
