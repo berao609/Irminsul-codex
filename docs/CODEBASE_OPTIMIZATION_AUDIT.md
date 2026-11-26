@@ -5,9 +5,9 @@
 - **Repository:** `berao609/Irminsul-codex`
 - **Working branch:** `main` (repository default branch, per `AGENTS.md`)
 - **Record purpose:** Track the phased codebase optimization audit independently of the development milestone history.
-- **Audit mode:** Read-only investigation until the consolidated audit plan is reviewed and the user separately authorizes implementation.
+- **Audit mode:** Investigation completed. Remediation is proceeding in separately authorized, focused implementation batches.
 - **Overall status:** In progress
-- **Current phase:** Audit complete - awaiting user review
+- **Current phase:** Remediation Batch 3 - AUD-006 (CPU-bound work off the main thread)
 - **Last updated:** 2026-11-26
 
 ## 1. Objective
@@ -685,3 +685,113 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Part 8 activity log
 - 2026-11-26: Reviewed agent instructions, Debug/Release workflows, build support files, ignore rules, and existing audit findings. Recorded AUD-010 and optional CI concurrency improvement. Part 8 completed as static review; no app source/config/tests/workflows or AGENTS.md modified.
+
+
+---
+
+## 10. Remediation implementation tracker
+
+**Purpose:** Continue this audit record through implementation and verification of every approved batch. The findings and investigation history above remain intact. This tracker records the later implementation phase and supersedes the earlier audit-complete / awaiting-review status.
+
+**Tracking rules:**
+- A batch is not cleared until its relevant CI checks and required physical-device checks pass.
+- Record implementation, commits, CI, APK evidence, and device verification separately.
+- Do not claim measured performance improvement without comparable profiling evidence.
+- Keep follow-up enhancements visible without reopening an otherwise cleared batch.
+
+### Batch overview
+
+| Batch | Audit finding(s) | Status | Notes |
+|---|---|---|---|
+| 1 | AUD-008 credential protection; AUD-009 Room migration integrity | Cleared | CI #521 and #522 passed. User completed credential/session and sign-out device checks. |
+| 2 | AUD-003 JSON export false-success fix | Cleared | Final CI #530 passed. User confirmed export flow is clear. Cancellation during an active save remains a future UX enhancement. |
+| 3 | AUD-006 CPU-heavy processing off main thread | Implementation committed; CI/device verification in progress | 267 unit tests passed in CI #542. Room instrumentation tests and final artifact checks are still running. |
+| 4 | AUD-007 Release test gate | Not started | Next approved batch after Batch 3 is cleared. |
+| 5 | AUD-005 lazy roster grid | Not started | Preserve existing filtering, sorting, and selection behavior. |
+| 6 | AUD-002 incremental UI extraction | Not started | Extract only cohesive sections, incrementally. |
+| 7 | AUD-004 lifecycle-aware StateFlow collection | Not started | Low-risk lifecycle improvement. |
+| 8 | AUD-010 agent workflow efficiency | Not started | Keep safety and Git rules unconditional. |
+
+### Batch 1 - Credential protection and Room migration integrity
+
+**Findings:** AUD-008 and AUD-009  
+**Status:** Cleared
+
+**Implementation:**
+- Added Android Keystore-backed AES-GCM encryption for the HoYoLAB cookie.
+- Kept non-sensitive preferences separate from the encrypted credential ciphertext.
+- Added legacy plaintext migration and explicit credential clearing behavior.
+- Added Room version-1-to-version-2 migration instrumentation coverage and committed schema snapshots.
+
+**Principal files:**
+- `app/src/main/java/com/irminsul/codex/integration/security/HoYoLabCredentialStore.kt`
+- `app/src/androidTest/java/com/irminsul/codex/data/local/IrminsulDatabaseMigrationTest.kt`
+- `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/1.json`
+- `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/2.json`
+- `app/build.gradle.kts`
+
+**Commits:** `a060320a`, `dcaa8066`, `2dc605dc`, `e0d57b1a`, `f1b204b3`, `f44f5ef8`  
+**CI:** #521 passed, including all eight Android instrumentation tests. #522 passed, including build and schema verification.  
+**Physical-device verification:** User confirmed the session survived installation and app restarts; sign-out returned to login while the saved character roster remained available; fresh login succeeded and remained connected after another restart.  
+**Verification boundary:** The UI checks did not directly inspect encrypted bytes on-device. Encryption and migration behavior are covered by automated tests.
+
+### Batch 2 - JSON export save-result integrity
+
+**Finding:** AUD-003  
+**Status:** Cleared
+
+**Implementation:**
+- Added a testable JSON document writer.
+- Treats a null output stream, open failure, write failure, or close failure as a failed save.
+- Reports success only after the output stream has been written and closed successfully.
+- Handles document-picker cancellation without displaying a false success message.
+
+**Principal files:**
+- `app/src/main/java/com/irminsul/codex/data/export/JsonDocumentWriter.kt`
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/test/java/com/irminsul/codex/data/export/JsonDocumentWriterTest.kt`
+
+**Commits:** `a509acede`, `c62e9f73`, `d4c03692`, `f2f83954`, `ec38bc78`  
+**CI:** #526 passed, #527 passed, #528 failed, #529 passed, and final integrated run #530 passed.  
+**Physical-device verification:** User confirmed the export flow is clear.  
+**Follow-up requirement:** Once an export/save operation begins, the UI currently has no cancel control. Add a safe cancellation action in a future relevant batch. A cancelled or partially written file must never be reported as successfully saved. This follow-up does not reopen the completed false-success fix.
+
+### Batch 3 - CPU-heavy processing off the main thread
+
+**Finding:** AUD-006  
+**Status:** Implementation committed; final CI and physical-device verification pending.
+
+**Implementation:**
+- `HoYoLabAccountRepository` now performs export JSON-to-domain mapping on an injected CPU dispatcher, defaulting to `Dispatchers.Default`.
+- `AccountViewModel` now runs deterministic account analysis on an injected CPU dispatcher. Its factory forwards the dispatcher and analyzer dependencies.
+- `RoomAccountSnapshotStore` now performs JSON chunk splitting, chunk joining, and restored snapshot mapping on an injected CPU dispatcher.
+- Room DAO queries and transactions remain suspend Room operations on Room-managed executors.
+- Coroutine cancellation is rethrown rather than converted into ordinary mapping or analysis failures.
+- No dependency, Room schema, JSON format, account model, or analysis rule was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/repository/HoYoLabAccountRepository.kt`
+- `app/src/main/java/com/irminsul/codex/data/local/repository/RoomAccountSnapshotStore.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/viewmodel/AccountViewModel.kt`
+- `app/src/test/java/com/irminsul/codex/data/repository/HoYoLabAccountRepositoryTest.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/viewmodel/AccountViewModelTest.kt`
+- `app/src/androidTest/java/com/irminsul/codex/data/local/RoomAccountSnapshotStoreTest.kt`
+
+**Commits:** `6f752366`, `9f7ae9a7`, `c8618646`, `d061d1a3`, `27be3508`, `a0488215`, `b1760fba`, `448d2823`, `3a88ba07`, `393e117c`, `d8719317`, `9bc551fe`.
+
+**Automated verification:**
+- CI #541 passed unit tests, Debug APK build, Room schema verification, and APK signature verification. Room instrumentation tests were skipped on that run because its changed-file set did not include the instrumentation test.
+- CI #542 is the final run for the instrumentation-test change. Its 267 unit tests passed. Room instrumentation tests are still in progress; build, schema, signature, and artifact steps have not yet been confirmed.
+- Earlier intermediate runs #532 through #540 failed while tests were being adjusted for asynchronous dispatch and thread verification. Those runs are superseded by the later corrected run #541 and final run #542. Do not treat an intermediate failure as a final batch result.
+
+**Performance evidence limitation:** The original audit established the main-thread execution paths by static inspection, but no baseline System Trace or comparable before-change timing was captured before implementation. No quantified speedup or frame-time improvement is claimed. Physical-device responsiveness checks and any available post-change profiling remain pending.
+
+**Next actions:**
+1. Confirm CI #542, including Room instrumentation tests, Debug APK build, schema verification, and signature verification.
+2. Install the resulting Debug APK and test a fresh account retrieval, cached snapshot restoration after app restart, and full-roster analysis.
+3. Confirm the UI remains responsive while these operations run and that the same account data and deterministic analysis results are preserved.
+4. Clear Batch 3 only after required checks pass. Then begin Batch 4, AUD-007.
+
+### Continuing update log
+
+- 2026-11-26: Recorded Batch 1 and Batch 2 implementation and verification history; started the Batch 3 remediation record. Batch 3 source changes are committed. Unit tests passed in CI #542; Room instrumentation and final build checks remain pending.
