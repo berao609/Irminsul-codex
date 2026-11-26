@@ -64,6 +64,7 @@ import com.irminsul.codex.presentation.ChronicleOverviewSection
 import com.irminsul.codex.presentation.ChronicleExplorationSection
 import com.irminsul.codex.presentation.ChronicleRecordSection
 import com.irminsul.codex.presentation.formatGameDescription
+import com.irminsul.codex.presentation.sortCharactersByRelease
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import com.irminsul.codex.integration.security.HoYoLabCredentialStore
