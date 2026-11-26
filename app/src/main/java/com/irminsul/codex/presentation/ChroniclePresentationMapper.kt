@@ -8,13 +8,23 @@ data class ChronicleRegion(val name: String, val progress: Float, val percentage
 enum class ChronicleRecordMode { SPIRAL_ABYSS, IMAGINARIUM_THEATER }
 
 object ChroniclePresentationMapper {
-    private val overviewFields = linkedMapOf(
-        "nickname" to "Player",
-        "level" to "Adventure Rank",
-        "world_level" to "World Level",
-        "finish_achievement_num" to "Achievements",
+    private val overviewStatFields = linkedMapOf(
+        "active_day_number" to "Active Days",
         "achievement_number" to "Achievements",
-        "active_day_number" to "Active Days"
+        "avatar_number" to "Characters",
+        "way_point_number" to "Waypoints",
+        "domain_number" to "Domains",
+        "anemoculus_number" to "Anemoculi",
+        "geoculus_number" to "Geoculi",
+        "electroculus_number" to "Electroculi",
+        "dendroculus_number" to "Dendroculi",
+        "hydroculus_number" to "Hydroculi",
+        "pyroculus_number" to "Pyroculi",
+        "precious_chest_number" to "Precious Chests",
+        "luxurious_chest_number" to "Luxurious Chests",
+        "exquisite_chest_number" to "Exquisite Chests",
+        "common_chest_number" to "Common Chests",
+        "magic_chest_number" to "Remarkable Chests"
     )
     private val abyssFields = linkedMapOf(
         "total_battle_times" to "Battles",
@@ -30,16 +40,25 @@ object ChroniclePresentationMapper {
 
     fun accountOverview(value: DataValue<StructuredData>): List<ChronicleMetric> {
         val fields = availableObject(value) ?: return emptyList()
-        return overviewFields.mapNotNull { (key, label) ->
-            fields[key]?.displayScalar()?.takeIf { it.isNotBlank() }?.let { ChronicleMetric(label, it) }
-        }.distinctBy { it.label }
+        val role = fields["role"].objectFields()
+        val stats = fields["stats"].objectFields()
+        val result = mutableListOf<ChronicleMetric>()
+        (role["nickname"] ?: fields["nickname"])?.displayScalar()
+            ?.takeIf { it.isNotBlank() }?.let { result += ChronicleMetric("Player", it) }
+        (role["level"] ?: fields["level"])?.displayScalar()
+            ?.takeIf { it.isNotBlank() }?.let { result += ChronicleMetric("Adventure Rank", it) }
+        overviewStatFields.forEach { (key, label) ->
+            stats[key]?.displayScalar()?.takeIf { it.isNotBlank() }?.let {
+                result += ChronicleMetric(label, it)
+            }
+        }
+        return result.distinctBy { it.label }
     }
 
     fun explorationRegions(value: DataValue<StructuredData>): List<ChronicleRegion> {
         val fields = availableObject(value) ?: return emptyList()
-        val entries = fields["exploration"] as? StructuredData.ArrayValue
-            ?: fields["exploration_list"] as? StructuredData.ArrayValue
-            ?: return emptyList()
+        val entries = (fields["world_explorations"] ?: fields["exploration"]
+            ?: fields["exploration_list"]) as? StructuredData.ArrayValue ?: return emptyList()
         return entries.items.mapNotNull { item ->
             val region = item as? StructuredData.ObjectValue ?: return@mapNotNull null
             val name = (region.fields["name"] ?: region.fields["area_name"])?.displayScalar()
@@ -47,15 +66,24 @@ object ChroniclePresentationMapper {
             val rawProgress = (region.fields["exploration_percentage"]
                 ?: region.fields["exploration_percent"])?.displayScalar()?.toDoubleOrNull()
                 ?: return@mapNotNull null
-            val normalized = when {
-                rawProgress < 0.0 -> return@mapNotNull null
-                rawProgress > 100.0 && rawProgress <= 10000.0 -> rawProgress / 10000.0
-                rawProgress <= 100.0 -> rawProgress / 100.0
-                else -> return@mapNotNull null
-            }.coerceIn(0.0, 1.0)
-            ChronicleRegion(name, normalized.toFloat(), "${(normalized * 100).toInt()}%")
+            if (rawProgress < 0.0 || rawProgress > 10000.0) return@mapNotNull null
+            // HoYoLAB's profile payload uses tenths of a percent (1000 = 100%).
+            // Retain the displayed over-exploration value while capping the visual bar.
+            val percent = when {
+                rawProgress <= 100.0 -> rawProgress
+                rawProgress <= 2000.0 -> rawProgress / 10.0
+                else -> rawProgress / 100.0
+            }
+            ChronicleRegion(
+                name = name,
+                progress = (percent / 100.0).coerceIn(0.0, 1.0).toFloat(),
+                percentageLabel = if (percent % 1.0 == 0.0) "${percent.toInt()}%" else "${"%.1f".format(java.util.Locale.ROOT, percent)}%"
+            )
         }
     }
+
+    private fun StructuredData?.objectFields(): Map<String, StructuredData> =
+        (this as? StructuredData.ObjectValue)?.fields.orEmpty()
 
     fun recordMetrics(value: DataValue<StructuredData>, mode: ChronicleRecordMode): List<ChronicleMetric> {
         val fields = availableObject(value) ?: return emptyList()

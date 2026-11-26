@@ -9,37 +9,69 @@ import org.junit.Test
 class ChroniclePresentationMapperTest {
     private fun obj(vararg fields: Pair<String, StructuredData>) = StructuredData.ObjectValue(mapOf(*fields))
 
-    @Test fun accountOverviewUsesOnlyApprovedSummaryFields() {
+    @Test fun accountOverviewMapsActualNestedProfilePayloadAndOnlyApprovedStats() {
         val data = DataValue.Available(obj(
-            "nickname" to StructuredData.StringValue("Traveler"),
-            "level" to StructuredData.NumberValue("60"),
-            "uid" to StructuredData.StringValue("800000001"),
-            "avatar_url" to StructuredData.StringValue("https://example.invalid/a.png"),
-            "unknown_internal_field" to StructuredData.StringValue("do not show")
+            "role" to obj(
+                "nickname" to StructuredData.StringValue("Leywin"),
+                "level" to StructuredData.NumberValue("60")
+            ),
+            "stats" to obj(
+                "active_day_number" to StructuredData.NumberValue("474"),
+                "achievement_number" to StructuredData.NumberValue("1337"),
+                "avatar_number" to StructuredData.NumberValue("67"),
+                "uid" to StructuredData.StringValue("865157206"),
+                "field_ext_map" to obj("image_url" to StructuredData.StringValue("https://example.invalid/a.png"))
+            )
         ), null)
         assertEquals(
-            listOf(ChronicleMetric("Player", "Traveler"), ChronicleMetric("Adventure Rank", "60")),
+            listOf(
+                ChronicleMetric("Player", "Leywin"),
+                ChronicleMetric("Adventure Rank", "60"),
+                ChronicleMetric("Active Days", "474"),
+                ChronicleMetric("Achievements", "1337"),
+                ChronicleMetric("Characters", "67")
+            ),
             ChroniclePresentationMapper.accountOverview(data)
         )
     }
 
-    @Test fun explorationMapsNamedRegionsAndNormalizesBasisPointPercentages() {
+    @Test fun explorationMapsActualWorldExplorationsAndClampsBonusProgress() {
+        val data = DataValue.Available(obj(
+            "world_explorations" to StructuredData.ArrayValue(listOf(
+                obj("name" to StructuredData.StringValue("Snezhnaya"),
+                    "exploration_percentage" to StructuredData.NumberValue("620"),
+                    "id" to StructuredData.NumberValue("20"),
+                    "area_exploration_list" to StructuredData.ArrayValue(emptyList())),
+                obj("name" to StructuredData.StringValue("Nod-Krai"),
+                    "exploration_percentage" to StructuredData.NumberValue("1000")),
+                obj("name" to StructuredData.StringValue("Sumeru"),
+                    "exploration_percentage" to StructuredData.NumberValue("1183"))
+            ))
+        ), null)
+        val regions = ChroniclePresentationMapper.explorationRegions(data)
+        assertEquals(3, regions.size)
+        assertEquals("Snezhnaya", regions[0].name)
+        assertEquals("62%", regions[0].percentageLabel)
+        assertEquals(0.62f, regions[0].progress, 0.001f)
+        assertEquals("100%", regions[1].percentageLabel)
+        assertEquals("118.3%", regions[2].percentageLabel)
+        assertEquals(1f, regions[2].progress, 0.001f)
+    }
+
+    @Test fun explorationSupportsLegacyFlatShapeAndHidesTechnicalValues() {
         val data = DataValue.Available(obj(
             "exploration" to StructuredData.ArrayValue(listOf(
                 obj("name" to StructuredData.StringValue("Mondstadt"),
                     "exploration_percentage" to StructuredData.NumberValue("8750"),
                     "id" to StructuredData.NumberValue("1"),
-                    "icon" to StructuredData.StringValue("https://example.invalid/icon.png")),
-                obj("name" to StructuredData.StringValue("Liyue"),
-                    "exploration_percentage" to StructuredData.NumberValue("82"))
+                    "icon" to StructuredData.StringValue("https://example.invalid/icon.png"))
             ))
         ), null)
         val regions = ChroniclePresentationMapper.explorationRegions(data)
-        assertEquals(2, regions.size)
+        assertEquals(1, regions.size)
         assertEquals("Mondstadt", regions[0].name)
-        assertEquals("87%", regions[0].percentageLabel)
+        assertEquals("87.5%", regions[0].percentageLabel)
         assertEquals(0.875f, regions[0].progress, 0.001f)
-        assertEquals("82%", regions[1].percentageLabel)
     }
 
     @Test fun modeMetricsAreAllowlistedAndNeverExposeNestedOrTechnicalFields() {
