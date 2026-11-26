@@ -52,9 +52,27 @@ Statuses used:
 
 ### Part 1 - Repository inventory
 
-**Status:** Not started
+**Status:** In progress
 
 **Purpose:** Establish an accurate map of the repository before drawing architectural or performance conclusions.
+
+**Initial inventory evidence (2026-11-26):**
+- Recursive Git tree on `main`: 175 entries, not truncated; 122 tracked file blobs, approximately 1.72 MB total.
+- Root structure: single Android app module (`app`), Gradle wrapper/configuration, version properties, two GitHub Actions workflows, and documentation/reference material under `docs/`.
+- App source: one Android manifest, one very large `MainActivity.kt` (146,608 bytes), plus separate API, data/catalogue, local Room storage, mapper, repository, domain analysis/model/validation, ViewModel, and login UI packages.
+- App tests: JVM unit tests across API, catalogue, mapper, repository, domain analysis/model/validation, and ViewModel; one Room instrumented test file under `androidTest`.
+- Root/app build configuration and version catalog are present. Gradle wrapper files were not present in the recursive tree inventory.
+- CI workflows: `.github/workflows/build.yml` and `.github/workflows/release.yml`.
+- Largest tracked files by size include `docs/PROGRESS_MILESTONES.md` (289,767 bytes), `MainActivity.kt` (146,608 bytes), five captured Hoyolab HTML/CSS reference files (78-116 KB each), `docs/SPECS.md` (116,288 bytes), and the audit/reference documentation.
+- These are inventory observations only. Large file size is not by itself proof of a defect; the UI source and reference captures require context and further inspection.
+
+
+**Initial structural observations (not yet classified as findings):**
+- `MainActivity.kt` is unusually large relative to the other source files and is a clear candidate for focused responsibility/structure review in Part 2 and Compose review in Part 4.
+- Documentation/reference capture files are among the largest tracked assets. Their purpose, duplication, and whether they are needed at runtime or solely for offline development must be checked before any recommendation to remove or relocate them.
+- The repository has a single app module. This is not inherently a problem; modularization should be considered only if concrete coupling or build/ownership benefits are demonstrated.
+
+**Inventory limitations:** This first pass used GitHub's recursive tree and file metadata. It did not inspect every source file, calculate test coverage, build the app, run tests, profile runtime performance, or validate on a physical device. The Gradle wrapper's absence from the tree is an observation to verify against repository configuration and setup instructions.
 
 **Investigation scope:**
 - Repository root and module structure.
@@ -71,6 +89,7 @@ Statuses used:
 ### Part 2 - Architecture and code complexity
 
 **Status:** Not started
+
 
 **Purpose:** Assess whether the current architecture is understandable, cohesive, appropriately layered, and proportionate to the application's actual needs.
 
@@ -285,6 +304,14 @@ When resuming after a pause:
 
 ## 7. Audit activity log
 
+### 2026-11-26 - Part 1 initial inventory completed
+
+
+- Retrieved the recursive `main` Git tree (175 entries, non-truncated) and reviewed root/app/source/test/docs/workflow structure plus key project instructions and build configuration.
+- Inventory: 122 tracked files, ~1.72 MB total. `MainActivity.kt` is 146,608 bytes; the milestone record is 289,767 bytes; the five captured HTML/CSS reference files are 78-116 KB each.
+- Identified follow-up inspection candidates without prematurely classifying them as defects: MainActivity responsibilities, purpose/runtime relevance of web reference captures, and whether project setup actually relies on a missing Gradle wrapper.
+- **No application code, build configuration, dependencies, tests, or workflows were modified.**
+
 ### 2026-11-26 - Audit plan initialized
 
 - **Status:** Preparation only; technical audit not started.
@@ -299,14 +326,14 @@ When resuming after a pause:
 
 ## 8. Current state and next action
 
-- **Overall audit status:** Not started.
-- **Current phase:** Preparation.
-- **Completed audit parts:** None.
-- **In-progress audit parts:** None.
-- **Blocked items:** Technical audit awaits confirmation that `main` is the intended target branch.
+- **Overall audit status:** In progress.
+- **Current phase:** Part 1 - Repository inventory.
+- **Completed audit parts:** None yet (Part 1 initial inventory evidence gathered; further checks needed before completion).
+- **In-progress audit parts:** Part 1.
+- **Blocked items:** None.
 - **Application source changes made by this audit:** None.
-- **Current stopping point:** The audit plan and tracking rules are established; no technical findings have been collected.
-- **Next action:** Ask the user to confirm the target branch. If confirmed, begin Part 1 and update this file with actual inventory evidence before proceeding to Part 2.
+- **Current stopping point:** Initial recursive inventory and project/build/workflow configuration review completed. Additional repository inventory verification remains before Part 1 is marked complete.
+- **Next action:** Verify root setup files and documentation references against the actual tree, inspect relevant file groups for generated/duplicate/reference assets, and finish Part 1's concise map and observations.
 
 ## 9. Audit completion criteria
 
