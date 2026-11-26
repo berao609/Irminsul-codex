@@ -390,13 +390,13 @@ When resuming after a pause:
 
 
 - **Overall audit status:** In progress.
-- **Current phase:** Part 4 - Jetpack Compose performance and UI architecture.
-- **Completed audit parts:** Parts 1, 2, and 3.
-- **In-progress audit parts:** Part 6.
+- **Current phase:** Part 7 - Testing, reliability, and security.
+- **Completed audit parts:** Parts 1, 2, 3, 4, 5, and 6.
+- **In-progress audit parts:** Part 7.
 - **Blocked items:** None.
 - **Application source changes made by this audit:** None.
-- **Current stopping point:** Part 5 static data-flow review completed. No large-account profiling or offline-mode device test was performed.
-- **Next action:** Inspect Gradle configuration, dependency graph, build variants, build tasks, and CI workflows for Part 6.
+- **Current stopping point:** Part 6 static build and CI review completed. No clean-room local build-time benchmark or dependency-resolution trace was performed.
+- **Next action:** Inspect test coverage, persistence/release reliability, credential handling, permissions, and security for Part 7.
 
 ## 9. Audit completion criteria
 
@@ -514,3 +514,39 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Part 5 activity log
 - 2026-11-26: Reviewed network fan-out/detail batching, raw JSON preservation, mapper transformations, chunked Room persistence, snapshot restoration, and deterministic analysis execution context. Recorded AUD-006. Part 5 completed as static review; no app source/config/tests/workflows modified.
+
+
+## Part 6 - Gradle, dependencies, build, and CI optimization (completed)
+
+### Evidence inspected
+- Root `build.gradle.kts`, `settings.gradle.kts`, and `gradle.properties`.
+- `gradle/libs.versions.toml`, `app/build.gradle.kts`, and `version.properties`.
+- `.github/workflows/build.yml` and `.github/workflows/release.yml`.
+- Android manifest and ProGuard rules.
+- Main source imports/usages for Coil and Material icons to check whether the corresponding visible dependencies are actually used.
+- Repository tree for Gradle wrapper files and Room schema snapshots.
+
+### Finding AUD-007 - Release workflow builds and publishes without running tests
+- **Classification:** Medium-priority release reliability gap.
+- **Evidence:** `.github/workflows/release.yml` validates the tag/version, configures signing, runs `gradle assembleRelease --no-daemon`, verifies the APK signature, calculates a checksum, and publishes the APK. It does not run unit tests or Room instrumentation tests. The Debug build workflow runs unit tests and conditionally runs Room instrumentation tests.
+- **Impact:** A release tag can publish an APK even if the tagged source has failing tests. A successful Release compilation and signature check do not establish behavioral correctness.
+- **Confidence:** Verified directly from the complete release workflow.
+- **Recommendation:** Add a test gate to the release workflow before publishing. At minimum run `testDebugUnitTest` (or an equivalent unit-test task against the tagged source). Decide whether Room instrumentation tests should also run on every release or whether the existing main-branch CI gate is sufficient; the release workflow should not silently imply test coverage it does not perform.
+- **Verification:** Create a test tag on a controlled branch or workflow test revision and confirm test failure prevents release publication.
+- **Implementation status:** None.
+
+### Build and CI observations (no confirmed defect)
+- The project has one app module, a centralized version catalog, Kotlin DSL, and KSP for Room. This is already a relatively simple build structure; no multi-module or build-logic restructuring is justified by this audit.
+- CI uses JDK 17 and Gradle 8.14.8. The Android Gradle Plugin is 8.5.0, Kotlin is 2.0.0, Compose compiler plugin is 2.0.0, and Room is 2.6.1. These are pinned versions, but this static review did not establish a specific compatibility failure. Upgrade as a coordinated, tested compatibility change rather than a blind version sweep.
+- The build workflow uses `gradle/actions/setup-gradle@v6`, which provides Gradle setup/caching support. It runs unit tests on every push and runs Room instrumentation tests when relevant persistence/schema/build files change or on manual dispatch. The path filter includes Room storage, mapper, snapshot model/contracts, Gradle configuration, and the workflow itself.
+- The workflow deliberately checks for KVM and retains an emulator TCG fallback. This is robust for GitHub-hosted runner variability. Do not remove this fallback or introduce paid runners as an assumed optimization.
+- Debug signing uses a dedicated persistent certificate supplied through Actions secrets; Release signing requires a separately configured keystore. Temporary keystore files are removed with an `always()` cleanup step. Release checkout disables persisted Git credentials.
+- Build workflow checkout uses `fetch-depth: 0`, supporting reliable comparison against the push event's `before` SHA for selective instrumentation testing. Reducing history depth is not recommended without proving that the diff base is always available.
+- The repository does not contain Gradle wrapper scripts/properties. CI installs the pinned Gradle distribution explicitly, while local development relies on an installed Gradle distribution. This is a reproducibility/onboarding trade-off, not a build defect in the current setup. Consider a wrapper only if consistent local setup across contributors becomes a requirement.
+- Coil and extended Material icons are used by the UI; they are not candidates for removal based on dependency name alone.
+- `lifecycle-runtime-ktx` appears in the direct dependency catalog but its APIs were not identified in the inspected main-source imports. Confirm its use across all source sets and transitive requirements before considering removal; its potential impact is likely small.
+- Release minification is disabled. Enabling R8 could reduce APK size, but it may introduce reflection/serialization/Room/Compose issues and should be a separate measured release-size project with mapping and smoke-test verification.
+- No build scan, Gradle task timing, dependency insight report, APK size baseline, or clean-room build benchmark was available. No claim of actual build slowness or dependency bloat is made.
+
+### Part 6 activity log
+- 2026-11-26: Reviewed Gradle scripts, version catalog, app dependencies, build/release workflows, signing configuration, manifest, ProGuard rules, wrapper presence, and visible dependency usages. Recorded AUD-007. Part 6 completed as static review; no app source/config/tests/workflows modified.
