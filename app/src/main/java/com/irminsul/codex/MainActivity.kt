@@ -55,6 +55,7 @@ import com.irminsul.codex.data.local.IrminsulDatabase
 import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
+import com.irminsul.codex.integration.security.HoYoLabCredentialStore
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
@@ -167,11 +168,14 @@ private fun CodexScreen(
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("irminsul_prefs", Context.MODE_PRIVATE) }
+    val credentialStore = remember(context) { HoYoLabCredentialStore(context.applicationContext) }
+    val storedCookieResult = remember(credentialStore) { runCatching { credentialStore.getCookie() } }
     val scope = rememberCoroutineScope()
     val accountExportState by accountViewModel.uiState.collectAsState()
 
     var uid by remember { mutableStateOf(prefs.getString("uid", "") ?: "") }
-    var cookie by remember { mutableStateOf(prefs.getString("cookie", "") ?: "") }
+    var credentialLoadError by remember { mutableStateOf(storedCookieResult.isFailure) }
+    var cookie by remember { mutableStateOf(storedCookieResult.getOrNull().orEmpty()) }
     var showCredentials by remember { mutableStateOf(uid.isBlank() || cookie.isBlank()) }
     var showWebLogin by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(CodexTab.HOME) }
@@ -212,10 +216,14 @@ private fun CodexScreen(
             errorMessage = "Enter both your UID and HoYoLAB cookie."
             return
         }
-        prefs.edit()
-            .putString("uid", targetUid.trim())
-            .putString("cookie", targetCookie.trim())
-            .apply()
+        try {
+            credentialStore.saveCookie(targetCookie.trim())
+        } catch (_: Exception) {
+            errorMessage = "Could not securely save HoYoLAB credentials. Clear saved credentials and sign in again."
+            return
+        }
+        prefs.edit().putString("uid", targetUid.trim()).apply()
+        credentialLoadError = false
 
         scope.launch {
             isLoading = true
@@ -261,8 +269,17 @@ private fun CodexScreen(
 
     fun handleWebLoginSuccess(capturedCookie: String) {
         showWebLogin = false
-        cookie = capturedCookie
-        prefs.edit().putString("cookie", capturedCookie).apply()
+        try {
+            credentialStore.saveCookie(capturedCookie.trim())
+        } catch (_: Exception) {
+            cookie = ""
+            credentialLoadError = true
+            showCredentials = true
+            errorMessage = "Could not securely save the HoYoLAB session. Clear saved credentials and sign in again."
+            return
+        }
+        cookie = capturedCookie.trim()
+        credentialLoadError = false
 
         scope.launch {
             isLoading = true
@@ -281,6 +298,18 @@ private fun CodexScreen(
                     }
                 }
         }
+    }
+
+    fun clearSavedCredentials() {
+        credentialStore.clearCookie()
+        prefs.edit().remove("uid").apply()
+        uid = ""
+        cookie = ""
+        dailyNote = null
+        showCredentials = true
+        showWebLogin = false
+        credentialLoadError = false
+        errorMessage = null
     }
 
     LaunchedEffect(uid) {
@@ -420,6 +449,16 @@ private fun CodexScreen(
                         maxLines = 3,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    if (credentialLoadError) {
+                        Text(
+                            "The saved session could not be unlocked. Clear it before signing in again.",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
+                        TextButton(onClick = { clearSavedCredentials() }) {
+                            Text("Clear saved credentials")
+                        }
+                    }
                     OutlinedButton(
                         onClick = { refreshData() },
                         enabled = !isLoading && !accountExportState.isExporting,
@@ -869,7 +908,24 @@ private fun CodexScreen(
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Irminsul Codex", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                     Text("Genshin Impact account intelligence", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("HoYoLAB account credentials are stored in the current app preferences. They are not encrypted by this implementation.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        "The HoYoLAB session cookie is encrypted with Android Keystore. The UID is stored locally.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (uid.isNotBlank() || cookie.isNotBlank()) {
+                        OutlinedButton(
+                            onClick = { clearSavedCredentials() },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Sign out and clear saved credentials")
+                        }
+                        Text(
+                            "Saved account snapshots remain on this device.",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     if (uid.isNotBlank() && cookie.isNotBlank() && !showCredentials) {
                         OutlinedButton(onClick = { showCredentials = true }, modifier = Modifier.fillMaxWidth()) {
                             Text("Manage HoYoLAB account")

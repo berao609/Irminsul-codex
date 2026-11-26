@@ -100,7 +100,8 @@ Screenshots will be added as the application interface develops.
 | Authentication | Android WebView |
 | Data Format | JSON |
 | Structured Local Storage | Room (account records and raw historical snapshots) |
-| Preferences | SharedPreferences (including the current credential flow; not encrypted) |
+| Preferences | SharedPreferences (non-sensitive settings and encrypted credential ciphertext) |
+| Credential Encryption | AES-GCM with Android Keystore-backed key material |
 | Build System | Gradle |
 | Continuous Integration | GitHub Actions |
 
@@ -570,17 +571,19 @@ Account authentication and API credentials require careful handling.
 
 ### Current Implementation
 
-* HoYoLAB authentication cookies are stored using ordinary Android SharedPreferences.
+* The HoYoLAB session cookie is encrypted with AES-GCM using a key generated and held by Android Keystore. Only the encrypted ciphertext is persisted in app-private SharedPreferences.
 
-* Masking credentials in the interface does not encrypt their stored values.
+* Existing installations migrate the legacy plaintext cookie to encrypted storage on first read. The legacy preference is removed after successful encryption.
+
+* The UID remains in ordinary app-private preferences because it is not an authentication secret.
+
+* The Account screen provides an explicit sign-out action that clears the saved UID, encrypted cookie, and in-memory credentials. Locally saved account snapshots are retained.
 
 * The login WebView clears its cookies, cache, history, and form data after authentication capture or dismissal.
 
 * The Android manifest sets `allowBackup` to `false`.
 
 ### Planned Improvements
-
-* Android Keystore-backed credential protection.
 
 * Secure AI API key storage.
 
@@ -592,7 +595,7 @@ Account authentication and API credentials require careful handling.
 
 * Separation of HoYoLAB credentials and AI provider credentials.
 
-> Important: Current credential storage should not be considered encrypted or production-grade secure storage.
+> Credential encryption protects the saved session cookie at rest within the app's private storage. It does not protect against a fully compromised device or a malicious process running with the app's privileges.
 
 Users should never share their HoYoLAB authentication cookies or AI API keys.
 
