@@ -2872,7 +2872,7 @@ private fun ChronicleOverviewSection(
     val overview = ChroniclePresentationMapper.accountOverview(accountCard, profileAndExploration)
     ChronicleSectionCard("Account Overview") {
         if (overview.isEmpty()) {
-            Text(chronicleAvailabilityText(value), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(chronicleAvailabilityText(profileAndExploration), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             overview.chunked(2).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
