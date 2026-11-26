@@ -2506,14 +2506,17 @@ private fun WeaponShowcaseRow(
     LaunchedEffect(expanded, passiveKey) {
         if (expanded && !passiveLoaded && !passiveLoading) {
             passiveLoading = true
-            passive = withContext(Dispatchers.IO) {
-                com.irminsul.codex.presentation.WeaponPassiveLookup.fetch(
-                    weapon.name,
-                    weapon.refinementLevel ?: 1
-                )
+            try {
+                passive = withContext(Dispatchers.IO) {
+                    com.irminsul.codex.presentation.WeaponPassiveLookup.fetch(
+                        weapon.name,
+                        weapon.refinementLevel ?: 1
+                    )
+                }
+                passiveLoaded = true
+            } finally {
+                passiveLoading = false
             }
-            passiveLoading = false
-            passiveLoaded = true
         }
     }
 
