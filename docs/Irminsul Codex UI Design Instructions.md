@@ -140,72 +140,69 @@ These are design-system recommendations, not permission to create all components
 - [ ] **No white Talent/Constellation PNGs** placed directly on light surfaces.
 - [ ] **No full-saturation elemental gradients** on list items or dashboard cards.
 - [ ] **No multi-paragraph AI disclaimers** cluttering forms or empty states.
-- [ ] **No production runtime DOM styling or scraping** from HoYoLAB WebViews. The narrowly scoped Debug-only Battle Chronicles Reference Mode in Section 10 is the sole exception for development-time visual inspection; its findings must be reviewed and translated into native Compose UI.
+- [ ] **No runtime DOM styling, scraping, or Battle Chronicles dependency.** Use the one-time, offline design-reference workflow in Section 10 during development, then implement the resulting design system natively in Compose.
 
 ---
 
-## 10. Battle Chronicles Visual Reference Mode (Debug-Only)
+## 10. Battle Chronicles Design Reference & Local Reconstruction
 
 ### Purpose
 
-Use HoYoLAB Battle Chronicles as a **visual and interaction reference** when designing Irminsul Codex. Do not invent every layout, information hierarchy, spacing rule, or interaction from scratch when the existing Battle Chronicles experience can be studied directly.
+Use HoYoLAB Battle Chronicles as the **one-time visual and interaction blueprint** for Irminsul Codex. We do not need to invent every layout, information hierarchy, spacing rule, or interaction from scratch. Study the existing experience, understand its design logic, and inherit the useful patterns in our own implementation.
 
-Think of this workflow as **tracing paper**: inspect the reference, understand how its visual system works, and then recreate the useful design ideas as clean, native Android Compose components that fit Irminsul Codex. The goal is informed reconstruction, not a pixel-for-pixel web clone.
+Think of this as **tracing paper**: observe how Battle Chronicles presents information and how its interface behaves, then reconstruct those ideas as Irminsul Codex's own local design system using native Android and Jetpack Compose.
 
-This is a development tool for improving the production interface. It is not an end-user feature and is not required for normal app functionality.
+**This is a development-time reference process, not an app feature.** Do not build a runtime inspector, embedded reference browser, online design service, or permanent WebView dependency for it. Once the reference has been studied and its design rules have been documented and implemented locally, Irminsul Codex must not need to contact HoYoLAB to render its interface.
 
-### What We Should Study
+### What to Study in the Reference
 
-Use relevant Battle Chronicles pages and states as references for:
+Study the relevant Battle Chronicles screens, visual states, and interactions. Capture enough information to understand both their appearance and their underlying design logic.
 
-* **Character presentation:** portrait placement, profile header composition, character identity, level and progression information.
-* **Weapons:** image scale, placement, refinement and level hierarchy, and how weapon details are revealed.
-* **Artifacts:** the five-slot arrangement, artifact icon treatment, set information, main stats, substats, and detail-inspection behavior.
-* **Character progression:** talent and constellation presentation, icon sizing, grouping, and selected states.
-* **Account statistics:** how attributes, exploration, Spiral Abyss, Imaginarium Theater, Stygian Onslaught, and other account information are grouped and prioritized.
-* **Visual language:** typography, color relationships, surface treatments, borders, spacing, alignment, iconography, image crops, and information density.
+* **Character presentation:** portrait placement and scale, profile header composition, character identity, level, progression, and information hierarchy.
+* **Weapons:** image scale and placement, refinement and level presentation, and how weapon details are revealed.
+* **Artifacts:** the five-slot arrangement, icon treatment, set information, main stats, substats, and detail-inspection behavior.
+* **Character progression:** talent and constellation presentation, icon sizing, grouping, selected states, and detail views.
+* **Account statistics:** attributes, exploration, Spiral Abyss, Imaginarium Theater, Stygian Onslaught, and how different categories of account information are grouped and prioritized.
+* **Visual language:** typography, color relationships, backgrounds, surfaces, borders, spacing, alignment, iconography, image crops, and information density.
 * **Interaction patterns:** expandable sections, selectable icons, tabs, detail panels, sheets, scrolling behavior, and transitions between summary and detailed information.
-* **Responsive behavior:** how the reference reorganizes or prioritizes information across available screen sizes, where observable.
+* **Responsive behavior:** how information is reorganized or prioritized at different screen sizes, where observable.
 
-Do not limit inspection to static screenshots. Study how important controls behave and what information appears after each interaction.
+Do not study screenshots alone. Interact with the reference manually and record what changes when a control, icon, tab, or section is selected.
 
-### Reference Inspection Workflow
+### One-Time Reference Capture Process
 
-1. **Open the reference.** Use a dedicated Debug-only reference-inspection session to access the relevant HoYoLAB Battle Chronicles page or state.
-2. **Explore the experience.** Navigate the relevant sections and interact with controls to reveal collapsed, selected, and detailed states.
-3. **Inspect visual structure.** Where useful, inspect visible DOM structure, element dimensions, computed styles, font stacks, colors, spacing, image sizing, and asset references through narrowly scoped WebView developer tooling.
-4. **Record the design pattern.** Describe the hierarchy, layout, component behavior, and the reason the pattern works. Keep useful measurements and observations as development references.
-5. **Translate into Compose.** Recreate the relevant pattern with native Android and Jetpack Compose components, using Irminsul Codex theme tokens and architecture.
-6. **Compare and refine.** Compare the Irminsul implementation against the reference using screenshots or equivalent visual comparisons. Adjust hierarchy, proportions, spacing, density, and interaction behavior where appropriate.
-7. **Keep the result native.** Production screens must render from Irminsul Codex Compose components and app data, not from embedded HoYoLAB pages or copied web stylesheets.
+1. **Visit the reference manually.** Open HoYoLAB Battle Chronicles in a normal browser or the official app, using an account and access method already available to the user. No special in-app inspector is required.
+2. **Capture representative screens.** Take screenshots of the relevant pages and important states. Include expanded details and selected states, not only default views.
+3. **Explore interactions.** Tap relevant controls and record what expands, changes, or becomes visible. Capture additional screenshots where necessary.
+4. **Study the design logic.** Identify layout structure, component hierarchy, relative sizing, spacing, alignment, typography, color roles, information density, and interaction behavior. Record useful measurements when they can be determined reliably.
+5. **Create a local design reference.** Convert observations into concise design notes, annotated screenshots, layout descriptions, and reusable rules within the development workflow. These references must be available locally to the coding process; do not require a live HoYoLAB connection to consult them.
+6. **Reconstruct in Compose.** Implement the relevant patterns as native Compose screens, components, and theme tokens. Adapt them to Irminsul Codex's architecture and Android conventions.
+7. **Compare and refine.** Compare local screenshots of Irminsul Codex against the captured reference images. Refine proportions, hierarchy, spacing, density, and interaction behavior.
+8. **Keep the implementation independent.** Once reconstructed, production screens must render from Irminsul Codex code, local design tokens, and the app's own data. They must not embed or load Battle Chronicles pages to reproduce the design.
 
-### Debug-Only Inspector Requirements
+### What We Should Inherit
 
-* **Debug builds only:** Any inspector entry point, WebView debugging support, JavaScript evaluation, or reference-capture controls must be excluded from Release builds. Gate the feature with the Android build configuration for the Debug variant. Do not use Flutter `kDebugMode` or Dart WebView APIs.
-* **Keep it separate from production navigation:** Do not add a user-facing destination, permanent app setting, or production UI entry for this developer tool. Use an isolated developer-only screen or entry point.
-* **Dedicated inspection session:** Do not silently reuse or extend the normal HoYoLAB login WebView lifecycle. The current login flow captures the required authentication cookies and then clears the WebView's cookies, cache, history, and form data. Preserve that security behavior. If a reference requires authentication, use a deliberately separate, user-initiated inspection session with its own lifecycle and clear its session data when inspection ends. Never retain or expose credentials for convenience.
-* **Narrow destination scope:** Restrict navigation and inspection to the intended HoYoLAB domains and the specific reference pages needed for the task. Do not turn the inspector into a general-purpose browser or crawler.
-* **Inspection data only:** The inspector may examine visible page structure and presentation metadata, such as element hierarchy, dimensions, computed visual properties, font information, and references to visible assets. It must not collect authentication cookies, tokens, account identifiers, personal account data, or unrelated session state.
-* **No access-control bypass:** Do not bypass authentication, anti-bot protections, service restrictions, or other access controls. Only inspect pages the user can legitimately access through the normal service experience.
-* **No bulk harvesting:** Do not build automatic crawling, mass asset downloading, unrestricted DOM export, or background collection. Inspection should be deliberate and limited to the selected reference screen or interaction.
-* **No automatic asset reuse:** Discovering an image, icon, SVG, font, or URL does not grant permission to bundle or redistribute it. Any proposed asset must undergo a separate provenance, licensing, permission, attribution, and suitability review before production use. Prefer original native Compose treatments or approved assets when reuse is not permitted.
+The goal is to inherit **design logic**, not blindly duplicate implementation details.
 
-### From Reference to Irminsul Design System
+* Reuse the reference's successful information hierarchy, grouping, proportions, visual emphasis, spacing relationships, and interaction concepts.
+* Preserve familiar presentation patterns where they make account information easier to scan and understand.
+* Adapt web-specific behavior into appropriate Android interactions. For example, use native expandable Compose sections, selectable detail panels, and bottom sheets where they provide the equivalent experience.
+* Preserve Irminsul Codex's design direction: **90% clean, modern Android utility / 10% subtle Genshin archival flavor**. Do not reproduce every decoration, gradient, animation, or inconsistency just because it exists in the reference.
+* Do not copy HoYoLAB source code, private implementation details, or protected assets. A screenshot or visible asset URL is not permission to redistribute that asset. Review provenance, licensing, permission, and attribution separately before considering any third-party asset for inclusion.
+* Dynamic character, weapon, and artifact artwork must continue to use the existing approved Battle Chronicle JSON URL flow and image-loading/cache path. The design-reference process is not a new asset pipeline.
+* Prefer native Compose drawing, Material 3 components, and locally defined theme tokens for recreated visual treatments when third-party asset reuse is not permitted.
+* Turn recurring patterns into reusable Compose components only when they genuinely improve consistency and maintainability. Do not create abstractions for every individual visual detail.
 
-* Treat Battle Chronicles as a **design reference**, not as the source code or runtime UI framework for Irminsul Codex.
-* Extract reusable design principles: hierarchy, proportions, spacing, grouping, visual emphasis, information density, and interaction behavior.
-* Reinterpret those principles for a native Android experience. Use Material 3, the app's theme tokens, established Compose components, and Android interaction conventions.
-* Preserve Irminsul Codex's design direction: **90% clean, modern Android utility / 10% subtle Genshin archival flavor**. Do not blindly reproduce every Battle Chronicles decoration, web-specific layout, gradient, animation, or visual inconsistency.
-* Keep the reference and the implementation distinct. Do not inject inspected HTML, CSS, JavaScript, or remote web components into production screens.
-* Dynamic character, weapon, and artifact artwork must continue to use the existing approved Battle Chronicle JSON URL flow and image-loading/cache path. The inspector is not a replacement data or asset pipeline.
-* When a reference pattern is useful, turn it into a reusable native Compose component or documented theme rule only when it supports more than a one-off imitation. Avoid creating abstractions for every inspected element.
-* The inspector is an aid, not the deliverable. The valuable outcome is a better, coherent, maintainable Irminsul Codex interface.
+### Local-First Requirement
 
-### Scope and Priority
+* The captured screenshots, notes, measurements, and design decisions are development references. Keep the necessary reference material available locally to the development workflow.
+* The resulting design tokens, component rules, and UI implementations must live in the Irminsul Codex project as ordinary local project resources and source code.
+* Do not add runtime network requests, remote stylesheets, remote component libraries, WebView rendering, DOM inspection, or a Battle Chronicles availability check for UI presentation.
+* Do not add a debug-only WebView inspector solely to perform this reference process.
+* If the original reference changes or a future redesign needs new study, repeat the manual capture process deliberately. It is not a recurring background task.
+* The app must remain visually complete and fully functional when offline, subject only to its separately defined account-data and optional online integration requirements.
 
-Battle Chronicles Reference Mode should be developed as a focused visual-development aid when meaningful UI work requires it. Start with the screens and interactions most relevant to the current task, rather than building a large inspection platform up front.
-
-The normal app must remain fully functional when the inspector is absent, disabled, or unable to load a reference page. No production feature may depend on it.
+**The deliverable is the locally implemented Irminsul Codex design system, not a tool for viewing HoYoLAB.**
 
 ---
 
