@@ -6,8 +6,8 @@
 - **Working branch:** `main` (repository default branch, per `AGENTS.md`)
 - **Record purpose:** Track the phased codebase optimization audit independently of the development milestone history.
 - **Audit mode:** Read-only investigation until the consolidated audit plan is reviewed and the user separately authorizes implementation.
-- **Overall status:** Not started
-- **Current phase:** Preparation
+- **Overall status:** In progress
+- **Current phase:** Part 4 - Jetpack Compose performance and UI architecture
 - **Last updated:** 2026-11-26
 
 ## 1. Objective
@@ -105,7 +105,7 @@ Statuses used:
 
 ### Part 2 - Architecture and code complexity
 
-**Status:** Not started
+**Status:** Complete
 
 
 **Purpose:** Assess whether the current architecture is understandable, cohesive, appropriately layered, and proportionate to the application's actual needs.
@@ -160,7 +160,7 @@ Statuses used:
 
 ## Part 3 - Kotlin and Android code quality
 
-**Status:** Not started
+**Status:** Complete
 
 **Purpose:** Review correctness, idiomatic Kotlin, lifecycle safety, and maintainability in the Android implementation.
 
@@ -180,7 +180,7 @@ Statuses used:
 
 ### Part 4 - Jetpack Compose performance and UI architecture
 
-**Status:** Not started
+**Status:** In progress
 
 **Purpose:** Identify avoidable UI work and state-management patterns that could affect responsiveness, rendering, or maintainability.
 
@@ -388,14 +388,15 @@ When resuming after a pause:
 
 ## 8. Current state and next action
 
+
 - **Overall audit status:** In progress.
-- **Current phase:** Part 1 - Repository inventory.
-- **Completed audit parts:** None yet (Part 1 initial inventory evidence gathered; further checks needed before completion).
-- **In-progress audit parts:** Part 1.
+- **Current phase:** Part 4 - Jetpack Compose performance and UI architecture.
+- **Completed audit parts:** Parts 1, 2, and 3.
+- **In-progress audit parts:** Part 4.
 - **Blocked items:** None.
 - **Application source changes made by this audit:** None.
-- **Current stopping point:** Initial recursive inventory and project/build/workflow configuration review completed. Additional repository inventory verification remains before Part 1 is marked complete.
-- **Next action:** Verify root setup files and documentation references against the actual tree, inspect relevant file groups for generated/duplicate/reference assets, and finish Part 1's concise map and observations.
+- **Current stopping point:** Part 3 review completed. Part 4 will assess Compose recomposition, state ownership, and rendering patterns; no runtime profiling has been performed.
+- **Next action:** Inspect Compose state collection, screen composition, list rendering, derived calculations, and UI state ownership in MainActivity.kt.
 
 ## 9. Audit completion criteria
 
@@ -410,3 +411,38 @@ The audit may be closed when:
 - The user has reviewed the consolidated plan and decided what, if anything, should be implemented.
 
 Closing this audit does not mean the application is perfect or that every optional improvement must be implemented. It means the defined review has been completed to the documented scope.
+
+
+## Part 3 - Kotlin and Android code quality (completed)
+
+### Evidence inspected
+- `AccountViewModel.kt`: snapshot restoration, retrieval/export workflow, deterministic analysis, StateFlow updates, cancellation and exception handling.
+- `HoYoLabClient.kt`: OkHttp setup, synchronous request helpers wrapped in IO context, response envelope/error handling, UID lookup, daily-note retrieval, export concurrency.
+- `HoYoLabResponseParser.kt` and `HoYoLabExportResponseValidator.kt`: HTTP/JSON envelope and required structure validation.
+- `HoYoLabAccountRepository.kt`: result handling and mapping boundary.
+- `RoomAccountSnapshotStore.kt`: transactional persistence, JSON chunking, legacy fallback.
+- `UpgradeCostCalculator.kt`: request validation, segment matching, cost accumulation with overflow checking, inventory validation.
+- `MainActivity.kt`: Compose-level refresh, login, export-file saving, preference state, and UI progress/error handling.
+
+
+### Finding AUD-003 - Export file save can report success when output stream is unavailable
+- **Classification:** Medium-priority reliability issue.
+- **Evidence:** In `MainActivity.kt`, the CreateDocument result handler checks URI and JSON, then uses `context.contentResolver.openOutputStream(uri)?.use { ... }`. The stream is nullable, but the following code reports `Saved JSON file` regardless of whether `openOutputStream` returned null.
+- **Impact:** A file-provider/storage failure can produce a false success message, leaving the user believing their JSON export was saved.
+- **Confidence:** Verified by static code inspection; actual provider behavior not reproduced.
+- **Recommendation:** Treat a null output stream as a save failure and only show success after a non-null stream has been opened and written without exception.
+- **Verification:** Test successful write, null stream, and thrown write/open errors through a small testable save helper or equivalent targeted verification.
+- **Implementation status:** No change made.
+
+
+### Kotlin/Android code-quality observations (no confirmed issue in sampled areas)
+- `AccountViewModel` consistently rethrows `CancellationException` rather than swallowing coroutine cancellation.
+- Network calls in `HoYoLabClient` use `withContext(Dispatchers.IO)` and close responses via `use`; parsing is validated before data mapping.
+- Snapshot persistence is transaction-wrapped and uses chunk rows with a compatibility fallback for legacy raw JSON storage.
+- `UpgradeCostCalculator` validates requests and cost segments and uses `Math.addExact` to detect overflow rather than silently wrapping.
+- These are positive patterns to preserve during optimization.
+- A potential credential-storage concern was observed: `MainActivity.kt` persists the HoYoLAB cookie in app preferences. Its security implications and storage alternatives are reserved for Part 7; no conclusion is made here.
+
+
+### Part 3 activity log
+- 2026-11-26: Reviewed ViewModel, network client/parser/validator, repository, local snapshot store, cost calculator, and relevant MainActivity account flows. Confirmed AUD-003. Part 3 complete. No app source/config/tests/workflows modified.
