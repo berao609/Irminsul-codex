@@ -52,7 +52,7 @@ Statuses used:
 
 ### Part 1 - Repository inventory
 
-**Status:** In progress
+**Status:** Complete
 
 **Purpose:** Establish an accurate map of the repository before drawing architectural or performance conclusions.
 
@@ -72,7 +72,24 @@ Statuses used:
 - Documentation/reference capture files are among the largest tracked assets. Their purpose, duplication, and whether they are needed at runtime or solely for offline development must be checked before any recommendation to remove or relocate them.
 - The repository has a single app module. This is not inherently a problem; modularization should be considered only if concrete coupling or build/ownership benefits are demonstrated.
 
-**Inventory limitations:** This first pass used GitHub's recursive tree and file metadata. It did not inspect every source file, calculate test coverage, build the app, run tests, profile runtime performance, or validate on a physical device. The Gradle wrapper's absence from the tree is an observation to verify against repository configuration and setup instructions.
+**Additional inventory checks:**
+- README explicitly states that the Gradle Wrapper is not included and uses an installed Gradle distribution for builds. This confirms the tree observation; it is not automatically a defect.
+- Root `.gitignore` covers common Gradle/build outputs, local configuration, APK/AAB files, and keystore files.
+- `AndroidManifest.xml` declares INTERNET permission, disables backup, and defines the launcher activity. Manifest permissions and security configuration will be reviewed more deeply in Part 7.
+- README and the Battle Chronicle reference analysis identify the captured web materials as development references, not runtime dependencies. However, `docs/share-page.html` is publicly tracked and the capture contains a UID-like account identifier. A privacy exposure concern is recorded below. Do not repeat the identifier in audit notes.
+- Build configuration uses a single app module, Android SDK 34, min SDK 26, target SDK 34, Kotlin 2.0.0 / AGP 8.5.0, Compose BOM 2024.06.00, Room 2.6.1, and Gradle 8.14.8 in CI. This is inventory context; compatibility or upgrade recommendations belong in Part 6.
+
+**Finding AUD-001 - Public account-specific reference capture**
+- **Part:** 1 (inventory discovery; detailed privacy review in Part 7)
+- **Classification:** High-priority privacy risk (not a credential/security compromise claim)
+- **Evidence:** `docs/share-page.html` is publicly tracked; its content scan confirmed a UID-like identifier. `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md` also notes the capture contains account-specific profile information and explicitly recommends sanitization.
+- **Impact:** Publishing account identifiers in a development reference capture exposes personal game-account metadata. A UID is not an authentication secret, but it can enable account lookup or unwanted correlation.
+- **Confidence:** Verified presence; impact depends on user privacy preference and identifier sensitivity.
+- **Recommendation:** Remove or sanitize account-specific identifiers and review embedded URLs/content before retaining a public reference capture. Preserve a sanitized reference if it remains useful for implementation.
+- **Verification for later remediation:** Scan the sanitized tracked file and related captures for UID/account-specific values; inspect the diff to ensure layout/reference usefulness remains and no account-specific identifiers remain.
+- **Implementation status:** No remediation performed during this read-only audit.
+
+**Inventory limitations:** This first pass used GitHub's recursive tree, file metadata, and targeted configuration/document inspection. It did not inspect every source file, calculate test coverage, build the app, run tests, profile runtime performance, or validate on a physical device.
 
 **Investigation scope:**
 - Repository root and module structure.
@@ -311,6 +328,16 @@ When resuming after a pause:
 - Inventory: 122 tracked files, ~1.72 MB total. `MainActivity.kt` is 146,608 bytes; the milestone record is 289,767 bytes; the five captured HTML/CSS reference files are 78-116 KB each.
 - Identified follow-up inspection candidates without prematurely classifying them as defects: MainActivity responsibilities, purpose/runtime relevance of web reference captures, and whether project setup actually relies on a missing Gradle wrapper.
 - **No application code, build configuration, dependencies, tests, or workflows were modified.**
+
+### 2026-11-26 - Part 1 repository inventory completed
+
+- Inspected the recursive repository tree, root/app/source/test/docs structure, project instructions, README structure, specifications headings, build configuration, version catalog, Gradle settings, Android manifest, CI/release workflows, and reference-analysis document.
+- Verified the Gradle Wrapper is intentionally absent and README requires an installed Gradle distribution.
+- Confirmed `MainActivity.kt` is 146,608 bytes and tracked reference captures are substantial. Size is a review candidate, not automatically a defect.
+- Verified the public `docs/share-page.html` contains a UID-like account identifier. Recorded AUD-001; did not copy the identifier into this audit file.
+- Part 1 is complete at inventory scope. Deeper code responsibilities, performance, dependencies, tests, and security remain for later parts.
+- No app code/config/tests/workflows were changed.
+
 
 ### 2026-11-26 - Audit plan initialized
 
