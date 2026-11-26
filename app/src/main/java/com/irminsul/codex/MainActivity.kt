@@ -1825,6 +1825,19 @@ private fun saveManualMaterialPlanRows(rows: List<ManualMaterialPlanRow>): Strin
 
 
 @Composable
+private fun CharacterAvatarFallback(symbol: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.size(76.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(symbol, fontSize = 30.sp)
+        }
+    }
+}
+
+@Composable
 private fun CharacterRecommendationCard(
     item: GoalAwareCharacterRecommendation,
     character: CharacterSnapshot?,
