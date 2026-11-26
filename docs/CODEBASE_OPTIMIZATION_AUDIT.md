@@ -953,7 +953,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 **Finding:** AUD-002 - Split oversized UI responsibilities incrementally.
 
-**Status:** Source extraction committed; CI and physical-device verification pending.
+**Status:** Source extraction committed; physical-device verification confirmed by user; CI verification remains pending.
 
 **Implementation:**
 - Moved the Lineup Simulator composable from `MainActivity.kt` into `presentation/LineupSimulatorSection.kt`.
@@ -971,12 +971,8 @@ Closing this audit does not mean the application is perfect or that every option
 - `e2e21c3703f733448e7918ea7be7ad2de3b52636` - extracted presentation component.
 - `21b68f750a54fce3f5115146225cfca1638bda7b` - updated MainActivity call site.
 
-**Verification required:**
-1. Confirm Debug CI unit tests, compilation, APK build, schema verification, and signature verification.
-2. Open Visuals and expand Lineup Simulator.
-3. Add four characters, remove one, and add a different character.
-4. Confirm slot order and the four-character limit remain correct.
-5. Confirm stale/partial roster warnings and empty-roster messaging remain correct.
-6. Confirm lineup selection still works after collapsing/reopening the section.
+**Verification record (2026-11-27):**
+- User confirmed the device checklist is clear. Physical-device verification is therefore recorded as passed.
+- Debug CI unit tests, compilation, APK build, schema verification, and signature verification are still unconfirmed in the available evidence. Do not mark CI as passed.
 
 **Boundary:** This is a responsibility extraction only. No performance improvement is claimed. Continue with one cohesive extraction after this step is verified.
