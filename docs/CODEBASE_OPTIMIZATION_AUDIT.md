@@ -154,7 +154,7 @@ Statuses used:
 
 
 ### Part 2 activity log
-- 2026-11-26: Started architecture/code-complexity review. Confirmed the main UI concentration issue with declaration boundaries and sizes; inspected ViewModel/repository/analysis-engine contracts. No app code or build files modified.
+- 2026-11-26: Reviewed source-file inventory, MainActivity declaration boundaries, screen state/wiring, ViewModel state/workflows, repository abstraction, deterministic analysis engine, overview composer, and representative build/stat analyzers. Confirmed AUD-002 UI concentration in MainActivity. Architecture boundaries appear intentional in sampled core flow; no duplication or layering defect confirmed yet. Completed Part 2. No app code or build files modified.
 
 
 
