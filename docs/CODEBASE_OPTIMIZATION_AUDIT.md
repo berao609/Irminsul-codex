@@ -390,13 +390,13 @@ When resuming after a pause:
 
 
 - **Overall audit status:** In progress.
-- **Current phase:** Part 7 - Testing, reliability, and security.
-- **Completed audit parts:** Parts 1, 2, 3, 4, 5, and 6.
-- **In-progress audit parts:** Part 7.
+- **Current phase:** Part 8 - Coding-agent and development workflow optimization.
+- **Completed audit parts:** Parts 1, 2, 3, 4, 5, 6, and 7.
+- **In-progress audit parts:** Part 8.
 - **Blocked items:** None.
 - **Application source changes made by this audit:** None.
-- **Current stopping point:** Part 6 static build and CI review completed. No clean-room local build-time benchmark or dependency-resolution trace was performed.
-- **Next action:** Inspect test coverage, persistence/release reliability, credential handling, permissions, and security for Part 7.
+- **Current stopping point:** Part 7 static test, reliability, and security review completed. No runtime penetration test, device compromise simulation, or migration execution against a real version-1 database was performed.
+- **Next action:** Review coding-agent instructions, repository automation, and developer workflow friction for Part 8.
 
 ## 9. Audit completion criteria
 
@@ -550,3 +550,48 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Part 6 activity log
 - 2026-11-26: Reviewed Gradle scripts, version catalog, app dependencies, build/release workflows, signing configuration, manifest, ProGuard rules, wrapper presence, and visible dependency usages. Recorded AUD-007. Part 6 completed as static review; no app source/config/tests/workflows modified.
+
+
+## Part 7 - Testing, reliability, and security (completed)
+
+### Evidence inspected
+- Unit-test inventory and focused tests for API response parsing/validation, export assembly/preservation, mapping, repository behavior, chunk splitting, analysis, ViewModel workflows, and domain validation.
+- `RoomAccountSnapshotStoreTest.kt`, `SnapshotJsonChunksTest.kt`, and `IrminsulDatabase.kt`, including the version 1-to-2 migration.
+- `MainActivity.kt`: credential persistence, refresh/export flows, document-provider save callback, and user-facing cookie handling.
+- `HoYoLabLoginDialog.kt`: WebView configuration, cookie extraction, cookie cleanup, and navigation behavior.
+- `HoYoLabClient.kt`: HTTPS endpoints, Cookie header use, transport error handling, cancellation, and timeouts.
+- `AndroidManifest.xml`: permissions, exported activity, and backup policy.
+- Build workflow test gates and Room schema snapshot handling.
+
+### Finding AUD-008 - HoYoLAB session cookie is stored in ordinary SharedPreferences
+- **Classification:** High-priority credential-protection concern.
+- **Evidence:** `MainActivity.kt` reads and writes the full `ltoken_v2`/`ltuid_v2` cookie under the `cookie` key in `getSharedPreferences("irminsul_prefs", Context.MODE_PRIVATE)`. The cookie is persisted after manual Save & Sync and after WebView login. The WebView extraction intentionally reduces the captured cookie to these two values, and the manifest disables Android application backup.
+- **Impact:** `MODE_PRIVATE` provides app-sandbox access control, but it does not encrypt the preference value at rest. A valid HoYoLAB session cookie is a bearer credential; extraction from a compromised, rooted, or otherwise exposed app-private data store could expose the account session.
+- **Confidence:** Verified storage path by static inspection. No device compromise or filesystem extraction test was performed.
+- **Recommendation:** Store session credentials using Android Keystore-backed encryption, or a currently supported encrypted-storage design appropriate to the app's minSdk. Keep the UID and non-sensitive preferences in ordinary preferences. Add an explicit credential-clear/sign-out path and ensure clearing removes the persisted cookie and in-memory value. Avoid logging the cookie or including it in crash/diagnostic reports.
+- **Verification:** Inspect persisted storage to confirm the raw token is absent; test save, app restart, credential replacement, sign-out/clear, and failed key/decryption behavior. Confirm no cookie is sent to any destination other than the intended HoYoLAB HTTPS endpoints.
+- **Implementation status:** None.
+
+### Finding AUD-009 - Room version 1-to-2 data migration has no visible migration test or committed schema history
+- **Classification:** High-priority data-integrity verification gap.
+- **Evidence:** `IrminsulDatabase.MIGRATION_1_2` creates the JSON chunk table, reads existing snapshot IDs and raw JSON lengths, copies each legacy JSON value into ordered chunks using SQL `substr()`, and clears the old rawJson field. The only instrumented Room test file covers in-memory snapshot save/history and account separation; it does not build a version-1 database and execute the migration. The repository tree contains only `app/schemas/.gitkeep`, not a committed Room schema JSON. CI checks that KSP generates schema version 2 and uploads that generated file as an artifact, but this does not preserve a versioned schema history in the repository.
+- **Impact:** A defect in the SQL migration or schema evolution could corrupt or lose existing account snapshots during an upgrade without being caught by the current visible tests. Missing committed schema history also weakens Room's migration review and reproducibility.
+- **Confidence:** Verified migration implementation, test inventory, repository tree, and CI workflow. Migration execution against a real version-1 database was not performed.
+- **Recommendation:** Add a migration test that creates/populates the exact version-1 schema with representative small and multi-chunk raw JSON, opens it through Room with `MIGRATION_1_2`, and verifies exact reconstructed JSON, metadata, ordering, and row integrity. Preserve exported Room schema snapshots in version control so future migrations can be reviewed and tested against known schemas. Keep the existing CI generation check, but make schema history a maintained source artifact rather than relying only on an ephemeral build output.
+- **Verification:** Run the migration test on CI and assert byte-for-byte raw JSON equality before and after migration, including a payload larger than multiple chunk boundaries and Unicode boundary cases.
+- **Implementation status:** None.
+
+### Test and reliability observations (no additional confirmed defect)
+- The unit suite is broad across pure parsing, data preservation, mapping, account analysis, recommendation rules, validation, calculations, repository behavior, and ViewModel state transitions. This is a strong foundation; retain deterministic unit tests as the default for domain behavior.
+- API response parsing has explicit tests for success, API errors, HTTP errors, empty/malformed bodies, and bounded server messages. Repository tests cover success, mapping failure paths, malformed JSON, and coroutine cancellation.
+- Snapshot chunk splitting has tests for multi-chunk round trips, UTF-16 surrogate-pair boundaries, and empty input. The Room instrumented tests cover immutable history, raw JSON preservation, and separation of same-UID records by server.
+- The Room migration is more consequential than ordinary CRUD and needs its own on-disk migration test. Current in-memory tests do not exercise the 1-to-2 migration.
+- The document save callback still contains the nullable-output-stream success-reporting issue already recorded as AUD-003. No duplicate finding was created.
+- The login WebView clears cookies/cache/history/form data when captured or dismissed, extracts only `ltoken_v2` and `ltuid_v2`, and does not expose a JavaScript bridge in the inspected code. JavaScript and third-party cookies are enabled for the HoYoLAB login flow. Consider restricting navigation to the expected HoYoLAB domains and handling unexpected external navigation explicitly; no exploit was demonstrated.
+- The app requests only the INTERNET permission in the manifest, declares the launcher activity exported as required, and sets `allowBackup="false"`. The inspected API endpoints use HTTPS and the client has finite connect/read timeouts. No cleartext-traffic opt-in or broad storage permission was found in the manifest.
+- The cookie is passed to the HoYoLAB client as an HTTP Cookie header. The inspected UI states it will not be sent to an AI provider, and no AI provider integration or cookie forwarding path was present in the reviewed code. This is a code-review observation, not a runtime network-capture result.
+- The test suite does not visibly cover the Android document-provider save callback, WebView login/cookie lifecycle, or actual OkHttp transport against a controlled server. Add focused tests when these platform boundaries change; do not force brittle UI tests for every pure domain behavior.
+- No dynamic security scan, penetration test, real-device storage inspection, or production API test was performed.
+
+### Part 7 activity log
+- 2026-11-26: Reviewed test inventory and representative parser/repository/ViewModel/Room tests, Room migration SQL and schema history, credential persistence, WebView cookie handling, network transport, manifest permissions, and CI test/schema gates. Recorded AUD-008 and AUD-009. Part 7 completed as static review; no app source/config/tests/workflows modified.
