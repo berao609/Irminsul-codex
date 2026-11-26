@@ -10,15 +10,26 @@ import com.irminsul.codex.data.mapper.AccountExportMapper
 import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.model.AccountSnapshot
 import com.irminsul.codex.domain.repository.AccountSnapshotStore
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.util.UUID
 
+/**
+ * Persists immutable account snapshots in Room.
+ *
+ * JSON chunk preparation, reconstruction, and domain mapping are CPU-bound and use
+ * the injected dispatcher. Room suspend DAO and transaction operations remain on
+ * Room's managed query/transaction executors.
+ */
 class RoomAccountSnapshotStore(
     private val database: IrminsulDatabase,
     private val snapshotIdProvider: () -> String = { UUID.randomUUID().toString() },
     private val mapExport: (String) -> AccountSnapshot = { json ->
         AccountExportMapper.map(JSONObject(json))
-    }
+    },
+    private val cpuDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : AccountSnapshotStore {
     override suspend fun save(export: AccountExport) {
         val snapshot = export.snapshot
@@ -27,12 +38,14 @@ class RoomAccountSnapshotStore(
         val exportedAt = snapshot.metadata.exportedAt
         val timestamp = exportedAt.toEpochMilli()
         val snapshotId = snapshotIdProvider()
-        val chunks = SnapshotJsonChunks.split(export.rawJson).mapIndexed { index, content ->
-            AccountSnapshotJsonChunkEntity(
-                snapshotId = snapshotId,
-                chunkIndex = index,
-                content = content
-            )
+        val chunks = withContext(cpuDispatcher) {
+            SnapshotJsonChunks.split(export.rawJson).mapIndexed { index, content ->
+                AccountSnapshotJsonChunkEntity(
+                    snapshotId = snapshotId,
+                    chunkIndex = index,
+                    content = content
+                )
+            }
         }
 
         database.withTransaction {
@@ -61,22 +74,30 @@ class RoomAccountSnapshotStore(
         }
     }
 
-    override suspend fun getLatest(uid: String): AccountExport? =
-        database.accountSnapshotDao().getLatestSnapshot(uid)?.let { record ->
-            val rawJson = readRawJson(record.snapshotId, record.rawJson)
+    override suspend fun getLatest(uid: String): AccountExport? {
+        val record = database.accountSnapshotDao().getLatestSnapshot(uid) ?: return null
+        val rawJson = readRawJson(record.snapshotId, record.rawJson)
+        return withContext(cpuDispatcher) {
             AccountExport(mapExport(rawJson), rawJson)
         }
+    }
 
-    override suspend fun getHistory(uid: String, server: String): List<AccountExport> =
-        database.accountSnapshotDao().getSnapshotHistory(uid, server).map { record ->
-            val rawJson = readRawJson(record.snapshotId, record.rawJson)
-            AccountExport(mapExport(rawJson), rawJson)
+    override suspend fun getHistory(uid: String, server: String): List<AccountExport> {
+        val records = database.accountSnapshotDao().getSnapshotHistory(uid, server)
+        val rawRecords = records.map { record ->
+            record to readRawJson(record.snapshotId, record.rawJson)
         }
+        return withContext(cpuDispatcher) {
+            rawRecords.map { (_, rawJson) ->
+                AccountExport(mapExport(rawJson), rawJson)
+            }
+        }
+    }
 
     private suspend fun readRawJson(snapshotId: String, legacyRawJson: String): String {
         val chunks = database.accountSnapshotDao().getJsonChunks(snapshotId)
         return if (chunks.isNotEmpty()) {
-            SnapshotJsonChunks.join(chunks)
+            withContext(cpuDispatcher) { SnapshotJsonChunks.join(chunks) }
         } else {
             // Compatibility fallback for a database created before the chunk migration.
             legacyRawJson
