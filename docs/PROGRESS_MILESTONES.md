@@ -3730,3 +3730,59 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 **CI:** Run #492 started for this commit: https://github.com/berao609/Irminsul-codex/actions/runs/45802370862
 
 **Verification boundary:** Compilation, tests, APK packaging, and device rendering are not yet confirmed. This is a data-faithful expandable first pass, not the final polished Battle Chronicle visual treatment. Follow-up work should replace generic nested-data presentation with purpose-built overview, exploration, chest, and game-mode layouts after confirming the exact export keys and payload shapes.
+
+
+## Milestone 059 - HoYoLAB Credential Protection and Room Migration Integrity
+
+**Status:** Implementation committed; CI verification passed; physical-device verification pending.
+
+### Implemented
+
+- Added `HoYoLabCredentialStore`, which encrypts the HoYoLAB session cookie with AES-GCM using an Android Keystore-held key.
+- Persisted only encrypted cookie ciphertext in app-private SharedPreferences. The UID and theme preference remain non-sensitive preferences.
+- Added automatic migration of the legacy plaintext cookie on first read. The legacy value is removed only after encryption succeeds. Decryption/corruption errors are surfaced so the user can explicitly clear the unusable saved credential.
+- Added an Account-screen sign-out action that clears the saved UID, encrypted/legacy cookie values, and in-memory credentials while retaining local account snapshots.
+- Added Android instrumentation coverage for encryption and restoration through a new store instance, legacy-cookie migration, replacement, clearing, and corrupted ciphertext behavior.
+- Added a version-1 Room schema snapshot and a migration test that creates a version-1 database, migrates small and multi-chunk JSON snapshots, and checks raw JSON reconstruction and metadata/account preservation.
+- Configured the Room schema directory as Android instrumentation-test assets so `MigrationTestHelper` can load historical schema files.
+- Added the generated version-2 Room schema snapshot to version control.
+- Updated README architecture/security descriptions to identify the credential-store boundary and Keystore-backed encryption.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/integration/security/HoYoLabCredentialStore.kt`
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/androidTest/java/com/irminsul/codex/integration/security/HoYoLabCredentialStoreTest.kt`
+- `app/src/androidTest/java/com/irminsul/codex/data/local/IrminsulDatabaseMigrationTest.kt`
+- `app/src/main/java/com/irminsul/codex/data/local/IrminsulDatabase.kt` (migration implementation was already present; covered by the new test)
+- `app/build.gradle.kts`
+- `gradle/libs.versions.toml`
+- `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/1.json`
+- `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/2.json`
+- `README.md`
+
+### Implementation commits
+
+- `a060320a9dca3e9a3536fd63d67142063b3a1771` - credential protection and initial migration test.
+- `dcaa806645354e97776816faebfc8d3169bfdfab` - package Room schema history as instrumentation-test assets.
+- `2dc605dc467d719a9f184dd1c2cf5fc98577a6ec` - preserve the generated Room version-2 schema.
+- `e0d57b1a8e0b321a654fc3cc2e4bc872799f40b5` - align README with secure credential storage.
+
+### CI verification
+
+- **Run #520, attempt 1:** Failed because Maven Central returned HTTP 429 while resolving `kotlin-stdlib:1.9.20` for the instrumentation test host.
+- **Run #520, attempt 2:** Exposed a test configuration defect: `MigrationTestHelper` could not find the version-1 schema because the schema directory was not packaged as androidTest assets.
+- **Run #521:** Passed on commit `dcaa806645354e97776816faebfc8d3169bfdfab`. Unit tests passed; all 8 Android instrumentation tests passed; Debug APK build, Room schema generation check, APK signature verification, and artifact upload passed.
+  - Run: https://github.com/berao609/Irminsul-codex/actions/runs/45847411030
+  - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.521-vc523` (ID `15131419035`)
+  - Room schema artifact: `irminsul-room-schema-v2-run-521` (ID `15131059231`)
+- **Run #522:** Passed on commit `2dc605dc467d719a9f184dd1c2cf5fc98577a6ec`. Unit tests, Debug APK build, generated schema check, signature verification, and artifact upload passed. Instrumentation tests were skipped because this commit only added the committed schema snapshot.
+  - Run: https://github.com/berao609/Irminsul-codex/actions/runs/45847457876
+  - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.522-vc524` (ID `15131764251`)
+  - Room schema artifact: `irminsul-room-schema-v2-run-522` (ID `15132685195`)
+
+### Verification boundary and next actions
+
+- CI verifies the credential-store instrumentation tests and version-1-to-2 Room migration test on an Android API 34 emulator. This does not replace a physical-device credential lifecycle check.
+- On device, verify existing legacy session migration on app launch, a fresh HoYoLAB login, app restart/session restoration, credential replacement, and Account-screen sign-out. Confirm the local Room snapshots remain available after sign-out.
+- Do not claim that an actual user's stored cookie has been migrated or inspected; no physical-device credential store inspection was performed.
