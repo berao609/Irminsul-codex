@@ -890,3 +890,27 @@ Closing this audit does not mean the application is perfect or that every option
 - The release workflow's step ordering provides the failure gate: a failed unit-test command terminates the job before signing or publishing.
 - The successful tagged-release publication path has not been executed; no release tag was created and no official release was published.
 - CI on the resulting main-branch commit and workflow syntax inspection are pending.
+
+
+## Batch 5 - Lazy character roster grid (AUD-005)
+
+**Status:** Implementation committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Replaced eager `chunked(3)` row/card composition with a three-column `LazyVerticalGrid`.
+- Added stable item keys using each character's existing ID.
+- Bounded the nested grid viewport to at most four estimated card rows so it receives finite height inside the existing vertically scrollable Visuals page. Larger rosters scroll within the grid instead of composing every card.
+- Memoized the element and weapon filter options by roster, and memoized filtered/sorted results by their input state. Filtering and sorting rules and their existing controls are unchanged.
+- Preserved selected-character highlighting and the selected character detail panel.
+- Added no dependencies and changed no account data, persistence, or analysis behavior.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification required:**
+- CI must pass compilation and the existing unit-test suite.
+- On-device, expand the roster and scroll inside the grid, then continue scrolling the page outside the grid.
+- Verify all characters can be reached; test search, each filter, minimum/maximum level, all sort choices and direction, selected-card highlighting, and character detail updates.
+- Compare responsiveness when opening and scrolling the expanded roster. No quantified performance improvement is claimed without profiling.

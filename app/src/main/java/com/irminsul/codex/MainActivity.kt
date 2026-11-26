@@ -19,6 +19,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -1989,32 +1992,47 @@ private fun CharacterShowcaseSection(
     var descending by remember { mutableStateOf(false) }
 
     val selected = characters.firstOrNull { it.id == selectedCharacterId } ?: characters.first()
-    val elements = listOf("All") + characters.map { it.element?.takeIf(String::isNotBlank) ?: "Unknown" }.distinct().sorted()
-    val weaponTypes = listOf("All") + characters.map { it.rosterWeaponType() ?: "Unknown" }.distinct().sorted()
+    val elements = remember(characters) {
+        listOf("All") + characters.map { it.element?.takeIf(String::isNotBlank) ?: "Unknown" }.distinct().sorted()
+    }
+    val weaponTypes = remember(characters) {
+        listOf("All") + characters.map { it.rosterWeaponType() ?: "Unknown" }.distinct().sorted()
+    }
     val rarities = listOf("All", "5★", "4★", "3★", "2★", "1★", "Unknown")
 
-    val filteredCharacters = characters.filter { character ->
-        val name = character.name ?: "Character #${character.id}"
-        val level = character.level
-        val rarity = character.rarity
-        val weaponType = character.rosterWeaponType() ?: "Unknown"
-        val element = character.element?.takeIf(String::isNotBlank) ?: "Unknown"
-        val minLevel = minimumLevel.toIntOrNull()
-        val maxLevel = maximumLevel.toIntOrNull()
-        name.contains(searchQuery.trim(), ignoreCase = true) &&
-            (selectedElement == "All" || element.equals(selectedElement, ignoreCase = true)) &&
-            (selectedWeaponType == "All" || weaponType == selectedWeaponType) &&
-            (selectedRarity == "All" || if (selectedRarity == "Unknown") rarity == null else rarity?.let { "${it}★" == selectedRarity } == true) &&
-            (minLevel == null || level != null && level >= minLevel) &&
-            (maxLevel == null || level != null && level <= maxLevel)
-    }.let { matches ->
-        val sorted = when (sortBy) {
-            "Level" -> if (descending) matches.sortedByDescending { it.level ?: Int.MIN_VALUE } else matches.sortedBy { it.level ?: Int.MAX_VALUE }
-            "Rarity" -> if (descending) matches.sortedByDescending { it.rarity ?: Int.MIN_VALUE } else matches.sortedBy { it.rarity ?: Int.MAX_VALUE }
-            "Friendship" -> if (descending) matches.sortedByDescending { it.friendshipLevel ?: Int.MIN_VALUE } else matches.sortedBy { it.friendshipLevel ?: Int.MAX_VALUE }
-            else -> if (descending) matches.sortedByDescending { it.name ?: "Character #${it.id}" } else matches.sortedBy { it.name ?: "Character #${it.id}" }
+    val filteredCharacters = remember(
+        characters,
+        searchQuery,
+        minimumLevel,
+        maximumLevel,
+        selectedElement,
+        selectedWeaponType,
+        selectedRarity,
+        sortBy,
+        descending
+    ) {
+        characters.filter { character ->
+            val name = character.name ?: "Character #${character.id}"
+            val level = character.level
+            val rarity = character.rarity
+            val weaponType = character.rosterWeaponType() ?: "Unknown"
+            val element = character.element?.takeIf(String::isNotBlank) ?: "Unknown"
+            val minLevel = minimumLevel.toIntOrNull()
+            val maxLevel = maximumLevel.toIntOrNull()
+            name.contains(searchQuery.trim(), ignoreCase = true) &&
+                (selectedElement == "All" || element.equals(selectedElement, ignoreCase = true)) &&
+                (selectedWeaponType == "All" || weaponType == selectedWeaponType) &&
+                (selectedRarity == "All" || if (selectedRarity == "Unknown") rarity == null else rarity?.let { "${it}★" == selectedRarity } == true) &&
+                (minLevel == null || level != null && level >= minLevel) &&
+                (maxLevel == null || level != null && level <= maxLevel)
+        }.let { matches ->
+            when (sortBy) {
+                "Level" -> if (descending) matches.sortedByDescending { it.level ?: Int.MIN_VALUE } else matches.sortedBy { it.level ?: Int.MAX_VALUE }
+                "Rarity" -> if (descending) matches.sortedByDescending { it.rarity ?: Int.MIN_VALUE } else matches.sortedBy { it.rarity ?: Int.MAX_VALUE }
+                "Friendship" -> if (descending) matches.sortedByDescending { it.friendshipLevel ?: Int.MIN_VALUE } else matches.sortedBy { it.friendshipLevel ?: Int.MAX_VALUE }
+                else -> if (descending) matches.sortedByDescending { it.name ?: "Character #${it.id}" } else matches.sortedBy { it.name ?: "Character #${it.id}" }
+            }
         }
-        sorted
     }
 
     val hasActiveFilters = searchQuery.isNotBlank() || minimumLevel.isNotBlank() || maximumLevel.isNotBlank() ||
@@ -2142,50 +2160,51 @@ private fun CharacterShowcaseSection(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    filteredCharacters.chunked(3).forEach { rowCharacters ->
-                        Row(
+                val visibleRowCount = ((filteredCharacters.size + 2) / 3).coerceAtMost(4)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = (visibleRowCount * 124).dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(
+                        items = filteredCharacters,
+                        key = { character -> character.id }
+                    ) { character ->
+                        val isSelected = character.id == selected.id
+                        Card(
+                            onClick = { onCharacterSelected(character.id) },
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                else MaterialTheme.colorScheme.surface
+                            ),
+                            shape = RoundedCornerShape(13.dp)
                         ) {
-                            rowCharacters.forEach { character ->
-                                val isSelected = character.id == selected.id
-                                Card(
-                                    onClick = { onCharacterSelected(character.id) },
-                                    modifier = Modifier.weight(1f),
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                        else MaterialTheme.colorScheme.surface
-                                    ),
-                                    shape = RoundedCornerShape(13.dp)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth().padding(7.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        ShowcaseArtwork(
-                                            url = character.avatarIcon,
-                                            description = "${character.name ?: "Character"} portrait",
-                                            fallback = elementGlyph(character.element),
-                                            modifier = Modifier.size(66.dp)
-                                        )
-                                        Text(
-                                            character.name ?: "Character #${character.id}",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            maxLines = 1
-                                        )
-                                        Text(
-                                            "Lv. ${character.level ?: "—"} • ${character.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "—"}",
-                                            fontSize = 10.sp,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                            repeat(3 - rowCharacters.size) {
-                                Spacer(Modifier.weight(1f))
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(7.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                ShowcaseArtwork(
+                                    url = character.avatarIcon,
+                                    description = "${character.name ?: "Character"} portrait",
+                                    fallback = elementGlyph(character.element),
+                                    modifier = Modifier.size(66.dp)
+                                )
+                                Text(
+                                    character.name ?: "Character #${character.id}",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1
+                                )
+                                Text(
+                                    "Lv. ${character.level ?: "—"} • ${character.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "—"}",
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                     }

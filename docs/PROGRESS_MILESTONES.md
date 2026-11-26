@@ -3972,3 +3972,34 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 **Verification status:** Implementation committed; main-branch CI pending. The successful tagged-release publication path has not been run. No test tag was created and no official release was published.
 
 **Coverage boundary:** Official releases run JVM unit tests against the tagged source. Room instrumentation tests are not repeated per release; they remain gated by relevant Debug workflow changes or manual full-test runs.
+
+
+## Milestone 066 - Lazy Character Roster Grid
+
+**Date recorded:** 2026-11-27  
+**Scope:** Reduce eager composition of the expanded character roster while preserving its existing behavior.
+
+**Implemented:**
+- Replaced the eager three-column `Column`/row/card tree with a three-column `LazyVerticalGrid`.
+- Added stable character-ID item keys.
+- Bounded the nested grid viewport to a maximum of four estimated card rows, allowing the lazy grid to operate safely inside the existing vertically scrollable Visuals page.
+- Memoized roster filter choices and filtered/sorted results against their input state.
+- Preserved search, element/weapon/rarity/level filters, sort direction, selected-character highlighting, and the detail panel.
+- Added no dependencies and changed no account data, persistence, or deterministic analysis behavior.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** Implementation committed; CI pending. Physical-device verification pending.
+
+**Device test checklist:**
+1. Expand Character Roster and scroll within the grid until the final character is reachable.
+2. Scroll the surrounding Visuals page outside the grid and confirm parent scrolling still works.
+3. Test search, element, weapon, rarity, minimum/maximum level filters, and Clear filters.
+4. Test Name, Level, Rarity, and Friendship sorting in both directions.
+5. Select multiple cards and confirm selected highlighting and the character detail panel update correctly.
+6. Confirm the roster remains responsive while opening and scrolling.
+
+**Verification boundary:** No runtime trace, composition count, frame-time comparison, or memory benchmark has been captured. Do not claim a measured performance improvement until comparable profiling is available.
