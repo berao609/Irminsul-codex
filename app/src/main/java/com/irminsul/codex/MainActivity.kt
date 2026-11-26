@@ -2744,6 +2744,41 @@ private fun AssessmentBar(label: String, value: Int, total: Int) {
 }
 
 @Composable
+private fun DailyNoteMetricRow(
+    label: String,
+    value: String,
+    status: String? = null
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = value,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        status?.let {
+            Text(
+                text = it,
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
 private fun MetricTile(
     label: String,
     value: String,
