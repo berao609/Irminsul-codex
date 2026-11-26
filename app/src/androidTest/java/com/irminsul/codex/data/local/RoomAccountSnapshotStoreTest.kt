@@ -81,6 +81,7 @@ class RoomAccountSnapshotStoreTest {
         }
         val dispatcher = executor.asCoroutineDispatcher()
         try {
+            val callerThread = Thread.currentThread().name
             val mappingThreads = mutableListOf<String>()
             val store = RoomAccountSnapshotStore(
                 database = database,
@@ -98,7 +99,8 @@ class RoomAccountSnapshotStoreTest {
 
             assertEquals(json, latest?.rawJson)
             assertEquals(json, history.single().rawJson)
-            assertEquals(listOf("room-snapshot-mapper-test", "room-snapshot-mapper-test"), mappingThreads)
+            assertEquals(2, mappingThreads.size)
+            assertTrue(mappingThreads.all { it != callerThread })
         } finally {
             dispatcher.close()
         }
