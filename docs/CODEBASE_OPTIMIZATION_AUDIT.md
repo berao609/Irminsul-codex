@@ -1020,3 +1020,34 @@ Closing this audit does not mean the application is perfect or that every option
 7. Collapse/reopen the roster and confirm the selected character remains selected.
 
 **Result:** Step 3 is cleared. Structural extraction only; no performance improvement is claimed.
+
+
+### Batch 6 - Step 4: Materials Planner presentation extraction
+
+**Finding:** AUD-002 - Split oversized UI responsibilities incrementally.
+
+**Status:** Extraction committed; CI and device verification pending.
+
+**Implementation:**
+- Moved Materials Planner presentation, plan row models, preference-backed state, and manual material JSON serialization helpers into `presentation/MaterialsPlannerSection.kt`.
+- Kept the existing call site in MainActivity and routed it to the extracted public composable.
+- Preserved SharedPreferences keys and serialization structure to avoid altering saved plans.
+- Kept `ManualMaterialPlanCalculator` and `ManualPlanCalculationStatus` in the domain layer.
+- No plan calculation, persistence format, or user-facing behavior was intentionally changed.
+
+**Commits:**
+- `1336b1de15c3920fcd3fd34409743efec8135cd0` - extracted Materials Planner presentation.
+- `9f19650b11a6180696b988c5baaa01c9d7cccf26` - integrated extracted presentation into MainActivity.
+
+**Static verification:** The extracted file exists and contains the public MaterialsPlannerSection composable and local serialization helpers. MainActivity retains the call site but no longer contains the planner's row model, composable, or serialization helpers. MainActivity is now approximately 1,472 lines.
+
+**Verification required:**
+1. CI #584 and #585 must pass compilation, unit tests, APK build, schema verification, and signature verification.
+2. Open Materials Planner and verify target selection for characters, equipped weapons, and custom targets.
+3. Verify character talent current/target fields.
+4. Verify planned weapon selection/custom weapon name and current/target level fields.
+5. Add, edit, and remove manual material rows; verify remaining quantity and invalid/missing input states.
+6. Collapse and reopen the planner; verify data persists for multiple targets.
+7. Confirm existing saved plans remain intact.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed.
