@@ -57,6 +57,8 @@ import com.irminsul.codex.data.export.JsonDocumentWriter
 import com.irminsul.codex.data.local.IrminsulDatabase
 import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
 import com.irminsul.codex.presentation.ChroniclePresentationRules
+import com.irminsul.codex.presentation.ChroniclePresentationMapper
+import com.irminsul.codex.presentation.ChronicleRecordMode
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import com.irminsul.codex.integration.security.HoYoLabCredentialStore
