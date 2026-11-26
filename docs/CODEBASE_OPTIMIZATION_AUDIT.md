@@ -932,7 +932,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ## Batch 6 - Incremental UI responsibility extraction (AUD-002)
 
-**Status:** In progress. First focused extraction committed; CI and device verification pending.
+**Status:** In progress. Focused presentation extractions are committed; CI and device verification remain pending for the active step.
 
 **Step 1 - Account Chronicle presentation extraction:**
 - Moved the Account Overview, World Exploration & Collectibles, and record summary composables into `presentation/ChronicleSections.kt`.
@@ -976,3 +976,43 @@ Closing this audit does not mean the application is perfect or that every option
 - Debug CI unit tests, compilation, APK build, schema verification, and signature verification are still unconfirmed in the available evidence. Do not mark CI as passed.
 
 **Boundary:** This is a responsibility extraction only. No performance improvement is claimed. Continue with one cohesive extraction after this step is verified.
+
+
+### Batch 6 - Step 3: Character Showcase presentation extraction
+
+**Finding:** AUD-002 - Split oversized UI responsibilities incrementally.
+
+**Status:** Source extraction committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Moved the Character Showcase roster, filters, selected-character detail profile, talent and constellation details, weapon and artifact inspection, and their presentation helpers into `presentation/CharacterShowcaseSection.kt`.
+- Kept the selected character ID and selection callback in `CodexScreen`; the screen still owns which character is selected.
+- Kept roster search/filter/expand state local to the Character Showcase presentation, where it was already owned.
+- Preserved the current release ordering, rarity card backgrounds, selection highlight, filters, lazy grid, character details, weapon passive lookup, and artifact/talent/constellation interactions.
+- No account model, persistence, navigation, analysis, or product behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterShowcaseSection.kt`
+
+**Commits:**
+- `96628ec862051308703c0a90e783bf77bbcac8c6` - extracted Character Showcase presentation.
+- `f3ca764cfb0c22291cd92baeceb753679369e5cc` - integrated extracted component into MainActivity.
+- `177c74737e4097d1187499784ff5fd253f15d551` - added coroutine imports required by weapon passive loading.
+
+**Static source verification:**
+- MainActivity imports and calls the extracted public composable.
+- The old private CharacterShowcaseSection implementation is no longer in MainActivity.
+- Selection ownership remains in CodexScreen.
+- Roster filters/grid and character build-detail components are present in the extracted file.
+
+**Verification required:**
+1. Confirm Debug CI compilation, unit tests, APK build, Room schema verification, and APK signature verification.
+2. Open Visuals and expand Character Roster.
+3. Verify newest-first release order, portrait cards, permanent rarity backgrounds, and selected-card highlight.
+4. Test search, element and weapon filters, level range, and Clear filters.
+5. Select multiple characters and confirm the detail panel follows the selected character.
+6. Inspect talents, constellations, weapon passive, weapon stats, artifacts, and artifact substats.
+7. Collapse/reopen the roster and confirm the selected character remains selected.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed.
