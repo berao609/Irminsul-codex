@@ -1989,9 +1989,6 @@ private fun CharacterShowcaseSection(
     var maximumLevel by remember { mutableStateOf("") }
     var selectedElement by remember { mutableStateOf("All") }
     var selectedWeaponType by remember { mutableStateOf("All") }
-    var selectedRarity by remember { mutableStateOf("All") }
-    var sortBy by remember { mutableStateOf("Name") }
-    var descending by remember { mutableStateOf(false) }
 
     val selected = characters.firstOrNull { it.id == selectedCharacterId } ?: characters.first()
     val elements = remember(characters) {
@@ -2000,23 +1997,17 @@ private fun CharacterShowcaseSection(
     val weaponTypes = remember(characters) {
         listOf("All") + characters.map { it.rosterWeaponType() ?: "Unknown" }.distinct().sorted()
     }
-    val rarities = listOf("All", "5★", "4★", "3★", "2★", "1★", "Unknown")
-
     val filteredCharacters = remember(
         characters,
         searchQuery,
         minimumLevel,
         maximumLevel,
         selectedElement,
-        selectedWeaponType,
-        selectedRarity,
-        sortBy,
-        descending
+        selectedWeaponType
     ) {
-        characters.filter { character ->
+        sortCharactersByRelease(characters.filter { character ->
             val name = character.name ?: "Character #${character.id}"
             val level = character.level
-            val rarity = character.rarity
             val weaponType = character.rosterWeaponType() ?: "Unknown"
             val element = character.element?.takeIf(String::isNotBlank) ?: "Unknown"
             val minLevel = minimumLevel.toIntOrNull()
@@ -2024,21 +2015,13 @@ private fun CharacterShowcaseSection(
             name.contains(searchQuery.trim(), ignoreCase = true) &&
                 (selectedElement == "All" || element.equals(selectedElement, ignoreCase = true)) &&
                 (selectedWeaponType == "All" || weaponType == selectedWeaponType) &&
-                (selectedRarity == "All" || if (selectedRarity == "Unknown") rarity == null else rarity?.let { "${it}★" == selectedRarity } == true) &&
                 (minLevel == null || level != null && level >= minLevel) &&
                 (maxLevel == null || level != null && level <= maxLevel)
-        }.let { matches ->
-            when (sortBy) {
-                "Level" -> if (descending) matches.sortedByDescending { it.level ?: Int.MIN_VALUE } else matches.sortedBy { it.level ?: Int.MAX_VALUE }
-                "Rarity" -> if (descending) matches.sortedByDescending { it.rarity ?: Int.MIN_VALUE } else matches.sortedBy { it.rarity ?: Int.MAX_VALUE }
-                "Friendship" -> if (descending) matches.sortedByDescending { it.friendshipLevel ?: Int.MIN_VALUE } else matches.sortedBy { it.friendshipLevel ?: Int.MAX_VALUE }
-                else -> if (descending) matches.sortedByDescending { it.name ?: "Character #${it.id}" } else matches.sortedBy { it.name ?: "Character #${it.id}" }
-            }
-        }
+        })
     }
 
     val hasActiveFilters = searchQuery.isNotBlank() || minimumLevel.isNotBlank() || maximumLevel.isNotBlank() ||
-        selectedElement != "All" || selectedWeaponType != "All" || selectedRarity != "All"
+        selectedElement != "All" || selectedWeaponType != "All"
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Card(
@@ -2087,22 +2070,6 @@ private fun CharacterShowcaseSection(
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RosterChoiceMenu(
-                    label = "Sort: $sortBy",
-                    options = listOf("Name", "Level", "Rarity", "Friendship"),
-                    selected = sortBy,
-                    onSelected = { sortBy = it }
-                )
-                TextButton(onClick = { descending = !descending }) {
-                    Text(if (descending) "Descending ↓" else "Ascending ↑")
-                }
-            }
-
             if (filtersExpanded) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
@@ -2115,9 +2082,6 @@ private fun CharacterShowcaseSection(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                         RosterChoiceMenu("Element: $selectedElement", elements, selectedElement) { selectedElement = it }
                         RosterChoiceMenu("Weapon: $selectedWeaponType", weaponTypes, selectedWeaponType) { selectedWeaponType = it }
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        RosterChoiceMenu("Rarity: $selectedRarity", rarities, selectedRarity) { selectedRarity = it }
                     }
                     Text("Character level", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -2146,7 +2110,6 @@ private fun CharacterShowcaseSection(
                                 maximumLevel = ""
                                 selectedElement = "All"
                                 selectedWeaponType = "All"
-                                selectedRarity = "All"
                             },
                             modifier = Modifier.align(Alignment.End)
                         ) { Text("Clear filters") }
@@ -2180,9 +2143,17 @@ private fun CharacterShowcaseSection(
                             onClick = { onCharacterSelected(character.id) },
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
-                                containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                else MaterialTheme.colorScheme.surface
+                                containerColor = when (character.rarity) {
+                                    5 -> Color(0xFFFFC857).copy(alpha = 0.24f)
+                                    4 -> Color(0xFFB388FF).copy(alpha = 0.24f)
+                                    else -> MaterialTheme.colorScheme.surface
+                                }
                             ),
+                            border = if (isSelected) androidx.compose.foundation.BorderStroke(
+                                1.5.dp,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
+                            ) else null,
+                            elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 0.dp),
                             shape = RoundedCornerShape(13.dp)
                         ) {
                             Column(
