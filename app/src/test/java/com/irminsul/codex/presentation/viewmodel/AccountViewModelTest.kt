@@ -62,7 +62,7 @@ class AccountViewModelTest {
                     return Result.success(export)
                 }
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.exportAccount("800000001", "test-cookie")
@@ -106,7 +106,7 @@ class AccountViewModelTest {
                     onProgress: (String) -> Unit
                 ): Result<AccountExport> = Result.success(export)
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.analyzeAccount("800000001", "test-cookie")
@@ -142,7 +142,7 @@ class AccountViewModelTest {
                     return Result.failure(IllegalStateException("unexpected network call"))
                 }
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(export))
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(export), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.restoreLatestSnapshot("800000001")
@@ -176,7 +176,7 @@ class AccountViewModelTest {
                     onProgress: (String) -> Unit
                 ): Result<AccountExport> = Result.failure(IllegalStateException("network unavailable"))
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(export))
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(export), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.restoreLatestSnapshot("800000001")
@@ -208,7 +208,7 @@ class AccountViewModelTest {
                     onProgress: (String) -> Unit
                 ): Result<AccountExport> = Result.failure(IllegalStateException("network unavailable"))
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.exportAccount("800000001", "test-cookie")
@@ -238,7 +238,7 @@ class AccountViewModelTest {
                     return Result.failure(IllegalStateException("should not be called"))
                 }
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.exportAccount("", "")
@@ -268,7 +268,7 @@ class AccountViewModelTest {
             val repository = object : AccountRepository {
                 override suspend fun fetchAccountExport(uid: String, cookie: String, onProgress: (String) -> Unit): Result<AccountExport> = Result.success(export)
             }
-            val viewModel = AccountViewModel(repository, snapshotStore)
+            val viewModel = AccountViewModel(repository, snapshotStore, UnconfinedTestDispatcher())
             store.put("account", viewModel)
             viewModel.exportAccount("800000001", "test-cookie")
             assertSame(export, savedExport)
