@@ -3785,3 +3785,34 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 - CI verifies the credential-store instrumentation tests and version-1-to-2 Room migration test on an Android API 34 emulator. This does not replace a physical-device credential lifecycle check.
 - On device, verify existing legacy session migration on app launch, a fresh HoYoLAB login, app restart/session restoration, credential replacement, and Account-screen sign-out. Confirm the local Room snapshots remain available after sign-out.
 - Do not claim that an actual user's stored cookie has been migrated or inspected; no physical-device credential store inspection was performed.
+## Milestone 060 - JSON Export Save-Result Integrity
+
+**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+
+### Implemented
+
+- Fixed the Android document-save callback so a null output stream is treated as a failed save instead of silently reporting success.
+- Extracted the UTF-8 document write into a small testable JsonDocumentWriter.
+- The writer returns the byte count only after the stream has been written and closed successfully. Open, write, and close failures propagate to the caller.
+- The UI displays the saved-file success message only after the writer completes. Failed writes clear the success status and show an error. A cancelled document picker is reported as cancelled.
+- Added unit tests for exact UTF-8 output, null output stream, stream-open failure, write failure, and close failure.
+- No export payload shape, source-data preservation, account retrieval, Room persistence, credential handling, or export-format version was changed.
+
+### Files changed
+
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/data/export/JsonDocumentWriter.kt
+- app/src/test/java/com/irminsul/codex/data/export/JsonDocumentWriterTest.kt
+
+### Implementation commits
+
+- a509acede2a9540a593f29cac141d66207f1458b - add testable JSON document writer.
+- c62e9f73b1a73e686f54d1516bf6e134ca14716d - add JSON document writer failure tests.
+- d4c0369295d788bf224d4a23a35fa78f0683fd14 - prevent false success on JSON export failure.
+- f2f83954342b8ffccbfc455774bf25eb209df676 - import the JSON document writer in MainActivity.
+
+### Verification boundary and next actions
+
+- Source and test changes are committed to main.
+- CI compilation and unit-test results have not yet been observed. Do not treat the new tests as passing until the workflow confirms them.
+- Physical-device checks remain: save a valid export and confirm the file opens as valid UTF-8 JSON; cancel the picker; and, where reproducible, test a destination/provider that fails to open or write. Confirm no failure path displays the saved-file success message.
