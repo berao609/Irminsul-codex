@@ -3984,7 +3984,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Added stable character-ID item keys.
 - Bounded the nested grid viewport to a maximum of four estimated card rows, allowing the lazy grid to operate safely inside the existing vertically scrollable Visuals page.
 - Memoized roster filter choices and filtered/sorted results against their input state.
-- Preserved search, element/weapon/rarity/level filters, sort direction, selected-character highlighting, and the detail panel.
+- Preserved search, element/weapon/rarity/level filters, sort direction, selected-character highlighting, and the detail panel during this performance-only change.
 - Added no dependencies and changed no account data, persistence, or deterministic analysis behavior.
 
 **Files changed:**
@@ -3992,14 +3992,21 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
 - `docs/PROGRESS_MILESTONES.md`
 
-**Verification status:** Implementation committed; CI pending. Physical-device verification pending.
+**Verification status:** CI #557 passed; physical-device verification passed.
 
 **Device test checklist:**
-1. Expand Character Roster and scroll within the grid until the final character is reachable.
-2. Scroll the surrounding Visuals page outside the grid and confirm parent scrolling still works.
-3. Test search, element, weapon, rarity, minimum/maximum level filters, and Clear filters.
-4. Test Name, Level, Rarity, and Friendship sorting in both directions.
-5. Select multiple cards and confirm selected highlighting and the character detail panel update correctly.
-6. Confirm the roster remains responsive while opening and scrolling.
+1. Passed: the final character is reachable by scrolling inside the grid.
+2. Passed: the surrounding Visuals page scrolls when swiping outside the grid.
+3. Passed: search, element, weapon, rarity, minimum/maximum level filters, and Clear filters.
+4. Passed: Name, Level, Rarity, and Friendship sorting in both directions.
+5. Passed: selecting characters updates highlighting and the detail panel.
+6. Passed: collapsing/reopening and scrolling remain responsive.
 
-**Verification boundary:** No runtime trace, composition count, frame-time comparison, or memory benchmark has been captured. Do not claim a measured performance improvement until comparable profiling is available.
+**Verification boundary:** No runtime trace, composition count, frame-time comparison, or memory benchmark has been captured. The user confirmed normal, responsive device behavior; no quantified performance improvement is claimed.
+
+**Follow-up UI requirements recorded for a separate focused change:**
+- Remove the Rarity filter entirely.
+- Remove all sorting controls and sorting options.
+- Display characters in chronological release order, oldest first, by default.
+- Give 5-star character cards a permanent gold background and 4-star cards a permanent purple background.
+- Add a subtle selection highlight without replacing the permanent rarity background.

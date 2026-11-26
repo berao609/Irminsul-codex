@@ -7,7 +7,7 @@
 - **Record purpose:** Track the phased codebase optimization audit independently of the development milestone history.
 - **Audit mode:** Investigation completed. Remediation is proceeding in separately authorized, focused implementation batches.
 - **Overall status:** In progress
-- **Current phase:** Remediation Batch 3 - AUD-006 (CPU-bound work off the main thread)
+- **Current phase:** Remediation Batch 6 - AUD-002 (incremental UI responsibility extraction)
 - **Last updated:** 2026-11-26
 
 ## 1. Objective
@@ -706,8 +706,8 @@ Closing this audit does not mean the application is perfect or that every option
 | 1 | AUD-008 credential protection; AUD-009 Room migration integrity | Cleared | CI #521 and #522 passed. User completed credential/session and sign-out device checks. |
 | 2 | AUD-003 JSON export false-success fix | Cleared | Final CI #530 passed. User confirmed export flow is clear. Cancellation during an active save remains a future UX enhancement. |
 | 3 | AUD-006 CPU-heavy processing off main thread; AUD-011 Chronicle rendering follow-up | Cleared | CI #542 passed for processing and #555 passed for the Chronicle corrections. User confirmed responsive rendering, correct Account Overview statistics, working expandables, and no exposed technical IDs/URLs. |
-| 4 | AUD-007 Release test gate | Implemented; CI pending | Release workflow now runs tagged-source JVM unit tests before signing/build/publication. Room instrumentation remains under the existing Debug CI policy. |
-| 5 | AUD-005 lazy roster grid | Not started | Preserve existing filtering, sorting, and selection behavior. |
+| 4 | AUD-007 Release test gate | CI passed; tagged-release path untested | CI #556 passed. The successful tagged-release publication path remains untested; no release was published. |
+| 5 | AUD-005 lazy roster grid | Cleared | CI #557 passed and user completed physical-device checks: grid scrolling, parent-page scrolling, filters, sorting, selection/detail updates, and responsiveness all worked. |
 | 6 | AUD-002 incremental UI extraction | Not started | Extract only cohesive sections, incrementally. |
 | 7 | AUD-004 lifecycle-aware StateFlow collection | Not started | Low-risk lifecycle improvement. |
 | 8 | AUD-010 agent workflow efficiency | Not started | Keep safety and Git rules unconditional. |
@@ -871,7 +871,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ## Batch 4 - Release test gate (AUD-007)
 
-**Status:** Implementation committed; CI and tagged-release workflow verification pending.
+**Status:** Implementation committed; CI #556 passed; tagged-release publication path untested.
 
 **Implementation:**
 - Added `gradle testDebugUnitTest --no-daemon` to `.github/workflows/release.yml`.
@@ -889,12 +889,12 @@ Closing this audit does not mean the application is perfect or that every option
 **Verification boundary:**
 - The release workflow's step ordering provides the failure gate: a failed unit-test command terminates the job before signing or publishing.
 - The successful tagged-release publication path has not been executed; no release tag was created and no official release was published.
-- CI on the resulting main-branch commit and workflow syntax inspection are pending.
+- CI #556 passed, including the Release workflow configuration validation on the main branch. The successful tagged-release publication path has not been executed; no release tag was created and no official release was published.
 
 
 ## Batch 5 - Lazy character roster grid (AUD-005)
 
-**Status:** Implementation committed; CI and physical-device verification pending.
+**Status:** Cleared after CI #557 and physical-device verification.
 
 **Implementation:**
 - Replaced eager `chunked(3)` row/card composition with a three-column `LazyVerticalGrid`.
@@ -909,8 +909,22 @@ Closing this audit does not mean the application is perfect or that every option
 - `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
 - `docs/PROGRESS_MILESTONES.md`
 
-**Verification required:**
-- CI must pass compilation and the existing unit-test suite.
-- On-device, expand the roster and scroll inside the grid, then continue scrolling the page outside the grid.
-- Verify all characters can be reached; test search, each filter, minimum/maximum level, all sort choices and direction, selected-card highlighting, and character detail updates.
-- Compare responsiveness when opening and scrolling the expanded roster. No quantified performance improvement is claimed without profiling.
+**Automated verification:**
+- CI #557 passed unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped because this change did not trigger them.
+- Commit: `17b64ce96be75a23eaa7556b08e5f2116e343615`.
+
+**Physical-device verification:** User installed Debug build #557 and confirmed:
+- Character Roster opens; scrolling inside the grid reaches the final character.
+- Scrolling outside the grid still moves the surrounding Visuals page.
+- Search, element/weapon/rarity/level filters, Clear filters, and all sorting choices/directions behaved normally.
+- Selecting every tested character updates the selected state and detail panel correctly.
+- Collapsing/reopening the roster and scrolling remained responsive.
+
+**Result:** Batch 5 is cleared. No quantified performance improvement is claimed because no comparable runtime profiling was captured.
+
+**Follow-up UI requirements recorded for a separate focused change (not part of the cleared performance batch):**
+- Remove the Rarity filter entirely.
+- Remove all sorting controls and sorting options.
+- Preserve chronological character release order, oldest first, as the default roster order.
+- Give 5-star cards a permanent gold background and 4-star cards a permanent purple background.
+- Keep the rarity background when selected and add a subtle additional selection highlight.
