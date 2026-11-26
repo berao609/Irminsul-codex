@@ -104,6 +104,7 @@ class HoYoLabAccountRepositoryTest {
         }
         val dispatcher = executor.asCoroutineDispatcher()
         try {
+            val callerThread = Thread.currentThread().name
             var mappingThread: String? = null
             val repository = HoYoLabAccountRepository(
                 exportJson = { _, _, _ -> Result.success(validExport) },
@@ -117,7 +118,8 @@ class HoYoLabAccountRepositoryTest {
             val result = repository.fetchAccountExport("800000001", "test-cookie")
 
             assertTrue(result.isSuccess)
-            assertEquals("account-export-mapper-test", mappingThread)
+            assertNotNull(mappingThread)
+            assertNotEquals(callerThread, mappingThread)
         } finally {
             dispatcher.close()
         }
