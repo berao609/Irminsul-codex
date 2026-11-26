@@ -999,6 +999,8 @@ Closing this audit does not mean the application is perfect or that every option
 - `96628ec862051308703c0a90e783bf77bbcac8c6` - extracted Character Showcase presentation.
 - `f3ca764cfb0c22291cd92baeceb753679369e5cc` - integrated extracted component into MainActivity.
 - `177c74737e4097d1187499784ff5fd253f15d551` - added coroutine imports required by weapon passive loading.
+- `6aa462c0743264f2a48311d20ed6b17c181ea59c` - moved the recommendation avatar fallback back beside its remaining caller.
+- `6ab25a876e7aed9e7db4f92e1cad7743ab5a0fc9` - completed the MainActivity helper integration.
 
 **Static source verification:**
 - MainActivity imports and calls the extracted public composable.
@@ -1006,8 +1008,10 @@ Closing this audit does not mean the application is perfect or that every option
 - Selection ownership remains in CodexScreen.
 - Roster filters/grid and character build-detail components are present in the extracted file.
 
+**CI correction record:** Initial Debug CI attempts exposed two extraction-boundary issues: the weapon-passive coroutine imports were missing from the new file, and `CharacterAvatarFallback` remained needed by the recommendation card in MainActivity. Both were corrected in the commits above. Later Debug CI reruns are in progress; no successful run is claimed yet.
+
 **Verification required:**
-1. Confirm Debug CI compilation, unit tests, APK build, Room schema verification, and APK signature verification.
+1. Confirm a Debug CI run after the corrective commits passes compilation, unit tests, APK build, Room schema verification, and APK signature verification.
 2. Open Visuals and expand Character Roster.
 3. Verify newest-first release order, portrait cards, permanent rarity backgrounds, and selected-card highlight.
 4. Test search, element and weapon filters, level range, and Clear filters.
