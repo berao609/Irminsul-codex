@@ -4063,3 +4063,41 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 **Remaining verification:** Debug CI compilation, unit tests, APK build, schema verification, and signature verification have not been confirmed.
 
 **Boundary:** Structural extraction only. No performance improvement is claimed.
+
+
+## Milestone 069 - Extract Character Showcase Presentation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Continue AUD-002 by separating the Character Showcase UI from the oversized MainActivity source file.
+
+**Implemented:**
+- Moved the Character Showcase roster, filters, selected-character detail profile, talent and constellation details, weapon and artifact inspection, and supporting presentation helpers into `presentation/CharacterShowcaseSection.kt`.
+- Kept selected-character ID and selection callback ownership in `CodexScreen`.
+- Kept roster search, filters, and expansion state local to the Character Showcase presentation.
+- Preserved release ordering, rarity card backgrounds, selection highlight, filters, lazy grid, character details, weapon passive lookup, and artifact/talent/constellation interactions.
+- No account model, persistence, navigation, analysis, or product behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterShowcaseSection.kt`
+
+**Commits:**
+- `96628ec862051308703c0a90e783bf77bbcac8c6`
+- `f3ca764cfb0c22291cd92baeceb753679369e5cc`
+- `177c74737e4097d1187499784ff5fd253f15d551`
+
+**Static source verification:** MainActivity imports and calls the extracted composable; its previous private implementation is absent; selected-character ownership remains in CodexScreen; roster and detail components are present in the new presentation file.
+
+**Verification status:** CI pending. Physical-device verification pending.
+
+**Device checklist:**
+1. Open Visuals and expand Character Roster.
+2. Verify newest-first release order, portrait cards, permanent rarity backgrounds, and selected-card highlight.
+3. Test search, element and weapon filters, level range, and Clear filters.
+4. Select multiple characters and confirm the detail panel follows the selected character.
+5. Inspect talents, constellations, weapon passive, weapon stats, artifacts, and artifact substats.
+6. Collapse/reopen the roster and confirm the selected character remains selected.
+
+**Remaining verification:** Debug CI compilation, unit tests, APK build, Room schema verification, APK signature verification, and physical-device behavior have not been confirmed.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed.
