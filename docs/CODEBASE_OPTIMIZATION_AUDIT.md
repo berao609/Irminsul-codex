@@ -7,7 +7,7 @@
 - **Record purpose:** Track the phased codebase optimization audit independently of the development milestone history.
 - **Audit mode:** Read-only investigation until the consolidated audit plan is reviewed and the user separately authorizes implementation.
 - **Overall status:** In progress
-- **Current phase:** Part 4 - Jetpack Compose performance and UI architecture
+- **Current phase:** Part 5 - Data processing and local-first design
 - **Last updated:** 2026-11-26
 
 ## 1. Objective
@@ -180,7 +180,7 @@ Statuses used:
 
 ### Part 4 - Jetpack Compose performance and UI architecture
 
-**Status:** In progress
+**Status:** Complete
 
 **Purpose:** Identify avoidable UI work and state-management patterns that could affect responsiveness, rendering, or maintainability.
 
@@ -392,11 +392,11 @@ When resuming after a pause:
 - **Overall audit status:** In progress.
 - **Current phase:** Part 4 - Jetpack Compose performance and UI architecture.
 - **Completed audit parts:** Parts 1, 2, and 3.
-- **In-progress audit parts:** Part 4.
+- **In-progress audit parts:** Part 5.
 - **Blocked items:** None.
 - **Application source changes made by this audit:** None.
-- **Current stopping point:** Part 3 review completed. Part 4 will assess Compose recomposition, state ownership, and rendering patterns; no runtime profiling has been performed.
-- **Next action:** Inspect Compose state collection, screen composition, list rendering, derived calculations, and UI state ownership in MainActivity.kt.
+- **Current stopping point:** Part 4 static Compose review completed. No runtime profiling or device performance measurements were performed.
+- **Next action:** Inspect account retrieval, parsing, persistence, cache/restore, and offline analysis data flow for Part 5.
 
 ## 9. Audit completion criteria
 
@@ -446,3 +446,39 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Part 3 activity log
 - 2026-11-26: Reviewed ViewModel, network client/parser/validator, repository, local snapshot store, cost calculator, and relevant MainActivity account flows. Confirmed AUD-003. Part 3 complete. No app source/config/tests/workflows modified.
+
+
+## Part 4 - Jetpack Compose performance and UI architecture (completed)
+
+### Evidence inspected
+- `MainActivity.kt`: root screen state, tab rendering, UI-state collection, vertical scrolling, conditional tab sections, roster filtering/sorting, character grid rendering, character detail sections, and artifact/constellation sorting.
+- Focused review of `CodexScreen` (lines 163-1156), `CharacterShowcaseSection` (lines 1902-2125), and `CharacterShowcaseDetail` (lines 2164-2386).
+- Android official architecture guidance was checked for lifecycle-aware UI state collection and Compose/ViewModel patterns.
+
+### Finding AUD-004 - UI state is collected without lifecycle awareness
+- **Classification:** Low-priority efficiency opportunity / lifecycle concern.
+- **Evidence:** `MainActivity.kt` collects `accountViewModel.uiState` using `collectAsState()` at line 171. The root screen is activity-composed UI, but the collector is not lifecycle-aware.
+- **Impact:** Collection can continue while the UI is not in an active lifecycle state, doing avoidable UI observation work.
+- **Confidence:** Verified implementation pattern; actual measurable resource impact not established.
+- **Recommendation:** Consider `collectAsStateWithLifecycle()` from Lifecycle Compose. This is a targeted modernization, not evidence of a current user-visible defect.
+- **Verification:** Ensure state updates are still reflected on resume and account workflows remain correct. No runtime measurement was performed.
+- **Implementation status:** None.
+
+### Finding AUD-005 - Expanded character roster is eagerly rendered
+- **Classification:** Medium efficiency opportunity; performance impact unmeasured.
+- **Evidence:** `CharacterShowcaseSection` filters and sorts the roster, then groups it with `chunked(3)` and renders each row and card inside regular `Column` composables. It does not use a lazy grid/list. Roster expansion is gated, but once expanded all filtered character cards are composed together; the current roster is around 67 characters.
+- **Impact:** Creates and lays out all visible roster cards and artwork slots at once rather than composing only viewport items. This may increase initial work and memory when users expand a large roster.
+- **Confidence:** Verified rendering pattern; runtime jank/frame or memory impact is not measured.
+- **Recommendation:** Consider replacing the expanded roster with `LazyVerticalGrid` or another lazy container, but only after checking nested scrolling constraints and keeping the current grid selection/filter/sort behavior. Avoid an unnecessary change if profiling shows no meaningful benefit at current roster size.
+- **Verification:** Compare composition/layout and scroll performance on-device with roster expanded, confirm selection, filters, sort, and detail panel behave identically.
+- **Implementation status:** None.
+
+### Compose observations (not confirmed defects)
+- The screen uses a root vertical scroll and conditional content for Home, Visuals, and Account. Tab changes recompose the screen, but conditional content prevents every tab's main section from being rendered simultaneously.
+- The roster's filtering and sorting are simple operations over a modest list. They are recomputed during composition; no finding is raised for this alone because the list is small and there is no performance measurement.
+- Character detail collections are small (talents, constellations, artifacts); eager rendering and sorting in these areas are not prioritized without evidence.
+- No measured recomposition, frame-time, or memory issue was confirmed. Static source review cannot establish runtime performance.
+- Official Android guidance recommends lifecycle-aware UI state collection such as `collectAsStateWithLifecycle()`. This supports AUD-004 as an opportunity, not a defect claim.
+
+### Part 4 activity log
+- 2026-11-26: Reviewed Compose state collection, tab content conditions, root scrolling, roster filtering/sorting and eager grid construction, character detail rendering, and collection sorting. Recorded AUD-004 and AUD-005. Part 4 completed as a static review with runtime profiling limitations stated. No app source/config/tests/workflows modified.
