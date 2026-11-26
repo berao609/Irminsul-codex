@@ -4010,3 +4010,26 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Display characters in chronological release order, oldest first, by default.
 - Give 5-star character cards a permanent gold background and 4-star cards a permanent purple background.
 - Add a subtle selection highlight without replacing the permanent rarity background.
+
+
+## Milestone 067 - Extract Account Chronicle Presentation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Begin AUD-002 by separating cohesive Account Chronicle UI from the oversized MainActivity source file.
+
+**Implemented:**
+- Moved Account Overview, World Exploration & Collectibles, and Chronicle record summary composables into `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`.
+- Kept the composables' existing parameters, mapper calls, expansion behavior, and visual content unchanged.
+- Updated MainActivity imports and retained its existing Chronicle call sites.
+- Left Daily Note metrics, materials planning, lineup simulation, and character showcase untouched.
+
+**Verification status:** CI pending; physical-device verification pending.
+
+**Verification checklist:**
+1. Confirm the app builds and unit tests pass.
+2. Open Visuals and verify Account Overview.
+3. Verify World Exploration & Collectibles and its region cards.
+4. Verify current/previous Spiral Abyss and Imaginarium Theater sections.
+5. Expand and collapse each Chronicle section and confirm the page remains responsive.
+
+**Boundary:** This is a structural extraction, not a UI redesign or performance optimization claim.

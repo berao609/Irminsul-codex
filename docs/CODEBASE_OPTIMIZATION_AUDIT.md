@@ -708,7 +708,7 @@ Closing this audit does not mean the application is perfect or that every option
 | 3 | AUD-006 CPU-heavy processing off main thread; AUD-011 Chronicle rendering follow-up | Cleared | CI #542 passed for processing and #555 passed for the Chronicle corrections. User confirmed responsive rendering, correct Account Overview statistics, working expandables, and no exposed technical IDs/URLs. |
 | 4 | AUD-007 Release test gate | CI passed; tagged-release path untested | CI #556 passed. The successful tagged-release publication path remains untested; no release was published. |
 | 5 | AUD-005 lazy roster grid | Cleared | CI #557 passed and user completed physical-device checks: grid scrolling, parent-page scrolling, filters, sorting, selection/detail updates, and responsiveness all worked. |
-| 6 | AUD-002 incremental UI extraction | Not started | Extract only cohesive sections, incrementally. |
+| 6 | AUD-002 incremental UI extraction | In progress | First focused extraction moves the account Chronicle presentation into its own presentation file; continue with other cohesive sections only after verification. |
 | 7 | AUD-004 lifecycle-aware StateFlow collection | Not started | Low-risk lifecycle improvement. |
 | 8 | AUD-010 agent workflow efficiency | Not started | Keep safety and Git rules unconditional. |
 
@@ -928,3 +928,22 @@ Closing this audit does not mean the application is perfect or that every option
 - Preserve chronological character release order, oldest first, as the default roster order.
 - Give 5-star cards a permanent gold background and 4-star cards a permanent purple background.
 - Keep the rarity background when selected and add a subtle additional selection highlight.
+
+
+## Batch 6 - Incremental UI responsibility extraction (AUD-002)
+
+**Status:** In progress. First focused extraction committed; CI and device verification pending.
+
+**Step 1 - Account Chronicle presentation extraction:**
+- Moved the Account Overview, World Exploration & Collectibles, and record summary composables into `presentation/ChronicleSections.kt`.
+- Kept the presentation mapper and record-mode types in the existing presentation package.
+- Preserved the existing call sites and rendered content. This is a file/responsibility extraction only; no state ownership, data mapping, or UI behavior was intentionally changed.
+- Kept the section card and availability-message helpers private to the extracted file.
+- Left unrelated Daily Note and metric components in MainActivity for a later focused decision.
+
+**Verification required:**
+- Run the Debug CI workflow and inspect compilation/unit-test results.
+- On device, verify Account Overview, World Exploration & Collectibles, current/previous Spiral Abyss, and Imaginarium Theater render and expand as before.
+- Confirm no navigation, account retrieval, or Visuals page behavior regresses.
+
+**Scope rule:** Continue one cohesive extraction at a time. Do not combine this work with the separately recorded character-roster filter/order/card-style follow-ups.
