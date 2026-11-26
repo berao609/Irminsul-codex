@@ -3754,7 +3754,6 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 - `app/src/main/java/com/irminsul/codex/MainActivity.kt`
 - `app/src/androidTest/java/com/irminsul/codex/integration/security/HoYoLabCredentialStoreTest.kt`
 - `app/src/androidTest/java/com/irminsul/codex/data/local/IrminsulDatabaseMigrationTest.kt`
-- `app/src/main/java/com/irminsul/codex/data/local/IrminsulDatabase.kt` (migration implementation was already present; covered by the new test)
 - `app/build.gradle.kts`
 - `gradle/libs.versions.toml`
 - `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/1.json`
