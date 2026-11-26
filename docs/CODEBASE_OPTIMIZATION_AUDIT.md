@@ -705,7 +705,7 @@ Closing this audit does not mean the application is perfect or that every option
 |---|---|---|---|
 | 1 | AUD-008 credential protection; AUD-009 Room migration integrity | Cleared | CI #521 and #522 passed. User completed credential/session and sign-out device checks. |
 | 2 | AUD-003 JSON export false-success fix | Cleared | Final CI #530 passed. User confirmed export flow is clear. Cancellation during an active save remains a future UX enhancement. |
-| 3 | AUD-006 CPU-heavy processing off main thread | CI passed; physical-device verification pending | CI #542 passed unit tests, Room instrumentation tests, Debug APK build, schema verification, signature verification, and artifact upload. |
+| 3 | AUD-006 CPU-heavy processing off main thread; AUD-011 Chronicle rendering follow-up | CI/device verification pending | CI #542 passed for AUD-006. The #542 device test exposed eager Chronicle rendering; AUD-011 follow-up is recorded below. |
 | 4 | AUD-007 Release test gate | Not started | Next approved batch after Batch 3 is cleared. |
 | 5 | AUD-005 lazy roster grid | Not started | Preserve existing filtering, sorting, and selection behavior. |
 | 6 | AUD-002 incremental UI extraction | Not started | Extract only cohesive sections, incrementally. |
@@ -796,3 +796,39 @@ Closing this audit does not mean the application is perfect or that every option
 ### Continuing update log
 
 - 2026-11-26: Recorded Batch 1 and Batch 2 implementation and verification history; started the Batch 3 remediation record. Batch 3 source changes are committed. CI #542 passed all unit, Room instrumentation, build, schema, signature, and artifact checks. Physical-device verification remains pending.
+
+
+### Batch 3 follow-up - AUD-011 bounded Chronicle rendering
+
+**Finding:** AUD-011 - Unbounded recursive Chronicle rendering  
+**Status:** Implementation prepared; CI and physical-device verification pending.
+
+**Observed during physical-device testing of Debug build #542:**
+- Account retrieval completed and the account information was reported correct.
+- Expanding Account Chronicles caused visible frame-rate drops, most noticeably in World Exploration & Collectibles.
+- The expanded section exposed source implementation details such as image URLs, icon paths, and internal entry identifiers.
+- Static source inspection confirmed that `ChronicleStructuredNode` recursively traversed every nested object and array and composed all entries immediately. This is a code-level explanation consistent with the report; no runtime trace or measured frame-time data is available.
+
+**Focused remediation:**
+- Keep the original structured payload intact. No mapper, export, snapshot, or persistence transformation is required.
+- Render immediate object fields only. Nested objects and arrays remain collapsed until the user opens them.
+- Render expanded arrays through a bounded-height `LazyColumn` with stable item keys rather than eagerly composing every entry.
+- Hide technical field names and URL/artwork-filename values from the presentation layer.
+- Keep the existing Character Showcase as the primary detailed character presentation. Chronicle remains a compact account-data overview.
+- Preserve missing, unavailable, failed, and stale section handling.
+
+**Files added/changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationRules.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationRulesTest.kt`
+
+**Verification plan:**
+1. Run the repository Debug CI workflow, including JVM tests and APK build/signature/artifact checks.
+2. Install the new APK and compare Chronicle expand/collapse responsiveness, especially World Exploration & Collectibles.
+3. Confirm URLs, artwork paths, and internal IDs are no longer presented as account details.
+4. Confirm profile values, exploration values, and independently expanded groups remain readable.
+5. Confirm current/previous Spiral Abyss and Imaginarium Theater sections still expand and preserve their status messaging.
+6. Confirm JSON export and restored account data are unchanged.
+
+**Performance evidence boundary:** Lazy composition and deferred nested traversal are structural optimizations. Do not claim a measured FPS improvement until the user confirms the device retest or comparable profiling evidence is available.
+

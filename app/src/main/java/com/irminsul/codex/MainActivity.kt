@@ -17,6 +17,8 @@ import androidx.compose.runtime.SideEffect
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -54,6 +56,7 @@ import com.irminsul.codex.data.repository.HoYoLabAccountRepository
 import com.irminsul.codex.data.export.JsonDocumentWriter
 import com.irminsul.codex.data.local.IrminsulDatabase
 import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
+import com.irminsul.codex.presentation.ChroniclePresentationRules
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import com.irminsul.codex.integration.security.HoYoLabCredentialStore
@@ -2877,7 +2880,7 @@ private fun ChronicleDataSection(
             if (expanded) {
                 if (payload != null) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    ChronicleStructuredNode(payload)
+                    ChronicleStructuredNode(payload, path = title)
                 } else {
                     Text(
                         text = statusText ?: "No data",
@@ -2890,69 +2893,165 @@ private fun ChronicleDataSection(
     }
 }
 
+/**
+ * Renders only the current object's immediate fields. Nested objects and arrays stay
+ * collapsed until selected, so opening a Chronicle section never walks the full payload.
+ */
 @Composable
 private fun ChronicleStructuredNode(
     value: StructuredData,
-    depth: Int = 0
+    depth: Int = 0,
+    path: String = "chronicle"
 ) {
     when (value) {
         is StructuredData.ObjectValue -> {
             value.fields.forEach { (key, child) ->
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(start = (depth * 8).dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
-                ) {
+                if (ChroniclePresentationRules.shouldDisplayField(key)) {
                     when (child) {
                         is StructuredData.ObjectValue, is StructuredData.ArrayValue -> {
-                            Text(
-                                text = chronicleLabel(key),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            ChronicleStructuredNode(child, depth + 1)
-                        }
-                        else -> Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Text(
-                                text = chronicleLabel(key),
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                text = chronicleValue(child),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f)
+                            ChronicleExpandableNode(
+                                label = chronicleLabel(key),
+                                value = child,
+                                depth = depth,
+                                path = "$path.$key"
                             )
                         }
+                        is StructuredData.StringValue -> {
+                            if (ChroniclePresentationRules.shouldDisplayValue(child.value)) {
+                                ChroniclePrimitiveRow(key, child, depth)
+                            }
+                        }
+                        else -> ChroniclePrimitiveRow(key, child, depth)
                     }
                 }
             }
         }
         is StructuredData.ArrayValue -> {
-            value.items.forEachIndexed { index, item ->
+            ChronicleExpandableNode(
+                label = "Entries",
+                value = value,
+                depth = depth,
+                path = path
+            )
+        }
+        is StructuredData.StringValue -> {
+            if (ChroniclePresentationRules.shouldDisplayValue(value.value)) {
                 Text(
-                    text = "Entry ${index + 1}",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = value.value,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 3
                 )
-                ChronicleStructuredNode(item, depth + 1)
-                if (index < value.items.lastIndex) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                }
             }
         }
         else -> Text(
             text = chronicleValue(value),
             fontSize = 12.sp,
             color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun ChronicleExpandableNode(
+    label: String,
+    value: StructuredData,
+    depth: Int,
+    path: String
+) {
+    var expanded by remember(path) { mutableStateOf(false) }
+    val summary = chronicleValue(value)
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(start = (depth * 8).dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .clickable { expanded = !expanded }
+                .padding(vertical = 7.dp, horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(
+                    text = label,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = summary,
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                contentDescription = if (expanded) "Collapse $label" else "Expand $label",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (expanded) {
+            when (value) {
+                is StructuredData.ObjectValue -> ChronicleStructuredNode(value, depth + 1, path)
+                is StructuredData.ArrayValue -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 280.dp),
+                        contentPadding = PaddingValues(vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        itemsIndexed(
+                            items = value.items,
+                            key = { index, _ -> "$path#$index" }
+                        ) { index, item ->
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Text(
+                                    text = "Entry ${index + 1}",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                ChronicleStructuredNode(item, depth + 1, "$path#$index")
+                                if (index < value.items.lastIndex) {
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                }
+                            }
+                        }
+                    }
+                }
+                else -> Unit
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChroniclePrimitiveRow(
+    key: String,
+    value: StructuredData,
+    depth: Int
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(start = (depth * 8).dp, vertical = 2.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = chronicleLabel(key),
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = chronicleValue(value),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+            maxLines = 3
         )
     }
 }
@@ -2975,6 +3074,7 @@ private fun chronicleValue(value: StructuredData): String = when (value) {
     is StructuredData.ObjectValue -> "${value.fields.size} fields"
     is StructuredData.ArrayValue -> "${value.items.size} entries"
 }
+
 
 @Composable
 private fun DailyNoteMetricRow(

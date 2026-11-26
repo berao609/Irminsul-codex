@@ -3877,3 +3877,43 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 - No comparable baseline System Trace was captured before the dispatcher changes. No quantified speedup or frame-time improvement is claimed.
 - Physical-device checks remain: fresh account retrieval, app restart and cached snapshot restoration, full-roster deterministic analysis, and confirmation that the UI remains responsive during these operations.
 - Clear this milestone only after the physical-device checks are completed. The next optimization batch is AUD-007, Release test gate.
+
+
+## Milestone 062 - Bounded Account Chronicle Rendering
+
+**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+
+### Trigger
+
+During physical-device testing of Debug build #542, account retrieval and account information were correct, but expanding Account Chronicles caused visible FPS drops. World Exploration & Collectibles was the most affected section. The expanded UI also displayed raw URLs, image/icon paths, and internal identifiers.
+
+Static inspection found that the Chronicle renderer recursively composed every nested object and array immediately. This was consistent with the reported behavior, but no runtime trace or quantified frame-time measurement was available.
+
+### Implemented
+
+- Changed Chronicle rendering to show immediate object fields while keeping nested objects and arrays collapsed by default.
+- Expanded arrays now use a bounded-height lazy list with stable item keys, avoiding eager composition of every entry.
+- Added presentation rules to hide technical field names (IDs, URL/image/icon/path/source metadata) and remote URLs/artwork filenames.
+- Preserved meaningful profile, region, level, exploration, and achievement fields when supplied by the source.
+- Kept source StructuredData unchanged. No export, mapper, Room schema, persistence, or account-analysis behavior was changed.
+- Preserved section status handling for available, stale, missing, unavailable, and failed data.
+- Kept the dedicated Character Showcase as the primary detailed character presentation.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationRules.kt` (new)
+- `app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationRulesTest.kt` (new)
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+
+- Unit tests added for technical-key filtering, URL/artwork-filename suppression, and retention of meaningful account values.
+- CI result: pending.
+- Debug APK artifact: pending.
+- Physical-device checks: pending. The user must retest World Exploration & Collectibles, the remaining Chronicle sections, and data/export integrity after installing the new build.
+
+### Verification boundary
+
+This change defers nested traversal and lazy-composes expanded array rows. A measurable FPS improvement is not claimed until device retesting or comparable profiling confirms it. The original #542 build remains the comparison point; Batch 3 is not cleared yet.
