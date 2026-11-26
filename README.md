@@ -238,6 +238,9 @@ Irminsul-codex/
 │   │       │       ├── presentation/
 │   │       │       │   └── viewmodel/
 │   │       │       │       └── AccountViewModel.kt
+│   │       │       ├── integration/
+│   │       │       │   └── security/
+│   │       │       │       └── HoYoLabCredentialStore.kt
 │   │       │       └── ui/
 │   │       │           └── HoYoLabLoginDialog.kt
 │   │       └── AndroidManifest.xml
@@ -266,7 +269,7 @@ Irminsul-codex/
 Responsible for:
 
 * Main application interface and existing Daily Note presentation.
-* Credential entry and the current SharedPreferences handling.
+* Credential entry and orchestration through `HoYoLabCredentialStore` for Keystore-backed cookie encryption; non-sensitive UID and theme preferences remain in SharedPreferences.
 * Daily Note synchronization actions.
 * Saving account JSON exports through Android's document picker.
 
@@ -295,6 +298,10 @@ Contains the Room database, account and snapshot entities, DAO, and local snapsh
 ### `data/repository/HoYoLabAccountRepository.kt`
 
 Adapts the existing HoYoLAB JSON export operation and AccountExportMapper to the domain repository contract.
+
+### `integration/security/HoYoLabCredentialStore.kt`
+
+Encrypts the HoYoLAB session cookie with AES-GCM using a key held by Android Keystore. It migrates the legacy plaintext preference after successful encryption and provides credential clearing. Only ciphertext is persisted in SharedPreferences.
 
 ### `ui/HoYoLabLoginDialog.kt`
 
