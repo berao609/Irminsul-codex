@@ -3692,3 +3692,22 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 
 **Commit:** `ff72b6414ad0e5f14b2d5feb0c507e1e5e022cd2`
 **CI:** Run #483 in progress.
+
+
+### Home Real-Time Notes visual reconstruction pass
+
+**Status:** Compose source committed; CI and physical-device verification pending.
+
+- Reworked the Home Daily Note presentation into a compact Chronicle-inspired panel.
+- Resin is presented as the primary left-side metric with current/max values, progress, and recovery status.
+- Expeditions, Realm Currency, Daily Commission progress/reward status, and weekly Resin discounts are grouped in a compact right-side stack.
+- Kept the section on Home. It is not duplicated in Visuals.
+- Reused only fields already present in the existing Daily Note response model. Individual expedition names/progress and other unavailable sub-records are not fabricated.
+- Preserved the existing Daily Note request, parser, nullable-value behavior, refresh action, and authentication flow.
+- No persistence schema, API endpoint, dependency, or account-export behavior changed.
+
+**Commits:**
+- `56da00ab4cf8daa0fb1b242d1aeb4390e84d9b55` - Home Daily Note panel layout
+- `df54b792c4f10107e844ae93fb5c2d92ee5edd95` - shared Daily Note metric row
+
+**Verification boundary:** Source is committed. CI compilation/unit tests and physical-device layout checks are pending. Confirm the panel at narrow mobile width and in both Light and Dark themes. The current API model does not provide per-expedition detail rows, so only the aggregate expedition count is displayed.
