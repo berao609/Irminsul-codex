@@ -374,3 +374,17 @@ HoYoLAB automatically synchronizes the user's in-game inventory with its calcula
 - Do not make the calculator depend on a live HoYoLAB connection or a recurring remote sync.
 
 This is an explicit product-scope decision, not a claim that HoYoLAB's synchronization mechanism has been technically reverse-engineered.
+
+
+### 8.6 Custom weapon calculation
+
+**User-observed workflow:** The user selects a weapon, specifies its target level, and the calculator displays the total count of materials required for that target.
+
+The following details are confirmed at the workflow level:
+
+- Weapon selection precedes target-level selection.
+- The result presents the total required material quantities.
+
+The exact material categories, per-material inventory balance, and whether the weapon result screen also displays remaining and excess quantities have not been separately confirmed. Do not assume the character result's full balance presentation is identical for weapons without further observation.
+
+**Irminsul direction:** Reuse the local deterministic material-requirement calculation and result presentation patterns where appropriate, while keeping weapon requirements distinct from character and talent requirements. No automatic inventory synchronization.
