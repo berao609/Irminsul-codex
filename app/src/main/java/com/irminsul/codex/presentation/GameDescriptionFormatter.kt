@@ -11,8 +11,8 @@ internal fun formatGameDescription(raw: String): String {
         .replace(Regex("<color=[^>]*>", RegexOption.IGNORE_CASE), "")
         .replace(Regex("</color>", RegexOption.IGNORE_CASE), "")
         .replace(Regex("<[^>]+>"), "")
-        .replace(Regex("""\\{LINK#[^}]+\\}"""), "")
-        .replace(Regex("""\\{/LINK\\}"""), "")
+        .replace(Regex("""\{LINK#[^}]+\}"""), "")
+        .replace(Regex("""\{/LINK\}"""), "")
         .replace(Regex("\\n{3,}"), "\n\n")
         .trim()
 }
