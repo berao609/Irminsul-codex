@@ -69,6 +69,8 @@ import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import com.irminsul.codex.integration.security.HoYoLabCredentialStore
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -2496,6 +2498,25 @@ private fun WeaponShowcaseRow(
     expanded: Boolean,
     onClick: () -> Unit
 ) {
+    val passiveKey = "${weapon.id}:${weapon.refinementLevel ?: 1}"
+    var passive by remember(passiveKey) { mutableStateOf<com.irminsul.codex.presentation.WeaponPassive?>(null) }
+    var passiveLoading by remember(passiveKey) { mutableStateOf(false) }
+    var passiveLoaded by remember(passiveKey) { mutableStateOf(false) }
+
+    LaunchedEffect(expanded, passiveKey) {
+        if (expanded && !passiveLoaded && !passiveLoading) {
+            passiveLoading = true
+            passive = withContext(Dispatchers.IO) {
+                com.irminsul.codex.presentation.WeaponPassiveLookup.fetch(
+                    weapon.name,
+                    weapon.refinementLevel ?: 1
+                )
+            }
+            passiveLoading = false
+            passiveLoaded = true
+        }
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
@@ -2523,7 +2544,21 @@ private fun WeaponShowcaseRow(
         if (expanded) {
             ShowcaseDetailSurface {
                 weapon.typeName?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                weapon.description?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                weapon.description?.takeIf { it.isNotBlank() }?.let {
+                    Text("Weapon description", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                    Text(it, style = MaterialTheme.typography.bodySmall)
+                }
+                Text("Weapon passive", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                when {
+                    passiveLoading -> Text("Loading passive description…", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    passive != null -> {
+                        passive?.name?.let { name ->
+                            Text(name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                        }
+                        Text(passive!!.description, style = MaterialTheme.typography.bodySmall)
+                    }
+                    passiveLoaded -> Text("No passive description is available from the game-data source.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 weapon.mainProperty?.let { stat ->
                     Text(
                         "${stat.statName ?: "Main stat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
