@@ -309,3 +309,41 @@ A seven-page screenshot reference was supplied in the conversation on 2026-11-26
 - Detailed interaction coverage is intentionally limited. Do not turn this research into an exhaustive audit of every icon, link, or decorative control.
 - Still useful if implementation requires it: inspect one representative game-mode detail destination (Abyss, Theater, or Stygian) and capture computed dimensions for a small number of high-value components. These are optional targeted follow-ups, not prerequisites to keep exploring the current character page.
 - Before any public repository release, review and sanitize account-specific information in `docs/share-page.html` and `docs/body-detail.html`. The screenshot reference also contains account-specific information and should not be committed publicly in raw form.
+
+
+## 8. Related HoYoLAB tool: Enhancement Progression Calculator
+
+This section records a separate HoYoLAB calculator page explored after the Battle Chronicle reference. It is related reference research, not part of the Battle Chronicle page itself.
+
+### 8.1 Page capture
+
+- File: `docs/enhancement-calculator-body.html`
+- SHA: `30e2221e2d5e94ee7c5a2f31578ce465ce006a6c`
+- Captured page title: **Genshin Impact Enhancement Progression Calculator**
+- The captured DOM contains the calculator landing page, profile header, quick-leveling module, gameplay-based leveling entry, custom calculation entry, and modal/loading markup.
+- The page capture includes account-specific profile information. Do not copy that information into implementation examples or expose it unnecessarily; sanitize before public distribution.
+
+### 8.2 Landing-page structure observed in the capture
+
+1. **Quick Character Leveling**
+   - Subtitle: Check characters that can be leveled up based on materials in Inventory.
+   - Entry options: `Level up based on characters` and `Recommended Inventory Materials`.
+2. **Level up based on the gameplay**
+   - Entry: `Spiral Abyss/Imaginarium Theater`.
+3. **Custom Calculation**
+   - Character: select 1–8 characters; weapons are optional.
+   - Weapon: select 1–8 weapons.
+   - Serenitea Pot: select furnishings; replica importing is supported.
+   - Artifact: select 1–5 artifacts.
+
+These are labels and options visible in the captured HTML. Their calculation logic and full subsequent screens have not yet been verified.
+
+### 8.3 Interaction observations
+
+- User opened `Level up based on characters`.
+- **Observed result:** the calculator displays a list of the user's owned characters for selection.
+- Selection behavior after choosing a character, material calculation details, and subsequent screens remain unverified.
+
+### 8.4 Research boundary
+
+Continue by selecting one owned character and documenting the next screen. Focus on the workflow, selected inputs, required materials, totals, and useful controls. Avoid exhaustively inspecting every decorative element.
