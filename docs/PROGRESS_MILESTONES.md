@@ -4062,7 +4062,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 
 **Remaining verification:** Debug CI compilation, unit tests, APK build, schema verification, and signature verification have not been confirmed.
 
-**Boundary:** Structural extraction only. No performance improvement is claimed.
+**Result:** Extraction verified and cleared. Structural extraction only; no performance improvement is claimed.
 
 
 ## Milestone 069 - Extract Character Showcase Presentation
@@ -4090,7 +4090,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 
 **Static source verification:** MainActivity imports and calls the extracted composable; its previous private implementation is absent; selected-character ownership remains in CodexScreen; roster and detail components are present in the new presentation file.
 
-**Verification status:** CI pending. Physical-device verification pending.
+**Verification status:** CI #581 passed; physical-device verification passed (user confirmed all checklist items).
 
 **CI correction record:** Initial Debug CI attempts found missing coroutine imports in the extracted file and a shared avatar fallback still referenced by the recommendation card in MainActivity. Both issues were corrected in commits `6aa462c` and `6ab25a8`. Subsequent CI reruns are pending; do not treat the earlier failed runs as passing.
 
@@ -4102,6 +4102,21 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 5. Inspect talents, constellations, weapon passive, weapon stats, artifacts, and artifact substats.
 6. Collapse/reopen the roster and confirm the selected character remains selected.
 
-**Remaining verification:** Debug CI compilation, unit tests, APK build, Room schema verification, APK signature verification, and physical-device behavior have not been confirmed.
+**Verification completed:** CI #581 passed compilation, unit tests, APK build, Room schema verification, APK signature verification, and artifact upload. User installed build #581 and confirmed the device checklist passed.
 
 **Boundary:** Structural extraction only. No performance improvement is claimed.
+
+
+## Milestone 070 - Character Showcase Extraction Verification
+
+**Date recorded:** 2026-11-27  
+**Scope:** Close AUD-002 Character Showcase presentation extraction after automated and physical-device verification.
+
+**Verification:**
+- Debug CI runs #579, #580, and #581 passed after the initial compile issues were corrected.
+- Run #581 verified compilation, unit tests, Debug APK build, Room schema verification, signature verification, and artifact upload.
+- User installed build #581 and confirmed all Character Showcase device checklist items passed.
+
+**Result:** Character Showcase extraction is cleared. Continue AUD-002 with one focused presentation extraction at a time.
+
+**Boundary:** No measured performance improvement is claimed.
