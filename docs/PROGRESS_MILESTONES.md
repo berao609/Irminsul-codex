@@ -4056,13 +4056,10 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `e2e21c3703f733448e7918ea7be7ad2de3b52636`
 - `21b68f750a54fce3f5115146225cfca1638bda7b`
 
-**Verification status:** CI pending. Physical-device verification pending.
+**Verification status:** Physical-device verification passed (user confirmed checklist clear on 2026-11-27). CI remains pending and is not claimed as passed.
 
-**Device checklist:**
-1. Expand Lineup Simulator on the Visuals page.
-2. Add four characters, remove one, and add a different character.
-3. Confirm slot order and the four-character limit.
-4. Confirm stale/partial roster warnings and empty-roster messaging.
-5. Collapse and reopen the section; confirm selections remain intact.
+**Device verification:** User confirmed the device checklist is clear on 2026-11-27. The following behaviors were included in the checklist: expand the section, add/remove characters, preserve slot order and the four-character limit, confirm roster warnings/empty state, and collapse/reopen without losing selection.
+
+**Remaining verification:** Debug CI compilation, unit tests, APK build, schema verification, and signature verification have not been confirmed.
 
 **Boundary:** Structural extraction only. No performance improvement is claimed.
