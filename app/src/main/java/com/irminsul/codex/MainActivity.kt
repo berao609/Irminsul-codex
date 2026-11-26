@@ -552,7 +552,7 @@ private fun CodexScreen(
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                ChronicleOverviewSection(snapshot.accountCard)
+                ChronicleOverviewSection(snapshot.accountCard, snapshot.profileAndExploration)
                 ChronicleExplorationSection(snapshot.profileAndExploration)
                 ChronicleRecordSection("Spiral Abyss · Current Cycle", snapshot.spiralAbyssCurrent, ChronicleRecordMode.SPIRAL_ABYSS)
                 ChronicleRecordSection("Spiral Abyss · Previous Cycle", snapshot.spiralAbyssPrevious, ChronicleRecordMode.SPIRAL_ABYSS)
@@ -2865,8 +2865,11 @@ private fun ChronicleSectionCard(
 }
 
 @Composable
-private fun ChronicleOverviewSection(value: DataValue<StructuredData>) {
-    val overview = ChroniclePresentationMapper.accountOverview(value)
+private fun ChronicleOverviewSection(
+    accountCard: DataValue<StructuredData>,
+    profileAndExploration: DataValue<StructuredData>
+) {
+    val overview = ChroniclePresentationMapper.accountOverview(accountCard, profileAndExploration)
     ChronicleSectionCard("Account Overview") {
         if (overview.isEmpty()) {
             Text(chronicleAvailabilityText(value), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -9,12 +9,12 @@ import org.junit.Test
 class ChroniclePresentationMapperTest {
     private fun obj(vararg fields: Pair<String, StructuredData>) = StructuredData.ObjectValue(mapOf(*fields))
 
-    @Test fun accountOverviewMapsActualNestedProfilePayloadAndOnlyApprovedStats() {
-        val data = DataValue.Available(obj(
-            "role" to obj(
-                "nickname" to StructuredData.StringValue("Leywin"),
-                "level" to StructuredData.NumberValue("60")
-            ),
+    @Test fun accountOverviewCombinesAccountCardIdentityWithProfileStatisticsAndOnlyApprovedFields() {
+        val accountCard = DataValue.Available(obj(
+            "role" to obj("nickname" to StructuredData.StringValue("Leywin"),
+                "level" to StructuredData.NumberValue("60"))
+        ), null)
+        val profileAndExploration = DataValue.Available(obj(
             "stats" to obj(
                 "active_day_number" to StructuredData.NumberValue("474"),
                 "achievement_number" to StructuredData.NumberValue("1337"),
@@ -24,14 +24,10 @@ class ChroniclePresentationMapperTest {
             )
         ), null)
         assertEquals(
-            listOf(
-                ChronicleMetric("Player", "Leywin"),
-                ChronicleMetric("Adventure Rank", "60"),
-                ChronicleMetric("Active Days", "474"),
-                ChronicleMetric("Achievements", "1337"),
-                ChronicleMetric("Characters", "67")
-            ),
-            ChroniclePresentationMapper.accountOverview(data)
+            listOf(ChronicleMetric("Player", "Leywin"), ChronicleMetric("Adventure Rank", "60"),
+                ChronicleMetric("Active Days", "474"), ChronicleMetric("Achievements", "1337"),
+                ChronicleMetric("Characters", "67")),
+            ChroniclePresentationMapper.accountOverview(accountCard, profileAndExploration)
         )
     }
 
@@ -87,7 +83,7 @@ class ChroniclePresentationMapperTest {
     }
 
     @Test fun missingAndFailedSectionsProduceNoInventedMetrics() {
-        assertTrue(ChroniclePresentationMapper.accountOverview(DataValue.Missing).isEmpty())
+        assertTrue(ChroniclePresentationMapper.accountOverview(DataValue.Missing, DataValue.Missing).isEmpty())
         assertTrue(ChroniclePresentationMapper.explorationRegions(DataValue.Unavailable).isEmpty())
     }
 }

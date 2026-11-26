@@ -38,14 +38,20 @@ object ChroniclePresentationMapper {
         "medal_num" to "Medals"
     )
 
-    fun accountOverview(value: DataValue<StructuredData>): List<ChronicleMetric> {
-        val fields = availableObject(value) ?: return emptyList()
-        val role = fields["role"].objectFields()
-        val stats = fields["stats"].objectFields()
+    fun accountOverview(
+        accountCard: DataValue<StructuredData>,
+        profileAndExploration: DataValue<StructuredData>
+    ): List<ChronicleMetric> {
+        val accountFields = availableObject(accountCard).orEmpty()
+        val profileFields = availableObject(profileAndExploration).orEmpty()
+        if (accountFields.isEmpty() && profileFields.isEmpty()) return emptyList()
+        // HoYoLAB separates identity/rank (account_card) from statistics (profile_and_exploration.stats).
+        val role = (profileFields["role"] ?: accountFields["role"]).objectFields()
+        val stats = (profileFields["stats"] ?: accountFields["stats"]).objectFields()
         val result = mutableListOf<ChronicleMetric>()
-        (role["nickname"] ?: fields["nickname"])?.displayScalar()
+        (role["nickname"] ?: profileFields["nickname"] ?: accountFields["nickname"])?.displayScalar()
             ?.takeIf { it.isNotBlank() }?.let { result += ChronicleMetric("Player", it) }
-        (role["level"] ?: fields["level"])?.displayScalar()
+        (role["level"] ?: profileFields["level"] ?: accountFields["level"])?.displayScalar()
             ?.takeIf { it.isNotBlank() }?.let { result += ChronicleMetric("Adventure Rank", it) }
         overviewStatFields.forEach { (key, label) ->
             stats[key]?.displayScalar()?.takeIf { it.isNotBlank() }?.let {
