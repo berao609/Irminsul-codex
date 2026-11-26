@@ -2,7 +2,7 @@
 
 **Project:** Irminsul Codex  
 **Purpose:** Preserve development-time observations from the HoYoLAB Genshin Impact Battle Chronicle reference for later native Jetpack Compose implementation.  
-**Status:** Initial HTML analysis complete; stylesheet and interaction-state capture remain pending.  
+**Status:** HTML and stylesheet captures reviewed; representative interaction behavior and seven-page screenshot reference reviewed. Detailed interaction coverage and exact layout measurements remain partial.  
 **Reference capture:** `docs/share-page.html`  
 **Captured HTML blob SHA:** `40c5fee0766a722eb22efc6ce7213310797ee29e`
 
@@ -84,13 +84,21 @@ The top account region groups a profile identity/header with a compact metric su
 
 The captured page includes a horizontally scrollable strip of compact character portraits and a separate character information presentation. The visible character content uses compact identity, element, level, and equipment-related information.
 
+**Observed interaction:** Selecting a different portrait switches the displayed character while remaining on the Character Details page. The selector does not require a full-page navigation.
+
 **Irminsul direction:** Keep the roster navigable and compact. The selected character should reveal details progressively. Preserve the existing Irminsul requirement that weapon and artifact details are inspectable on demand rather than dumping every detail into one long page.
 
 ### 4.3 World exploration
 
 The HTML contains a dedicated exploration section with multiple regional cards. Class groups indicate area names, progress sections, progress values, and card imagery/backgrounds. Inline styles show region-specific colors and progress widths in the captured state.
 
-**Irminsul direction:** Use region cards with clear region identity and a readable progress indicator. Do not hardcode the captured account's progress values or treat one screenshot's colors as universal theme tokens.
+**Screenshot-confirmed overview (reference PDF, page 3):** The Home/Battle Chronicle overview presents World Exploration as a horizontal carousel of region cards. Each visible card contains a prominent region emblem, region name, the label `Main Areas Only`, a percentage, and a horizontal progress bar. A `View More` action opens the dedicated World Exploration page.
+
+**Screenshot-confirmed detail page (reference PDF, page 4):** The dedicated page presents larger vertically stacked region cards. Each card includes the region emblem and name, a relevant progression descriptor and level where available (for example, Statue of The Seven level or an offering-system level), plus an exploration percentage and progress bar. The screenshot shows different visual backgrounds per region/card. A small downward indicator is visible at the bottom of cards; its exact interaction was not tested and must not be assumed to expand anything.
+
+**Observed interaction coverage:** No individual exploration card control was exhaustively tested. The user described the overview as simple region-name slides with a percentage bar, consistent with the screenshot. Do not spend further research time testing every small control unless a specific implementation question requires it.
+
+**Irminsul direction:** Use a compact horizontal region-card carousel in the overview and a vertically stacked card list on the dedicated exploration page. Show only source-backed region progression fields. Do not hardcode the captured account's percentages or progression levels, and do not treat screenshot-specific colors as universal theme tokens.
 
 ### 4.4 Game-mode sections
 
@@ -185,11 +193,11 @@ Before treating the capture as a durable repository artifact, sanitize account-s
 - [x] Separate the agreed Irminsul scope from unrelated modules visible in the source.
 - [x] Record limitations of a rendered DOM snapshot.
 - [x] Obtain the exact stylesheet URL and inspect the CSS.
-- [ ] Capture representative interaction states.
-- [ ] Capture reference screenshots and reliable viewport/layout measurements.
+- [x] Capture representative interaction states: character selection switches in place; tested equipment/talent/constellation links navigate to HoYoLAB Wiki. Detailed control coverage intentionally limited.
+- [x] Review the supplied seven-page screenshot reference for major layouts and section hierarchy. Exact viewport measurements and dp conversion remain pending.
 - [ ] Map observed source data fields to the Irminsul account model before implementation.
 - [ ] Prepare a section-by-section native Compose implementation plan.
-- [ ] Sanitize or otherwise restrict access to the account-specific raw HTML capture.
+- [ ] Sanitize or otherwise restrict access to the account-specific raw HTML captures (`share-page.html` and `body-detail.html`) before public repository use.
 
 
 ## 6.4 Retrieved stylesheet analysis
@@ -232,3 +240,72 @@ Repository copy: [`docs/m_55ae43ba.css`](m_55ae43ba.css)
 - Capture interaction states before assigning dialog styles to a particular user action.
 - Measure the relevant layout in the actual mobile viewport. Do not infer Android dp values directly from `gpx`.
 
+
+
+## 6.5 Individual character detail capture
+
+A complete rendered `<body>` capture from the Character Details page was uploaded to the repository:
+
+- File: `docs/body-detail.html`
+- SHA: `18ba0399a4ef55a1b6e38b627c0e600ff4672a1c`
+- Captured source begins with the page's `<body data-game-id="2"...>` and contains the `.share-container.role-detail-layout` subtree.
+- The capture includes the character selector, character presentation, base information, constellation icons, attribute statistics, weapon section, artifact/relic section, talent icons, and other page markup.
+- The captured page is a rendered DOM snapshot. It does not prove the original component architecture or all runtime behavior.
+
+### Character detail structure observed
+
+- `.header-navbar`: page header titled Character Details.
+- `.bgs`: character-specific background region, including gradient/video-related markup.
+- `.list-swiper`: horizontal character portrait selector.
+- `.role-detail-container` and `.base-info-section`: main character presentation and identity.
+- `.constellations` and `.constellation-icon`: six constellation icon entries.
+- `.info-panel`, `.top-info`, and `.base-info`: character identity and base information.
+- `.prop-info-section`, `.prop-stats`, `.base-stat`, `.add-stat`, and `.final-stat`: character attribute presentation.
+- `.weapon-info-section`: weapon information.
+- `.relic-info-section`, `.relic-list`, `.relic-item`, `.relic-top`, and `.relic-icon`: five-slot artifact presentation and related stats.
+- `.skill-item` and `.skill-icon`: talent presentation.
+- `.gt-modal` / `.gt-popup-root`: modal-related markup exists, but its relationship to the tested icon actions is not established.
+
+### Character detail interactions actually tested
+
+| Element | Observed behavior |
+|---|---|
+| Character portrait selector | Selecting another portrait changes the displayed character in place on the same Character Details page. |
+| Weapon entry | Redirects to the HoYoLAB Wiki. |
+| Artifact entry | Redirects to the HoYoLAB Wiki. |
+| Constellation icons | Redirect to the HoYoLAB Wiki. |
+| Talent icons | Redirect to the HoYoLAB Wiki. |
+
+The tested weapon, artifact, constellation, and talent controls are external Wiki navigation, not in-page expandable inspectors. Do not copy that navigation behavior into Irminsul's character showcase: Irminsul's separately approved interaction is local progressive disclosure, where tapping a weapon or artifact reveals its information in the app. This is an intentional product difference, not an attempt to reproduce the reference's external links.
+
+The user explicitly stopped exhaustive one-by-one control inspection. Treat the table above as the representative interaction sample. Do not continue testing every icon or control without a concrete unresolved implementation question.
+
+## 6.6 Screenshot reference review
+
+A seven-page screenshot reference was supplied in the conversation on 2026-11-26. It is a visual source for this analysis; it is not currently a repository file. Page descriptions below refer to the uploaded PDF's page order.
+
+- **Page 1 - All Characters:** Four-column portrait grid; character cards show portraits, element indicators, level labels, and character names. A sort control (shown as High → Low Level) and Filter action appear above the grid. A reference-only data disclaimer is visible.
+- **Page 2 - Common Tools and Stygian Onslaught:** Common Tools appears above a Stygian Onslaught Battle Records Review card. The record card has Current Lunar Phase / Previous Lunar Phase tabs, period context, best-record summary, per-challenge time elapsed, strongest single strike, highest total damage, and a View Challenge Details action. Theater Lobby begins below. Common Tools is outside the agreed Irminsul Visuals scope; the Stygian record presentation is relevant.
+- **Page 3 - World Exploration overview and Event Calendar:** World Exploration is a compact horizontal region-card carousel with a View More action. Each region card shows an emblem, region name, Main Areas Only label, percentage, and progress bar. Event Calendar and Event Wishes appear below but are excluded from the agreed reconstruction scope.
+- **Page 4 - World Exploration detail page:** Large vertical region cards show region identity, progression descriptor/level where available, exploration percentage, and a progress bar. Examples of progression descriptors visible include Statue of The Seven, Temple of Space/Memory Core, and offering-system level. The screenshot shows region-specific background artwork/color treatments.
+- **Page 5 - Character Details:** A large character artwork/background presentation, compact horizontal character selector, character identity/level/friendship, constellation and talent icon rows, Character Stats panel, and the start of the Weapons section.
+- **Page 6 - Account overview and My Characters:** Profile identity and account summary metrics appear first. Visible metrics include Days Active, Achievements, Characters, Spiral Abyss, Max Friendship Characters, Imaginarium Theater, and Stygian Onslaught. A grid of collectibles/progression counts follows, including waypoints, domains, oculi categories, and chest categories. My Characters appears as a horizontal portrait selector with a compact selected-character equipment card.
+- **Page 7 - Account overview and Real-Time Notes:** The account summary is shown in a more compact/collapsed state above My Characters. Real-Time Notes appears below with Resin as the primary metric and a supporting list for expeditions, Realm Currency, Daily Commission rewards/progress, and weekly progress. This confirms the reference placement of Real-Time Notes on its own account/Home surface; Irminsul's agreed rule remains that Real-Time Notes are on Home only and must not be duplicated in Visuals.
+
+### Additional screenshot-derived layout observations
+
+- The page uses a dark charcoal overall background with warm gold section headings and restrained decorative star/flower markers.
+- Account summary metrics are arranged in a compact multi-column grid of small cards, with a visible expand/collapse affordance between the summary and lower content.
+- My Characters uses a compact portrait strip and a pale selected-character equipment card. The selected card summarizes character level, weapon, and five artifact icons/levels rather than showing the full character detail page.
+- The All Characters page uses a denser multi-column grid than the compact My Characters strip.
+- The screenshots are evidence of one captured account and one UI state. Do not copy account-specific values, names, UID, or progression figures into product defaults or analysis examples. Do not infer exact Android dp dimensions from screenshot pixels.
+
+## 6.7 Research decisions and remaining coverage
+
+- The CSS file and representative rendered HTML captures are available in the repository; a representative Character Details body capture is also present.
+- The seven-page screenshot reference has been reviewed for major page structure and visual hierarchy.
+- Character selector behavior and representative outbound Wiki-link behavior have been tested.
+- World Exploration overview and detail-page layouts are screenshot-confirmed.
+- Detailed interaction coverage is intentionally limited. Do not turn this research into an exhaustive audit of every icon, link, or decorative control.
+- Still useful if implementation requires it: inspect one representative game-mode detail destination (Abyss, Theater, or Stygian) and capture computed dimensions for a small number of high-value components. These are optional targeted follow-ups, not prerequisites to keep exploring the current character page.
+- Before any public repository release, review and sanitize account-specific information in `docs/share-page.html` and `docs/body-detail.html`. The screenshot reference also contains account-specific information and should not be committed publicly in raw form.
