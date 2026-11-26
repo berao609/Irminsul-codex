@@ -63,6 +63,7 @@ import com.irminsul.codex.presentation.ChronicleRecordMode
 import com.irminsul.codex.presentation.ChronicleOverviewSection
 import com.irminsul.codex.presentation.ChronicleExplorationSection
 import com.irminsul.codex.presentation.ChronicleRecordSection
+import com.irminsul.codex.presentation.formatGameDescription
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import com.irminsul.codex.integration.security.HoYoLabCredentialStore
@@ -2408,10 +2409,10 @@ private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             constellation.effect?.takeIf { it.isNotBlank() }?.let {
-                                Text(it, style = MaterialTheme.typography.bodySmall)
+                                Text(formatGameDescription(it), style = MaterialTheme.typography.bodySmall)
                             }
                             constellation.enhancedEffect?.takeIf { it.isNotBlank() }?.let {
-                                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                                Text(formatGameDescription(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
@@ -2502,19 +2503,6 @@ private fun ShowcaseExpandableSection(
         }
         if (expanded) ShowcaseDetailSurface(content)
     }
-}
-
-private fun formatGameDescription(raw: String): String {
-    return raw
-        .replace("\\r\\n", "\\n")
-        .replace("\\n", "\n")
-        .replace(Regex("<color=[^>]*>", RegexOption.IGNORE_CASE), "")
-        .replace(Regex("</color>", RegexOption.IGNORE_CASE), "")
-        .replace(Regex("<[^>]+>"), "")
-        .replace(Regex("\\{LINK#[^}]+}"), "")
-        .replace(Regex("\\{/LINK}"), "")
-        .replace(Regex("\\n{3,}"), "\\n\\n")
-        .trim()
 }
 
 @Composable
