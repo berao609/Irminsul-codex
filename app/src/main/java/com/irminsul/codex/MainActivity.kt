@@ -3035,7 +3035,7 @@ private fun ChroniclePrimitiveRow(
     depth: Int
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = (depth * 8).dp, vertical = 2.dp),
+        modifier = Modifier.fillMaxWidth().padding(start = (depth * 8).dp, top = 2.dp, bottom = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Top
     ) {
