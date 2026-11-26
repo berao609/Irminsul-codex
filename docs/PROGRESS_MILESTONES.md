@@ -3948,3 +3948,27 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `docs/PROGRESS_MILESTONES.md`
 
 **Verification status:** Correction committed; fresh CI pending. CI #550 did not reach unit tests, APK build, signature verification, or artifact upload. Physical-device verification of the allowlisted Chronicle renderer remains pending. No performance improvement is claimed.
+
+
+## Milestone 065 - Release Unit-Test Gate
+
+**Date recorded:** 2026-11-27  
+**Scope:** Prevent official Release APK signing and publication when tagged-source JVM unit tests fail.
+
+**Implemented:**
+- Added `gradle testDebugUnitTest --no-daemon` to the Release workflow after tag/version validation and Gradle setup.
+- The test gate runs before Release keystore decoding, APK build/signing, signature verification, and GitHub Release publication.
+- A failing test terminates the job before any signing or publication step.
+- Kept Room instrumentation tests under the existing Debug CI policy. Relevant persistence/schema changes and manual full-test runs continue to execute the emulator suite.
+- Updated `RELEASE_PROCESS.md` with the Release test-gate behavior and coverage boundary.
+- Closed Batch 3 in the optimization audit after CI #542/#555 and successful physical-device verification.
+
+**Files changed:**
+- `.github/workflows/release.yml`
+- `RELEASE_PROCESS.md`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** Implementation committed; main-branch CI pending. The successful tagged-release publication path has not been run. No test tag was created and no official release was published.
+
+**Coverage boundary:** Official releases run JVM unit tests against the tagged source. Room instrumentation tests are not repeated per release; they remain gated by relevant Debug workflow changes or manual full-test runs.

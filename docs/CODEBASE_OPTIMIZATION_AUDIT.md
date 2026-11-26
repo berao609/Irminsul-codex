@@ -705,8 +705,8 @@ Closing this audit does not mean the application is perfect or that every option
 |---|---|---|---|
 | 1 | AUD-008 credential protection; AUD-009 Room migration integrity | Cleared | CI #521 and #522 passed. User completed credential/session and sign-out device checks. |
 | 2 | AUD-003 JSON export false-success fix | Cleared | Final CI #530 passed. User confirmed export flow is clear. Cancellation during an active save remains a future UX enhancement. |
-| 3 | AUD-006 CPU-heavy processing off main thread; AUD-011 Chronicle rendering follow-up | CI/device verification pending | CI #542 passed for AUD-006. The #542 device test exposed eager Chronicle rendering; AUD-011 follow-up is recorded below. |
-| 4 | AUD-007 Release test gate | Not started | Next approved batch after Batch 3 is cleared. |
+| 3 | AUD-006 CPU-heavy processing off main thread; AUD-011 Chronicle rendering follow-up | Cleared | CI #542 passed for processing and #555 passed for the Chronicle corrections. User confirmed responsive rendering, correct Account Overview statistics, working expandables, and no exposed technical IDs/URLs. |
+| 4 | AUD-007 Release test gate | Implemented; CI pending | Release workflow now runs tagged-source JVM unit tests before signing/build/publication. Room instrumentation remains under the existing Debug CI policy. |
 | 5 | AUD-005 lazy roster grid | Not started | Preserve existing filtering, sorting, and selection behavior. |
 | 6 | AUD-002 incremental UI extraction | Not started | Extract only cohesive sections, incrementally. |
 | 7 | AUD-004 lifecycle-aware StateFlow collection | Not started | Low-risk lifecycle improvement. |
@@ -857,3 +857,36 @@ Closing this audit does not mean the application is perfect or that every option
 **Correction:** Remove the duplicate annotation and retain the single required `@Composable` annotation. No runtime behavior or data mapping is changed by this correction.
 
 **Verification boundary:** The correction must pass a fresh CI run before an APK can be offered. The allowlisted renderer remains unverified on the physical device; the earlier bounded recursive renderer remains rejected based on the user's device feedback.
+
+
+## Batch 3 closure - AUD-006 and AUD-011
+
+**Status:** Cleared by CI and physical-device verification.
+
+- CI #542 passed the dispatcher implementation, unit tests, Room instrumentation tests, Debug APK build, schema verification, and signature verification.
+- The initial bounded recursive Chronicle renderer was rejected after device testing due to worse lag and continued technical-field exposure.
+- The section-specific allowlisted renderer and subsequent Account Overview split-source correction passed CI #555.
+- The user confirmed the latest build is smooth, Account Overview statistics are present, expandable sections work, and technical IDs/URLs are no longer exposed.
+- No quantified FPS improvement is claimed; the device feedback confirms acceptable responsiveness, not a measured frame-time delta.
+
+## Batch 4 - Release test gate (AUD-007)
+
+**Status:** Implementation committed; CI and tagged-release workflow verification pending.
+
+**Implementation:**
+- Added `gradle testDebugUnitTest --no-daemon` to `.github/workflows/release.yml`.
+- The test gate runs against the tagged source after tag/version validation and Gradle setup, but before Release keystore decoding, Release APK compilation/signing, signature verification, and GitHub Release publication.
+- A non-zero test result fails the job, so subsequent signing/build/publication steps are skipped.
+- Room instrumentation tests are intentionally not repeated on every official release. The existing Debug workflow continues to run them for relevant persistence/schema changes and manual full-test runs.
+- Updated `RELEASE_PROCESS.md` to describe the test gate and its coverage boundary.
+
+**Files changed:**
+- `.github/workflows/release.yml`
+- `RELEASE_PROCESS.md`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification boundary:**
+- The release workflow's step ordering provides the failure gate: a failed unit-test command terminates the job before signing or publishing.
+- The successful tagged-release publication path has not been executed; no release tag was created and no official release was published.
+- CI on the resulting main-branch commit and workflow syntax inspection are pending.
