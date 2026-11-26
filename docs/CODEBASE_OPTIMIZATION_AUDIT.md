@@ -123,7 +123,42 @@ Statuses used:
 
 **Expected output:** Architecture map, concrete complexity findings, justified simplification opportunities, and risks of proposed structural changes.
 
-### Part 3 - Kotlin and Android code quality
+#
+
+## Part 2 - Architecture and code complexity (in progress)
+
+### Scope correction
+- This audit is limited to application code and build-relevant configuration. Documentation, milestone history, HTML/CSS captures, and other non-app assets are excluded from code optimization assessment unless they directly affect build/runtime behavior or security/privacy.
+
+### Evidence inspected
+- Kotlin production source inventory and byte sizes from the recursive Git tree.
+- Full declaration/range inventory of `MainActivity.kt` (2,988 lines) and its key composable/function boundaries.
+- `AccountViewModel.kt`, `AccountIntelligenceEngine.kt`, `HoYoLabAccountRepository.kt`, and `AccountRepository.kt`.
+- Project README app architecture/build context was used only where it described the application/build setup.
+
+### Finding AUD-002 - UI responsibilities concentrated in MainActivity.kt
+- **Classification:** Maintainability / cohesion concern; confirmed structural complexity, not a runtime-performance defect.
+- **Evidence:** `MainActivity.kt` is 2,988 lines / 146,423 bytes. `CodexScreen` spans roughly 994 lines (163-1156) and contains application screen state and orchestration including refresh/export/login handling. The same file also contains a 536-line MaterialsPlannerSection (1172-1707), 155-line LineupSimulatorSection, 224-line CharacterShowcaseSection, 223-line CharacterShowcaseDetail, recommendation cards, chronicle rendering, metric components, and supporting formatting/rendering functions.
+- **Impact:** Makes navigation, screen-level state, unrelated UI sections, and presentation helpers harder to locate and review together. Increases risk that changes to one screen feature are entangled with other UI behavior. File size alone does not prove Compose recomposition or frame performance problems.
+- **Confidence:** High for concentration and file boundaries; performance impact unmeasured.
+- **Recommendation:** Candidate for later extraction into feature/section files (Home, account/JSON export, materials planner, lineup simulator, character showcase/detail, reusable chronicle/metric UI) while preserving existing behavior and state ownership. Do not split solely by line count; Part 4 will examine Compose/state concerns and propose a safe order.
+- **Implementation status:** None. Audit remains read-only.
+
+
+### Architecture observations (not yet defects)
+- The repository has recognizable API, data, domain, repository, and presentation/ViewModel boundaries.
+- `AccountViewModel` receives repository and snapshot-store abstractions and manages a StateFlow UI state; it delegates deterministic analysis to `AccountIntelligenceEngine` and uses coroutine scope.
+- `HoYoLabAccountRepository` adapts network export/mapping behind the domain repository contract. It injects retrieval and mapping functions, supporting tests without real network/credentials.
+- `AccountIntelligenceEngine` orchestrates multiple dedicated deterministic analyzers rather than owning their individual rules. This is a reasonable separation in principle; Part 3 will inspect logic overlap and Part 5 data flow before judging whether the analyzer/model count is excessive.
+- The UI is not fully separated into source files, despite domain/data boundaries. The material planner, lineup simulator, character showcase, and other large UI sections are colocated with the main screen.
+
+
+### Part 2 activity log
+- 2026-11-26: Started architecture/code-complexity review. Confirmed the main UI concentration issue with declaration boundaries and sizes; inspected ViewModel/repository/analysis-engine contracts. No app code or build files modified.
+
+
+
+## Part 3 - Kotlin and Android code quality
 
 **Status:** Not started
 
