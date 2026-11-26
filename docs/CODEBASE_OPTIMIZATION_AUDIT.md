@@ -705,7 +705,7 @@ Closing this audit does not mean the application is perfect or that every option
 |---|---|---|---|
 | 1 | AUD-008 credential protection; AUD-009 Room migration integrity | Cleared | CI #521 and #522 passed. User completed credential/session and sign-out device checks. |
 | 2 | AUD-003 JSON export false-success fix | Cleared | Final CI #530 passed. User confirmed export flow is clear. Cancellation during an active save remains a future UX enhancement. |
-| 3 | AUD-006 CPU-heavy processing off main thread | Implementation committed; CI/device verification in progress | 267 unit tests passed in CI #542. Room instrumentation tests and final artifact checks are still running. |
+| 3 | AUD-006 CPU-heavy processing off main thread | CI passed; physical-device verification pending | CI #542 passed unit tests, Room instrumentation tests, Debug APK build, schema verification, signature verification, and artifact upload. |
 | 4 | AUD-007 Release test gate | Not started | Next approved batch after Batch 3 is cleared. |
 | 5 | AUD-005 lazy roster grid | Not started | Preserve existing filtering, sorting, and selection behavior. |
 | 6 | AUD-002 incremental UI extraction | Not started | Extract only cohesive sections, incrementally. |
@@ -759,7 +759,7 @@ Closing this audit does not mean the application is perfect or that every option
 ### Batch 3 - CPU-heavy processing off the main thread
 
 **Finding:** AUD-006  
-**Status:** Implementation committed; final CI and physical-device verification pending.
+**Status:** Implementation committed; CI verification passed; physical-device verification pending.
 
 **Implementation:**
 - `HoYoLabAccountRepository` now performs export JSON-to-domain mapping on an injected CPU dispatcher, defaulting to `Dispatchers.Default`.
@@ -781,17 +781,18 @@ Closing this audit does not mean the application is perfect or that every option
 
 **Automated verification:**
 - CI #541 passed unit tests, Debug APK build, Room schema verification, and APK signature verification. Room instrumentation tests were skipped on that run because its changed-file set did not include the instrumentation test.
-- CI #542 is the final run for the instrumentation-test change. Its 267 unit tests passed. Room instrumentation tests are still in progress; build, schema, signature, and artifact steps have not yet been confirmed.
+- CI #542 passed on commit `9bc551fe1b59ff08c244fbb398d684a7973c01c8`. Unit tests passed (267 tests); Room instrumentation tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload all passed.
 - Earlier intermediate runs #532 through #540 failed while tests were being adjusted for asynchronous dispatch and thread verification. Those runs are superseded by the later corrected run #541 and final run #542. Do not treat an intermediate failure as a final batch result.
 
 **Performance evidence limitation:** The original audit established the main-thread execution paths by static inspection, but no baseline System Trace or comparable before-change timing was captured before implementation. No quantified speedup or frame-time improvement is claimed. Physical-device responsiveness checks and any available post-change profiling remain pending.
 
 **Next actions:**
-1. Confirm CI #542, including Room instrumentation tests, Debug APK build, schema verification, and signature verification.
-2. Install the resulting Debug APK and test a fresh account retrieval, cached snapshot restoration after app restart, and full-roster analysis.
-3. Confirm the UI remains responsive while these operations run and that the same account data and deterministic analysis results are preserved.
-4. Clear Batch 3 only after required checks pass. Then begin Batch 4, AUD-007.
+1. Install the CI #542 Debug APK on the physical device.
+2. Test a fresh account retrieval and confirm the UI remains responsive while the account export is mapped and saved.
+3. Restart the app and confirm cached snapshot restoration and deterministic analysis complete without a new account download.
+4. Confirm full-roster analysis remains responsive and produces the same account findings and recommendations.
+5. Clear Batch 3 only after these device checks pass. Then begin Batch 4, AUD-007.
 
 ### Continuing update log
 
-- 2026-11-26: Recorded Batch 1 and Batch 2 implementation and verification history; started the Batch 3 remediation record. Batch 3 source changes are committed. Unit tests passed in CI #542; Room instrumentation and final build checks remain pending.
+- 2026-11-26: Recorded Batch 1 and Batch 2 implementation and verification history; started the Batch 3 remediation record. Batch 3 source changes are committed. CI #542 passed all unit, Room instrumentation, build, schema, signature, and artifact checks. Physical-device verification remains pending.
