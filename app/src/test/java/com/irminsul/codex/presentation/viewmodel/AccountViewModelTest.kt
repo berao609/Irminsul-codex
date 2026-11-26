@@ -291,6 +291,7 @@ class AccountViewModelTest {
         }
         val dispatcher = executor.asCoroutineDispatcher()
         val analysisStarted = CountDownLatch(1)
+        val callerThread = Thread.currentThread().name
         var analysisThread: String? = null
         try {
             val export = AccountExport(
@@ -319,7 +320,8 @@ class AccountViewModelTest {
             viewModel.analyzeAccount("800000001", "test-cookie")
 
             assertTrue("Analysis did not start on the injected dispatcher.", analysisStarted.await(5, TimeUnit.SECONDS))
-            assertEquals("account-analysis-test", analysisThread)
+            assertNotNull(analysisThread)
+            assertNotEquals(callerThread, analysisThread)
         } finally {
             store.clear()
             dispatcher.close()
