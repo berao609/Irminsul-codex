@@ -6,14 +6,14 @@ package com.irminsul.codex.presentation
  */
 object ChroniclePresentationRules {
     private val technicalKeyFragments = listOf(
-        "url", "icon", "image", "filepath", "filename", "sourcepath", "entryid"
+        "url", "icon", "image", "filepath", "filename", "sourcepath", "source", "entryid"
     )
 
     fun shouldDisplayField(rawKey: String): Boolean {
         val key = rawKey.lowercase().replace(Regex("[^a-z0-9]"), "")
         if (key.isBlank()) return false
-        if (key == "id" || key.endsWith("id")) return false
-        return technicalKeyFragments.none(key::contains)
+        if (key == "id" || key == "uid" || rawKey.matches(Regex("(?i).*(?:_id|Id)$"))) return false
+        return technicalKeyFragments.none { fragment -> key.contains(fragment) }
     }
 
     fun shouldDisplayValue(rawValue: String): Boolean {
