@@ -846,3 +846,14 @@ Closing this audit does not mean the application is perfect or that every option
 **Corrective implementation direction:** Remove the generic raw-payload renderer from Visuals. Replace it with section-specific presentation mapping that uses explicit allowlists of supported user-facing fields. Render exploration regions as a bounded horizontal card strip. Keep unsupported and unknown source fields out of the UI. Preserve raw structured data unchanged for local analysis and JSON export.
 
 **Verification:** The previous renderer is rejected based on physical-device feedback. The replacement requires CI and a fresh device test. No FPS improvement is claimed until the user retests the replacement build.
+
+
+## AUD-011 Follow-up - CI #550 compilation failure and correction
+
+**CI evidence:** Workflow run [#550](https://github.com/berao609/Irminsul-codex/actions/runs/45860847660) failed at `app:compileDebugKotlin` before unit tests, APK packaging, signature verification, or artifact upload. The compiler reported `MainActivity.kt:2837:1: This annotation is not repeatable.`
+
+**Root cause:** `ChronicleOverviewSection` had two consecutive `@Composable` annotations. This was introduced in the section-specific renderer change. It is a direct source compilation defect, not a Gradle, dependency, signing, or test failure.
+
+**Correction:** Remove the duplicate annotation and retain the single required `@Composable` annotation. No runtime behavior or data mapping is changed by this correction.
+
+**Verification boundary:** The correction must pass a fresh CI run before an APK can be offered. The allowlisted renderer remains unverified on the physical device; the earlier bounded recursive renderer remains rejected based on the user's device feedback.

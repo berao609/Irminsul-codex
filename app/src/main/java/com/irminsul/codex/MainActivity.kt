@@ -2834,7 +2834,6 @@ private fun AssessmentBar(label: String, value: Int, total: Int) {
 }
 
 @Composable
-@Composable
 private fun ChronicleOverviewSection(value: DataValue<StructuredData>) {
     val overview = ChroniclePresentationMapper.accountOverview(value)
     Card(

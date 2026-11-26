@@ -3931,3 +3931,20 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 **Verification status:** CI pending for this commit. Physical-device verification pending. No performance improvement is claimed before the replacement is installed and retested.
 
 **Known limitation:** The export's exact exploration and mode payload variants are not fully represented by repository fixtures. The new presentation intentionally shows only supported allowlisted fields; unsupported variants remain hidden rather than falling back to raw rendering.
+
+
+## Milestone 064 - Correct Chronicle Renderer Compilation Error
+
+**Date recorded:** 2026-11-27  
+**Scope:** Correct the duplicate Compose annotation identified by Debug CI #550.
+
+**Trigger:** CI #550 failed during `app:compileDebugKotlin` with `MainActivity.kt:2837:1: This annotation is not repeatable.` Inspection confirmed two consecutive `@Composable` annotations immediately before `ChronicleOverviewSection`.
+
+**Correction:** Removed the duplicate annotation. The function retains one `@Composable` annotation. No presentation behavior, source data, or export logic was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** Correction committed; fresh CI pending. CI #550 did not reach unit tests, APK build, signature verification, or artifact upload. Physical-device verification of the allowlisted Chronicle renderer remains pending. No performance improvement is claimed.
