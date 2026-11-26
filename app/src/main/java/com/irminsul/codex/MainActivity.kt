@@ -25,6 +25,7 @@ import coil.compose.SubcomposeAsyncImage
 import com.irminsul.codex.domain.model.CharacterSnapshot
 import com.irminsul.codex.domain.model.CharacterDevelopmentRecommendationType
 import com.irminsul.codex.domain.model.DataValue
+import com.irminsul.codex.domain.model.StructuredData
 import com.irminsul.codex.domain.model.GoalAwareCharacterRecommendation
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
@@ -484,6 +485,22 @@ private fun CodexScreen(
                         Text(if (accountExportState.isExporting) "Extracting..." else "Save JSON")
                     }
                 }
+            }
+        }
+
+        if (selectedTab == CodexTab.VISUALS) {
+            accountExportState.snapshot?.let { snapshot ->
+                Text(
+                    text = "Account Chronicle",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                ChronicleDataSection("Account Overview", snapshot.accountCard)
+                ChronicleDataSection("World Exploration & Collectibles", snapshot.profileAndExploration)
+                ChronicleDataSection("Spiral Abyss · Current Cycle", snapshot.spiralAbyssCurrent)
+                ChronicleDataSection("Spiral Abyss · Previous Cycle", snapshot.spiralAbyssPrevious)
+                ChronicleDataSection("Imaginarium Theater", snapshot.imaginariumTheater)
             }
         }
 
@@ -2741,6 +2758,154 @@ private fun AssessmentBar(label: String, value: Int, total: Int) {
             trackColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
+}
+
+@Composable
+private fun ChronicleDataSection(
+    title: String,
+    value: DataValue<StructuredData>
+) {
+    var expanded by remember(title) { mutableStateOf(false) }
+    val payload = when (value) {
+        is DataValue.Available -> value.value
+        is DataValue.Stale -> value.value
+        else -> null
+    }
+    val statusText = when (value) {
+        is DataValue.Available -> null
+        is DataValue.Stale -> "Showing previously retrieved data"
+        DataValue.Missing -> "Not included in this account export"
+        DataValue.Unavailable -> "Not available from the source"
+        is DataValue.Failed -> value.reason
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    Text(
+                        text = when {
+                            payload != null -> "Account data available"
+                            else -> statusText ?: "No data"
+                        },
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2
+                    )
+                }
+                Icon(
+                    imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    contentDescription = if (expanded) "Collapse $title" else "Expand $title",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (expanded) {
+                if (payload != null) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    ChronicleStructuredNode(payload)
+                } else {
+                    Text(
+                        text = statusText ?: "No data",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChronicleStructuredNode(
+    value: StructuredData,
+    depth: Int = 0
+) {
+    when (value) {
+        is StructuredData.ObjectValue -> {
+            value.fields.forEach { (key, child) ->
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(start = (depth * 8).dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    when (child) {
+                        is StructuredData.ObjectValue, is StructuredData.ArrayValue -> {
+                            Text(
+                                text = chronicleLabel(key),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            ChronicleStructuredNode(child, depth + 1)
+                        }
+                        else -> Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Text(
+                                text = chronicleLabel(key),
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = chronicleValue(child),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        is StructuredData.ArrayValue -> {
+            value.items.forEachIndexed { index, item ->
+                Text(
+                    text = "Entry ${index + 1}",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                ChronicleStructuredNode(item, depth + 1)
+                if (index < value.items.lastIndex) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+            }
+        }
+        else -> Text(
+            text = chronicleValue(value),
+            fontSize = 12.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+private fun chronicleLabel(raw: String): String =
+    raw.replace(Regex("([a-z0-9])([A-Z])"), "$1 $2")
+        .replace('_', ' ')
+        .replace('-', ' ')
+        .trim()
+        .split(Regex("\\s+"))
+        .joinToString(" ") { word ->
+            word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        }
+
+private fun chronicleValue(value: StructuredData): String = when (value) {
+    is StructuredData.StringValue -> value.value.ifBlank { "—" }
+    is StructuredData.NumberValue -> value.value
+    is StructuredData.BooleanValue -> if (value.value) "Yes" else "No"
+    StructuredData.NullValue -> "—"
+    is StructuredData.ObjectValue -> "${value.fields.size} fields"
+    is StructuredData.ArrayValue -> "${value.items.size} entries"
 }
 
 @Composable
