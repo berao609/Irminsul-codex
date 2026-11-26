@@ -184,9 +184,51 @@ Before treating the capture as a durable repository artifact, sanitize account-s
 - [x] Record initial account-summary, character, exploration, and game-mode presentation patterns.
 - [x] Separate the agreed Irminsul scope from unrelated modules visible in the source.
 - [x] Record limitations of a rendered DOM snapshot.
-- [ ] Obtain the exact stylesheet URL and inspect the CSS.
+- [x] Obtain the exact stylesheet URL and inspect the CSS.
 - [ ] Capture representative interaction states.
 - [ ] Capture reference screenshots and reliable viewport/layout measurements.
 - [ ] Map observed source data fields to the Irminsul account model before implementation.
 - [ ] Prepare a section-by-section native Compose implementation plan.
 - [ ] Sanitize or otherwise restrict access to the account-specific raw HTML capture.
+
+
+## 6.4 Retrieved stylesheet analysis
+
+The stylesheet was obtained from the exact browser Network request URL:
+
+`https://act.hoyolab.com/app/community-game-records-sea/m_55ae43ba.css`
+
+Repository copy: [`docs/m_55ae43ba.css`](m_55ae43ba.css)
+
+- Git blob SHA: `c7cf50e27b1007d9e78697731155ed67659535f9`
+- File size: 113,102 bytes in the repository listing.
+- Retrieved text length: 113,028 characters.
+- Parsed rule count: 1,145 CSS rules.
+- The file is minified into a small number of long lines.
+- The stylesheet begins with a miHoYo copyright notice. It is retained as a research reference only; do not copy its source code into Irminsul.
+
+### Confirmed styling patterns
+
+1. **Viewport-scaled measurements:** Many dimensions use `calc(N * var(--gpx))`. The page's global `--gpx` scale variable is therefore central to the original mobile layout. Treat these as reference CSS units, not Android dp values. Measure the rendered viewport and convert deliberately.
+2. **Navigation geometry:** The navigation container uses flex alignment, space-between distribution, and approximately 10 gpx vertical / 16 gpx horizontal padding. Navigation icons are 24 gpx square. The centered title is 16 gpx, weight 600, with a 24 gpx line height.
+3. **Gold identity accent:** For game ID 2, the navigation title uses `#d3bc8e`, with subtle letter spacing. This supports the warm archival-gold visual identity already selected for Irminsul, but should be mapped to a theme token rather than copied as a raw value.
+4. **Dark base surfaces:** The root layout and some dialog surfaces use dark charcoal values such as `#2a2a2a`, `#333`, and `#0d0e12`. Other dialogs use a pale parchment-like surface `#f6f3ed`, with warm borders and muted brown text. The source uses both dark and light dialog treatments, so surface color is component/state-specific rather than one universal card color.
+5. **Typography:** The stylesheet repeatedly uses Microsoft YaHei / sans-serif for dialog content, with explicit font sizes and line heights. Examples include 16/24 gpx titles and 12/16 gpx supporting text. Do not assume these are the exact fonts used by every page section.
+6. **Character avatar overlays:** `.avatar-container` is positioned relatively. Constellation badges are placed at the top-right, use white semibold 12 gpx text, an 18 gpx line height, and a translucent black background. Avatar labels sit below with an 8 gpx top margin. This is a useful observed pattern for compact roster tiles.
+7. **Detail dialogs:** Skill, rune, buff, and generic dialog selectors define compact fixed-width panels, rounded corners, inset borders, close controls, scrollable descriptions, and decorative corner/background images. These are candidate references for detail inspection, but their actual trigger and relevance to the captured Battle Chronicle modules must be verified through interaction testing.
+8. **Utility classes:** The file includes many generated utility selectors (including `tw-` prefixed width, height, spacing, text, background, border, and positioning classes). Their presence indicates utility-class styling is mixed with component-scoped CSS.
+
+### Interpretation limits
+
+- The stylesheet is a shared page bundle, not a clean stylesheet dedicated only to the captured `.share-page` node. It contains styles for navigation, dialogs, popovers, verification/error states, and other components. A selector appearing in the file does not prove it is visible in the captured page state.
+- Vue scoped-style attributes such as `data-v-...` identify component-scoped rules. They are useful for grouping related rules, but they do not expose the original Vue component source.
+- The captured DOM and stylesheet together provide stronger evidence than either alone. Computed styles and interaction states are still needed before recording exact section/card geometry.
+- Colors and dimensions above are examples explicitly present in CSS. They are not a complete design-token inventory and should not be applied indiscriminately.
+
+### Next stylesheet-related work
+
+- Cross-reference additional selectors against the captured DOM and the visible sections in the approved scope.
+- Inspect computed styles on representative account summary, exploration, character, Abyss, Theater, and Stygian elements.
+- Capture interaction states before assigning dialog styles to a particular user action.
+- Measure the relevant layout in the actual mobile viewport. Do not infer Android dp values directly from `gpx`.
+
