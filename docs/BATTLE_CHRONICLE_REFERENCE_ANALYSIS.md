@@ -347,3 +347,30 @@ These are labels and options visible in the captured HTML. Their calculation log
 ### 8.4 Research boundary
 
 Continue by selecting one owned character and documenting the next screen. Focus on the workflow, selected inputs, required materials, totals, and useful controls. Avoid exhaustively inspecting every decorative element.
+
+
+### 8.4 Custom character calculation and material balance
+
+**User-observed workflow:** In the Custom Calculation page, the user can select a character's target character level and target levels for the character's individual talents. After proceeding to the result, the calculator displays the total materials required and material-balance information, including how much is still needed and how much is in excess.
+
+This establishes the following useful output concepts:
+
+- Total required quantity per material for the selected target levels.
+- Remaining quantity still needed after accounting for available inventory.
+- Excess quantity when available inventory exceeds the requirement.
+
+The exact labels, grouping, sorting, and numerical formulas have not been independently inspected. Treat the above as user-reported behavior, not a verified DOM-level specification.
+
+### 8.5 Inventory synchronization and Irminsul scope decision
+
+HoYoLAB automatically synchronizes the user's in-game inventory with its calculator. The user explicitly decided **not** to reproduce this automatic synchronization in Irminsul Codex.
+
+**Irminsul implementation direction:**
+
+- Do not introduce real-time or automatic in-game inventory synchronization for this calculator.
+- Keep material calculations local and deterministic.
+- Use inventory quantities already available in the app's local account data, where present, and/or allow users to enter or adjust quantities manually.
+- Clearly distinguish required, owned/available, remaining, and excess quantities.
+- Do not make the calculator depend on a live HoYoLAB connection or a recurring remote sync.
+
+This is an explicit product-scope decision, not a claim that HoYoLAB's synchronization mechanism has been technically reverse-engineered.
