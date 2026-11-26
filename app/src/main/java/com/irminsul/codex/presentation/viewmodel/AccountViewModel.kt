@@ -39,7 +39,9 @@ data class AccountExportUiState(
 class AccountViewModel(
     private val repository: AccountRepository,
     private val snapshotStore: AccountSnapshotStore,
-    private val cpuDispatcher: CoroutineDispatcher = Dispatchers.Default
+    private val cpuDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    private val analyzeIntelligence: (AccountSnapshot, CharacterDevelopmentGoal) -> AccountIntelligenceOverview =
+        AccountIntelligenceEngine::analyze
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AccountExportUiState())
     val uiState: StateFlow<AccountExportUiState> = _uiState.asStateFlow()
@@ -197,7 +199,7 @@ class AccountViewModel(
         }
         try {
             val overview = withContext(cpuDispatcher) {
-                AccountIntelligenceEngine.analyze(snapshot, CharacterDevelopmentGoal.BALANCED_DEVELOPMENT)
+                analyzeIntelligence(snapshot, CharacterDevelopmentGoal.BALANCED_DEVELOPMENT)
             }
             _uiState.update {
                 it.copy(
@@ -227,12 +229,14 @@ class AccountViewModel(
     class Factory(
         private val repository: AccountRepository,
         private val snapshotStore: AccountSnapshotStore,
-        private val cpuDispatcher: CoroutineDispatcher = Dispatchers.Default
+        private val cpuDispatcher: CoroutineDispatcher = Dispatchers.Default,
+        private val analyzeIntelligence: (AccountSnapshot, CharacterDevelopmentGoal) -> AccountIntelligenceOverview =
+            AccountIntelligenceEngine::analyze
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(AccountViewModel::class.java)) {
-                return AccountViewModel(repository, snapshotStore, cpuDispatcher) as T
+                return AccountViewModel(repository, snapshotStore, cpuDispatcher, analyzeIntelligence) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
