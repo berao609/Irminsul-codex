@@ -947,3 +947,36 @@ Closing this audit does not mean the application is perfect or that every option
 - Confirm no navigation, account retrieval, or Visuals page behavior regresses.
 
 **Scope rule:** Continue one cohesive extraction at a time. Do not combine this work with the separately recorded character-roster filter/order/card-style follow-ups.
+
+
+### Batch 6 - Step 2: Lineup Simulator presentation extraction
+
+**Finding:** AUD-002 - Split oversized UI responsibilities incrementally.
+
+**Status:** Source extraction committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Moved the Lineup Simulator composable from `MainActivity.kt` into `presentation/LineupSimulatorSection.kt`.
+- Kept selection state, active-roster filtering, stale/partial status derivation, and toggle callbacks in `CodexScreen`.
+- Kept the existing `LineupSelectionRules` domain logic unchanged.
+- Moved the lineup-specific artwork and element-fallback helpers with the extracted presentation.
+- Preserved the four-slot layout, selection order, full-team behavior, roster warnings, and descriptive-only element summary.
+- No account data, persistence, navigation, or analysis behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/LineupSimulatorSection.kt`
+
+**Commits:**
+- `e2e21c3703f733448e7918ea7be7ad2de3b52636` - extracted presentation component.
+- `21b68f750a54fce3f5115146225cfca1638bda7b` - updated MainActivity call site.
+
+**Verification required:**
+1. Confirm Debug CI unit tests, compilation, APK build, schema verification, and signature verification.
+2. Open Visuals and expand Lineup Simulator.
+3. Add four characters, remove one, and add a different character.
+4. Confirm slot order and the four-character limit remain correct.
+5. Confirm stale/partial roster warnings and empty-roster messaging remain correct.
+6. Confirm lineup selection still works after collapsing/reopening the section.
+
+**Boundary:** This is a responsibility extraction only. No performance improvement is claimed. Continue with one cohesive extraction after this step is verified.
