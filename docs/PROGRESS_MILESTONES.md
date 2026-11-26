@@ -3917,3 +3917,17 @@ Static inspection found that the Chronicle renderer recursively composed every n
 ### Verification boundary
 
 This change defers nested traversal and lazy-composes expanded array rows. A measurable FPS improvement is not claimed until device retesting or comparable profiling confirms it. The original #542 build remains the comparison point; Batch 3 is not cleared yet.
+
+
+## Milestone 063 - Replace Generic Chronicle Payload Rendering
+
+**Date recorded:** 2026-11-27  
+**Scope:** Remove the failed generic raw-payload Chronicle renderer and replace it with allowlisted section-specific summaries.
+
+**Implementation status:** Prepared in this commit. Account overview and mode summaries use explicit field allowlists. World exploration uses named region cards in a horizontal strip with normalized progress values. Raw IDs, URLs, image paths, nested source metadata, and unknown fields are not rendered. Original StructuredData and JSON export remain unchanged.
+
+**Reason for replacement:** The user tested the previous bounded recursive renderer and reported worse lag plus continued exposure of reference IDs and URLs. The prior implementation is considered failed.
+
+**Verification status:** CI pending for this commit. Physical-device verification pending. No performance improvement is claimed before the replacement is installed and retested.
+
+**Known limitation:** The export's exact exploration and mode payload variants are not fully represented by repository fixtures. The new presentation intentionally shows only supported allowlisted fields; unsupported variants remain hidden rather than falling back to raw rendering.

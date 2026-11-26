@@ -832,3 +832,17 @@ Closing this audit does not mean the application is perfect or that every option
 
 **Performance evidence boundary:** Lazy composition and deferred nested traversal are structural optimizations. Do not claim a measured FPS improvement until the user confirms the device retest or comparable profiling evidence is available.
 
+
+
+## AUD-011 Follow-up - Failed generic Chronicle renderer replacement
+
+**Device result:** The user tested the build containing the bounded recursive renderer and reported that scrolling/expansion lag became worse and technical reference IDs and URLs remained visible. The attempted mitigation is therefore **failed**, not accepted.
+
+**Cause confirmed by source inspection:**
+- A recursive generic renderer still exposed raw payload values through incomplete denylist filtering.
+- It created nested Compose content for large object/array trees.
+- A nested `LazyColumn` was placed inside the screen's vertically scrolling content, increasing layout/scroll complexity.
+
+**Corrective implementation direction:** Remove the generic raw-payload renderer from Visuals. Replace it with section-specific presentation mapping that uses explicit allowlists of supported user-facing fields. Render exploration regions as a bounded horizontal card strip. Keep unsupported and unknown source fields out of the UI. Preserve raw structured data unchanged for local analysis and JSON export.
+
+**Verification:** The previous renderer is rejected based on physical-device feedback. The replacement requires CI and a fresh device test. No FPS improvement is claimed until the user retests the replacement build.
