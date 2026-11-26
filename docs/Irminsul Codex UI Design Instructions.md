@@ -140,22 +140,72 @@ These are design-system recommendations, not permission to create all components
 - [ ] **No white Talent/Constellation PNGs** placed directly on light surfaces.
 - [ ] **No full-saturation elemental gradients** on list items or dashboard cards.
 - [ ] **No multi-paragraph AI disclaimers** cluttering forms or empty states.
-- [ ] **No runtime DOM style scraping** from HoYoLAB WebViews (static UI tokens/assets are curated once, where permitted).
+- [ ] **No production runtime DOM styling or scraping** from HoYoLAB WebViews. The narrowly scoped Debug-only Battle Chronicles Reference Mode in Section 10 is the sole exception for development-time visual inspection; its findings must be reviewed and translated into native Compose UI.
 
 ---
 
-## 10. Asset & Token Sourcing (Optional Debug-Only WebView Inspector)
+## 10. Battle Chronicles Visual Reference Mode (Debug-Only)
 
-A developer-only utility inside the authenticated HoYoLAB Android `WebView` may be considered for inspecting static UI references that are not included in Battle Chronicle JSON. This is optional and is not a prerequisite for normal app functionality or UI work.
+### Purpose
 
-* **Strictly Debug-Only:** Any inspection trigger or JavaScript evaluation must be guarded by Android's `BuildConfig.DEBUG` and must not appear or execute in release builds. Use the Android `WebView.evaluateJavascript(...)` API only if an approved, narrowly scoped debug utility is actually needed. Do not use Flutter `kDebugMode` or Dart WebView APIs.
-* **What the Inspector May Capture:**
-  * Inline SVG markup for subtle archival motifs (e.g., the `✦` 4-point star) and static UI glyphs.
-  * Static asset URLs for icons not returned in Battle Chronicle JSON (e.g., Original Resin icon, Spiral Abyss / Imaginarium Theater / Stygian Onslaught emblems, elemental crests).
-  * Reference colors and font stacks for offline Light/Dark token review.
-* **Privacy and scope:** Do not capture authentication cookies, account data, personal identifiers, or session state. Do not bypass access controls, scrape protected content, or collect assets beyond what the service terms and project source-permission decisions allow.
-* **Curate & Bundle Once:** Any extracted references must be reviewed manually for provenance, permission, attribution, and suitability before being added as Android resources.
-* **Zero Runtime DOM Styling:** Never parse or apply scraped HoYoLAB HTML/CSS at runtime to style Compose screens, and never import HoYoLAB's mismatched web gradients or parchment blocks wholesale. Dynamic game art (characters, weapons, artifacts) must always come from the existing approved Battle Chronicle JSON URL flow.
+Use HoYoLAB Battle Chronicles as a **visual and interaction reference** when designing Irminsul Codex. Do not invent every layout, information hierarchy, spacing rule, or interaction from scratch when the existing Battle Chronicles experience can be studied directly.
+
+Think of this workflow as **tracing paper**: inspect the reference, understand how its visual system works, and then recreate the useful design ideas as clean, native Android Compose components that fit Irminsul Codex. The goal is informed reconstruction, not a pixel-for-pixel web clone.
+
+This is a development tool for improving the production interface. It is not an end-user feature and is not required for normal app functionality.
+
+### What We Should Study
+
+Use relevant Battle Chronicles pages and states as references for:
+
+* **Character presentation:** portrait placement, profile header composition, character identity, level and progression information.
+* **Weapons:** image scale, placement, refinement and level hierarchy, and how weapon details are revealed.
+* **Artifacts:** the five-slot arrangement, artifact icon treatment, set information, main stats, substats, and detail-inspection behavior.
+* **Character progression:** talent and constellation presentation, icon sizing, grouping, and selected states.
+* **Account statistics:** how attributes, exploration, Spiral Abyss, Imaginarium Theater, Stygian Onslaught, and other account information are grouped and prioritized.
+* **Visual language:** typography, color relationships, surface treatments, borders, spacing, alignment, iconography, image crops, and information density.
+* **Interaction patterns:** expandable sections, selectable icons, tabs, detail panels, sheets, scrolling behavior, and transitions between summary and detailed information.
+* **Responsive behavior:** how the reference reorganizes or prioritizes information across available screen sizes, where observable.
+
+Do not limit inspection to static screenshots. Study how important controls behave and what information appears after each interaction.
+
+### Reference Inspection Workflow
+
+1. **Open the reference.** Use a dedicated Debug-only reference-inspection session to access the relevant HoYoLAB Battle Chronicles page or state.
+2. **Explore the experience.** Navigate the relevant sections and interact with controls to reveal collapsed, selected, and detailed states.
+3. **Inspect visual structure.** Where useful, inspect visible DOM structure, element dimensions, computed styles, font stacks, colors, spacing, image sizing, and asset references through narrowly scoped WebView developer tooling.
+4. **Record the design pattern.** Describe the hierarchy, layout, component behavior, and the reason the pattern works. Keep useful measurements and observations as development references.
+5. **Translate into Compose.** Recreate the relevant pattern with native Android and Jetpack Compose components, using Irminsul Codex theme tokens and architecture.
+6. **Compare and refine.** Compare the Irminsul implementation against the reference using screenshots or equivalent visual comparisons. Adjust hierarchy, proportions, spacing, density, and interaction behavior where appropriate.
+7. **Keep the result native.** Production screens must render from Irminsul Codex Compose components and app data, not from embedded HoYoLAB pages or copied web stylesheets.
+
+### Debug-Only Inspector Requirements
+
+* **Debug builds only:** Any inspector entry point, WebView debugging support, JavaScript evaluation, or reference-capture controls must be excluded from Release builds. Gate the feature with the Android build configuration for the Debug variant. Do not use Flutter `kDebugMode` or Dart WebView APIs.
+* **Keep it separate from production navigation:** Do not add a user-facing destination, permanent app setting, or production UI entry for this developer tool. Use an isolated developer-only screen or entry point.
+* **Dedicated inspection session:** Do not silently reuse or extend the normal HoYoLAB login WebView lifecycle. The current login flow captures the required authentication cookies and then clears the WebView's cookies, cache, history, and form data. Preserve that security behavior. If a reference requires authentication, use a deliberately separate, user-initiated inspection session with its own lifecycle and clear its session data when inspection ends. Never retain or expose credentials for convenience.
+* **Narrow destination scope:** Restrict navigation and inspection to the intended HoYoLAB domains and the specific reference pages needed for the task. Do not turn the inspector into a general-purpose browser or crawler.
+* **Inspection data only:** The inspector may examine visible page structure and presentation metadata, such as element hierarchy, dimensions, computed visual properties, font information, and references to visible assets. It must not collect authentication cookies, tokens, account identifiers, personal account data, or unrelated session state.
+* **No access-control bypass:** Do not bypass authentication, anti-bot protections, service restrictions, or other access controls. Only inspect pages the user can legitimately access through the normal service experience.
+* **No bulk harvesting:** Do not build automatic crawling, mass asset downloading, unrestricted DOM export, or background collection. Inspection should be deliberate and limited to the selected reference screen or interaction.
+* **No automatic asset reuse:** Discovering an image, icon, SVG, font, or URL does not grant permission to bundle or redistribute it. Any proposed asset must undergo a separate provenance, licensing, permission, attribution, and suitability review before production use. Prefer original native Compose treatments or approved assets when reuse is not permitted.
+
+### From Reference to Irminsul Design System
+
+* Treat Battle Chronicles as a **design reference**, not as the source code or runtime UI framework for Irminsul Codex.
+* Extract reusable design principles: hierarchy, proportions, spacing, grouping, visual emphasis, information density, and interaction behavior.
+* Reinterpret those principles for a native Android experience. Use Material 3, the app's theme tokens, established Compose components, and Android interaction conventions.
+* Preserve Irminsul Codex's design direction: **90% clean, modern Android utility / 10% subtle Genshin archival flavor**. Do not blindly reproduce every Battle Chronicles decoration, web-specific layout, gradient, animation, or visual inconsistency.
+* Keep the reference and the implementation distinct. Do not inject inspected HTML, CSS, JavaScript, or remote web components into production screens.
+* Dynamic character, weapon, and artifact artwork must continue to use the existing approved Battle Chronicle JSON URL flow and image-loading/cache path. The inspector is not a replacement data or asset pipeline.
+* When a reference pattern is useful, turn it into a reusable native Compose component or documented theme rule only when it supports more than a one-off imitation. Avoid creating abstractions for every inspected element.
+* The inspector is an aid, not the deliverable. The valuable outcome is a better, coherent, maintainable Irminsul Codex interface.
+
+### Scope and Priority
+
+Battle Chronicles Reference Mode should be developed as a focused visual-development aid when meaningful UI work requires it. Start with the screens and interactions most relevant to the current task, rather than building a large inspection platform up front.
+
+The normal app must remain fully functional when the inspector is absent, disabled, or unable to load a reference page. No production feature may depend on it.
 
 ---
 
