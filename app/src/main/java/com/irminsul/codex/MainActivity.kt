@@ -198,15 +198,26 @@ private fun CodexScreen(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
         val content = exportedJson
-        if (uri != null && content != null) {
-            try {
-                context.contentResolver.openOutputStream(uri)?.use { out ->
-                    out.write(content.toByteArray(Charsets.UTF_8))
+        when {
+            uri == null -> {
+                exportStatus = "Save cancelled."
+            }
+            content == null -> {
+                exportStatus = null
+                errorMessage = "No export data is available to save."
+            }
+            else -> {
+                try {
+                    val byteCount = JsonDocumentWriter.write(content) {
+                        context.contentResolver.openOutputStream(uri)
+                    }
+                    val kb = (byteCount / 1024).coerceAtLeast(1)
+                    errorMessage = null
+                    exportStatus = "Saved JSON file ($kb KB)."
+                } catch (e: Exception) {
+                    exportStatus = null
+                    errorMessage = "Could not save file: ${e.message ?: "Unknown error."}"
                 }
-                val kb = (content.toByteArray(Charsets.UTF_8).size / 1024).coerceAtLeast(1)
-                exportStatus = "Saved JSON file ($kb KB)."
-            } catch (e: Exception) {
-                errorMessage = "Could not save file: ${e.message}"
             }
         }
     }
