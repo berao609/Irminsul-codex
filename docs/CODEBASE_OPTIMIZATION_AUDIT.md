@@ -982,7 +982,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 **Finding:** AUD-002 - Split oversized UI responsibilities incrementally.
 
-**Status:** Source extraction committed; CI and physical-device verification pending.
+**Status:** Cleared after CI #581 and physical-device verification.
 
 **Implementation:**
 - Moved the Character Showcase roster, filters, selected-character detail profile, talent and constellation details, weapon and artifact inspection, and their presentation helpers into `presentation/CharacterShowcaseSection.kt`.
@@ -1019,4 +1019,4 @@ Closing this audit does not mean the application is perfect or that every option
 6. Inspect talents, constellations, weapon passive, weapon stats, artifacts, and artifact substats.
 7. Collapse/reopen the roster and confirm the selected character remains selected.
 
-**Boundary:** Structural extraction only. No performance improvement is claimed.
+**Result:** Step 3 is cleared. Structural extraction only; no performance improvement is claimed.
