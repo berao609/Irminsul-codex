@@ -1305,30 +1305,46 @@ private fun MaterialsPlannerSection(
             .apply()
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Materials Planner", fontSize = 23.sp, fontWeight = FontWeight.Bold)
             Text(
-                "Plan character, talent, and weapon upgrades independently.",
-                fontSize = 13.sp,
+                "Materials Planner",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Build upgrade plans for your characters and weapons.",
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(20.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text("Upgrade target", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("1. Choose an upgrade target", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Each character and weapon keeps its own level range.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Box {
-                    OutlinedButton(onClick = { targetMenuExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { targetMenuExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
                         Text(
                             selectedTarget?.label ?: if (selectedTargetId == "custom") "Custom target" else "Choose target",
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1
                         )
                         Text("⌄")
                     }
@@ -1351,12 +1367,13 @@ private fun MaterialsPlannerSection(
                         onValueChange = { customTargetName = it },
                         label = { Text("Character or weapon name") },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
                 Text(
-                    if (selectedTargetId.startsWith("character:")) "Character level"
-                    else "Weapon level",
+                    if (selectedTargetId.startsWith("character:")) "Character level" else "Weapon level",
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1366,7 +1383,8 @@ private fun MaterialsPlannerSection(
                         label = { Text("Current") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
                     )
                     OutlinedTextField(
                         value = targetLevel,
@@ -1374,78 +1392,98 @@ private fun MaterialsPlannerSection(
                         label = { Text("Target") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
-                Text(
-                    "Each target keeps its own saved level range. Existing saved ranges are retained.",
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
 
         if (characterId != null) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(20.dp)
             ) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Talent levels", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Column(
+                    Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("2. Talent investment", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Set each talent track independently.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     talentValues.forEach { (track, label, levels) ->
-                        Text(label, fontWeight = FontWeight.Medium, fontSize = 13.sp)
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            OutlinedTextField(
-                                value = levels.first,
-                                onValueChange = { next ->
-                                    val level = next.filter(Char::isDigit).take(2)
-                                    when (track) {
-                                        "normal" -> normalTalentCurrent = level
-                                        "skill" -> skillTalentCurrent = level
-                                        "burst" -> burstTalentCurrent = level
-                                    }
-                                },
-                                label = { Text("Current") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
-                            )
-                            OutlinedTextField(
-                                value = levels.second,
-                                onValueChange = { next ->
-                                    val level = next.filter(Char::isDigit).take(2)
-                                    when (track) {
-                                        "normal" -> normalTalentTarget = level
-                                        "skill" -> skillTalentTarget = level
-                                        "burst" -> burstTalentTarget = level
-                                    }
-                                },
-                                label = { Text("Target") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                modifier = Modifier.weight(1f)
-                            )
+                        Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                OutlinedTextField(
+                                    value = levels.first,
+                                    onValueChange = { next ->
+                                        val level = next.filter(Char::isDigit).take(2)
+                                        when (track) {
+                                            "normal" -> normalTalentCurrent = level
+                                            "skill" -> skillTalentCurrent = level
+                                            "burst" -> burstTalentCurrent = level
+                                        }
+                                    },
+                                    label = { Text("Current") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                OutlinedTextField(
+                                    value = levels.second,
+                                    onValueChange = { next ->
+                                        val level = next.filter(Char::isDigit).take(2)
+                                        when (track) {
+                                            "normal" -> normalTalentTarget = level
+                                            "skill" -> skillTalentTarget = level
+                                            "burst" -> burstTalentTarget = level
+                                        }
+                                    },
+                                    label = { Text("Target") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                            }
                         }
                     }
-                    Text(
-                        "Talent targets are saved separately for each character.",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
             }
 
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(20.dp)
             ) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Weapon to equip", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Column(
+                    Modifier.fillMaxWidth().padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Text("3. Planned weapon", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Choose the weapon this character is intended to equip.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Box {
-                        OutlinedButton(onClick = { weaponMenuExpanded = true }, modifier = Modifier.fillMaxWidth()) {
+                        OutlinedButton(
+                            onClick = { weaponMenuExpanded = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
                             Text(
                                 plannedWeapon?.label ?: if (plannedWeaponId == "custom") "Choose or enter a weapon" else "Custom weapon",
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1
                             )
                             Text("⌄")
                         }
@@ -1468,25 +1506,28 @@ private fun MaterialsPlannerSection(
                             onValueChange = { plannedWeaponName = it },
                             label = { Text("Weapon name") },
                             singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         OutlinedTextField(
                             value = plannedWeaponCurrent,
                             onValueChange = { plannedWeaponCurrent = it.filter(Char::isDigit).take(3) },
-                            label = { Text("Weapon current level") },
+                            label = { Text("Current level") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
                         )
                         OutlinedTextField(
                             value = plannedWeaponTarget,
                             onValueChange = { plannedWeaponTarget = it.filter(Char::isDigit).take(3) },
-                            label = { Text("Weapon target level") },
+                            label = { Text("Target level") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
                         )
                     }
                 }
@@ -1497,107 +1538,148 @@ private fun MaterialsPlannerSection(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Verified material costs unavailable", fontWeight = FontWeight.SemiBold)
+            Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Automatic costs are not connected yet", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Text(
-                    "The catalogue metadata and trusted-calculation connection are in place, but no external cost source is currently approved for automatic ingestion. Manual entries remain available until reviewed cost records are authorized.",
-                    fontSize = 12.sp,
+                    "Only reviewed, approved cost data can populate automatic requirements. Manual tracking is available in the meantime.",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Material requirements", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-            TextButton(onClick = { rows.add(ManualMaterialPlanRow(id = UUID.randomUUID().toString())) }) {
-                Text("+ Add material")
-            }
-        }
-        if (rows.isEmpty()) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("No manual materials added", fontWeight = FontWeight.SemiBold)
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("Material requirements", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                     Text(
-                        "Add a material and enter its required and owned quantities. Existing saved rows are loaded automatically.",
-                        fontSize = 12.sp,
+                        if (rows.isEmpty()) "No materials tracked" else "${rows.size} materials tracked",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Button(onClick = { rows.add(ManualMaterialPlanRow(id = UUID.randomUUID().toString())) }) {
-                        Text("Add first material")
+                }
+                Button(
+                    onClick = { rows.add(ManualMaterialPlanRow(id = UUID.randomUUID().toString())) },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Add material")
+                }
+            }
+
+            if (rows.isEmpty()) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text("Your material list is empty", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Add a material to track its required and owned quantities. Existing saved rows are loaded automatically.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
-        }
-        rows.forEachIndexed { index, row ->
-            val calculation = ManualMaterialPlanCalculator.calculate(row.requiredQuantity, row.ownedQuantity)
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+
+            rows.forEachIndexed { index, row ->
+                val calculation = ManualMaterialPlanCalculator.calculate(row.requiredQuantity, row.ownedQuantity)
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text("Material ${index + 1}", fontWeight = FontWeight.SemiBold)
-                        TextButton(onClick = { rows.removeAt(index) }) { Text("Remove") }
-                    }
-                    OutlinedTextField(
-                        value = row.materialName,
-                        onValueChange = { rows[index] = row.copy(materialName = it) },
-                        label = { Text("Material name") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "Material ${index + 1}",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            TextButton(onClick = { rows.removeAt(index) }) { Text("Remove") }
+                        }
                         OutlinedTextField(
-                            value = row.requiredQuantity,
-                            onValueChange = { rows[index] = row.copy(requiredQuantity = it.filter(Char::isDigit)) },
-                            label = { Text("Required") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            value = row.materialName,
+                            onValueChange = { rows[index] = row.copy(materialName = it) },
+                            label = { Text("Material name") },
                             singleLine = true,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
-                        OutlinedTextField(
-                            value = row.ownedQuantity,
-                            onValueChange = { rows[index] = row.copy(ownedQuantity = it.filter(Char::isDigit)) },
-                            label = { Text("Owned") },
-                            placeholder = { Text("Not entered") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    when (calculation.status) {
-                        ManualPlanCalculationStatus.COMPLETE -> Text(
-                            "Remaining: ${calculation.remainingQuantity}  •  Required: ${calculation.requiredQuantity}  •  Owned: ${calculation.ownedQuantity}",
-                            fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary
-                        )
-                        ManualPlanCalculationStatus.INVENTORY_NOT_ENTERED -> Text(
-                            "Required: ${calculation.requiredQuantity}  •  Enter owned quantity to calculate what remains.",
-                            fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        ManualPlanCalculationStatus.REQUIRED_NOT_ENTERED -> Text(
-                            "Enter the required quantity.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        ManualPlanCalculationStatus.INVALID_QUANTITY -> Text(
-                            "Enter valid non-negative whole numbers.", fontSize = 12.sp, color = MaterialTheme.colorScheme.error
-                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedTextField(
+                                value = row.requiredQuantity,
+                                onValueChange = { rows[index] = row.copy(requiredQuantity = it.filter(Char::isDigit)) },
+                                label = { Text("Required") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            OutlinedTextField(
+                                value = row.ownedQuantity,
+                                onValueChange = { rows[index] = row.copy(ownedQuantity = it.filter(Char::isDigit)) },
+                                label = { Text("Owned") },
+                                placeholder = { Text("Not entered") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                        }
+                        when (calculation.status) {
+                            ManualPlanCalculationStatus.COMPLETE -> {
+                                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Remaining", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(
+                                        calculation.remainingQuantity.toString(),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                            ManualPlanCalculationStatus.INVENTORY_NOT_ENTERED -> Text(
+                                "Enter your owned quantity to calculate what remains.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            ManualPlanCalculationStatus.REQUIRED_NOT_ENTERED -> Text(
+                                "Enter the required quantity.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            ManualPlanCalculationStatus.INVALID_QUANTITY -> Text(
+                                "Enter valid non-negative whole numbers.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }
         }
         Text(
-            "Plans remain saved locally. Existing material rows keep their original target-specific storage keys. Blank owned quantities remain unknown; 0 means none owned.",
-            fontSize = 11.sp,
+            "Plans are saved locally. A blank owned quantity means unknown; 0 means none owned.",
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
@@ -1801,71 +1883,277 @@ private fun CharacterShowcaseSection(
     selectedCharacterId: Int?,
     onCharacterSelected: (Int) -> Unit
 ) {
+    var rosterExpanded by remember { mutableStateOf(false) }
+    var filtersExpanded by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var minimumLevel by remember { mutableStateOf("") }
+    var maximumLevel by remember { mutableStateOf("") }
+    var selectedElement by remember { mutableStateOf("All") }
+    var selectedWeaponType by remember { mutableStateOf("All") }
+    var selectedRarity by remember { mutableStateOf("All") }
+    var sortBy by remember { mutableStateOf("Name") }
+    var descending by remember { mutableStateOf(false) }
+
     val selected = characters.firstOrNull { it.id == selectedCharacterId } ?: characters.first()
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Character Showcase", fontSize = 21.sp, fontWeight = FontWeight.Bold)
-            Text(
-                "${characters.size} characters retrieved • Select a character to inspect their build.",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+    val elements = listOf("All") + characters.map { it.element?.takeIf(String::isNotBlank) ?: "Unknown" }.distinct().sorted()
+    val weaponTypes = listOf("All") + characters.map { it.rosterWeaponType() ?: "Unknown" }.distinct().sorted()
+    val rarities = listOf("All", "5★", "4★", "3★", "2★", "1★", "Unknown")
+
+    val filteredCharacters = characters.filter { character ->
+        val name = character.name ?: "Character #${character.id}"
+        val level = character.level
+        val rarity = character.rarity
+        val weaponType = character.rosterWeaponType() ?: "Unknown"
+        val element = character.element?.takeIf(String::isNotBlank) ?: "Unknown"
+        val minLevel = minimumLevel.toIntOrNull()
+        val maxLevel = maximumLevel.toIntOrNull()
+        name.contains(searchQuery.trim(), ignoreCase = true) &&
+            (selectedElement == "All" || element.equals(selectedElement, ignoreCase = true)) &&
+            (selectedWeaponType == "All" || weaponType == selectedWeaponType) &&
+            (selectedRarity == "All" || if (selectedRarity == "Unknown") rarity == null else rarity?.let { "${it}★" == selectedRarity } == true) &&
+            (minLevel == null || level != null && level >= minLevel) &&
+            (maxLevel == null || level != null && level <= maxLevel)
+    }.let { matches ->
+        val sorted = when (sortBy) {
+            "Level" -> if (descending) matches.sortedByDescending { it.level ?: Int.MIN_VALUE } else matches.sortedBy { it.level ?: Int.MAX_VALUE }
+            "Rarity" -> if (descending) matches.sortedByDescending { it.rarity ?: Int.MIN_VALUE } else matches.sortedBy { it.rarity ?: Int.MAX_VALUE }
+            "Friendship" -> if (descending) matches.sortedByDescending { it.friendshipLevel ?: Int.MIN_VALUE } else matches.sortedBy { it.friendshipLevel ?: Int.MAX_VALUE }
+            else -> if (descending) matches.sortedByDescending { it.name ?: "Character #${it.id}" } else matches.sortedBy { it.name ?: "Character #${it.id}" }
         }
-        Row(
-            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        sorted
+    }
+
+    val hasActiveFilters = searchQuery.isNotBlank() || minimumLevel.isNotBlank() || maximumLevel.isNotBlank() ||
+        selectedElement != "All" || selectedWeaponType != "All" || selectedRarity != "All"
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Card(
+            onClick = { rosterExpanded = !rosterExpanded },
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            characters.forEach { character ->
-                val isSelected = character.id == selected.id
-                Card(
-                    onClick = { onCharacterSelected(character.id) },
-                    modifier = Modifier.width(112.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surface
-                    ),
-                    shape = RoundedCornerShape(14.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("Character Roster", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        if (rosterExpanded) "${filteredCharacters.size} of ${characters.size} characters shown"
+                        else "${characters.size} characters • Selected: ${selected.name ?: "Character #${selected.id}"}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Icon(
+                    if (rosterExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    contentDescription = if (rosterExpanded) "Collapse character roster" else "Expand character roster"
+                )
+            }
+        }
+
+        if (rosterExpanded) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    label = { Text("Search characters") },
+                    textStyle = MaterialTheme.typography.bodyMedium
+                )
+                TextButton(onClick = { filtersExpanded = !filtersExpanded }) {
+                    Text(if (filtersExpanded) "Hide filters" else "Filters")
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RosterChoiceMenu(
+                    label = "Sort: $sortBy",
+                    options = listOf("Name", "Level", "Rarity", "Friendship"),
+                    selected = sortBy,
+                    onSelected = { sortBy = it }
+                )
+                TextButton(onClick = { descending = !descending }) {
+                    Text(if (descending) "Descending ↓" else "Ascending ↑")
+                }
+            }
+
+            if (filtersExpanded) {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(9.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        ShowcaseArtwork(
-                            url = character.avatarIcon,
-                            description = "${character.name ?: "Character"} portrait",
-                            fallback = elementGlyph(character.element),
-                            modifier = Modifier.size(88.dp)
+                    Text("Filter roster", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        RosterChoiceMenu("Element: $selectedElement", elements, selectedElement) { selectedElement = it }
+                        RosterChoiceMenu("Weapon: $selectedWeaponType", weaponTypes, selectedWeaponType) { selectedWeaponType = it }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        RosterChoiceMenu("Rarity: $selectedRarity", rarities, selectedRarity) { selectedRarity = it }
+                    }
+                    Text("Character level", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = minimumLevel,
+                            onValueChange = { minimumLevel = it.filter(Char::isDigit).take(2) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            label = { Text("Minimum") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
-                        Text(
-                            character.name ?: "Character #${character.id}",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1
+                        OutlinedTextField(
+                            value = maximumLevel,
+                            onValueChange = { maximumLevel = it.filter(Char::isDigit).take(2) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            label = { Text("Maximum") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
-                        Text(
-                            "Lv. ${character.level ?: "—"}",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    }
+                    if (hasActiveFilters) {
+                        TextButton(
+                            onClick = {
+                                searchQuery = ""
+                                minimumLevel = ""
+                                maximumLevel = ""
+                                selectedElement = "All"
+                                selectedWeaponType = "All"
+                                selectedRarity = "All"
+                            },
+                            modifier = Modifier.align(Alignment.End)
+                        ) { Text("Clear filters") }
+                    }
+                }
+            }
+
+            if (filteredCharacters.isEmpty()) {
+                Text(
+                    "No characters match these filters. Adjust or clear the filters.",
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    filteredCharacters.chunked(3).forEach { rowCharacters ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            rowCharacters.forEach { character ->
+                                val isSelected = character.id == selected.id
+                                Card(
+                                    onClick = { onCharacterSelected(character.id) },
+                                    modifier = Modifier.weight(1f),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.surface
+                                    ),
+                                    shape = RoundedCornerShape(13.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().padding(7.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        ShowcaseArtwork(
+                                            url = character.avatarIcon,
+                                            description = "${character.name ?: "Character"} portrait",
+                                            fallback = elementGlyph(character.element),
+                                            modifier = Modifier.size(66.dp)
+                                        )
+                                        Text(
+                                            character.name ?: "Character #${character.id}",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1
+                                        )
+                                        Text(
+                                            "Lv. ${character.level ?: "—"} • ${character.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "—"}",
+                                            fontSize = 10.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                            repeat(3 - rowCharacters.size) {
+                                Spacer(Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             }
         }
+
         CharacterShowcaseDetail(character = selected)
     }
 }
 
 @Composable
+private fun RosterChoiceMenu(
+    label: String,
+    options: List<String>,
+    selected: String,
+    onSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        OutlinedButton(onClick = { expanded = true }) {
+            Text(label, maxLines = 1)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onSelected(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+private fun CharacterSnapshot.rosterWeaponType(): String? {
+    val weapon = when (val value = weapon) {
+        is DataValue.Available -> value.value
+        is DataValue.Stale -> value.value
+        else -> null
+    } ?: return null
+    return weapon.typeName?.takeIf(String::isNotBlank)
+        ?: weapon.type?.let { "Type $it" }
+}
+
+@Composable
 private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
+    var expandedDetailKey by remember(character.id) { mutableStateOf<String?>(null) }
+    fun toggleDetail(key: String) {
+        expandedDetailKey = if (expandedDetailKey == key) null else key
+    }
+
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 ShowcaseArtwork(
@@ -1875,187 +2163,382 @@ private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
                     modifier = Modifier.width(112.dp).height(142.dp)
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.weight(1f)) {
-                    Text(character.name ?: "Character #${character.id}", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(character.name ?: "Character #${character.id}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text(
                         "${character.element ?: "Element unavailable"} • ${character.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"}",
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Text("Level ${character.level ?: "—"}", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Level ${character.level ?: "—"}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     Text(
                         "Friendship ${character.friendshipLevel ?: "—"} • Constellations ${character.activeConstellationCount ?: "—"}/6",
-                        fontSize = 11.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Weapon", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            when (val weapon = character.weapon) {
-                is DataValue.Available -> WeaponShowcaseRow(weapon.value)
-                is DataValue.Stale -> WeaponShowcaseRow(weapon.value, stale = true)
-                DataValue.Missing -> ShowcaseUnavailable("Weapon data was not included.")
-                DataValue.Unavailable -> ShowcaseUnavailable("Weapon data is unavailable.")
-                is DataValue.Failed -> ShowcaseUnavailable("Weapon data could not be read.")
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Artifacts", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            when (val artifacts = character.artifacts) {
-                is DataValue.Available -> ArtifactShowcaseRow(artifacts.value)
-                is DataValue.Stale -> ArtifactShowcaseRow(artifacts.value, stale = true)
-                DataValue.Missing -> ShowcaseUnavailable("Artifact data was not included.")
-                DataValue.Unavailable -> ShowcaseUnavailable("Artifact data is unavailable.")
-                is DataValue.Failed -> ShowcaseUnavailable("Artifact data could not be read.")
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Attributes", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            if (character.selectedProperties.isEmpty()) {
-                ShowcaseUnavailable("Character attributes are not available.")
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    character.selectedProperties.take(8).forEach { stat ->
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(stat.statName ?: "Unknown stat", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(stat.final ?: stat.value ?: stat.add ?: stat.base ?: "—", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Talents", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                if (character.skills.isEmpty()) {
+                    ShowcaseUnavailable("Talent details are not available.")
+                } else {
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(9.dp)
+                    ) {
+                        character.skills.forEach { skill ->
+                            val key = "talent:${skill.id}"
+                            Column(
+                                modifier = Modifier
+                                    .width(78.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (expandedDetailKey == key) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .clickable { toggleDetail(key) }
+                                    .padding(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                ShowcaseArtwork(skill.icon, skill.name ?: "Talent", "✦", Modifier.size(48.dp))
+                                Text(skill.name ?: "Talent", style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                                Text("Lv. ${skill.level ?: "—"}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                    character.skills.firstOrNull { "talent:${it.id}" == expandedDetailKey }?.let { skill ->
+                        ShowcaseDetailSurface {
+                            Text(skill.name ?: "Talent", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                when {
+                                    skill.isUnlocked == false -> "Locked"
+                                    skill.isUnlocked == true -> "Unlocked • Level ${skill.level ?: "—"}"
+                                    else -> "Level ${skill.level ?: "—"}"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            skill.description?.takeIf { it.isNotBlank() }?.let {
+                                Text(formatGameDescription(it), style = MaterialTheme.typography.bodySmall)
+                            }
+                            skill.enhancedDescription?.takeIf { it.isNotBlank() }?.let {
+                                Text(formatGameDescription(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Talents", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            if (character.skills.isEmpty()) {
-                ShowcaseUnavailable("Talent details are not available.")
-            } else {
-                Row(
-                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    character.skills.forEach { skill ->
-                        Column(
-                            modifier = Modifier.width(88.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            ShowcaseArtwork(
-                                skill.icon,
-                                skill.name ?: "Talent",
-                                "✦",
-                                Modifier.size(54.dp)
-                            )
-                            Text(skill.name ?: "Talent", fontSize = 10.sp, maxLines = 2)
-                            Text("Lv. ${skill.level ?: "—"}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Constellations", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                if (character.constellations.isEmpty()) {
+                    ShowcaseUnavailable("Constellation details are not available.")
+                } else {
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(9.dp)
+                    ) {
+                        character.constellations.sortedBy { it.position ?: it.id }.forEach { constellation ->
+                            val key = "constellation:${constellation.id}"
+                            Column(
+                                modifier = Modifier
+                                    .width(72.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (expandedDetailKey == key) MaterialTheme.colorScheme.primaryContainer
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .clickable { toggleDetail(key) }
+                                    .padding(7.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                ShowcaseArtwork(
+                                    constellation.icon,
+                                    constellation.name ?: "Constellation",
+                                    "C${constellation.position ?: constellation.id}",
+                                    Modifier.size(46.dp)
+                                )
+                                Text("C${constellation.position ?: constellation.id}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    when (constellation.isActive) {
+                                        true -> "Unlocked"
+                                        false -> "Locked"
+                                        null -> "Unknown"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (constellation.isActive == true) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
-                }
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            Text("Constellations", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            if (character.constellations.isEmpty()) {
-                ShowcaseUnavailable("Constellation details are not available.")
-            } else {
-                Row(
-                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    character.constellations.sortedBy { it.position ?: it.id }.forEach { constellation ->
-                        Column(
-                            modifier = Modifier.width(88.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            ShowcaseArtwork(
-                                constellation.icon,
-                                constellation.name ?: "Constellation",
-                                "C${constellation.position ?: constellation.id}",
-                                Modifier.size(54.dp)
-                            )
+                    character.constellations.firstOrNull {
+                        "constellation:${it.id}" == expandedDetailKey
+                    }?.let { constellation ->
+                        ShowcaseDetailSurface {
                             Text(
                                 constellation.name ?: "Constellation ${constellation.position ?: constellation.id}",
-                                fontSize = 10.sp,
-                                maxLines = 2
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 when (constellation.isActive) {
                                     true -> "Unlocked"
                                     false -> "Locked"
-                                    null -> "Unknown"
+                                    null -> "Unlock status unavailable"
                                 },
-                                fontSize = 10.sp,
-                                color = if (constellation.isActive == true) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            constellation.effect?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = MaterialTheme.typography.bodySmall)
+                            }
+                            constellation.enhancedEffect?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }
             }
         }
     }
+            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+            Text("Build inspection", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            when (val weapon = character.weapon) {
+                is DataValue.Available -> WeaponShowcaseRow(
+                    weapon.value,
+                    expanded = expandedDetailKey == "weapon",
+                    onClick = { toggleDetail("weapon") }
+                )
+                is DataValue.Stale -> WeaponShowcaseRow(
+                    weapon.value,
+                    stale = true,
+                    expanded = expandedDetailKey == "weapon",
+                    onClick = { toggleDetail("weapon") }
+                )
+                DataValue.Missing -> ShowcaseUnavailable("Weapon data was not included.")
+                DataValue.Unavailable -> ShowcaseUnavailable("Weapon data is unavailable.")
+                is DataValue.Failed -> ShowcaseUnavailable("Weapon data could not be read.")
+            }
+
+            when (val artifacts = character.artifacts) {
+                is DataValue.Available -> ArtifactShowcaseRow(
+                    artifacts.value,
+                    expandedDetailKey = expandedDetailKey,
+                    onArtifactSelected = ::toggleDetail
+                )
+                is DataValue.Stale -> ArtifactShowcaseRow(
+                    artifacts.value,
+                    stale = true,
+                    expandedDetailKey = expandedDetailKey,
+                    onArtifactSelected = ::toggleDetail
+                )
+                DataValue.Missing -> ShowcaseUnavailable("Artifact data was not included.")
+                DataValue.Unavailable -> ShowcaseUnavailable("Artifact data is unavailable.")
+                is DataValue.Failed -> ShowcaseUnavailable("Artifact data could not be read.")
+            }
+
+            ShowcaseExpandableSection(
+                title = "Attributes",
+                summary = if (character.selectedProperties.isEmpty()) "No attribute data" else "${character.selectedProperties.size} stats",
+                expanded = expandedDetailKey == "attributes",
+                onClick = { toggleDetail("attributes") }
+            ) {
+                if (character.selectedProperties.isEmpty()) {
+                    ShowcaseUnavailable("Character attributes are not available.")
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                        character.selectedProperties.take(12).forEach { stat ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stat.statName ?: "Unknown stat", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stat.final ?: stat.value ?: stat.add ?: stat.base ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
+            }
+
+
 }
 
 @Composable
-private fun WeaponShowcaseRow(weapon: com.irminsul.codex.domain.model.WeaponSnapshot, stale: Boolean = false) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        ShowcaseArtwork(weapon.icon, weapon.name ?: "Weapon", "⚔", Modifier.size(64.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(weapon.name ?: "Weapon #${weapon.id}", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-            Text(
-                "Lv. ${weapon.level ?: "—"} • Refinement ${weapon.refinementLevel ?: "—"} • ${weapon.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"}",
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+private fun ShowcaseExpandableSection(
+    title: String,
+    summary: String,
+    expanded: Boolean,
+    onClick: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick).padding(vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(summary, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(
+                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                contentDescription = if (expanded) "Collapse $title" else "Expand $title"
             )
-            if (stale) Text("Using older account data", fontSize = 10.sp, color = MaterialTheme.colorScheme.error)
+        }
+        if (expanded) ShowcaseDetailSurface(content)
+    }
+}
+
+private fun formatGameDescription(raw: String): String {
+    return raw
+        .replace("\\r\\n", "\\n")
+        .replace("\\n", "\n")
+        .replace(Regex("<color=[^>]*>", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("</color>", RegexOption.IGNORE_CASE), "")
+        .replace(Regex("<[^>]+>"), "")
+        .replace(Regex("\\{LINK#[^}]+}"), "")
+        .replace(Regex("\\{/LINK}"), "")
+        .replace(Regex("\\n{3,}"), "\\n\\n")
+        .trim()
+}
+
+@Composable
+private fun ShowcaseDetailSurface(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
+        content = content
+    )
+}
+
+@Composable
+private fun WeaponShowcaseRow(
+    weapon: com.irminsul.codex.domain.model.WeaponSnapshot,
+    stale: Boolean = false,
+    expanded: Boolean,
+    onClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                .background(if (expanded) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                .clickable(onClick = onClick)
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ShowcaseArtwork(weapon.icon, weapon.name ?: "Weapon", "⚔", Modifier.size(58.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp), modifier = Modifier.weight(1f)) {
+                Text(weapon.name ?: "Weapon #${weapon.id}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "Lv. ${weapon.level ?: "—"} • R${weapon.refinementLevel ?: "—"} • ${weapon.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (stale) Text("Using older account data", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+            }
+            Icon(
+                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                contentDescription = if (expanded) "Collapse weapon details" else "Expand weapon details"
+            )
+        }
+        if (expanded) {
+            ShowcaseDetailSurface {
+                weapon.typeName?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                weapon.description?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                weapon.mainProperty?.let { stat ->
+                    Text(
+                        "${stat.statName ?: "Main stat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                weapon.subProperty?.let { stat ->
+                    Text(
+                        "${stat.statName ?: "Secondary stat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Text(
+                    "Ascension ${weapon.ascensionLevel ?: "—"} • Level ${weapon.level ?: "—"} • Refinement ${weapon.refinementLevel ?: "—"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun ArtifactShowcaseRow(artifacts: List<com.irminsul.codex.domain.model.ArtifactSnapshot>, stale: Boolean = false) {
+private fun ArtifactShowcaseRow(
+    artifacts: List<com.irminsul.codex.domain.model.ArtifactSnapshot>,
+    stale: Boolean = false,
+    expandedDetailKey: String?,
+    onArtifactSelected: (String) -> Unit
+) {
     if (artifacts.isEmpty()) {
         ShowcaseUnavailable("No equipped artifact entries were returned.")
         return
     }
+    val orderedArtifacts = artifacts.sortedBy { it.slot ?: Int.MAX_VALUE }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Artifacts", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(9.dp)
         ) {
-            artifacts.sortedBy { it.slot ?: Int.MAX_VALUE }.forEach { artifact ->
+            orderedArtifacts.forEach { artifact ->
+                val key = "artifact:${artifact.id}"
                 Column(
-                    modifier = Modifier.width(76.dp),
+                    modifier = Modifier
+                        .width(72.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (expandedDetailKey == key) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .clickable { onArtifactSelected(key) }
+                        .padding(7.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    ShowcaseArtwork(artifact.icon, artifact.name ?: "Artifact", "◇", Modifier.size(62.dp))
-                    Text(artifact.slotName ?: artifact.name ?: "Artifact", fontSize = 10.sp, maxLines = 2)
-                    Text("+${artifact.level ?: "—"}", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    ShowcaseArtwork(artifact.icon, artifact.name ?: "Artifact", "◇", Modifier.size(48.dp))
+                    Text(artifact.slotName ?: artifact.name ?: "Artifact", style = MaterialTheme.typography.labelSmall, maxLines = 2)
+                    Text("+${artifact.level ?: "—"}", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
-        artifacts.sortedBy { it.slot ?: Int.MAX_VALUE }.forEach { artifact ->
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(artifact.name ?: artifact.slotName ?: "Artifact", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+        orderedArtifacts.firstOrNull { "artifact:${it.id}" == expandedDetailKey }?.let { artifact ->
+            ShowcaseDetailSurface {
+                Text(artifact.name ?: artifact.slotName ?: "Artifact", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(
+                    "${artifact.slotName ?: "Artifact slot"} • ${artifact.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"} • +${artifact.level ?: "—"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 artifact.mainProperty?.let { stat ->
                     Text(
                         "${stat.statName ?: "Main stat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
-                artifact.subProperties.forEach { stat ->
-                    Text(
-                        "${stat.statName ?: "Substat"}: ${stat.value ?: stat.final ?: stat.base ?: "—"}",
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                if (artifact.subProperties.isNotEmpty()) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    artifact.subProperties.forEach { stat ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(stat.statName ?: "Substat", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stat.value ?: stat.final ?: stat.base ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                        }
+                    }
                 }
             }
         }
-        if (stale) Text("Using older account data", fontSize = 10.sp, color = MaterialTheme.colorScheme.error)
+        if (stale) Text("Using older account data", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
     }
 }
 

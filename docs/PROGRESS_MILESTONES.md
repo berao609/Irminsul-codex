@@ -3615,3 +3615,80 @@ Room instrumentation tests were skipped in both runs because the workflow determ
 
 **Next action**
 Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and test independent character levels, all three talent tracks, each character's planned weapon and weapon levels, and an existing saved manual material plan. Confirm that saved values remain after leaving and reopening the planner and after restarting the app.
+
+### UI guideline platform-alignment correction
+
+**Status:** Documentation update committed; Android implementation unchanged.
+
+- Updated `docs/Irminsul Codex UI Design Instructions.md` to explicitly target native Kotlin, Jetpack Compose, and Material 3.
+- Preserved the visual direction: Archival Gold, neutral surfaces, restrained elemental accents, data-first typography, compact artifact inspection, dark backing for white game glyphs, and the symmetric five-slot navigation concept.
+- Replaced Flutter-specific theme, widget, asset, WebView, animation, haptics, and verification guidance with Android/Compose equivalents.
+- Clarified that the reserved fifth-shell position is layout space only until a real destination exists; no fake route or dead navigation item should be added.
+- Corrected the icon dependency boundary: the current app has Compose Material Icons Extended; a Lucide Compose dependency is not assumed or added.
+- Clarified that Compose UI/instrumentation testing must be based on the repository's actual test setup. CI JVM unit tests do not prove layout correctness, and device verification remains a separate evidence category.
+- No application source, Gradle dependencies, runtime behavior, or saved data were changed.
+
+**Commit:** `2372621ea4cbdbe611953e998ec6504cc00573c1`
+
+**Next action:** Resume M58 implementation. Continue the Materials Planner work using the corrected native Compose design guidance, preserving manual material rows and existing saved-plan compatibility. Keep source-permission restrictions from SPECS §3.18 in force; do not invent or bundle unapproved upgrade-cost data.
+
+### M58 planner presentation pass - native Compose
+
+**Status:** UI source committed; CI and device verification pending.
+
+- Reorganized the Materials Planner into a numbered flow: upgrade target, talent investment, planned weapon, and material requirements.
+- Increased section hierarchy and spacing, standardized form-control corner radii, and reduced repeated explanatory copy.
+- Reworked manual material rows into compact cards with a clear remaining-quantity result when both required and owned values are valid.
+- Kept blank owned quantities distinct from an explicit zero.
+- Preserved the existing target-specific SharedPreferences keys, talent/weapon persistence keys, manual row JSON fields, and save/load effects. The UI-only change does not introduce a new saved-plan schema.
+- Kept the automatic-cost status explicit. No unapproved source data or automatic cost claims were introduced.
+- No new dependencies were added.
+
+**Commit:** `a30e20ae6a46dbc17e07eba8a069cf4fb3fcc0a0`
+
+**Verification boundary:** The code change is committed. CI compilation/unit tests and a physical-device check are still required. The existing manual material rows and previously saved plan values must be checked on device after installing the new build.
+
+### Character Showcase progressive inspection pass
+
+**Status:** Compose implementation committed; CI and physical-device verification pending.
+
+- Replaced the always-expanded weapon, five-artifact stat dump, and full attribute list with tap-to-inspect interactions.
+- Weapon summary is compact by default. Tapping it reveals the weapon description, main/secondary stat, level, ascension, and refinement details.
+- Artifacts remain a compact horizontal five-slot row. Tapping one artifact reveals only that artifact's set item identity, slot, rarity, level, main stat, and substats. Other artifacts stay collapsed.
+- Attributes are collapsed behind a summary row and expand only when selected.
+- Talent and constellation icons remain compact and reveal their descriptions/effects when selected.
+- One shared selection state is used per character. Opening a different item switches the detail panel; tapping the active item again collapses it. Changing characters resets the open detail.
+- Stale equipment indicators and unavailable/missing data states remain visible.
+- No account model, source data, persistence schema, network behavior, or dependencies were changed.
+
+**Commit:** `d697496c312b6157d8b876463fe0147cea5896af`
+
+**Verification boundary:** Source change is committed. CI compilation and tests are pending. Physical-device verification must confirm tap targets, horizontal artifact scrolling, expanded stat readability, and Light/Dark appearance. The CI workflow does not by itself prove visual correctness on device.
+
+### Expandable character roster and collection controls
+
+**Status:** Compose implementation committed; CI and physical-device verification pending.
+
+- Replaced the always-visible horizontal character strip with a compact, expandable Character Roster header. The selected character's detailed showcase remains visible when the roster list is collapsed.
+- Expanded roster uses a compact three-column portrait grid and highlights the currently selected character.
+- Added name search and filters for element, weapon type, rarity, and minimum/maximum character level.
+- Added sorting by name, level, rarity, and friendship level, with ascending/descending order.
+- Filter choices are derived from the retrieved roster and weapon metadata. Missing weapon metadata is grouped as Unknown; numeric weapon type identifiers are displayed as source type codes rather than guessed weapon names.
+- Added a clear-filters action and an explicit no-results state.
+- Kept selection and character showcase details connected to the original character IDs. No account payload, persistence schema, networking, or dependencies were changed.
+
+**Commit:** `83ee34e5a997d7e036c58edc7178987ac1b1661a`
+
+**Verification boundary:** Source is committed. CI compilation/unit tests and physical-device layout/interaction checks are pending. Device checks should cover roster collapse/expand, portrait selection, all filter combinations, level boundaries, sort direction, empty results, and Light/Dark themes.
+
+### Showcase compact progression and description cleanup
+
+**Status:** Source committed; CI build in progress; weapon passive source still requires verification.
+
+- Moved talent and constellation icon groups into the compact character profile area directly following portrait/core identity, ahead of build inspection.
+- Added shared display cleanup for talent, constellation, enhanced descriptions, and weapon description text: strips markup, removes internal link syntax, converts escaped newline sequences, and reduces excessive blank lines. Original mapped data remains untouched.
+- Weapon passive is not added yet: current account mapper only maps weapon `desc`, which is not a verified combat-passive source. Do not display lore as a passive or fabricate refinement text.
+- No account schema or persisted data changes.
+
+**Commit:** `ff72b6414ad0e5f14b2d5feb0c507e1e5e022cd2`
+**CI:** Run #483 in progress.
