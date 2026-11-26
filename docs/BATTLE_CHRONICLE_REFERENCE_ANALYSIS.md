@@ -388,3 +388,20 @@ The following details are confirmed at the workflow level:
 The exact material categories, per-material inventory balance, and whether the weapon result screen also displays remaining and excess quantities have not been separately confirmed. Do not assume the character result's full balance presentation is identical for weapons without further observation.
 
 **Irminsul direction:** Reuse the local deterministic material-requirement calculation and result presentation patterns where appropriate, while keeping weapon requirements distinct from character and talent requirements. No automatic inventory synchronization.
+
+
+### 8.7 External item and material reference
+
+**Product decision:** Irminsul Codex may use the Genshin Impact Wiki as an external reference for explaining game resources, enhancement materials, and their uses. The app does not need to reproduce the Wiki's encyclopedia content locally.
+
+**Suggested interaction:** Make a material/resource name or its detail affordance open the corresponding Genshin Impact Wiki page. Prefer a direct item-specific page when the mapping is known; use a relevant category or general reference page only as a fallback. Keep the calculator's required quantities and inventory arithmetic inside Irminsul.
+
+**Boundary:** The Wiki is explanatory reference content, not a calculation engine or a runtime data dependency. Do not require live Wiki access for character/weapon material calculations. If a page cannot be opened, the calculator must still work.
+
+**Reference checked:** The Genshin Impact Wiki provides item/material classification and dedicated material pages, including character talent materials and character/weapon enhancement materials:
+- [Genshin Impact Wiki](https://genshin-impact.fandom.com/wiki/Genshin_Impact_Wiki)
+- [Material](https://genshin-impact.fandom.com/wiki/Material)
+- [Character Talent Material](https://genshin-impact.fandom.com/wiki/Character_Talent_Material)
+- [Character and Weapon Enhancement Materials](https://genshin-impact.fandom.com/wiki/Category:Character_and_Weapon_Enhancement_Materials)
+
+These pages confirm the Wiki is suitable as an explanatory reference. Exact URL resolution for each in-app resource should be handled deliberately and tested; do not construct arbitrary URLs from untrusted display strings.
