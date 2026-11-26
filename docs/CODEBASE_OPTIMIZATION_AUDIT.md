@@ -7,7 +7,7 @@
 - **Record purpose:** Track the phased codebase optimization audit independently of the development milestone history.
 - **Audit mode:** Read-only investigation until the consolidated audit plan is reviewed and the user separately authorizes implementation.
 - **Overall status:** In progress
-- **Current phase:** Part 9 - Consolidated optimization plan
+- **Current phase:** Audit complete - awaiting user review
 - **Last updated:** 2026-11-26
 
 ## 1. Objective
@@ -389,14 +389,74 @@ When resuming after a pause:
 ## 8. Current state and next action
 
 
-- **Overall audit status:** In progress.
-- **Current phase:** Part 9 - Consolidated optimization plan.
-- **Completed audit parts:** Parts 1, 2, 3, 4, 5, 6, 7, and 8.
-- **In-progress audit parts:** Part 9.
+- **Overall audit status:** Complete - awaiting user review.
+- **Current phase:** Audit complete - awaiting user review.
+- **Completed audit parts:** Parts 1, 2, 3, 4, 5, 6, 7, 8, and 9.
+- **In-progress audit parts:** None.
 - **Blocked items:** None.
 - **Application source changes made by this audit:** None.
-- **Current stopping point:** Part 8 coding-agent and development workflow review completed. No live workflow timing comparison or multi-agent benchmark was performed.
-- **Next action:** Consolidate all findings, resolve overlaps/dependencies, prioritize remediation, and propose a safe implementation sequence for Part 9.
+- **Current stopping point:** All nine audit parts completed. The consolidated plan is recorded below. No implementation has been authorized or performed.
+- **Next action:** User reviews the consolidated plan and decides whether to authorize a specific implementation batch.
+
+## Part 9 - Consolidated optimization plan (completed)
+
+### Scope and reconciliation
+- Consolidated app-code and build-relevant findings AUD-002 through AUD-010.
+- AUD-001 concerns a UID-like value in a publicly tracked HTML reference capture. It is outside the narrowed app-code/build optimization scope and is excluded from the remediation backlog. It must not be used to expand this audit into general documentation cleanup.
+- No duplicate findings were found among AUD-002 through AUD-010. AUD-003 is a specific export correctness issue; AUD-006 is a broader execution-context risk. AUD-007 is a release test-gate gap; it is distinct from the Debug workflow's existing selective test gate.
+- The priority labels below are remediation order, not claims of measured runtime impact. Static risks remain unmeasured where explicitly stated.
+- All recommendations remain unimplemented. The user must approve the chosen implementation scope before any app files are changed.
+
+### Prioritized remediation backlog
+
+| Order | Finding | Priority | Recommended action | Verification required |
+|---|---|---|---|---|
+| 1 | AUD-008 | High - credential protection | Replace ordinary SharedPreferences storage for the HoYoLAB session cookie with a Keystore-backed encrypted design compatible with minSdk 26. Keep non-sensitive preferences separate. Ensure explicit clear/sign-out removes persisted and in-memory credentials. | Verify raw token is not stored in plaintext; test save, restart, replacement, clear/sign-out, key/decryption failure, and confirm cookie destination remains restricted to HoYoLAB HTTPS endpoints. |
+| 2 | AUD-009 | High - data integrity | Add a real version-1-to-2 Room migration test using the exact legacy schema and representative records. Preserve Room schema exports in version control. | Test on-disk migration, byte-for-byte raw JSON reconstruction, metadata, ordering, multiple chunks, Unicode boundaries, and row integrity. Run in CI. |
+| 3 | AUD-003 | Medium - correctness; quick fix | Correct the document-save callback so a null output stream or any failed write cannot display a success message. Prefer a small testable helper around the write operation. | Test successful write, null stream, open failure, write failure, and success notification only after a completed write. |
+| 4 | AUD-006 | High - responsiveness risk; measure then fix | Move CPU-heavy export mapping, deterministic analysis, chunk preparation, and snapshot restoration mapping off the main thread using explicit injectable dispatchers. Keep Room operations on Room-managed dispatchers and preserve cancellation. | Capture baseline and post-change traces for cold import, cached restore, and full-roster analysis. Confirm main-thread responsiveness, cancellation, UI progress/error states, and deterministic output. |
+| 5 | AUD-007 | Medium - release reliability | Add a test gate to the Release workflow before publication. At minimum run unit tests against the tagged source. Decide whether Room instrumentation tests must also run for every release or whether the main-branch gate plus migration coverage is sufficient. | Demonstrate that a failing test blocks release publication; verify successful tagged release path in a controlled test workflow. |
+| 6 | AUD-005 | Medium - efficiency opportunity | Consider replacing eager character-card rendering with a lazy grid, but only after confirming parent/nested scroll constraints and preserving existing filter, sort, and selection behavior. | Compare composition count, scrolling smoothness, memory/frame timing with a large roster; regression-test filters, sorting, selection, and detail opening. |
+| 7 | AUD-002 | Medium - maintainability | Incrementally extract cohesive UI sections from MainActivity into feature files. Preserve state ownership and public behavior. Start with a self-contained section rather than a broad rewrite. | Build and run relevant UI flows after each extraction; compare behavior and keep diffs narrowly scoped. Avoid splitting solely by line count. |
+| 8 | AUD-004 | Low - lifecycle improvement | Use lifecycle-aware collection for the ViewModel StateFlow where appropriate, such as collectAsStateWithLifecycle. | Compile and verify state collection across foreground/background and activity recreation. |
+| 9 | AUD-010 | Low - workflow efficiency | Make AGENTS.md reading requirements conditional by task while keeping privacy, credential, test, cancellation, and Git safety rules unconditional. | Review revised instructions against representative UI, data, dependency, and release tasks; confirm no mandatory safety checks were weakened. |
+
+### Optional improvements, not required fixes
+- Add a Debug workflow concurrency group with cancellation of superseded runs only if older in-progress Debug artifacts do not need to be retained. Do not add paid runners.
+- Consider removing the direct lifecycle-runtime-ktx dependency only after confirming it is unused across all source sets and not needed by another declared dependency. Expected benefit is small.
+- Consider a Gradle Wrapper only if reproducible local setup across contributors becomes a requirement. Current CI pins Gradle explicitly and the user works primarily from Android/Termux; adding wrapper files is not necessary to fix a demonstrated defect.
+- Consider R8/minification only as a separate measured APK-size effort with keep-rule, signing, and release smoke-test coverage.
+- Collect Gradle task timing and APK-size baselines before making build-speed or size claims.
+
+### Recommended implementation batches and dependencies
+1. **Security and data integrity:** AUD-008 and AUD-009. Treat as separate focused changes, with credential lifecycle tests and migration fixtures/schema history.
+2. **Correctness and execution responsiveness:** AUD-003 and AUD-006. AUD-003 is a small isolated fix. For AUD-006, record baseline traces first, then change dispatching with injectable test dispatchers and cancellation coverage.
+3. **Release assurance:** AUD-007 after the relevant test tasks are reliable and the migration test is included in CI. Keep the Debug workflow's current selective instrumentation policy unless evidence supports changing it.
+4. **UI efficiency and maintainability:** AUD-005 and AUD-002. Assess nested scrolling and capture a baseline before replacing the grid; perform UI extraction incrementally, not as a single rewrite.
+5. **Low-risk workflow cleanup:** AUD-004 and AUD-010. These can be scheduled independently after the higher-risk changes.
+
+### Preserve; do not optimize without new evidence
+- Keep the single app module and current recognizable presentation/domain/data boundaries. No evidence justifies multi-module decomposition or a broad architecture rewrite.
+- Keep raw source JSON preservation, unknown-field retention, and the normalized account model. Their processing cost is an intentional trade-off for fidelity and offline analysis.
+- Keep the existing local-first snapshot restore and deterministic analysis path. Do not make cloud AI or a remote backend mandatory.
+- Keep the current initial API concurrency and sequential character-detail batching unless rate-limit and latency measurements justify a change.
+- Keep Room's chunked transactional storage and legacy fallback while strengthening migration verification.
+- Keep Debug persistent signing, separate Release signing, signature verification, temporary keystore cleanup, KVM detection, and emulator TCG fallback.
+- Do not remove Coil or extended Material icons based on name alone; the inspected UI uses them.
+- Do not upgrade AGP/Kotlin/Compose/Room as a blind version sweep. No specific compatibility failure was established.
+- Do not enable R8, add dependencies, add custom build logic, or introduce paid CI runners as part of routine cleanup.
+
+### Audit limitations and confidence
+- This was a static repository review. No app build, unit/instrumentation test suite, runtime profiler, large-account benchmark, real-device credential extraction, dynamic security scan, penetration test, production API test, or real version-1 database migration was executed as part of this audit.
+- AUD-006's main-thread execution paths are established by static inspection, but the degree of user-visible jank is unmeasured.
+- AUD-008 confirms plaintext-capable SharedPreferences usage, but no physical-device extraction test was performed.
+- AUD-009 confirms the absence of a visible migration test and committed schema history in the inspected repository tree; actual migration failure or data loss has not been demonstrated.
+- Optional performance/build improvements require before-and-after measurements. No speedup, memory reduction, or APK-size reduction is claimed.
+- The audit did not modify application source, tests, Gradle configuration, dependencies, workflows, AGENTS.md, or product specifications.
+
+### Part 9 activity log
+- 2026-11-26: Reconciled AUD-002 through AUD-010, excluded the out-of-scope documentation capture concern AUD-001, prioritized remediation, identified dependencies and verification criteria, and documented preservation/deferment decisions. Part 9 completed. Awaiting user review and explicit implementation authorization.
+
 
 ## 9. Audit completion criteria
 
