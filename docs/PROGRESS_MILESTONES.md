@@ -3247,7 +3247,7 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Restore the latest locally saved account snapshot and rebuild its deterministic analysis when the app opens, without repeating account JSON retrieval.  
-**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+**Status:** Implementation committed; CI verification passed; physical-device verification passed, with active-save cancellation retained as a follow-up.
 
 ### Active Memory Recall and repository verification
 
@@ -3734,7 +3734,7 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 
 ## Milestone 059 - HoYoLAB Credential Protection and Room Migration Integrity
 
-**Status:** Implementation committed; CI verification passed; physical-device verification pending.
+**Status:** Implementation committed; CI verification passed; physical-device verification passed.
 
 ### Implemented
 
@@ -3782,9 +3782,9 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 
 ### Verification boundary and next actions
 
-- CI verifies the credential-store instrumentation tests and version-1-to-2 Room migration test on an Android API 34 emulator. This does not replace a physical-device credential lifecycle check.
-- On device, verify existing legacy session migration on app launch, a fresh HoYoLAB login, app restart/session restoration, credential replacement, and Account-screen sign-out. Confirm the local Room snapshots remain available after sign-out.
-- Do not claim that an actual user's stored cookie has been migrated or inspected; no physical-device credential store inspection was performed.
+- CI verified the credential-store instrumentation tests and version-1-to-2 Room migration test on an Android API 34 emulator.
+- Physical-device checks passed: the saved session survived installation and app restarts; sign-out returned to login while the local character roster remained available; fresh login succeeded and remained connected after another restart.
+- The encrypted bytes stored on the physical device were not directly inspected. Encryption-at-rest behavior is covered by automated tests.
 ## Milestone 060 - JSON Export Save-Result Integrity
 
 **Status:** Implementation committed; CI verification pending; physical-device verification pending.
@@ -3811,8 +3811,69 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 - d4c0369295d788bf224d4a23a35fa78f0683fd14 - prevent false success on JSON export failure.
 - f2f83954342b8ffccbfc455774bf25eb209df676 - import the JSON document writer in MainActivity.
 
+### CI verification
+
+- CI runs #526, #527, #529, and final integrated run #530 passed. Run #528 failed before the final import/integration commits; the final run #530 passed on commit `ec38bc7895aa399b11e6c4da47e681cd6562860c`.
+- Final run: https://github.com/berao609/Irminsul-codex/actions/runs/45850549052
+
+### Physical-device verification
+
+- User confirmed the export flow is clear and the save result is understandable.
+- Follow-up observation: after saving begins, there is no cancel control. Add a safe cancellation action in a future relevant batch. This is a follow-up UX requirement, not a failure of the false-success fix.
+
+### Verification boundary
+
+- The automated writer tests cover successful UTF-8 output, null stream, open failure, write failure, and close failure.
+- The final integrated CI run passed. Do not claim that an in-progress write can currently be cancelled.
+
+## Milestone 061 - CPU-Bound Account Processing Dispatch
+
+**Status:** Implementation committed; CI verification passed; physical-device verification pending.
+
+### Implemented
+
+- Moved HoYoLAB export JSON-to-domain mapping to an injected CPU dispatcher, defaulting to `Dispatchers.Default`.
+- Moved deterministic account analysis in AccountViewModel to an injected CPU dispatcher.
+- Moved Room snapshot JSON chunk splitting, chunk joining, and restored snapshot mapping to an injected CPU dispatcher.
+- Kept Room DAO queries and transactions as suspend Room operations on Room-managed executors.
+- Preserved coroutine cancellation propagation.
+- Added tests confirming repository mapping, ViewModel analysis, and Room snapshot restoration mapping execute away from the caller thread.
+- Added cancellation coverage for export mapping.
+- No new dependencies, Room schema changes, export-format changes, or deterministic analysis rule changes.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/data/repository/HoYoLabAccountRepository.kt`
+- `app/src/main/java/com/irminsul/codex/data/local/repository/RoomAccountSnapshotStore.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/viewmodel/AccountViewModel.kt`
+- `app/src/test/java/com/irminsul/codex/data/repository/HoYoLabAccountRepositoryTest.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/viewmodel/AccountViewModelTest.kt`
+- `app/src/androidTest/java/com/irminsul/codex/data/local/RoomAccountSnapshotStoreTest.kt`
+
+### Implementation commits
+
+- `6f752366f7f16388bbc9425fb2c9e4053615514a` - dispatch export mapping.
+- `9f7ae9a737a151ebe5ff83dcee9f176efe0ef087` - test export mapping dispatcher and cancellation.
+- `c861864694c8cfa9662e4dd00d9b61b2b189c371` - dispatch snapshot chunk preparation and restoration mapping.
+- `d061d1a3777b068a85ef70ec3ebfba2135b2869c` - dispatch deterministic analysis.
+- `27be3508de96b886b8047d4dabe8639de6910020` - make analysis dispatcher injectable for tests.
+- `a04882154cf51234d364a74c0ef9fb748e72f374` - test analysis dispatcher.
+- `b1760fba239f83108c8cbc987493320d093ae5a4` - test Room restoration dispatcher.
+- `448d2823745bd169dcfb72f152f8d45d0ae8240f`, `3a88ba07452fac7c3236f687aa11487b5fcc509f`, `393e117c8112c87a604441e4f80cd0184dbf38e0` - correct off-caller thread assertions.
+- `d87193175dbd415328ef9d844aaa45b2267145ce` - keep ViewModel tests deterministic with an injected test dispatcher.
+- `9bc551fe1b59ff08c244fbb398d684a7973c01c8` - add missing instrumentation assertion import.
+
+### CI verification
+
+- **Run #541:** Passed unit tests, Debug APK build, Room schema verification, and APK signature verification. Room instrumentation tests were skipped because the run did not include an instrumentation-test source change.
+- **Run #542:** Passed all workflow steps on commit `9bc551fe1b59ff08c244fbb398d684a7973c01c8`, including unit tests, Room instrumentation tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload.
+  - Run: https://github.com/berao609/Irminsul-codex/actions/runs/45853412200
+  - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.542-vc544` (ID `15134681823`, SHA-256 `b0cf7d0f602c3f179f1f9580ecf8c18185be434a9c830f660a99e3b45a00086b`)
+  - Room schema artifact: `irminsul-room-schema-v2-run-542` (ID `15135495906`)
+
 ### Verification boundary and next actions
 
-- Source and test changes are committed to main.
-- CI compilation and unit-test results have not yet been observed. Do not treat the new tests as passing until the workflow confirms them.
-- Physical-device checks remain: save a valid export and confirm the file opens as valid UTF-8 JSON; cancel the picker; and, where reproducible, test a destination/provider that fails to open or write. Confirm no failure path displays the saved-file success message.
+- CI confirms unit and Android instrumentation tests, Debug APK packaging, Room schema verification, and APK signature verification.
+- No comparable baseline System Trace was captured before the dispatcher changes. No quantified speedup or frame-time improvement is claimed.
+- Physical-device checks remain: fresh account retrieval, app restart and cached snapshot restoration, full-roster deterministic analysis, and confirmation that the UI remains responsive during these operations.
+- Clear this milestone only after the physical-device checks are completed. The next optimization batch is AUD-007, Release test gate.
