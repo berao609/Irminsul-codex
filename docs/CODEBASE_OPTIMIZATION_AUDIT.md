@@ -7,7 +7,7 @@
 - **Record purpose:** Track the phased codebase optimization audit independently of the development milestone history.
 - **Audit mode:** Read-only investigation until the consolidated audit plan is reviewed and the user separately authorizes implementation.
 - **Overall status:** In progress
-- **Current phase:** Part 6 - Gradle, dependencies, build, and CI
+- **Current phase:** Part 9 - Consolidated optimization plan
 - **Last updated:** 2026-11-26
 
 ## 1. Objective
@@ -390,13 +390,13 @@ When resuming after a pause:
 
 
 - **Overall audit status:** In progress.
-- **Current phase:** Part 8 - Coding-agent and development workflow optimization.
-- **Completed audit parts:** Parts 1, 2, 3, 4, 5, 6, and 7.
-- **In-progress audit parts:** Part 8.
+- **Current phase:** Part 9 - Consolidated optimization plan.
+- **Completed audit parts:** Parts 1, 2, 3, 4, 5, 6, 7, and 8.
+- **In-progress audit parts:** Part 9.
 - **Blocked items:** None.
 - **Application source changes made by this audit:** None.
-- **Current stopping point:** Part 7 static test, reliability, and security review completed. No runtime penetration test, device compromise simulation, or migration execution against a real version-1 database was performed.
-- **Next action:** Review coding-agent instructions, repository automation, and developer workflow friction for Part 8.
+- **Current stopping point:** Part 8 coding-agent and development workflow review completed. No live workflow timing comparison or multi-agent benchmark was performed.
+- **Next action:** Consolidate all findings, resolve overlaps/dependencies, prioritize remediation, and propose a safe implementation sequence for Part 9.
 
 ## 9. Audit completion criteria
 
@@ -595,3 +595,33 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Part 7 activity log
 - 2026-11-26: Reviewed test inventory and representative parser/repository/ViewModel/Room tests, Room migration SQL and schema history, credential persistence, WebView cookie handling, network transport, manifest permissions, and CI test/schema gates. Recorded AUD-008 and AUD-009. Part 7 completed as static review; no app source/config/tests/workflows modified.
+
+
+## Part 8 - Coding-agent and development workflow optimization (completed)
+
+### Evidence inspected
+- Root `AGENTS.md` instructions for repository reading, architecture, privacy, testing, release, milestone, and Git safety.
+- Debug and Release GitHub Actions workflows.
+- `.gitignore`, Gradle configuration, and repository tree for automation/support scripts.
+- Existing audit findings from Parts 1-7 for cross-part workflow implications.
+
+### Finding AUD-010 - Agent instructions can cause unnecessary broad context loading and documentation churn
+- **Classification:** Low-priority workflow efficiency opportunity.
+- **Evidence:** Root `AGENTS.md` lists README, `docs/SPECS.md`, and `docs/PROGRESS_MILESTONES.md` as minimum reading before changing code, and separately requires milestone updates for each meaningful development milestone. It also requires `RELEASE_PROCESS.md` and `version.properties` for version/signing/release changes. The user has explicitly narrowed this optimization effort to app implementation/build behavior and asked that unrelated repository documentation not become audit targets.
+- **Impact:** If agents interpret every listed document as mandatory for every narrow app change, they may load unrelated context and produce unnecessary documentation edits. This increases task time and makes focused app work harder to review.
+- **Confidence:** Instruction text verified. Actual agent token/time overhead was not benchmarked.
+- **Recommendation:** In a later authorized AGENTS.md revision, make reading conditional by task: always inspect the directly affected source/tests/build files; read product specs for behavior/architecture changes; read version/release instructions only for version/signing/release changes; consult milestone history only when continuing or recording a development milestone. Keep the privacy, credential, test, cancellation, and Git safety rules unconditional. Do not modify AGENTS.md during this audit.
+- **Implementation status:** None.
+
+### Workflow observations (no confirmed defect)
+- Debug CI runs unit tests on every push and conditionally runs Room instrumentation tests for persistence, mapper, schema, and build-related changes, plus manual runs. This is a reasonable balance for free GitHub-hosted runners; retain the selective test gate.
+- The workflow uses `fetch-depth: 0` because it compares the push's before-SHA with the current SHA to determine whether Room tests are required. Do not reduce checkout depth unless the change-detection mechanism is replaced and tested.
+- Persistent Debug signing, unique run-number-based Debug versioning, signature verification, and artifact upload are automated. Release signing is separate, checkout credentials are not persisted, and temporary signing material is removed.
+- The Release workflow's missing test gate is already recorded as AUD-007 in Part 6; no duplicate finding was created.
+- The Debug workflow has no concurrency group. Rapid pushes can queue redundant builds. An optional branch-scoped concurrency group with `cancel-in-progress: true` could reduce wasted runner minutes, but only if cancelling older in-progress Debug builds is acceptable. Preserve the latest successful artifact requirement and do not add paid runners.
+- No repository-specific developer scripts or custom build-logic modules were identified in the inspected workflow/configuration file set. The one-module Gradle setup and version catalog are already straightforward.
+- `.gitignore` excludes generated Gradle/build outputs, local SDK configuration, APKs, keystores, and profiling dumps. No obvious generated-artifact tracking issue was found in the inspected rules.
+- No workflow execution-time baseline, runner queue analysis, or agent-effort benchmark was available. The above workflow opportunities are static assessments, not measured speedups.
+
+### Part 8 activity log
+- 2026-11-26: Reviewed agent instructions, Debug/Release workflows, build support files, ignore rules, and existing audit findings. Recorded AUD-010 and optional CI concurrency improvement. Part 8 completed as static review; no app source/config/tests/workflows or AGENTS.md modified.
