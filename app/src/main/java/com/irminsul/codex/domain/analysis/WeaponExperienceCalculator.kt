@@ -28,7 +28,9 @@ data class WeaponExperienceCalculationRequest(
 
 data class WeaponExperienceMaterialRequirement(
     val itemId: String,
-    val quantity: Long
+    val quantity: Long,
+    /** Source-provided label for candidate costs; null for locally named ore entries. */
+    val itemName: String? = null
 )
 
 data class WeaponExperienceCalculationResult(
