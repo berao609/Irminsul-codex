@@ -57,7 +57,7 @@ fun ToolsSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Icon(
+                AppIcon(
                     if (showMaterialsPlanner) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = if (showMaterialsPlanner) "Collapse Materials Calculator" else "Expand Materials Calculator"
                 )
@@ -88,7 +88,7 @@ fun ToolsSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Icon(
+                AppIcon(
                     if (showLineupSimulator) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = if (showLineupSimulator) "Collapse Lineup Simulator" else "Expand Lineup Simulator"
                 )
