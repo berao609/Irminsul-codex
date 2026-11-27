@@ -40,13 +40,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.outlined.DoorFront
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.InsertChart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -114,13 +110,6 @@ private enum class ThemeMode(val label: String, val preferenceValue: String) {
         fun fromPreference(value: String?): ThemeMode =
             entries.firstOrNull { it.preferenceValue == value } ?: SYSTEM
     }
-}
-
-private enum class CodexTab(val label: String) {
-    HOME("Home"),
-    VISUALS("Visuals"),
-    TOOLS("Tools"),
-    ACCOUNT("Account")
 }
 
 class MainActivity : ComponentActivity() {
@@ -363,54 +352,14 @@ private fun CodexScreen(
 
     Scaffold(
         bottomBar = {
-            Box {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 3.dp
-                ) {
-                    NavigationBarItem(
-                        selected = selectedTab == CodexTab.HOME,
-                        onClick = { selectedTab = CodexTab.HOME },
-                        icon = { Icon(Icons.Outlined.DoorFront, contentDescription = "Home") },
-                        label = { Text("Home", fontSize = 10.sp) },
-                        alwaysShowLabel = true
-                    )
-                    NavigationBarItem(
-                        selected = selectedTab == CodexTab.VISUALS,
-                        onClick = { selectedTab = CodexTab.VISUALS },
-                        icon = { Icon(Icons.Outlined.InsertChart, contentDescription = "Visuals") },
-                        label = { Text("Visuals", fontSize = 10.sp) },
-                        alwaysShowLabel = true
-                    )
-                    Spacer(Modifier.weight(1f))
-                    NavigationBarItem(
-                        selected = selectedTab == CodexTab.TOOLS,
-                        onClick = { selectedTab = CodexTab.TOOLS },
-                        icon = { Icon(Icons.Outlined.Build, contentDescription = "Tools") },
-                        label = { Text("Tools", fontSize = 10.sp) },
-                        alwaysShowLabel = true
-                    )
-                    NavigationBarItem(
-                        selected = selectedTab == CodexTab.ACCOUNT,
-                        onClick = {
-                            selectedTab = CodexTab.ACCOUNT
-                            showCredentials = true
-                        },
-                        icon = { Icon(Icons.Outlined.AccountCircle, contentDescription = "Account") },
-                        label = { Text("Account", fontSize = 10.sp) },
-                        alwaysShowLabel = true
-                    )
-                }
-                FloatingActionButton(
-                    onClick = { showAiSheet = true },
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = (-18).dp),
-                    shape = RoundedCornerShape(50),
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ) {
-                    Icon(Icons.Outlined.AutoAwesome, contentDescription = "Open AI assistant")
-                }
-            }
+            CodexBottomNavigationBar(
+                selectedTab = selectedTab,
+                onTabSelected = { tab ->
+                    selectedTab = tab
+                    if (tab == CodexTab.ACCOUNT) showCredentials = true
+                },
+                onOpenAi = { showAiSheet = true }
+            )
         }
     ) { innerPadding ->
     Column(
