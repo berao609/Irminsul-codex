@@ -122,7 +122,7 @@ internal fun WeaponEnhancementCalculatorSection(
     } else null
 
     val ascensionCalculation = if (
-        weapon.rarity in 4..5 &&
+        weapon.rarity != null && weapon.rarity in 4..5 &&
         weapon.ascensionLevel != null &&
         current != null && target != null &&
         current in 1..90 && target in current..90 &&
