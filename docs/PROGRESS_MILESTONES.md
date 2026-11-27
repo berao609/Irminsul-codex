@@ -4632,3 +4632,39 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Physical-device verification: pending user installation and Visuals dashboard checklist.
 
 **Result:** Visual Dashboard presentation is extracted and CI-verified. Device verification remains outstanding; no performance improvement is claimed.
+
+
+## Milestone 085 - Home-Only Visual Dashboard and Coverage Panel Removal
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Correct dashboard placement after device observation and simplify the dashboard presentation.
+
+**Implemented:**
+- Restricted VisualDashboardSection to the Home destination. It no longer appears on Visuals, Tools, or Account.
+- Removed the Account data coverage card from the Visual Dashboard.
+- Preserved the Home dashboard's no-analysis state, character assessment, recommendation count, and confirmed-gap metrics.
+- Kept Visuals account analysis and its existing recommendation/character content, Tools calculator, Account functions, and underlying analysis data unchanged.
+- Updated README navigation and feature descriptions.
+
+**Files changed:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/VisualDashboardSection.kt
+- README.md
+
+**Commits:**
+- 7e0f86b36126654f5bd2b35a1b8122928a8424e0 - restrict dashboard to Home.
+- a9fc65af97ea30c15a8a4b80f5a89c633a11bbf0 - remove dashboard coverage card.
+- 901100de487339238d8ec8957919ea9cfecc7e13 - update README.
+
+**Verification status:** Source changes committed. Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Home shows the Visual Dashboard exactly once.
+2. Dashboard has no Account data coverage card.
+3. Visuals has no Visual Dashboard; account analysis, recommendations, character showcase, and other Visuals content remain.
+4. Tools has no Visual Dashboard; Materials Calculator remains available and usable.
+5. Account has no Visual Dashboard; account settings and export remain available.
+6. Switch between all destinations and confirm content and scrolling remain correct.
+
+**Result:** Dashboard presentation is limited to Home and no longer includes the account data coverage panel. Automated and physical-device verification are pending.
