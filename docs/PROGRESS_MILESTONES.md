@@ -4724,7 +4724,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `app/src/main/java/com/irminsul/codex/MainActivity.kt`
 - `app/src/main/java/com/irminsul/codex/presentation/AccountDataExportSection.kt`
 
-**Verification status:** Source changes committed. CI and physical-device verification pending.
+**Verification status:** CI #767 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. User confirmed successful physical-device testing.
 
 **Device checklist:**
 1. Confirm the Account Data Export card appears only on Account when both UID and cookie are present.
@@ -4734,4 +4734,37 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 5. Confirm successful save and document-picker cancellation still report the correct result.
 6. Confirm Home, Visuals, Tools, navigation, and Materials Calculator remain unaffected.
 
-**Result:** Account Data Export presentation is separated from MainActivity. Export behavior remains screen-owned and unchanged; automated and physical-device verification are pending.
+**Result:** Account Data Export presentation is separated from MainActivity. Export behavior remains screen-owned and unchanged. CI #767 passed, and the user confirmed successful physical-device testing.
+
+
+## Milestone 088 - Centered First-Run Sign-In
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Simplify the first-launch sign-in experience.
+
+**Implemented:**
+- Added `presentation/InitialSignInSection.kt` with a centered, width-constrained sign-in card.
+- The initial Home screen now shows only the Irminsul Codex heading, short connection guidance, and the Sign in with HoYoLAB action, plus relevant loading or authentication error feedback.
+- Removed the Genshin UID field, HoYoLAB cookie field, divider, and Save & Sync button from the first-run card.
+- Kept manual UID/cookie entry and Save & Sync available from the Account destination as a recovery/fallback path.
+- Preserved embedded HoYoLAB WebView authentication, secure cookie storage, automatic UID detection, and Daily Note synchronization.
+- Updated the UID-detection failure message to direct the user to Account for manual entry.
+- No credential format, storage, API, account retrieval, navigation order, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/InitialSignInSection.kt`
+- `README.md`
+
+**Verification status:** Source committed. CI and physical-device verification pending.
+
+**Device checklist:**
+1. On a fresh install, confirm the sign-in card is centered in the available screen area.
+2. Confirm the initial card has no UID field, cookie field, divider, or Save & Sync button.
+3. Confirm Sign in with HoYoLAB opens the existing WebView login and automatic UID detection/sync still works.
+4. Confirm loading and authentication error feedback remains readable.
+5. Confirm Account still exposes manual UID/cookie entry and Save & Sync as fallback.
+6. Confirm existing signed-in startup, navigation, account export, and Materials Calculator remain unaffected.
+
+**Result:** First-run sign-in presentation is simplified; manual credential recovery remains available under Account. Automated and physical-device verification are pending.
