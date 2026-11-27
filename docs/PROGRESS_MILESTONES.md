@@ -4286,3 +4286,39 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Connect 4-star/5-star weapon selection and target-level controls to the user-facing calculator.
 
 **Result:** A tested-in-progress candidate foundation exists for ore-only enhancement of 4-star and 5-star weapons. It does not yet constitute a complete user-facing automatic weapon calculator.
+
+## Milestone 075 - Weapon Ascension Candidate Cost Calculator
+
+**Date recorded:** 2026-11-27  
+**Scope:** Add deterministic calculation for weapon ascension materials using the existing Genshin-DB candidate importer output. This increment does not approve candidate data or connect a production dataset to the Materials Planner.
+
+**Implemented:**
+- Added `WeaponAscensionCandidateCalculator` in the data/catalogue layer, reusing the existing `GenshinDbUpgradeCostCandidate` model and importer output.
+- Restricted calculations to 4-star and 5-star weapons.
+- Derives the ascension gates required by the selected target level and starts at the weapon's current ascension rank, so already-paid stages are not charged again.
+- Aggregates Mora, weapon ascension materials, and enemy drops by item ID across the required stages.
+- Preserves source material names for candidate display and rejects conflicting names for the same item ID.
+- Returns explicit incomplete, invalid, overlapping, and quantity-overflow states. Partial material totals are withheld when required candidate stages are missing or invalid.
+- Does not convert candidates into trusted `UpgradeCostRecord` values or bypass source permission and human review.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/catalogue/WeaponAscensionCandidateCalculator.kt` (new)
+- `app/src/test/java/com/irminsul/codex/data/catalogue/WeaponAscensionCandidateCalculatorTest.kt` (new)
+
+**Commits:**
+- `043b84004db12d5941bd0d3997f7d3ada917bc45`
+- `2c8a75a31bc76a6da850909605fbdd21e41c3348`
+
+**Verification status:**
+- CI #612: running at time of recording.
+- CI #613: running at time of recording.
+- Physical-device verification: not applicable to this data/domain-only increment; no visible UI behavior changed.
+
+**Remaining work:**
+- Provide a versioned offline candidate dataset for weapon ascension costs for 4-star and 5-star weapons.
+- Resolve material display metadata and source attribution/reuse review without promoting unapproved data.
+- Connect candidate weapon ascension costs with the ore-only EXP calculation in the Materials Planner, showing an explicit candidate/incomplete state.
+- Allow target levels beyond the currently unlocked ascension cap only when the plan includes the required ascension stages, while retaining correct per-phase EXP rounding.
+- Add an end-to-end regression test proving EXP ores, Mora, ascension materials, and enemy drops aggregate without double-counting Mora.
+
+**Result:** A deterministic stage-aware weapon ascension candidate calculator now exists and is covered by regression tests. It is not yet wired to a bundled weapon-cost dataset or the user-facing calculator.
