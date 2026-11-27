@@ -5225,3 +5225,44 @@ Reduce unnecessary repository context loading for narrow tasks without weakening
 
 ### Boundary
 This is an agent workflow instruction change. It does not alter application source, runtime behavior, build configuration, dependencies, or product architecture.
+
+
+## Milestone 104 - UI Revamp Batch 1: Design-System Foundation
+
+**Date recorded:** 2026-11-27  
+**Development phase:** UI Revamp - Batch 1  
+**Status:** Implemented on `ui-revamp/batch-1-design-foundation`; CI and physical-device verification pending.
+
+### Objective
+Establish the shared theme foundation for the agreed high-fidelity Battle Chronicles, anti-slop, Android-native UI direction without redesigning individual screens.
+
+### Implementation
+- Replaced the former teal Material 3 primary palette with Archival Gold for Dark (`#D3BC8E`) and Light (`#8E6E35`) themes.
+- Added coordinated Light/Dark surface, text, outline, and status color roles.
+- Added shared Light/Dark Genshin element and character-rarity semantic palettes.
+- Added `CodexDesignTokens.kt` with the shared 4/8dp spacing family, Material typography roles, standard shapes, and a tabular-numeric text style.
+- Integrated shared colors, typography, and shapes through `CodexAppTheme`.
+- Preserved existing System/Light/Dark selection, preference persistence, edge-to-edge setup, and system-bar icon handling.
+- No dependencies, SDK levels, screen layouts, navigation, account behavior, or calculation logic were changed.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/presentation/CodexThemeColors.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexDesignTokens.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexAppTheme.kt`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+- Source implementation: committed on the Batch 1 branch.
+- Debug build and automated tests: pending GitHub Actions.
+- APK artifact: pending.
+- Physical-device verification: pending user testing.
+
+### Device checklist
+1. Verify System, Light, and Dark appearance modes.
+2. Check primary actions and text contrast in both themes.
+3. Check system-bar icon contrast and edge-to-edge content.
+4. Confirm Home, Visuals, Tools, Account, and AI sheet still render and function.
+5. Confirm theme preference remains saved after restarting the app.
+
+### Boundary
+Theme and shared-token foundation only. No individual screen redesign is included in Batch 1.

@@ -4,8 +4,10 @@ import android.view.View
 import android.view.Window
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 
 @Composable
 internal fun CodexAppTheme(
@@ -21,10 +23,12 @@ internal fun CodexAppTheme(
     )
 
     MaterialTheme(
-        colorScheme = if (useDarkTheme) CodexDarkColors else CodexLightColors
+        colorScheme = if (useDarkTheme) CodexDarkColors else CodexLightColors,
+        typography = CodexTypography,
+        shapes = CodexShapes
     ) {
         Surface(
-            modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
             content()
