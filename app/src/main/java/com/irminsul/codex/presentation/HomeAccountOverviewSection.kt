@@ -56,7 +56,7 @@ fun HomeAccountOverviewSection(
                         modifier = Modifier.size(72.dp).clip(CircleShape),
                         contentScale = ContentScale.Crop,
                         loading = { ProfileAvatarFallback(accountProfile?.nickname) },
-                        error = { ProfileAvatarFallback(accountProfile.nickname) }
+                        error = { ProfileAvatarFallback(accountProfile?.nickname) }
                     )
                 } else {
                     ProfileAvatarFallback(accountProfile?.nickname)
