@@ -1105,7 +1105,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 **Files changed:**
 - `app/src/main/java/com/irminsul/codex/MainActivity.kt`
-- `app/src/main/java/com/irminsul/codex/CodexBottomNavigationBar.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexBottomNavigationBar.kt`
 
 **Static verification:**
 - MainActivity delegates bottom-bar rendering to the extracted composable.
