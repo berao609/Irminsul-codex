@@ -567,53 +567,6 @@ private fun CodexScreen(
             }
         }
 
-        if (selectedTab == CodexTab.TOOLS) {
-            Text("Tools", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-            Text(
-                "Calculators and utilities for account progression.",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            val materialCharacters = when (val value = accountExportState.snapshot?.characters) {
-                is DataValue.Available -> value.value
-                is DataValue.Stale -> value.value
-                else -> emptyList()
-            }
-            Card(
-                modifier = Modifier.fillMaxWidth().clickable {
-                    showMaterialsPlanner = !showMaterialsPlanner
-                },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Outlined.Build, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("Materials Calculator", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Automatically plan character and weapon upgrade materials",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Icon(
-                        if (showMaterialsPlanner) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                        contentDescription = if (showMaterialsPlanner) "Collapse Materials Calculator" else "Expand Materials Calculator"
-                    )
-                }
-            }
-            if (showMaterialsPlanner) {
-                MaterialsPlannerSection(
-                    characters = materialCharacters,
-                    preferences = prefs
-                )
-            }
-        }
-
         if (selectedTab == CodexTab.ACCOUNT) {
             Text("Account & settings", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
