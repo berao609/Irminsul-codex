@@ -4982,13 +4982,39 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `45123d072e4676c3c6fb32e2d0307d3acb06cb53` - add shared feedback presentation.
 - `39e0901c3ddda2cf69c1aefd68899e2fd5e53943` - delegate feedback rendering from MainActivity.
 
+**Verification status:** CI #811 (run `45966052224`) and CI #812 (run `45966055782`) passed. Unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload passed; Room instrumentation tests were skipped by workflow conditions. Integration Debug APK: `irminsul-codex-debug-v1.0.0-dev.812-vc814` (artifact ID `15182921675`). The user confirmed all physical-device checks clear, including loading feedback, error display/precedence, banner styling/placement, and all destinations.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+## Milestone 096 - Home Destination Composition Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 Batch 6 by extracting the Home destination composition from MainActivity.
+
+**Implemented:**
+- Added `presentation/HomeSection.kt` to compose the existing Home account overview, Daily Note, and Visual Dashboard sections in their original order.
+- MainActivity continues to derive and own roster count, server name, snapshot timestamp, credential availability, and all screen state.
+- Passed existing data and callbacks to HomeSection; UID/cookie, snapshot, Daily Note, loading/error, and intelligence state plus refresh/navigation orchestration remain in CodexScreen.
+- Reused existing presentation components without changing their internal behavior.
+- Preserved the Home destination condition, loading indicator placement, snapshot visibility, Daily Note sync/refresh behavior, and Visual Dashboard display.
+- No retrieval, mapping, persistence, analysis, navigation structure, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeSection.kt`
+
+**Commits:**
+- `760a08d6e08ef05fbbc4f1ff9e2e041245be272d` - extract Home destination composition.
+- `cf308f82ec5b571e8154e2f7a17baefce1e66eac` - delegate Home composition from MainActivity.
+
 **Verification status:** Source changes committed. Debug CI and physical-device verification pending.
 
 **Device checklist:**
-1. Trigger a Home refresh and verify the centered loading indicator appears only while loading before Daily Note data is available.
-2. Verify a general screen error displays the correct message.
-3. Verify an account-export error displays when no general screen error is present.
-4. If both error sources are present, confirm the general screen error takes precedence.
-5. Confirm banner styling/placement and all destinations remain functional.
+1. Verify Home account identity and snapshot summary with and without a saved snapshot.
+2. Verify Daily Note unavailable, loading, loaded, and refresh states.
+3. Verify the Visual Dashboard remains visible and populated/empty states are unchanged.
+4. Confirm Visuals, Tools, Account, navigation, AI placeholder, Materials Calculator, and Lineup Simulator remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
