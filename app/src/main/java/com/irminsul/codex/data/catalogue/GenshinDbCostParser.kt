@@ -39,13 +39,16 @@ data class CatalogueCostParseResult(
  */
 object GenshinDbCostParser {
 
+    // genshin-db's ascend1..ascend6 keys represent the six gated ascensions,
+    // not the character's initial level range. The first cost is paid at 20,
+    // and the sixth unlocks the final 80-to-90 progression.
     private val ascensionStages = linkedMapOf(
-        "ascend1" to (1 to 20),
-        "ascend2" to (20 to 40),
-        "ascend3" to (40 to 50),
-        "ascend4" to (50 to 60),
-        "ascend5" to (60 to 70),
-        "ascend6" to (70 to 80)
+        "ascend1" to (20 to 40),
+        "ascend2" to (40 to 50),
+        "ascend3" to (50 to 60),
+        "ascend4" to (60 to 70),
+        "ascend5" to (70 to 80),
+        "ascend6" to (80 to 90)
     )
 
     private val talentStages = (2..10).associate { "lvl$it" to ((it - 1) to it) }
