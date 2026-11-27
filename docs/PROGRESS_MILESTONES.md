@@ -4596,7 +4596,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 
 **Files changed:**
 - app/src/main/java/com/irminsul/codex/MainActivity.kt
-- app/src/main/java/com/irminsul/codex/CodexBottomNavigationBar.kt
+- app/src/main/java/com/irminsul/codex/presentation/CodexBottomNavigationBar.kt
 - docs/CODEBASE_OPTIMIZATION_AUDIT.md
 - docs/PROGRESS_MILESTONES.md
 
