@@ -6,17 +6,19 @@ Irminsul Codex is a native Android application for Genshin Impact account data r
 
 This file provides repository-wide instructions for AI coding agents and automated contributors. Follow it before making changes.
 
-## Required reading
+## Task-specific context retrieval
 
-Before changing code or project behavior, inspect the relevant current files. At minimum:
+Always read this file first. Then retrieve only the additional repository context that is relevant to the current task.
 
-1. `README.md` for the current product scope, implemented features, limitations, and roadmap.
-2. `docs/SPECS.md` for the agreed product and technical architecture.
-3. `docs/PROGRESS_MILESTONES.md` for completed work, verification evidence, outstanding checks, and the next development checkpoint.
-4. `version.properties` and `RELEASE_PROCESS.md` before changing application versions, signing, or release workflows.
-5. Relevant source files, tests, Gradle configuration, and GitHub Actions workflows for the task.
+- **Always:** Inspect the exact source files, tests, and configuration that the change can affect. Check the current branch and relevant recent commits before editing.
+- **Product behavior or user-facing UI:** Read the relevant README sections for implemented behavior, limitations, and navigation. Read `docs/SPECS.md` when the task changes agreed product behavior, architecture, data ownership, privacy, or technical boundaries.
+- **Architecture or data-model changes:** Read the relevant sections of `docs/SPECS.md`, plus the affected domain/data/presentation source and tests.
+- **Continuing existing work or recording a milestone:** Read the relevant entries in `docs/PROGRESS_MILESTONES.md` and the active audit/plan. Retrieve broader history only when it affects the change.
+- **Build, dependency, or CI changes:** Inspect the relevant Gradle files, version catalog, and affected GitHub Actions workflow. Check dependency use before adding, removing, or updating dependencies.
+- **Versioning, signing, or release changes:** Read `version.properties` and `RELEASE_PROCESS.md` before making changes.
+- **Narrow bug fixes or isolated refactors:** Do not load unrelated product specifications, release instructions, or the full milestone history when the affected source, tests, and directly relevant documentation provide sufficient context.
 
-Do not assume an earlier chat, plan, or milestone description is more current than the repository. Recheck files when the task changes.
+Do not skip a source or instruction that is relevant merely to reduce context. Do not read unrelated material merely because it exists. Reassess the required context when the task changes.
 
 ## Architecture and implementation principles
 

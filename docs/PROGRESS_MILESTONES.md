@@ -5168,7 +5168,7 @@ Composition extraction only. Theme selection, preference persistence, and screen
 
 **Date recorded:** 2026-11-27  
 **Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
-**Status:** Implemented and committed; CI and physical-device verification pending.
+**Status:** Implemented and committed; CI #852 passed; physical-device verification pending.
 
 ### Objective
 Move the existing root screen composable out of MainActivity while preserving its state ownership and behavior.
@@ -5196,3 +5196,32 @@ Move the existing root screen composable out of MainActivity while preserving it
 
 ### Boundary
 File/responsibility relocation only. Screen state ownership and behavior are unchanged. No performance improvement is claimed.
+
+
+## Milestone 103 - Agent Context Retrieval Efficiency
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Batch 8 - AUD-010 agent workflow efficiency  
+**Status:** Implemented and committed; CI verification pending.
+
+### Objective
+Reduce unnecessary repository context loading for narrow tasks without weakening project, privacy, testing, cancellation, or Git safety requirements.
+
+### Implementation
+- Replaced the blanket minimum-reading list in root `AGENTS.md` with task-specific context retrieval rules.
+- Kept relevant source/test inspection and current branch/commit checks mandatory.
+- Made README, technical specifications, milestone history, release instructions, Gradle configuration, and workflows conditional on the task they govern.
+- Explicitly requires agents to retrieve relevant context without loading unrelated documents.
+
+### Files changed
+- `AGENTS.md`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+- Static instruction review completed.
+- CI verification: pending.
+- Physical-device verification: not applicable; no app behavior changed.
+
+### Boundary
+This is an agent workflow instruction change. It does not alter application source, runtime behavior, build configuration, dependencies, or product architecture.

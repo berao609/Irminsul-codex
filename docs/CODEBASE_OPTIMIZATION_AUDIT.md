@@ -7,8 +7,8 @@
 - **Record purpose:** Track the phased codebase optimization audit independently of the development milestone history.
 - **Audit mode:** Investigation completed. Remediation is proceeding in separately authorized, focused implementation batches.
 - **Overall status:** In progress
-- **Current phase:** Remediation Batch 6 - AUD-002 (incremental UI responsibility extraction)
-- **Last updated:** 2026-11-26
+- **Current phase:** Remediation Batch 8 - AUD-010 (task-specific agent context retrieval)
+- **Last updated:** 2026-11-27
 
 ## 1. Objective
 
@@ -708,9 +708,9 @@ Closing this audit does not mean the application is perfect or that every option
 | 3 | AUD-006 CPU-heavy processing off main thread; AUD-011 Chronicle rendering follow-up | Cleared | CI #542 passed for processing and #555 passed for the Chronicle corrections. User confirmed responsive rendering, correct Account Overview statistics, working expandables, and no exposed technical IDs/URLs. |
 | 4 | AUD-007 Release test gate | CI passed; tagged-release path untested | CI #556 passed. The successful tagged-release publication path remains untested; no release was published. |
 | 5 | AUD-005 lazy roster grid | Cleared | CI #557 passed and user completed physical-device checks: grid scrolling, parent-page scrolling, filters, sorting, selection/detail updates, and responsiveness all worked. |
-| 6 | AUD-002 incremental UI extraction | In progress | Steps 1-8 cleared, including user-confirmed Step 8 device test; Step 9 Account Data Export extraction is implemented and awaiting CI/device verification. |
-| 7 | AUD-004 lifecycle-aware StateFlow collection | Not started | Low-risk lifecycle improvement. |
-| 8 | AUD-010 agent workflow efficiency | Not started | Keep safety and Git rules unconditional. |
+| 6 | AUD-002 incremental UI extraction | CI #852 passed; final physical-device verification pending | Steps 1-21 are cleared. Step 22 is implemented; CI #852 passed and Debug APK artifact is available. |
+| 7 | AUD-004 lifecycle-aware StateFlow collection | Implemented; CI #782 passed; device verification not recorded | Already present in current CodexScreen and lifecycle-runtime-compose dependency. No duplicate implementation needed. |
+| 8 | AUD-010 agent workflow efficiency | Implemented in current commit; CI pending | AGENTS.md now retrieves supporting context conditionally by task while retaining safety rules unconditionally. |
 
 ### Batch 1 - Credential protection and Room migration integrity
 
@@ -1587,3 +1587,48 @@ Closing this audit does not mean the application is perfect or that every option
 4. Verify Home, Visuals, Tools, Account, and AI entry remain functional.
 
 **Boundary:** File/responsibility relocation only. Screen state ownership and behavior are unchanged. No performance improvement is claimed.
+
+
+## Batch 6 verification reconciliation - 2026-11-27
+
+- Steps 1-21 are recorded as cleared in the active development history.
+- Step 22 root screen extraction is present at the verified `main` head before this update.
+- CI #852 passed for commit `eaa555d466d8e6c64e0ee6e58c84fd5091aea5f8`: unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload passed. Room instrumentation tests were skipped by workflow conditions.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.852-vc854` (artifact ID `15185432479`; SHA-256 `4fca07cacec30e25c5d8a7d1aeaf6579d5ba70a1a30b895ec05ca4fb1a6d8d32`).
+- Physical-device verification for Step 22 remains pending. Batch 6 must not be marked cleared until the user completes the consolidated device check.
+
+## Batch 7 - Lifecycle-aware UI state collection (AUD-004)
+
+**Status:** Implemented and committed; CI #782 passed; physical-device verification is not recorded.
+
+- The existing `AccountViewModel.uiState` collection now uses `collectAsStateWithLifecycle()` in `app/src/main/java/com/irminsul/codex/presentation/CodexScreen.kt`.
+- The app declares `androidx.lifecycle:lifecycle-runtime-compose` through the version catalog and app dependency.
+- Commit: `0109f00803b9c17017efdae2145995c41258a93b`.
+- CI #782 passed unit tests, Debug APK assembly, Room schema verification, signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions.
+- Workflow: https://github.com/berao609/Irminsul-codex/actions/runs/45956004485
+- Debug APK: `irminsul-codex-debug-v1.0.0-dev.782-vc784` (artifact ID `15178389176`; SHA-256 `af2d67255723ee8daccca38d83f8af2c16084b83f46902179cc4e1b6056a943b`).
+- This work was already present in the current branch. The previous tracker row saying "Not started" was stale; no duplicate code change was made during Batch 8.
+- Lifecycle behavior has not been independently device-verified in the available record. Do not claim that it has.
+
+## Batch 8 - Agent context retrieval efficiency (AUD-010)
+
+**Status:** Implemented in this commit; CI pending.
+
+**Change:**
+- Replaced the blanket minimum-reading list in root `AGENTS.md` with task-specific context retrieval rules.
+- Keeps `AGENTS.md`, relevant source/tests, branch/commit checks, privacy, credential handling, cancellation, testing, and Git safety requirements mandatory.
+- Makes README, SPECS, milestone history, release instructions, Gradle files, and workflows conditional on the task they govern.
+- Explicitly prevents both under-reading relevant material and loading unrelated repository context.
+- No application source, test, dependency, build, or workflow behavior changed.
+
+**Files changed:**
+- `AGENTS.md`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification:**
+- Static review of the revised instruction routing is complete.
+- CI and repository read-back verification are pending.
+- No app behavior or performance improvement is claimed.
+
+**Next action:** Verify the resulting CI run and read back the committed AGENTS.md/audit/milestone changes. Then continue with the next approved product-development batch; keep Batch 6 Step 22 device verification and Batch 7 device verification explicitly outstanding.
