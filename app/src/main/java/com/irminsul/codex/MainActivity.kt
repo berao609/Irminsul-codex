@@ -113,6 +113,7 @@ private enum class ThemeMode(val label: String, val preferenceValue: String) {
 private enum class CodexTab(val label: String) {
     HOME("Home"),
     VISUALS("Visuals"),
+    TOOLS("Tools"),
     ACCOUNT("Account")
 }
 
@@ -375,6 +376,13 @@ private fun CodexScreen(
                         label = { Text("Visuals", fontSize = 10.sp) },
                         alwaysShowLabel = true
                     )
+                    NavigationBarItem(
+                        selected = selectedTab == CodexTab.TOOLS,
+                        onClick = { selectedTab = CodexTab.TOOLS },
+                        icon = { Icon(Icons.Outlined.Build, contentDescription = "Tools") },
+                        label = { Text("Tools", fontSize = 10.sp) },
+                        alwaysShowLabel = true
+                    )
                     Spacer(Modifier.weight(1f))
                     NavigationBarItem(
                         selected = selectedTab == CodexTab.ACCOUNT,
@@ -426,14 +434,6 @@ private fun CodexScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-            TextButton(onClick = {
-                selectedTab = CodexTab.ACCOUNT
-                showCredentials = true
-            }) {
-                Icon(Icons.Outlined.AccountCircle, contentDescription = null)
-                Spacer(Modifier.width(6.dp))
-                Text("Account")
             }
         }
 
@@ -866,7 +866,21 @@ private fun CodexScreen(
                 )
             }
 
-            val materialCharacters = lineupCharacters
+
+        }
+
+        if (selectedTab == CodexTab.TOOLS) {
+            Text("Tools", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                "Calculators and utilities for account progression.",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            val materialCharacters = when (val value = accountExportState.snapshot?.characters) {
+                is DataValue.Available -> value.value
+                is DataValue.Stale -> value.value
+                else -> emptyList()
+            }
             Card(
                 modifier = Modifier.fillMaxWidth().clickable {
                     showMaterialsPlanner = !showMaterialsPlanner
@@ -881,16 +895,16 @@ private fun CodexScreen(
                 ) {
                     Icon(Icons.Outlined.Build, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("Materials Planner", fontWeight = FontWeight.SemiBold)
+                        Text("Materials Calculator", fontWeight = FontWeight.SemiBold)
                         Text(
-                            "Plan character and weapon upgrades",
+                            "Automatically plan character and weapon upgrade materials",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Icon(
                         if (showMaterialsPlanner) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                        contentDescription = if (showMaterialsPlanner) "Collapse Materials Planner" else "Expand Materials Planner"
+                        contentDescription = if (showMaterialsPlanner) "Collapse Materials Calculator" else "Expand Materials Calculator"
                     )
                 }
             }
