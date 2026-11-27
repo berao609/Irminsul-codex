@@ -1355,7 +1355,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 14: Visuals destination presentation extraction
 
-**Status:** Implemented and committed; CI and physical-device verification pending.
+**Status:** Cleared after CI #810 and user-confirmed physical-device verification.
 
 **Implementation:**
 - Added `presentation/VisualsSection.kt` to own the Visuals destination composition: Account Chronicle sections, Character Showcase and its empty state, and Account Analysis.
@@ -1378,5 +1378,34 @@ Closing this audit does not mean the application is perfect or that every option
 3. Verify Character Showcase roster, selection, and empty state.
 4. Verify Account Analysis refresh action, progress/error states, recommendation display, and credential gating.
 5. Confirm Home dashboard and Daily Note, Tools calculators and Lineup Simulator, Account settings/export, navigation, and AI placeholder remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 15: Shared screen feedback presentation extraction
+
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Added `presentation/ScreenFeedbackSections.kt` with `ScreenErrorBanner` and `HomeInitialLoadingIndicator`.
+- MainActivity now delegates the shared error card and Home's initial loading indicator to these presentation components.
+- Preserved the existing error-message precedence (general screen error before account-export error), banner colors, shape, text styling, and padding.
+- Preserved the loading condition exactly: Home destination, loading active, and no Daily Note available. The centered indicator and vertical spacing remain unchanged.
+- No error-state ownership, loading state, retrieval, account data, navigation, or calculator behavior changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ScreenFeedbackSections.kt`
+
+**Commits:**
+- `45123d072e4676c3c6fb32e2d0307d3acb06cb53` - add shared feedback presentation.
+- `39e0901c3ddda2cf69c1aefd68899e2fd5e53943` - delegate feedback rendering from MainActivity.
+
+**Verification required:**
+1. Confirm Debug CI compilation, unit tests, APK assembly, Room schema verification, APK signature verification, and artifact upload.
+2. Trigger a Home refresh and verify the centered loading indicator appears only while loading before Daily Note data is available.
+3. Verify general errors and account-export errors still show the correct message, with general error precedence when both exist.
+4. Confirm the error banner styling and placement remain unchanged.
+5. Confirm Home dashboard, Visuals, Tools, Account, navigation, and AI placeholder remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
