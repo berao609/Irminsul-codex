@@ -5134,7 +5134,7 @@ Run Debug CI, inspect the resulting artifact, and verify status/navigation bar i
 
 **Date recorded:** 2026-11-27  
 **Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
-**Status:** Implemented and committed; CI and physical-device verification pending.
+**Status:** Implemented, committed, CI #845 passed, and physical-device verified by user.
 
 ### Objective
 Extract the existing app-level theme composition from MainActivity without changing theme behavior.
