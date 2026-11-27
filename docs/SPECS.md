@@ -2178,3 +2178,149 @@ The latest successfully persisted account snapshot is the startup source for the
 - Switching to a different UID must not display the previous account's snapshot while the new UID is being restored.
 - Credentials are not added to Room or to the snapshot-store interface.
 - Raw account JSON must not be stored or queried as one large SQLite text value. Persist it as bounded chunks (32 KiB per text row) keyed by snapshot ID, and reassemble chunks in index order when restoring. Existing version-1 snapshot rows must be migrated in SQLite using `substr()` so the full legacy JSON is never materialized through Android `CursorWindow` during migration. Keep snapshot metadata queries independent of JSON content.
+
+---
+
+## 23. Runtime Execution and Data-Flow Contract
+
+This section makes the runtime benefits of the architecture explicit. It complements the existing layer, storage, synchronization, AI, and testing requirements. It does not prescribe a new package tree, screen inventory, or wholesale migration.
+
+### 23.1 Default application flow
+
+Use this responsibility flow as the default mental model:
+
+```text
+Compose UI
+   ↓ user actions / observed UI state
+ViewModel
+   ↓
+Domain use cases and rules
+   ↓ repository contracts
+Repository implementations
+   ├── Local data sources (Room, DataStore, cache)
+   └── External data sources (HoYoLAB, selected AI provider)
+   ↓
+Validation, mapping, and normalized domain data
+   ↓
+ViewModel state
+   ↓
+Compose UI
+```
+
+The flow is a responsibility model, not a requirement that every request pass through a separately named class at every stage. Small workflows may use fewer abstractions when the boundaries remain clear and testable.
+
+- Composables render state, collect user input, and invoke callbacks.
+- ViewModels own screen state and coordinate use cases. They do not become repositories or domain engines.
+- Domain use cases express application actions and rules without Android UI or provider dependencies.
+- Repository contracts define application-facing data operations.
+- Repository implementations coordinate local and remote sources and preserve source status and provenance.
+- Data sources handle storage or transport mechanics.
+- Mappers validate external/persisted representations before exposing normalized data.
+- The application composition root wires implementations. Dependencies should remain explicit and replaceable in tests.
+
+### 23.2 UI state and event handling
+
+Use MVVM with unidirectional data flow as the default Compose interaction pattern:
+
+1. The ViewModel exposes an immutable observable screen state.
+2. The UI renders that state.
+3. User interaction is sent to the ViewModel as an action or method call.
+4. The ViewModel invokes the relevant use case and publishes the resulting state.
+5. One-time effects, such as navigation or a transient message, are not stored as if they were durable account state.
+
+Prefer StateFlow or the repository's established observable state mechanism for durable screen state. Collect it with lifecycle-aware APIs. Avoid duplicating authoritative account data in Composables or maintaining separate competing copies in multiple ViewModels.
+
+Screen state should represent loading, content, empty, stale, partial, and failure conditions without conflating them. Do not replace useful cached content with a full-screen loading state during an ordinary refresh.
+
+### 23.3 Cache-first startup and refresh
+
+When a valid local snapshot exists:
+
+1. Load and render the last usable local state promptly.
+2. Expose its retrieval time and freshness.
+3. Start remote refresh independently when appropriate.
+4. Validate each returned section before updating its local record.
+5. Publish successful section updates without erasing unrelated valid sections.
+6. Preserve the last-known-good value when refresh fails.
+7. Report which sections refreshed, remained stale, were unavailable, or failed.
+
+This is a stale-while-revalidate behavior, not permission to label stale data as current. A cache miss, corrupt cache, incompatible schema, expired credentials, or failed migration must have an explicit recovery path. Cache retention and pruning must follow the storage policy in Section 8.
+
+Do not trigger repeated full account downloads merely because a screen recomposes or a user revisits a destination. Synchronization must have an explicit owner and trigger, deduplicate overlapping work where appropriate, and respect source rate limits.
+
+### 23.4 Coroutine, threading, and lifecycle rules
+
+- Network and disk operations must not block the main thread.
+- Use appropriate coroutine dispatchers for blocking I/O and CPU-heavy transformations. Keep dispatcher selection injectable or otherwise controllable in tests where it materially improves testability.
+- Keep CPU-heavy parsing, normalization, and calculations off the main thread when their cost can affect responsiveness.
+- Preserve structured concurrency. Child work should have a clear owner and cancellation boundary.
+- Propagate CancellationException; do not swallow it in broad exception handlers or report it as an API failure.
+- Cancel obsolete refreshes, searches, and AI streams when superseded or no longer needed.
+- Do not use unmanaged global scopes for screen- or request-owned work.
+- Bound parallel requests and respect HoYoLAB rate limits. Concurrency must not become an excuse to overload unofficial endpoints.
+- Expose progress and section outcomes where they help the user understand long-running work.
+
+### 23.5 Repository, source, and cache consistency
+
+A repository is the application-facing coordinator for a data capability. It should not become a catch-all object for unrelated features.
+
+- Keep local and remote data-source contracts independently testable.
+- Define which source is authoritative for each field or section.
+- Validate remote data before persistence and before publishing it to observers.
+- Preserve provenance, schema/version, and retrieval timestamps where required by the unified model.
+- Do not overwrite a good local value with malformed, incomplete, or older data unless an explicit reconciliation rule allows it.
+- Make snapshot completion criteria explicit. Partial section refreshes must not be recorded as complete snapshots.
+- Keep mapping and compatibility logic close to the data boundary, not scattered through UI code.
+- Keep Room entities and transport DTOs distinct from domain models when their lifecycle or schema differs.
+
+### 23.6 Dependency composition and project scale
+
+The initial application remains a single Gradle module. Establish responsibility boundaries through packages and interfaces before considering module extraction.
+
+Prefer a small, explicit application container/composition root for wiring repositories, data sources, and services. Manual dependency construction is the default unless actual complexity justifies an established lightweight alternative. Do not add Hilt, Koin, KSP, or another framework solely because a blueprint names it.
+
+Use existing compatible HTTP, coroutine, persistence, and serialization libraries where possible. Before adding or replacing a dependency, inspect current usage, maintenance status, compatibility, APK/build impact, and whether the same need can be met by the existing stack.
+
+A module or framework change requires a concrete benefit such as enforced dependency boundaries, materially improved build performance, independently reusable code, or reduced maintenance cost. Directory aesthetics alone are not sufficient.
+
+### 23.7 Typed models and serialization evolution
+
+Use typed Kotlin models at stable boundaries and keep raw source payloads separate from normalized application data.
+
+- Evolve legacy JSON parsing incrementally rather than performing a risky all-at-once rewrite.
+- Introduce serialization changes behind tested mappers and versioned contracts.
+- Preserve unknown fields or source payloads when required for forward compatibility, debugging, or lossless export.
+- Keep export compatibility explicit. A breaking export change requires a format-version change and migration/compatibility tests.
+- Do not expose raw transport DTOs as long-lived UI state.
+- Do not discard fields merely because the current screen does not display them.
+
+### 23.8 AI request lifecycle
+
+The AI path follows the same separation principles as account retrieval:
+
+1. The user action and selected context reach the assistant ViewModel.
+2. The context builder selects only relevant normalized account facts, deterministic results, and permitted trusted knowledge.
+3. The orchestrator selects the configured provider and checks its declared capabilities.
+4. The provider adapter maps the request to its transport protocol.
+5. A streaming response, when supported, is emitted incrementally and can be cancelled immediately.
+6. The UI presents partial output, completion, or a recoverable error without confusing an interrupted stream with a completed answer.
+
+Provider-specific request/response types must remain inside adapters. Streaming must not be assumed for every provider. Context must retain relevant timestamps, source provenance, assumptions, and unknown states. AI output is explanatory and advisory; it does not mutate account facts or replace deterministic calculations.
+
+### 23.9 Runtime acceptance checks
+
+For changes that affect these workflows, select the relevant checks rather than running an unrelated full audit:
+
+- Cached data appears before or independently of remote refresh when a usable snapshot exists.
+- Refresh failure preserves the last-known-good data and reports the failed section.
+- Partial success updates only validated successful sections.
+- Stale data is visibly distinguishable from fresh data.
+- Recomposition does not start duplicate network or calculation work.
+- Leaving or superseding a workflow cancels work that no longer has an owner.
+- Cancellation is not surfaced as an ordinary error.
+- CPU-heavy or blocking work does not run on the main thread.
+- Provider streaming can be stopped and does not continue after cancellation.
+- Tests can substitute repositories, dispatchers, and provider adapters without live credentials.
+- Existing navigation, account behavior, export compatibility, and UI design decisions remain intact unless explicitly changed by the task.
+
+These are behavioral requirements. They do not require a particular ViewModel class name, cache library, DI framework, or fixed directory structure.
