@@ -328,6 +328,11 @@ data class AccountSnapshotFreshnessReport(
     val invalidTimestampCount: Int get() = sections.count { it.status == SectionFreshnessStatus.INVALID_TIMESTAMP }
 }
 
+data class StygianOnslaughtSnapshot(
+    val bestRecordName: String?,
+    val difficulty: String?
+)
+
 data class AccountSnapshot(
     val identity: AccountIdentity,
     val metadata: SnapshotMetadata,
@@ -342,6 +347,8 @@ data class AccountSnapshot(
     val spiralAbyssPrevious: DataValue<StructuredData>,
     val imaginariumTheater: DataValue<StructuredData>,
     val sections: Map<String, AccountSectionMetadata>,
+    /** Stygian Onslaught summary mapped from the Battle Chronicle index stats. */
+    val stygianOnslaught: DataValue<StygianOnslaughtSnapshot> = DataValue.Missing,
     val characterCollectionIntegrity: CharacterCollectionIntegrity = CharacterCollectionIntegrity(),
     val characterBuildValidation: DataValue<CharacterBuildValidationReport> = DataValue.Missing,
     val characterStatReconciliation: DataValue<CharacterStatReconciliationReport> = DataValue.Missing,
