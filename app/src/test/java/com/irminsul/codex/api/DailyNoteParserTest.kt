@@ -26,7 +26,12 @@ class DailyNoteParserTest {
                   "current_home_coin": 1800,
                   "max_home_coin": 2400,
                   "current_expedition_num": 5,
-                  "max_expedition_num": 5
+                  "max_expedition_num": 5,
+                  "transformer": {
+                    "obtained": true,
+                    "reached": false,
+                    "recovery_time": {"Day": 1, "Hour": 2, "Minute": 3, "Second": 4}
+                  }
                 }
                 """.trimIndent()
             )
@@ -44,6 +49,9 @@ class DailyNoteParserTest {
         assertEquals(2400, note.maxHomeCoin)
         assertEquals(5, note.currentExpeditionNum)
         assertEquals(5, note.maxExpeditionNum)
+        assertTrue(note.transformerObtained!!)
+        assertFalse(note.transformerReached!!)
+        assertEquals(93_784L, note.transformerRecoveryTimeSeconds)
     }
 
     @Test
@@ -76,6 +84,9 @@ class DailyNoteParserTest {
         assertNull(note.maxHomeCoin)
         assertNull(note.currentExpeditionNum)
         assertNull(note.maxExpeditionNum)
+        assertNull(note.transformerObtained)
+        assertNull(note.transformerRecoveryTimeSeconds)
+        assertNull(note.transformerReached)
     }
 
     @Test
@@ -91,4 +102,26 @@ class DailyNoteParserTest {
         assertNull(note.resinRecoveryTime)
         assertNull(note.isExtraTaskRewardReceived)
     }
+    @Test
+    fun preservesReadyParametricTransformerState() {
+        val note = DailyNoteParser.parse(
+            JSONObject("""{"transformer":{"obtained":true,"reached":true,"recovery_time":{"Day":0,"Hour":0,"Minute":0,"Second":0}}}""")
+        )
+
+        assertTrue(note.transformerObtained!!)
+        assertTrue(note.transformerReached!!)
+        assertEquals(0L, note.transformerRecoveryTimeSeconds)
+    }
+
+    @Test
+    fun malformedTransformerCooldownRemainsUnavailable() {
+        val note = DailyNoteParser.parse(
+            JSONObject("""{"transformer":{"obtained":true,"reached":false,"recovery_time":{"Day":0,"Hour":24,"Minute":0,"Second":0}}}""")
+        )
+
+        assertTrue(note.transformerObtained!!)
+        assertFalse(note.transformerReached!!)
+        assertNull(note.transformerRecoveryTimeSeconds)
+    }
+
 }
