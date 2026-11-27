@@ -4757,7 +4757,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `app/src/main/java/com/irminsul/codex/presentation/InitialSignInSection.kt`
 - `README.md`
 
-**Verification status:** Source committed. CI and physical-device verification pending.
+**Verification status:** CI #774 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. User confirmed successful physical-device testing.
 
 **Device checklist:**
 1. On a fresh install, confirm the sign-in card is centered in the available screen area.
@@ -4767,4 +4767,36 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 5. Confirm Account still exposes manual UID/cookie entry and Save & Sync as fallback.
 6. Confirm existing signed-in startup, navigation, account export, and Materials Calculator remain unaffected.
 
-**Result:** First-run sign-in presentation is simplified; manual credential recovery remains available under Account. Automated and physical-device verification are pending.
+**Result:** First-run sign-in presentation is simplified; manual credential recovery remains available under Account. CI #774 passed and the user confirmed successful physical-device testing.
+
+
+## Milestone 089 - Lineup Simulator Relocation to Tools
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Move the existing Lineup Simulator from Visuals to Tools without changing its behavior.
+
+**Implemented:**
+- Removed the collapsible Lineup Simulator card and content from Visuals.
+- Added the same collapsible simulator to Tools, alongside Materials Calculator.
+- Preserved the four-character selection limit, selection order, removal/toggle behavior, roster-derived character data, element summary, and stale/partial roster warnings.
+- Kept lineup selection and expansion state screen-owned. No persistence or team-analysis capability was added.
+- Updated README navigation and feature descriptions.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `README.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** Source committed. CI and physical-device verification pending.
+
+**Device checklist:**
+1. Confirm Lineup Simulator is absent from Visuals.
+2. Confirm Lineup Simulator appears in Tools alongside Materials Calculator.
+3. Confirm expanding/collapsing the simulator works.
+4. Confirm owned character portraits, four slots, add/remove behavior, and element summary work.
+5. Confirm stale/partial roster warnings remain visible when applicable.
+6. Confirm switching tabs preserves the expected selection state.
+7. Confirm Materials Calculator and the remaining tabs still work.
+
+**Result:** Lineup Simulator is now grouped with the app's calculators and utilities in Tools. Its existing selection behavior and trust limitations are unchanged.
