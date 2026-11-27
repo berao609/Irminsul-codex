@@ -5311,3 +5311,52 @@ Reconstruct Home as a coherent, touch-first account landing page using the share
 
 ### Boundary
 Home presentation only. No account retrieval, persistence, data model, analysis, navigation architecture, dependency, or SDK changes.
+
+
+## Milestone 106 - Home Profile Identity and Parametric Transformer
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Home follow-up  
+**Status:** Implemented on `main`; automated verification pending; physical-device verification pending.
+
+### Requested changes
+- Replace the Home Weekly Discounts metric with the Parametric Transformer cooldown.
+- Show the signed-in Genshin IGN, UID, HoYoLAB profile avatar, and game server in the Adventurer Profile surface.
+
+### Implementation
+- Daily Note parsing now preserves transformer ownership, reached state, and validated `Day/Hour/Minute/Second` recovery time. Missing or malformed values remain unavailable.
+- The Home transformer metric displays Not obtained, cooldown remaining, Ready, or an explicit unavailable state. A local Compose countdown ticks once per second from the last server-reported cooldown; refresh remains the source of truth.
+- Added best-effort HoYoLAB profile retrieval using the game record card for IGN/server/UID and the community user profile for `avatar_url`. Avatar failure does not hide valid game identity.
+- The Home profile card now shows the profile image with an initials fallback, IGN, UID, and readable server name.
+- Profile retrieval runs alongside the existing Daily Note refresh workflow. Clearing credentials clears the in-memory profile.
+- Added parser tests for transformer ready/cooldown/malformed states and account profile mapping.
+- Updated README Home feature description.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
+- `app/src/main/java/com/irminsul/codex/api/DailyNoteParser.kt`
+- `app/src/main/java/com/irminsul/codex/api/AccountProfileParser.kt` (new)
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreen.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeAccountOverviewSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeDailyNoteSection.kt`
+- `app/src/test/java/com/irminsul/codex/api/DailyNoteParserTest.kt`
+- `app/src/test/java/com/irminsul/codex/api/AccountProfileParserTest.kt` (new)
+- `README.md`
+
+### Verification
+- Source changes committed; exact current main SHA to be confirmed after CI.
+- Unit tests and Debug APK build: pending.
+- APK artifact: pending.
+- Physical-device verification: pending.
+
+### Device checklist
+1. Confirm IGN, UID, profile avatar, and server appear after login and remain after app restart.
+2. Confirm avatar fallback works if the profile image cannot load.
+3. Confirm account switching and sign-out do not show the previous account's profile.
+4. Confirm Parametric Transformer states: not obtained, cooldown, ready, and unavailable.
+5. Confirm cooldown ticks down and refresh reconciles it with the server response.
+6. Confirm Weekly Discounts is no longer displayed and the rest of Daily Note remains intact.
+
+### Boundary
+Home/profile and Daily Note presentation/data mapping only. No account snapshot schema, analysis engine, navigation, dependencies, or SDK changes.
