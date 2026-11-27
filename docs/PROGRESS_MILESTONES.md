@@ -4239,3 +4239,50 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Connect reviewed character and weapon progression data to the automatic Materials Planner.
 
 **Result:** Character EXP requirements can now be calculated deterministically for a target level range, including ascension-phase rounding and material totals. This is a tested candidate calculation foundation, not yet a user-facing or verified production calculator.
+
+
+## Milestone 074 - 4-Star and 5-Star Weapon EXP Candidate Calculator
+
+**Date recorded:** 2026-11-27  
+**Scope:** Add ore-only weapon enhancement calculations for 4-star and 5-star weapons. Lower-rarity weapons and weapon fodder are explicitly outside this calculator's scope.
+
+**Implemented:**
+- Added separate 90-level cumulative EXP curves for 4-star and 5-star weapons.
+- Adapted the 4-star and 5-star weapon EXP tables from the Genshin Impact Wiki, with CC BY-SA 3.0 attribution and share-alike notice. Both datasets remain `CANDIDATE` with `PENDING_REVIEW` permission; neither is promoted into trusted production costs.
+- Added a deterministic calculator accepting weapon rarity, current level, current within-level EXP, target level, and current ascension-unlocked level cap.
+- Enforced ascension caps at levels 20, 40, 50, 60, 70, 80, and 90.
+- Calculated Mystic Enhancement Ore (104013), Fine Enhancement Ore (104012), Enhancement Ore (104011), and Mora (202).
+- Limited enhancement input to ore materials. Weapon fodder EXP is intentionally excluded.
+- Rounded ore EXP independently at each ascension phase because excess EXP cannot carry through a weapon level cap.
+- Added tests for both complete curves, full level 1-to-90 totals, phase rounding, current partial EXP, ascension cap restrictions, maximum-level no-op behavior, malformed curves, and candidate provenance.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinWeaponExperienceCurveCandidate.kt`
+- `app/src/main/java/com/irminsul/codex/domain/analysis/WeaponExperienceCalculator.kt`
+- `app/src/test/java/com/irminsul/codex/domain/analysis/WeaponExperienceCalculatorTest.kt`
+
+**Implementation commit:**
+- `4bdbd4db75fb42442a86677afe11d2d758caac0d`
+
+**Source references:**
+- 4-star weapon EXP: https://genshin-impact.fandom.com/wiki/Weapon_EXP/4-Star_Weapons
+- 5-star weapon EXP: https://genshin-impact.fandom.com/wiki/Weapon_EXP/5-Star_Weapons
+- Weapon Enhancement Material values: https://genshin-impact.fandom.com/wiki/Weapon_Enhancement_Material
+- Item IDs cross-check: Enhancement Ore 104011, Fine Enhancement Ore 104012, Mystic Enhancement Ore 104013.
+
+**Verification status at recording:**
+- CI #605 is running: https://github.com/berao609/Irminsul-codex/actions/runs/45923403862
+- Unit tests, Debug APK build, signature verification, and artifact upload are pending CI completion.
+- No physical-device verification has been performed. This is a domain/data foundation and is not connected to the Materials Planner UI.
+
+**Reference full-level ore-only totals (per-phase rounding):**
+- 4-star: 6,042,650 required EXP; 600 Mystic Ore, 19 Fine Ore, 15 Enhancement Ore; 604,400 Mora; 1,350 excess EXP.
+- 5-star: 9,064,450 required EXP; 903 Mystic Ore, 15 Fine Ore, 13 Enhancement Ore; 906,520 Mora; 750 excess EXP.
+
+**Remaining work:**
+- Complete CI verification and update this milestone with the result and artifact evidence.
+- Complete source permission/review before any promotion into trusted calculation data.
+- Integrate weapon EXP results with weapon ascension costs and the shared Materials Planner flow.
+- Connect 4-star/5-star weapon selection and target-level controls to the user-facing calculator.
+
+**Result:** A tested-in-progress candidate foundation exists for ore-only enhancement of 4-star and 5-star weapons. It does not yet constitute a complete user-facing automatic weapon calculator.
