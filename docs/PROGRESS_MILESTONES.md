@@ -4705,3 +4705,33 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 5. Confirm other tabs and their existing features remain unaffected.
 
 **Result:** Daily Note presentation is separated from MainActivity while state and data retrieval remain screen-owned. Automated and physical-device verification are pending.
+
+
+## Milestone 087 - Account Data Export Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by extracting the Account Data Export card presentation from MainActivity.
+
+**Implemented:**
+- Added `presentation/AccountDataExportSection.kt`.
+- MainActivity delegates the Account Data Export card while passing existing progress, export status, exporting/restoring flags, and the export callback.
+- Kept UID/cookie checks, export orchestration, ViewModel interaction, document-picker handling, JSON writing, and state ownership in CodexScreen.
+- Preserved Account-tab visibility conditions, progress/status messaging, Save JSON label, and disabled behavior.
+- No export format, account retrieval, persistence, credentials, navigation, or calculator logic was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountDataExportSection.kt`
+
+**Verification status:** Source changes committed. CI and physical-device verification pending.
+
+**Device checklist:**
+1. Confirm the Account Data Export card appears only on Account when both UID and cookie are present.
+2. Confirm it is hidden when credentials are missing.
+3. Confirm progress and export status messages remain visible at the correct times.
+4. Confirm Save JSON is disabled during export and snapshot restoration, and shows Extracting... while exporting.
+5. Confirm successful save and document-picker cancellation still report the correct result.
+6. Confirm Home, Visuals, Tools, navigation, and Materials Calculator remain unaffected.
+
+**Result:** Account Data Export presentation is separated from MainActivity. Export behavior remains screen-owned and unchanged; automated and physical-device verification are pending.
