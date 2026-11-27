@@ -3,6 +3,7 @@ package com.irminsul.codex
 import com.irminsul.codex.presentation.CodexBottomNavigationBar
 import com.irminsul.codex.presentation.CodexTab
 
+import com.irminsul.codex.presentation.HomeDailyNoteSection
 import com.irminsul.codex.presentation.VisualDashboardSection
 
 import android.content.Context
