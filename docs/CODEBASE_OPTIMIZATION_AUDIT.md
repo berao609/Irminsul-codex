@@ -1090,3 +1090,32 @@ Closing this audit does not mean the application is perfect or that every option
 3. Confirm missing/zero values and duration labels render as before.
 
 **Boundary:** Continue one cohesive extraction at a time. Keep calculator logic and the deferred UI redesign out of this step.
+
+
+### Batch 6 - Step 6: Bottom navigation presentation extraction
+
+**Status:** Source extraction committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Moved the bottom navigation bar and raised central AI action into `CodexBottomNavigationBar.kt`.
+- Moved the `CodexTab` enum alongside the navigation presentation component.
+- Kept tab selection and Account credential-panel state ownership in `CodexScreen`; the extracted component reports tab selection and AI-button clicks through callbacks.
+- Preserved the destination order and selected-state behavior: Home, Visuals, centered AI action, Tools, Account.
+- No navigation destinations, routing rules, account data, or AI provider behavior were changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/CodexBottomNavigationBar.kt`
+
+**Static verification:**
+- MainActivity delegates bottom-bar rendering to the extracted composable.
+- Tab state remains owned by CodexScreen.
+- Account selection still opens the credential panel.
+- Structural extraction only; no performance improvement is claimed.
+
+**Verification required:**
+1. Confirm Debug CI unit tests, Kotlin compilation, APK build, Room schema check, signature verification, and artifact upload.
+2. On device, verify destination order, selected-tab indication, raised AI button, and Account credential-panel behavior.
+3. Verify tab switching and scrolling remain unchanged.
+
+**Boundary:** Do not alter tab behavior or begin the deferred UI redesign during this extraction.
