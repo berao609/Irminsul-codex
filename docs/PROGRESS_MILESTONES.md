@@ -4197,3 +4197,45 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Connect the verified records to automatic character/weapon target inputs and the Materials Planner UI.
 
 **Result:** Progression data can now be imported as stable, provenance-carrying candidates. This is not yet a complete or user-facing automatic materials calculator.
+
+
+## Milestone 073 - Character EXP Progression Candidate Calculator
+
+**Date recorded:** 2026-11-27  
+**Scope:** Add the shared character level EXP curve and a deterministic candidate calculator without bypassing the verified-cost trust boundary.
+
+**Implemented:**
+- Added the complete cumulative Character EXP curve for levels 1-90, indexed once for all characters rather than duplicated per character.
+- Added candidate provenance and a separate CC BY-SA 3.0 attribution/license notice for the adapted Genshin Impact Wiki table. The dataset remains marked `CANDIDATE` and source permission remains `PENDING_REVIEW`; it is not promoted into the trusted material catalogue.
+- Added a pure character EXP calculation path accepting current level, current EXP within that level, target level, and the maximum level unlocked by ascension.
+- Enforced valid ascension caps (20, 40, 50, 60, 70, 80, 90), level bounds, within-level EXP bounds, and monotonic progression data.
+- Calculated Hero's Wit (Genshin-DB ID 104003), Adventurer's Experience (104002), Wanderer's Advice (104001), and Mora (202).
+- Rounded book requirements independently at each ascension phase, matching the published 1→90 material totals: 415 Hero's Wit, 11 Adventurer's Experience, 12 Wanderer's Advice, and 1,673,400 Mora.
+- Exposed required EXP, granted EXP, wasted EXP, and Mora totals. Candidate results are explicitly labelled `CANDIDATE_DATA`, not verified production costs.
+- Added regression coverage for all level checkpoints, full 1→20 and 1→90 totals, partial current-level EXP, ascension-cap restrictions, maximum level, malformed curves, and source-review state.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinCharacterExperienceCurveCandidate.kt`
+- `app/src/main/java/com/irminsul/codex/domain/analysis/CharacterExperienceCalculator.kt`
+- `app/src/test/java/com/irminsul/codex/domain/analysis/CharacterExperienceCalculatorTest.kt`
+
+**Commits:**
+- `ffcaf73edaecba26a5c77a39e8a4cfeec11efcf9`
+- `9187f4fdd33c910af2cd4115624e5d1e532eed14`
+- `1bb0f273ca470527c1a6a50899366f7efda0860b`
+
+**Verification:**
+- CI #601 and #602 failed because the initial implementation rounded the entire requested level range as one batch, which did not match the published per-ascension-phase book counts. This was corrected; failures were not hidden.
+- CI #603 passed all 310 unit tests, Debug APK build, Room schema snapshot verification, Debug APK signature verification, and artifact upload. Room instrumentation tests were skipped because this change does not modify Room schema or persistence.
+- CI #603: https://github.com/berao609/Irminsul-codex/actions/runs/45922802196
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.603-vc605` (artifact ID `15165486192`).
+- APK artifact SHA-256: `f1d5a22eec0f65d7922f5043b841f21d3ff4df839bbae9512caeb49d0cc6f6ce`.
+
+**Physical-device verification:** Not required for this data/domain-only step; the new calculator is not yet connected to the Materials Planner UI.
+
+**Remaining work:**
+- Add rarity-specific weapon EXP curves and the corresponding weapon EXP/Mora/Enhancement Ore calculator.
+- Complete source/license review before promotion into trusted calculation data.
+- Connect reviewed character and weapon progression data to the automatic Materials Planner.
+
+**Result:** Character EXP requirements can now be calculated deterministically for a target level range, including ascension-phase rounding and material totals. This is a tested candidate calculation foundation, not yet a user-facing or verified production calculator.
