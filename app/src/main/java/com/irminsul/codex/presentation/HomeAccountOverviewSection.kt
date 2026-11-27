@@ -23,6 +23,7 @@ fun HomeAccountOverviewSection(
     serverName: String,
     rosterCount: Int?,
     exportedAt: String?,
+    hasSnapshot: Boolean,
     onOpenAnalysis: () -> Unit
 ) {
     Card(
@@ -45,7 +46,7 @@ fun HomeAccountOverviewSection(
         }
     }
 
-    if (exportedAt != null) {
+    if (hasSnapshot) {
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
