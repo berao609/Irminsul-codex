@@ -125,7 +125,9 @@ data class CharacterSnapshot(
     val extraProperties: List<StatValueSnapshot> = emptyList(),
     val elementProperties: List<StatValueSnapshot> = emptyList(),
     /** Optional portrait URL supplied by the account-data source. */
-    val avatarIcon: String? = null
+    val avatarIcon: String? = null,
+    /** Character ascension rank (HoYoLAB promote_level); null when unavailable. */
+    val ascensionLevel: Int? = null
 )
 
 data class EquipmentIntegritySnapshot(

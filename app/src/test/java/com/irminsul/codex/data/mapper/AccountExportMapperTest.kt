@@ -148,6 +148,18 @@ class AccountExportMapperTest {
         } catch (_: IllegalArgumentException) { }
     }
 
+    @Test fun mapsCharacterAscensionLevelAndPreservesZeroAndMissing() {
+        val ascensionZero = export().put("characters", org.json.JSONArray().put(JSONObject()
+            .put("base", JSONObject().put("id", 10000003).put("level", 20).put("promote_level", 0))))
+        val zeroCharacter = (AccountExportMapper.map(ascensionZero).characters as DataValue.Available).value.single()
+        assertEquals(0, zeroCharacter.ascensionLevel)
+
+        val unavailable = export().put("characters", org.json.JSONArray().put(JSONObject()
+            .put("base", JSONObject().put("id", 10000004).put("level", 20))))
+        val unavailableCharacter = (AccountExportMapper.map(unavailable).characters as DataValue.Available).value.single()
+        assertNull(unavailableCharacter.ascensionLevel)
+    }
+
     @Test fun mapsOptionalCharacterPortraitIconWithoutRequiringIt() {
         val withIcon = export().put("characters", org.json.JSONArray().put(JSONObject()
             .put("base", JSONObject().put("id", 10000003).put("name", "Jean")
