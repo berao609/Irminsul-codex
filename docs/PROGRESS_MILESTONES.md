@@ -5369,7 +5369,7 @@ Home/profile and Daily Note presentation/data mapping only. No account snapshot 
 
 **Date recorded:** 2026-11-27  
 **Development phase:** UI Revamp - Batch 3  
-**Status:** Implemented on `ui-revamp/batch-3-visuals`; CI and physical-device verification pending.
+**Status:** Implemented and CI-verified; physical-device verification pending.
 
 ### Objective
 Reconstruct the Visuals destination around the agreed high-fidelity Battle Chronicles hierarchy while preserving existing account data, analysis, and interactions.
@@ -5413,10 +5413,9 @@ Visual presentation and composition only. No account retrieval, persistence, ana
 
 ### Reference-alignment correction (2026-11-27)
 - Re-reviewed the actual HTML exports after the first Batch 3 CI attempt. The first implementation did not fully reflect the reference: the account summary lacked its primary/secondary expandable metric hierarchy, and the character showcase lacked the compact horizontal portrait selector.
-- Added a primary account-stat row with expandable secondary statistics.
-- Added a horizontal, release-ordered character portrait selector before the selected character detail, matching the reference's selector/detail relationship. The existing expanded roster remains available as a supplementary selection surface.
-- Exploration cards now use the reference's exact `Main Areas Only` descriptor.
-- Game-mode primary metrics are now mode-specific: Best Floor for Spiral Abyss and Difficulty for Imaginarium Theater, with Stars as fallback.
+- Added the horizontal, release-ordered character portrait selector before the selected character detail, matching the reference's selector/detail relationship. The existing expanded roster remains available as a supplementary selection surface.
+- Corrected game-mode primary metrics: Best Floor for Spiral Abyss and Difficulty for Imaginarium Theater, with Stars as fallback.
+- The account summary hierarchy and exact `Main Areas Only` label were not actually completed in this correction; they were completed in Milestone 108.
 - The current `AccountSnapshot` has no Stygian Onslaught section. The reference includes it, but this batch does not fabricate or add a data source for it.
 - Added the missing `dp` import to `VisualsSection.kt`, which caused CI run #877 to fail during Kotlin compilation.
-- This correction is still pending CI and device verification.
+- GitHub Actions run #878 succeeded for merge commit `e74f2c1ff7360444415ef097dd4b3f50264e6888`; Debug APK artifact ID `15198589056` (`irminsul-codex-debug-v1.0.0-dev.878-vc880`). Physical-device verification remains pending.

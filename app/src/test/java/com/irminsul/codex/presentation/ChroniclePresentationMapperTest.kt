@@ -70,6 +70,33 @@ class ChroniclePresentationMapperTest {
         assertEquals(0.875f, regions[0].progress, 0.001f)
     }
 
+    @Test fun accountOverviewSeparatesPrimaryAndSecondaryStatisticsWithoutInventingMissingValues() {
+        val metrics = listOf(
+            ChronicleMetric("Player", "Traveler"),
+            ChronicleMetric("Active Days", "120"),
+            ChronicleMetric("Waypoints", "80"),
+            ChronicleMetric("Achievements", "500"),
+            ChronicleMetric("Characters", "30")
+        )
+        assertEquals(
+            listOf(ChronicleMetric("Active Days", "120"), ChronicleMetric("Achievements", "500"), ChronicleMetric("Characters", "30")),
+            ChroniclePresentationMapper.primaryOverviewMetrics(metrics)
+        )
+        assertEquals(listOf(ChronicleMetric("Waypoints", "80")), ChroniclePresentationMapper.secondaryOverviewMetrics(metrics))
+        assertTrue(ChroniclePresentationMapper.primaryOverviewMetrics(listOf(ChronicleMetric("Waypoints", "0"))).isEmpty())
+    }
+
+    @Test fun explorationDoesNotExposeNonHttpImageValuesAsEmblems() {
+        val data = DataValue.Available(obj(
+            "world_explorations" to StructuredData.ArrayValue(listOf(
+                obj("name" to StructuredData.StringValue("Fontaine"),
+                    "exploration_percentage" to StructuredData.NumberValue("500"),
+                    "icon" to StructuredData.StringValue("data:image/png;base64,hidden"))
+            ))
+        ), null)
+        assertEquals(null, ChroniclePresentationMapper.explorationRegions(data).single().iconUrl)
+    }
+
     @Test fun modeMetricsAreAllowlistedAndNeverExposeNestedOrTechnicalFields() {
         val data = DataValue.Available(obj(
             "total_battle_times" to StructuredData.NumberValue("12"),
