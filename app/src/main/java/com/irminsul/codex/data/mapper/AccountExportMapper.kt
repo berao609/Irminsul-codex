@@ -219,7 +219,7 @@ object AccountExportMapper {
             extraProperties = item.optJSONArray("extra_properties")?.let(::mapStats).orEmpty(),
             elementProperties = item.optJSONArray("element_properties")?.let(::mapStats).orEmpty(),
             avatarIcon = base.stringOrNull("icon") ?: item.stringOrNull("icon") ?: base.stringOrNull("image"),
-            ascensionLevel = base.intOrNull("promote_level")
+            ascensionLevel = base.intOrNull("promote_level") ?: item.intOrNull("promote_level")
         )
     }
 
