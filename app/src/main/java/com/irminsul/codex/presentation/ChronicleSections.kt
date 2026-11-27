@@ -32,7 +32,7 @@ private fun ChronicleSection(title: String, subtitle: String? = null, content: @
                 Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
                 subtitle?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
-            Icon(if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE, contentDescription = if (expanded) "Collapse $title" else "Expand $title", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            AppIcon(if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE, contentDescription = if (expanded) "Collapse $title" else "Expand $title", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (expanded) content()
     }
@@ -89,7 +89,7 @@ fun ChronicleOverviewSection(accountCard: DataValue<StructuredData>, profileAndE
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Icon(
+                    AppIcon(
                         if (secondaryExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                         contentDescription = if (secondaryExpanded) "Collapse additional statistics" else "Expand additional statistics",
                         tint = MaterialTheme.colorScheme.primary
