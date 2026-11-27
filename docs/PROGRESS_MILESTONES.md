@@ -4957,3 +4957,38 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 5. Confirm Home, Tools, Account, navigation, and AI placeholder remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+## Milestone 095 - Shared Screen Feedback Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 Batch 6 by extracting shared screen feedback presentation from MainActivity.
+
+**Implemented:**
+- Added `presentation/ScreenFeedbackSections.kt` with `ScreenErrorBanner` and `HomeInitialLoadingIndicator`.
+- MainActivity delegates the existing shared error card and Home initial loading indicator.
+- Preserved error precedence, banner colors/shape/text/padding, and original placement.
+- Preserved the exact Home loading condition and indicator alignment/spacing.
+- Kept error/loading state ownership and all retrieval/navigation behavior in CodexScreen.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ScreenFeedbackSections.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Commits:**
+- `45123d072e4676c3c6fb32e2d0307d3acb06cb53` - add shared feedback presentation.
+- `39e0901c3ddda2cf69c1aefd68899e2fd5e53943` - delegate feedback rendering from MainActivity.
+
+**Verification status:** Source changes committed. Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Trigger a Home refresh and verify the centered loading indicator appears only while loading before Daily Note data is available.
+2. Verify a general screen error displays the correct message.
+3. Verify an account-export error displays when no general screen error is present.
+4. If both error sources are present, confirm the general screen error takes precedence.
+5. Confirm banner styling/placement and all destinations remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
