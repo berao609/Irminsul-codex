@@ -2,10 +2,8 @@ package com.irminsul.codex
 
 import com.irminsul.codex.presentation.CodexBottomNavigationBar
 import com.irminsul.codex.presentation.CodexTab
-import com.irminsul.codex.presentation.DailyNoteMetricRow
 
 import com.irminsul.codex.presentation.VisualDashboardSection
-import com.irminsul.codex.presentation.formatDuration
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -962,132 +960,13 @@ private fun CodexScreen(
                 }
             }
 
-            if (dailyNote == null && !isLoading && uid.isNotBlank() && cookie.isNotBlank()) {
-                Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Daily activity not loaded", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Sync your Daily Note to see Resin, commissions, expeditions, and Realm Currency.",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        OutlinedButton(
-                            onClick = { refreshData() },
-                            enabled = !isLoading && !accountExportState.isExporting,
-                            modifier = Modifier.fillMaxWidth()
-                        ) { Text("Sync Daily Note") }
-                    }
-                }
-            }
-            dailyNote?.let { note ->
-                val resinProgress = if (note.currentResin != null && note.maxResin != null && note.maxResin > 0) {
-                    (note.currentResin.toFloat() / note.maxResin).coerceIn(0f, 1f)
-                } else null
-
-                Text(
-                    text = "Real-Time Notes",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(18.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .weight(0.9f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                "Original Resin",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "${note.currentResin ?: "—"}",
-                                fontSize = 30.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "/ ${note.maxResin ?: "—"}",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            if (resinProgress != null) {
-                                LinearProgressIndicator(
-                                    progress = { resinProgress },
-                                    modifier = Modifier.fillMaxWidth().height(6.dp),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    trackColor = MaterialTheme.colorScheme.outlineVariant
-                                )
-                            }
-                            Text(
-                                text = when {
-                                    note.resinRecoveryTime == null -> "Recovery unavailable"
-                                    note.resinRecoveryTime > 0L -> "Full in ${formatDuration(note.resinRecoveryTime)}"
-                                    note.currentResin != null && note.maxResin != null && note.currentResin >= note.maxResin -> "Resin is full"
-                                    else -> "Recovery unavailable"
-                                },
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Column(
-                            modifier = Modifier.weight(1.5f),
-                            verticalArrangement = Arrangement.spacedBy(9.dp)
-                        ) {
-                            DailyNoteMetricRow(
-                                label = "Dispatched Expeditions",
-                                value = "${note.currentExpeditionNum ?: "—"}/${note.maxExpeditionNum ?: "—"}"
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            DailyNoteMetricRow(
-                                label = "Realm Currency",
-                                value = "${note.currentHomeCoin ?: "—"}/${note.maxHomeCoin ?: "—"}"
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            DailyNoteMetricRow(
-                                label = "Daily Commission Rewards",
-                                value = "${note.finishedTaskNum ?: "—"}/${note.totalTaskNum ?: "—"}",
-                                status = when (note.isExtraTaskRewardReceived) {
-                                    true -> "All claimed"
-                                    false -> "Reward unclaimed"
-                                    null -> "Claim status unavailable"
-                                }
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            DailyNoteMetricRow(
-                                label = "Weekly Resin Discounts",
-                                value = "${note.remainResinDiscountNum ?: "—"}/${note.resinDiscountNumLimit ?: "—"}",
-                                status = "Remaining"
-                            )
-                        }
-                    }
-                }
-
-                OutlinedButton(
-                    onClick = { refreshData() },
-                    enabled = !isLoading && !accountExportState.isExporting,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text(if (isLoading) "Refreshing..." else "Refresh Notes")
-                }
-            }
+            HomeDailyNoteSection(
+                note = dailyNote,
+                isLoading = isLoading,
+                canSync = uid.isNotBlank() && cookie.isNotBlank(),
+                isExporting = accountExportState.isExporting,
+                onRefresh = { refreshData() }
+            )
         }
         if (showAiSheet) {
             ModalBottomSheet(
