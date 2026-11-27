@@ -102,6 +102,34 @@ class AccountExportMapperTest {
         assertEquals(DataValue.Missing, model.spiralAbyssPrevious)
     }
 
+    @Test fun mapsStygianOnslaughtFromNestedBattleChronicleIndexStats() {
+        val source = export().put("profile_and_exploration", JSONObject()
+            .put("stats", JSONObject()
+                .put("hard_challenge", JSONObject().put("name", "Challenge Alpha"))
+                .put("difficulty", 6)))
+        val snapshot = AccountExportMapper.map(source)
+        val stygian = snapshot.stygianOnslaught as DataValue.Available
+        assertEquals("Challenge Alpha", stygian.value.bestRecordName)
+        assertEquals("6", stygian.value.difficulty)
+        assertTrue(source.has("profile_and_exploration"))
+    }
+
+    @Test fun missingStygianFieldsRemainMissingAndFailedIndexRemainsFailed() {
+        val missing = export().put("profile_and_exploration", JSONObject()
+            .put("stats", JSONObject().put("hard_challenge", JSONObject())))
+        assertEquals(DataValue.Missing, AccountExportMapper.map(missing).stygianOnslaught)
+
+        val failed = export().put("export_status", JSONObject()
+            .put("overall_status", "partial")
+            .put("sections", JSONObject()
+                .put("profile_and_exploration", JSONObject()
+                    .put("status", "failed")
+                    .put("message", "index request failed"))))
+        val stygian = AccountExportMapper.map(failed).stygianOnslaught
+        assertTrue(stygian is DataValue.Failed)
+        assertEquals("index request failed", (stygian as DataValue.Failed).reason)
+    }
+
     @Test fun mapsAccountCardRosterAndRawCharacterDetailBatches() {
         val source = export()
             .put("account_card", JSONObject().put("nickname", "Traveler").put("level", 60))
