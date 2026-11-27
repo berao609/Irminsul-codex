@@ -1527,7 +1527,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 20: System-bar appearance presentation extraction
 
-**Status:** Implemented and committed; CI and physical-device verification pending.
+**Status:** User confirmed successful CI/build and physical-device testing; exact workflow run and artifact identifiers were not supplied.
 
 **Implementation:**
 - Moved the existing status-bar and navigation-bar icon appearance SideEffect into `presentation/CodexSystemBars.kt`.
@@ -1541,3 +1541,26 @@ Closing this audit does not mean the application is perfect or that every option
 - `app/src/main/java/com/irminsul/codex/presentation/CodexSystemBars.kt`
 
 **Boundary:** Presentation side-effect extraction only. No visual or performance improvement is claimed. CI and device verification are pending.
+
+
+### Batch 6 - Step 21: App theme composition extraction
+
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Added `presentation/CodexAppTheme.kt` to compose the existing system-bar appearance effect, Material 3 color scheme, and root Surface.
+- MainActivity retains theme preference state, System/Light/Dark resolution, preference persistence, Activity window/view acquisition, and CodexScreen state.
+- Preserved the existing color-scheme selection, Surface background, fill-size modifier, and system-bar effect.
+- Removed only the now-unneeded direct imports for the extracted theme colors and system-bar component.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexAppTheme.kt`
+
+**Verification required:**
+1. Confirm Debug CI compilation, unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Verify System, Light, and Dark modes, including status/navigation bar icon contrast.
+3. Verify theme preference persistence after restart.
+4. Confirm all destinations, sign-in, account controls, and AI entry remain functional.
+
+**Boundary:** Composition extraction only. Theme selection, preference persistence, and screen state remain caller-owned. No visual or performance improvement is claimed.
