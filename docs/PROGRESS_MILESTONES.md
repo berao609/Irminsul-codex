@@ -5070,3 +5070,32 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 3. Confirm all destinations, bottom navigation, and AI entry remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+## Milestone 099 - Theme Color-Scheme Presentation Extraction
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+### Objective
+Move the existing Material 3 light and dark color-scheme definitions out of MainActivity without changing theme behavior.
+
+### Implementation
+- Added `presentation/CodexThemeColors.kt` with the existing `CodexDarkColors` and `CodexLightColors` definitions.
+- MainActivity imports and applies those definitions.
+- All color values remain unchanged.
+- Theme selection, preference persistence, system-bar icon handling, and MaterialTheme ownership remain in MainActivity.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexThemeColors.kt`
+
+### Verification
+- Source changes are committed on `main`.
+- CI verification: pending.
+- Debug APK artifact: pending.
+- Physical-device verification: pending.
+
+### Remaining work
+Run Debug CI, inspect the resulting artifact, and verify System/Light/Dark appearance plus all existing destinations and navigation on the physical device.
