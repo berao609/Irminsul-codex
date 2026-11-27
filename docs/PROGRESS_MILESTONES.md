@@ -4657,7 +4657,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - a9fc65af97ea30c15a8a4b80f5a89c633a11bbf0 - remove dashboard coverage card.
 - 901100de487339238d8ec8957919ea9cfecc7e13 - update README.
 
-**Verification status:** Source changes committed. Debug CI and physical-device verification pending.
+**Verification status:** CI #752 passed for the corrected source. User confirmed successful physical-device testing.
 
 **Device checklist:**
 1. Home shows the Visual Dashboard exactly once.
@@ -4668,3 +4668,38 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 6. Switch between all destinations and confirm content and scrolling remain correct.
 
 **Result:** Dashboard presentation is limited to Home and no longer includes the account data coverage panel. Automated and physical-device verification are pending.
+
+
+## Milestone 086 - Home Daily Note Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by extracting the Home Daily Note presentation from MainActivity.
+
+**Implemented:**
+- Added `presentation/HomeDailyNoteSection.kt` for the Daily Note empty state and populated Resin, expedition, Realm Currency, commission, weekly discount, and refresh UI.
+- MainActivity delegates the Daily Note content to the extracted component.
+- Kept retrieval, loading, credentials, export state, and refresh action ownership in CodexScreen.
+- Preserved nullable-value display, Resin progress/recovery rules, button enablement, and the existing loading-indicator position.
+- No API, parsing, persistence, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeDailyNoteSection.kt`
+
+**Commits:**
+- `816288d4847ace9ec2c74eeba1b46ba1c5492370`
+- `f12e48f2eb10738d47397d3c7f396fd1f611a81a`
+- `33c360f31862361630c9b0fb306df85f8598b89a`
+- `5a8884338f7f8cd86763fa41552352833c3288c4`
+
+**Verification status:** Source committed. Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Confirm loading indicator, empty state, and Sync Daily Note action.
+2. Confirm Resin value, maximum, progress, recovery, and full-resin states.
+3. Confirm expedition, Realm Currency, commission, and weekly discount values/statuses, including unavailable values.
+4. Confirm Refresh Notes and loading/disabled behavior.
+5. Confirm other tabs and their existing features remain unaffected.
+
+**Result:** Daily Note presentation is separated from MainActivity while state and data retrieval remain screen-owned. Automated and physical-device verification are pending.
