@@ -50,6 +50,7 @@ internal fun CharacterEnhancementCalculatorSection(
             .apply()
     }
 
+    var candidateLoadFailed by remember(character.id) { mutableStateOf(false) }
     var loadedCandidates by remember(character.id) {
         mutableStateOf<List<com.irminsul.codex.data.catalogue.GenshinDbUpgradeCostCandidate>?>(null)
     }
