@@ -31,9 +31,11 @@ import com.irminsul.codex.domain.model.DataValue
 fun CharacterShowcaseSection(
     characters: List<CharacterSnapshot>,
     selectedCharacterId: Int?,
-    onCharacterSelected: (Int) -> Unit
+    onCharacterSelected: (Int) -> Unit,
+    initialRosterExpanded: Boolean = false,
+    showSelectedDetail: Boolean = true
 ) {
-    var rosterExpanded by remember { mutableStateOf(false) }
+    var rosterExpanded by remember(characters) { mutableStateOf(initialRosterExpanded) }
     var filtersExpanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var minimumLevel by remember { mutableStateOf("") }
@@ -101,7 +103,7 @@ fun CharacterShowcaseSection(
                 }
             }
         }
-        CharacterShowcaseDetail(character = selected)
+        if (showSelectedDetail) CharacterShowcaseDetail(character = selected)
 
         Card(
             onClick = { rosterExpanded = !rosterExpanded },
@@ -304,7 +306,7 @@ private fun CharacterSnapshot.rosterWeaponType(): String? {
 }
 
 @Composable
-private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
+internal fun CharacterShowcaseDetail(character: CharacterSnapshot) {
     var expandedDetailKey by remember(character.id) { mutableStateOf<String?>(null) }
     fun toggleDetail(key: String) {
         expandedDetailKey = if (expandedDetailKey == key) null else key
