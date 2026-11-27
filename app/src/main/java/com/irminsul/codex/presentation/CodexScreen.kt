@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.irminsul.codex.api.AccountProfile
 import com.irminsul.codex.api.DailyNote
 import com.irminsul.codex.api.HoYoLabClient
 import com.irminsul.codex.data.repository.HoYoLabAccountRepository
@@ -88,6 +89,7 @@ internal fun CodexScreen(
     var selectedCharacterId by remember { mutableStateOf<Int?>(null) }
 
     var dailyNote by remember { mutableStateOf<DailyNote?>(null) }
+    var accountProfile by remember { mutableStateOf<AccountProfile?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -135,6 +137,7 @@ internal fun CodexScreen(
         }
         prefs.edit().putString("uid", targetUid.trim()).apply()
         credentialLoadError = false
+        if (accountProfile?.uid != targetUid.trim()) accountProfile = null
 
         scope.launch {
             isLoading = true
@@ -147,6 +150,8 @@ internal fun CodexScreen(
                 .onFailure { err ->
                     errorMessage = err.message ?: "Request failed."
                 }
+            HoYoLabClient.fetchAccountProfile(targetUid, targetCookie)
+                .onSuccess { profile -> accountProfile = profile }
             isLoading = false
         }
     }
@@ -190,6 +195,7 @@ internal fun CodexScreen(
             return
         }
         cookie = capturedCookie.trim()
+        accountProfile = null
         credentialLoadError = false
 
         scope.launch {
@@ -217,6 +223,7 @@ internal fun CodexScreen(
         uid = ""
         cookie = ""
         dailyNote = null
+        accountProfile = null
         showCredentials = true
         showWebLogin = false
         credentialLoadError = false
@@ -366,6 +373,7 @@ internal fun CodexScreen(
             HomeSection(
                 uid = uid,
                 serverName = HoYoLabClient.detectServer(uid),
+                accountProfile = accountProfile,
                 rosterCount = rosterCount,
                 exportedAt = homeSnapshot?.metadata?.exportedAt?.toString(),
                 hasSnapshot = homeSnapshot != null,
