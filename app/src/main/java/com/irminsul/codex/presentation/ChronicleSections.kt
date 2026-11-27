@@ -6,9 +6,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,7 +32,7 @@ private fun ChronicleSection(title: String, subtitle: String? = null, content: @
                 Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
                 subtitle?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
-            Icon(if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, contentDescription = if (expanded) "Collapse $title" else "Expand $title", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE, contentDescription = if (expanded) "Collapse $title" else "Expand $title", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (expanded) content()
     }
@@ -93,7 +90,7 @@ fun ChronicleOverviewSection(accountCard: DataValue<StructuredData>, profileAndE
                         color = MaterialTheme.colorScheme.primary
                     )
                     Icon(
-                        if (secondaryExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                        if (secondaryExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                         contentDescription = if (secondaryExpanded) "Collapse additional statistics" else "Expand additional statistics",
                         tint = MaterialTheme.colorScheme.primary
                     )
