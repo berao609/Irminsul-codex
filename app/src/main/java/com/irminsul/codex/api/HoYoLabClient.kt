@@ -31,7 +31,17 @@ data class DailyNote(
     val currentHomeCoin: Int?,
     val maxHomeCoin: Int?,
     val currentExpeditionNum: Int?,
-    val maxExpeditionNum: Int?
+    val maxExpeditionNum: Int?,
+    val transformerObtained: Boolean?,
+    val transformerRecoveryTimeSeconds: Long?,
+    val transformerReached: Boolean?
+)
+
+data class AccountProfile(
+    val nickname: String?,
+    val uid: String,
+    val serverName: String?,
+    val avatarUrl: String?
 )
 
 private data class FetchedExportResponse(
@@ -43,6 +53,7 @@ private data class FetchedExportResponse(
 object HoYoLabClient {
     private const val API_BASE = "https://sg-public-api.hoyolab.com/event/game_record/genshin/api"
     private const val RECORD_CARD_URL = "https://bbs-api-os.hoyolab.com/game_record/card/wapi/getGameRecordCard"
+    private const val USER_INFO_URL = "https://bbs-api-os.hoyolab.com/community/user/wapi/getUserFullInfo"
     private const val DS_SALT = "6s25p5ox5y14umn1p61aqyyvbvvl3lrt"
     private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
@@ -213,6 +224,72 @@ object HoYoLabClient {
             throw cancelled
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+
+    /**
+     * Retrieves the signed-in Genshin profile card and the HoYoLAB profile avatar.
+     * Avatar lookup is best-effort; profile identity remains usable if that endpoint
+     * is unavailable or the user has no public avatar URL.
+     */
+    suspend fun fetchAccountProfile(uid: String, cookie: String): Result<AccountProfile> = withContext(Dispatchers.IO) {
+        try {
+            val cleanUid = uid.trim()
+            val hoyolabUid = extractCookieValue(cookie, "ltuid_v2")
+                ?: extractCookieValue(cookie, "ltuid")
+                ?: extractCookieValue(cookie, "account_id")
+                ?: return@withContext Result.failure(Exception("HoYoLAB account ID is unavailable."))
+
+            val cardResponse = fetchRawGet("$RECORD_CARD_URL?uid=$hoyolabUid&gids=2", cookie)
+            if (cardResponse.optInt("retcode", -1) != 0) {
+                return@withContext Result.failure(
+                    Exception(cardResponse.optString("message", "Could not retrieve the Genshin profile card."))
+                )
+            }
+            val cards = cardResponse.optJSONObject("data")?.optJSONArray("list")
+                ?: return@withContext Result.failure(Exception("Genshin profile card is unavailable."))
+            var selectedCard: JSONObject? = null
+            for (index in 0 until cards.length()) {
+                val card = cards.optJSONObject(index) ?: continue
+                if (card.optInt("game_id") == 2 &&
+                    (card.optString("game_role_id") == cleanUid || selectedCard == null)
+                ) {
+                    selectedCard = card
+                    if (card.optString("game_role_id") == cleanUid) break
+                }
+            }
+            val card = selectedCard
+                ?: return@withContext Result.failure(Exception("No Genshin profile is linked to this HoYoLAB account."))
+            if (card.optString("game_role_id").isNotBlank() && card.optString("game_role_id") != cleanUid) {
+                return@withContext Result.failure(Exception("The HoYoLAB profile does not match the signed-in Genshin UID."))
+            }
+
+            val avatarUrl = try {
+                val userResponse = fetchRawGet("$USER_INFO_URL?uid=$hoyolabUid&gids=2", cookie)
+                userResponse.optJSONObject("data")
+                    ?.optJSONObject("user_info")
+                    ?.optString("avatar_url")
+                    ?.takeIf { it.startsWith("https://") }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            }
+
+            Result.success(
+                AccountProfile(
+                    nickname = card.optString("nickname").takeIf { it.isNotBlank() },
+                    uid = cleanUid,
+                    serverName = card.optString("region_name").takeIf { it.isNotBlank() }
+                        ?: card.optString("region").takeIf { it.isNotBlank() },
+                    avatarUrl = avatarUrl
+                )
+            )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            Result.failure(error)
         }
     }
 
