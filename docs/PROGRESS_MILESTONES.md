@@ -4704,7 +4704,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 4. Confirm Refresh Notes and loading/disabled behavior.
 5. Confirm other tabs and their existing features remain unaffected.
 
-**Result:** Daily Note presentation is separated from MainActivity while state and data retrieval remain screen-owned. Automated and physical-device verification are pending.
+**Result:** Daily Note presentation is separated from MainActivity while state and data retrieval remain screen-owned. CI #756 passed, and the user confirmed successful physical-device testing.
 
 
 ## Milestone 087 - Account Data Export Presentation Extraction
