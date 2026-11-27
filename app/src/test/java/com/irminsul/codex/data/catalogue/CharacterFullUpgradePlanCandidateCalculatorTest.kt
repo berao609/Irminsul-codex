@@ -59,23 +59,29 @@ class CharacterFullUpgradePlanCandidateCalculatorTest {
     }
 
     @Test fun unchangedTalentDoesNotChargeAndMissingTrackWithholdsAllTotals() {
-        val ranges = listOf(
-            CharacterTalentLevelRange("normal", 1, 1),
+        val missingRanges = listOf(
+            CharacterTalentLevelRange("normal", 1, 2),
             CharacterTalentLevelRange("skill", 1, 2),
             CharacterTalentLevelRange("burst", 1, 1)
         )
         val missing = CharacterFullUpgradePlanCandidateCalculator.calculate(
-            levelPlan(), "10000002", "7.2", ranges,
+            levelPlan(), "10000002", "7.2", missingRanges,
             listOf(talent("skill", 1, 2, "book-skill"))
         )
         assertEquals(CharacterUpgradePlanCandidateStatus.INCOMPLETE, missing.status)
         assertTrue(missing.requirements.isEmpty())
 
+        val unchangedRanges = listOf(
+            CharacterTalentLevelRange("normal", 1, 1),
+            CharacterTalentLevelRange("skill", 1, 2),
+            CharacterTalentLevelRange("burst", 1, 1)
+        )
         val complete = CharacterFullUpgradePlanCandidateCalculator.calculate(
-            levelPlan(), "10000002", "7.2", ranges,
+            levelPlan(), "10000002", "7.2", unchangedRanges,
             listOf(talent("skill", 1, 2, "book-skill"))
         )
-        assertEquals(CharacterUpgradePlanCandidateStatus.INCOMPLETE, complete.status)
+        assertEquals(CharacterUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA, complete.status)
+        assertFalse(complete.requirements.any { it.itemId == "book-normal" || it.itemId == "book-burst" })
     }
 
     @Test fun rejectsInvalidTalentLevels() {
