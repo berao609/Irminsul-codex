@@ -207,16 +207,21 @@ jobs:
             echo "available=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run Room instrumentation tests
+      - name: Run Room instrumentation tests on Android 17
         if: steps.room_tests.outputs.run == 'true'
         uses: reactivecircus/android-emulator-runner@v2
         env:
           ANDROID_I_WANT_MY_TCG: ${{ steps.kvm.outputs.available != 'true' && 'yes' || '' }}
         with:
+          # Keep the stable API 36 compile platform. Install the API 37
+          # Android 17 beta system image separately for runtime compatibility.
           api-level: 36
+          system-image-api-level: 37
+          channel: beta
           arch: x86_64
           target: google_apis
           profile: pixel_2
+          ram-size: 4096M
           disable-linux-hw-accel: ${{ steps.kvm.outputs.available != 'true' }}
           script: gradle connectedDebugAndroidTest --no-daemon
 
