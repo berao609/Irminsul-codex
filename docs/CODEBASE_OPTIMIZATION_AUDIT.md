@@ -1478,3 +1478,30 @@ Closing this audit does not mean the application is perfect or that every option
 6. Confirm Home, Visuals, Tools, navigation, AI placeholder, Materials Calculator, and Lineup Simulator remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+
+### Batch 6 - Step 18: Screen header presentation extraction
+
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Added `presentation/CodexScreenHeader.kt` to render the existing app title and optional UID/server identity line.
+- MainActivity continues to own the UID and derives the server label before passing it to the component.
+- Preserved title text, typography, colors, alignment, spacing, and the conditional UID/server line.
+- No navigation, account state, credential, retrieval, or persistence behavior changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreenHeader.kt`
+
+**Commits:**
+- `752f6be52ea92866384937a90ee8cdf9bd34510d` - add screen header presentation.
+- `dde97640026e75ed78f3bedf566a85882660bc4f` - delegate header rendering from MainActivity.
+
+**Verification required:**
+1. Confirm Debug CI unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Confirm title and UID/server line appearance with and without a configured UID.
+3. Confirm Home, Visuals, Tools, Account, navigation, and AI entry remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
