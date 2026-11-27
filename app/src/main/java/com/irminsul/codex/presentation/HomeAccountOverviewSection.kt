@@ -1,10 +1,13 @@
 package com.irminsul.codex.presentation
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -13,13 +16,19 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import coil.compose.SubcomposeAsyncImage
+import com.irminsul.codex.api.AccountProfile
 
 @Composable
 fun HomeAccountOverviewSection(
     uid: String,
     serverName: String,
+    accountProfile: AccountProfile?,
     rosterCount: Int?,
     exportedAt: String?,
     hasSnapshot: Boolean,
@@ -34,27 +43,62 @@ fun HomeAccountOverviewSection(
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.primaryContainer
         ) {
-            Column(
+            Row(
                 modifier = Modifier.padding(CodexSpacing.xl),
-                verticalArrangement = Arrangement.spacedBy(CodexSpacing.xs)
+                horizontalArrangement = Arrangement.spacedBy(CodexSpacing.lg),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "ADVENTURER PROFILE",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = if (uid.isNotBlank()) "Genshin Impact" else "No account connected",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = if (uid.isNotBlank()) serverName.ifBlank { "Server unavailable" } + " Server"
-                    else "Connect your HoYoLAB account from Account to get started",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                val avatarUrl = accountProfile?.avatarUrl
+                if (!avatarUrl.isNullOrBlank()) {
+                    SubcomposeAsyncImage(
+                        model = avatarUrl,
+                        contentDescription = "HoYoLAB profile avatar",
+                        modifier = Modifier.size(72.dp).clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                        loading = { ProfileAvatarFallback(accountProfile.nickname) },
+                        error = { ProfileAvatarFallback(accountProfile.nickname) }
+                    )
+                } else {
+                    ProfileAvatarFallback(accountProfile?.nickname)
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(CodexSpacing.xs)
+                ) {
+                    Text(
+                        text = "ADVENTURER PROFILE",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = accountProfile?.nickname?.takeIf { it.isNotBlank() }
+                            ?: if (uid.isNotBlank()) "Genshin Impact" else "No account connected",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (uid.isNotBlank()) {
+                        Text(
+                            text = "UID ${uid.trim()}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = formatHomeServerName(accountProfile?.serverName ?: serverName),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    } else {
+                        Text(
+                            text = "Connect your HoYoLAB account from Account to get started",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
             }
         }
 
@@ -117,5 +161,32 @@ fun HomeAccountOverviewSection(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+private fun ProfileAvatarFallback(nickname: String?) {
+    Surface(
+        modifier = Modifier.size(72.dp),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = nickname?.firstOrNull()?.uppercase() ?: "?",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+private fun formatHomeServerName(value: String): String {
+    return when (value.trim().lowercase()) {
+        "os_asia", "asia", "cn_gf01" -> "Asia Server"
+        "os_usa", "america", "na" -> "America Server"
+        "os_euro", "europe" -> "Europe Server"
+        "os_cht", "tw", "hk", "mo" -> "TW, HK, MO Server"
+        else -> if (value.isBlank()) "Server unavailable" else "$value Server"
     }
 }
