@@ -38,7 +38,7 @@ import com.irminsul.codex.domain.model.StructuredData
 import com.irminsul.codex.domain.model.StygianOnslaughtSnapshot
 
 @Composable
-fun VisualsSection(
+internal fun VisualsSection(
     modifier: Modifier = Modifier,
     destination: VisualsDestination,
     onNavigate: (VisualsDestination) -> Unit,
