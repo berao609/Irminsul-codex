@@ -5036,13 +5036,6 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `711efc64ced18833a16a079a66e89fbe28274a23` - extract Account destination composition.
 - `9d140637c24244cf17aee59b0a07fb23842264ba` - delegate Account composition from MainActivity.
 
-**Verification status:** Source changes committed. Debug CI and physical-device verification pending.
-
-**Device checklist:**
-1. Verify Account credentials visibility, sign-in, save/sync, and clear-credentials behavior.
-2. Verify JSON export progress, status, and Save JSON action.
-3. Verify Appearance theme selection and persistence.
-4. Verify Manage HoYoLAB account and Hide account credentials controls.
-5. Confirm Home, Visuals, Tools, navigation, AI placeholder, Materials Calculator, and Lineup Simulator remain functional.
+**Verification status:** Cleared. Component CI #819 passed. Initial integration CI #820 and documentation CI #821/#822 failed on a stale duplicate `AccountSettingsSection` reference in MainActivity. Removed the duplicate block in fix commit `13950fa0f122d233e6f43b238de5a3e0ecd530aa`. Corrected integration CI #823 (run `45968107535`) passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Debug APK: `irminsul-codex-debug-v1.0.0-dev.823-vc825` (artifact ID `15184221465`). User confirmed successful physical-device testing and all clear.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
