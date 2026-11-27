@@ -21,7 +21,9 @@ data class WeaponExperienceCalculationRequest(
     val currentExperienceWithinLevel: Long,
     val targetLevel: Int,
     /** Highest level unlocked by the weapon's current ascension phase. */
-    val maximumUnlockedLevel: Int
+    val maximumUnlockedLevel: Int,
+    /** Highest level the plan intends to unlock after paying required ascension costs. */
+    val targetMaximumUnlockedLevel: Int = maximumUnlockedLevel
 )
 
 data class WeaponExperienceMaterialRequirement(
@@ -74,11 +76,13 @@ object WeaponExperienceCalculator {
             request.targetLevel !in 1..request.rarity.maximumLevel ||
             request.targetLevel < request.currentLevel ||
             request.maximumUnlockedLevel !in ascensionPhaseEnds ||
+            request.targetMaximumUnlockedLevel !in ascensionPhaseEnds ||
+            request.targetMaximumUnlockedLevel < request.maximumUnlockedLevel ||
             request.currentLevel > request.maximumUnlockedLevel
         ) {
             return invalid(WeaponExperienceCalculationIssue.INVALID_LEVEL_RANGE)
         }
-        if (request.targetLevel > request.maximumUnlockedLevel) {
+        if (request.targetLevel > request.targetMaximumUnlockedLevel) {
             return invalid(WeaponExperienceCalculationIssue.TARGET_EXCEEDS_ASCENSION_CAP)
         }
         if (cumulativeExperienceByLevel.size != request.rarity.maximumLevel ||
