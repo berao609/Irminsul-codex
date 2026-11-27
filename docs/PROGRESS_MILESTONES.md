@@ -4429,8 +4429,12 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 
 **Verification status:**
 - Source inventory verified against the pinned upstream Git tree: 126 character records, 122 matching talent-cost payloads, no duplicate character IDs, and all 15 chunks share the same version and source commit.
-- Unit tests and Debug APK CI: pending.
-- Physical-device verification: pending; no Materials Planner UI behavior was changed in this dataset/loader increment.
+- CI #691 failed because a weapon combined-plan regression test expected 100 ascension Mora while its fixture supplied 10. The fixture-derived expectation was corrected in commit `18b293ad4de5ab26dadae8121bf5c45d61abe65d`; the failure was not hidden.
+- CI #692 passed: 375 unit tests, Debug APK assembly, Room schema snapshot verification, Debug APK signature verification, and artifact uploads. Room instrumentation tests were skipped because no Room schema or persistence code changed.
+- CI #692: https://github.com/berao609/Irminsul-codex/actions/runs/45934729313
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.692-vc694` (artifact ID `15170345820`, archive SHA-256 `12fface025e0316ba16559cb3965dea2c07f1e8e62c4297913946212df91077a`).
+- Room schema artifact: `irminsul-room-schema-v2-run-692` (artifact ID `15170480105`).
+- Physical-device verification: not required for this data/loader-only milestone; no Materials Planner UI behavior changed.
 
 **Remaining work:**
 - Verify repository tests and the Debug APK workflow.
