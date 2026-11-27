@@ -630,6 +630,7 @@ private fun CodexScreen(
                 serverName = HoYoLabClient.detectServer(uid),
                 rosterCount = rosterCount,
                 exportedAt = homeSnapshot?.metadata?.exportedAt,
+                hasSnapshot = homeSnapshot != null,
                 onOpenAnalysis = { selectedTab = CodexTab.VISUALS }
             )
 
