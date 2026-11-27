@@ -4600,10 +4600,35 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - docs/CODEBASE_OPTIMIZATION_AUDIT.md
 - docs/PROGRESS_MILESTONES.md
 
-**Verification status:** Source changes committed. CI and physical-device verification pending. No performance improvement is claimed.
+**Verification status:** CI #738 succeeded. User confirmed physical-device navigation testing passed, including navigation order, tab selection, central AI action, and Account access. No performance improvement is claimed.
 
-**Device checklist:**
-1. Verify Home, Visuals, Tools, and Account destinations.
-2. Verify the central AI button remains raised and opens the existing AI sheet.
-3. Verify selecting Account opens the credential panel.
-4. Verify selected-tab indication and tab switching.
+
+## Milestone 084 - Visual Dashboard Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by extracting the Visual Dashboard composable from MainActivity without changing analysis behavior.
+
+**Implemented:**
+- Extracted Visual Dashboard rendering into `presentation/VisualDashboardSection.kt`.
+- MainActivity delegates to `VisualDashboardSection(accountExportState.intelligenceOverview)`.
+- Preserved no-analysis state, assessment bars, recommendation/gap metrics, account-data coverage, and warning text.
+- Reused the shared `AssessmentBar` and `MetricTile` presentation helpers.
+- Kept state ownership, analysis logic, account mapping, navigation, and calculator behavior unchanged.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualDashboardSection.kt`
+
+**Commits:**
+- Extraction/integration and source corrections: `9f730e5c510b73bfe5600107c91b9a1d7724268b`, `9840297f1afab04fb8962da2055ba7639f4fdf78`, `82c764635e4166005e4f42754964c30bc835acb9`, `43f0b5de84d7c52b126439cf8b8cf164650aca48`, `2e2d505956a1c9e21ea4e4ecf3508b785ec891cc`, `6bdceb471321b727bee9f22b0aeb97167e2c6273`, `756f2fa6d7a23ae8e8c26a23b541bff8d7dbe937`.
+
+**Verification:**
+- CI #744 failed on a missing Compose `dp` import; corrected in the final commit.
+- CI #745 passed unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions.
+- Workflow: https://github.com/berao609/Irminsul-codex/actions/runs/45948947383
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.745-vc747` (ID `15175399449`; SHA-256 `442e74e737e89fcdce84800ae0b349e6aa77897ccb712f9f6fc272276295b266`).
+- Room schema artifact: `irminsul-room-schema-v2-run-745` (ID `15175592695`).
+- Physical-device verification: pending user installation and Visuals dashboard checklist.
+
+**Result:** Visual Dashboard presentation is extracted and CI-verified. Device verification remains outstanding; no performance improvement is claimed.

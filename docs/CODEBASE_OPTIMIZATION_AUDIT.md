@@ -1068,7 +1068,9 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 5: Shared dashboard metric presentation extraction
 
-**Status:** Source extraction committed; CI and physical-device verification pending.
+**Status:** Cleared after CI #727 and user-confirmed physical-device verification.
+
+**Verification:** User confirmed CI #727 succeeded and the app was tested on a physical device. The user-confirmed device checklist passed. Exact workflow run ID and artifact metadata were not independently retrieved. No performance improvement is claimed.
 
 **Implementation:**
 - Moved AssessmentBar, MetricTile, and DailyNoteMetricRow plus formatDuration into presentation/DashboardMetrics.kt.
@@ -1094,7 +1096,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 6: Bottom navigation presentation extraction
 
-**Status:** Source extraction committed; CI and physical-device verification pending.
+**Status:** Cleared after CI #738 and user-confirmed physical-device navigation verification.
 
 **Implementation:**
 - Moved the bottom navigation bar and raised central AI action into `CodexBottomNavigationBar.kt`.
@@ -1118,4 +1120,40 @@ Closing this audit does not mean the application is perfect or that every option
 2. On device, verify destination order, selected-tab indication, raised AI button, and Account credential-panel behavior.
 3. Verify tab switching and scrolling remain unchanged.
 
+**Verification record:** User confirmed CI #738 succeeded and device navigation testing passed, including the navigation behavior. No performance improvement is claimed.
+
 **Boundary:** Do not alter tab behavior or begin the deferred UI redesign during this extraction.
+
+
+### Batch 6 - Step 7: Visual Dashboard presentation extraction
+
+**Status:** Source extraction and Debug CI verified; physical-device verification pending.
+
+**Implementation:**
+- Moved the Visual Dashboard presentation into `presentation/VisualDashboardSection.kt`.
+- MainActivity now delegates rendering through `VisualDashboardSection(accountExportState.intelligenceOverview)`.
+- Preserved the no-analysis state, assessment bars, recommendation/gap metrics, account-data coverage, and warning presentation.
+- Reused the existing `AssessmentBar` and `MetricTile` helpers from `DashboardMetrics.kt`.
+- Kept account analysis, state ownership, data mapping, navigation, and calculator behavior unchanged.
+- Corrected the missing Compose `dp` import after CI #744 exposed the compile error.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualDashboardSection.kt`
+
+**Commits:**
+- Extraction and integration: `9f730e5c510b73bfe5600107c91b9a1d7724268b`, `9840297f1afab04fb8962da2055ba7639f4fdf78`
+- Follow-up source corrections: `82c764635e4166005e4f42754964c30bc835acb9`, `43f0b5de84d7c52b126439cf8b8cf164650aca48`, `2e2d505956a1c9e21ea4e4ecf3508b785ec891cc`, `6bdceb471321b727bee9f22b0aeb97167e2c6273`
+- CI correction: `756f2fa6d7a23ae8e8c26a23b541bff8d7dbe937`
+
+**Automated verification:**
+- CI #744 failed at Kotlin compilation because the extracted file lacked the `androidx.compose.ui.unit.dp` import.
+- Added the missing import; no behavior change.
+- CI #745 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped because this presentation-only change did not require them.
+- Workflow: https://github.com/berao609/Irminsul-codex/actions/runs/45948947383
+- Debug APK: `irminsul-codex-debug-v1.0.0-dev.745-vc747` (artifact ID `15175399449`, archive SHA-256 `442e74e737e89fcdce84800ae0b349e6aa77897ccb712f9f6fc272276295b266`).
+- Room schema artifact: `irminsul-room-schema-v2-run-745` (artifact ID `15175592695`).
+
+**Physical-device verification:** Pending. User must install the #745 Debug APK and verify both no-analysis and populated Visual Dashboard states, including assessment bars, recommendation/gap metrics, account-data coverage, and warning text.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed. Do not begin another extraction until the user confirms the device checklist.
