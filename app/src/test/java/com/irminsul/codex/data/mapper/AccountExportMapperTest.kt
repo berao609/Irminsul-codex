@@ -105,13 +105,22 @@ class AccountExportMapperTest {
     @Test fun mapsStygianOnslaughtFromNestedBattleChronicleIndexStats() {
         val source = export().put("profile_and_exploration", JSONObject()
             .put("stats", JSONObject()
-                .put("hard_challenge", JSONObject().put("name", "Challenge Alpha"))
-                .put("difficulty", 6)))
+                .put("hard_challenge", JSONObject().put("name", "Challenge Alpha").put("difficulty", 6))))
         val snapshot = AccountExportMapper.map(source)
         val stygian = snapshot.stygianOnslaught as DataValue.Available
         assertEquals("Challenge Alpha", stygian.value.bestRecordName)
         assertEquals("6", stygian.value.difficulty)
         assertTrue(source.has("profile_and_exploration"))
+    }
+
+    @Test fun mapsStygianDifficultyFromHardChallengeAndIgnoresUnrelatedStatsDifficulty() {
+        val source = export().put("profile_and_exploration", JSONObject()
+            .put("stats", JSONObject()
+                .put("difficulty", 99)
+                .put("hard_challenge", JSONObject().put("name", "Battle Amid the Great Waves").put("difficulty", 4))))
+        val stygian = (AccountExportMapper.map(source).stygianOnslaught as DataValue.Available).value
+        assertEquals("Battle Amid the Great Waves", stygian.bestRecordName)
+        assertEquals("4", stygian.difficulty)
     }
 
     @Test fun missingStygianFieldsRemainMissingAndFailedIndexRemainsFailed() {

@@ -113,4 +113,55 @@ class ChroniclePresentationMapperTest {
         assertTrue(ChroniclePresentationMapper.accountOverview(DataValue.Missing, DataValue.Missing).isEmpty())
         assertTrue(ChroniclePresentationMapper.explorationRegions(DataValue.Unavailable).isEmpty())
     }
+    @Test fun mapsEveryNestedImaginariumTheaterCycleAndRoundLineups() {
+        val value = DataValue.Available(obj(
+            "data" to StructuredData.ArrayValue(listOf(
+                obj(
+                    "has_data" to StructuredData.BooleanValue(true),
+                    "stat" to obj(
+                        "difficulty_id" to StructuredData.NumberValue("4"),
+                        "max_round_id" to StructuredData.NumberValue("10"),
+                        "medal_num" to StructuredData.NumberValue("10"),
+                        "coin_num" to StructuredData.NumberValue("1140"),
+                        "avatar_bonus_num" to StructuredData.NumberValue("4"),
+                        "rent_cnt" to StructuredData.NumberValue("2")
+                    ),
+                    "schedule" to obj("schedule_id" to StructuredData.NumberValue("31"),
+                        "start_date_time" to obj("year" to StructuredData.NumberValue("2026"), "month" to StructuredData.NumberValue("11"))),
+                    "detail" to obj("rounds_data" to StructuredData.ArrayValue(listOf(
+                        obj("round_id" to StructuredData.NumberValue("1"),
+                            "is_get_medal" to StructuredData.BooleanValue(true),
+                            "avatars" to StructuredData.ArrayValue(listOf(
+                                obj("name" to StructuredData.StringValue("Flins")),
+                                obj("name" to StructuredData.StringValue("Xingqiu"))
+                            )))
+                    )))
+                ),
+                obj(
+                    "has_data" to StructuredData.BooleanValue(true),
+                    "stat" to obj("difficulty_id" to StructuredData.NumberValue("3"), "max_round_id" to StructuredData.NumberValue("8"), "medal_num" to StructuredData.NumberValue("8")),
+                    "schedule" to obj("schedule_id" to StructuredData.NumberValue("30"),
+                        "start_date_time" to obj("year" to StructuredData.NumberValue("2026"), "month" to StructuredData.NumberValue("10"))),
+                    "detail" to obj("rounds_data" to StructuredData.ArrayValue(emptyList()))
+                )
+            ))
+        ), null)
+        val cycles = ChroniclePresentationMapper.theaterCycles(value)
+        assertEquals(2, cycles.size)
+        assertEquals("November 2026", cycles[0].title)
+        assertEquals("4", cycles[0].difficulty)
+        assertEquals("10", cycles[0].medals)
+        assertEquals("1140", cycles[0].coins)
+        assertEquals(listOf("Flins", "Xingqiu"), cycles[0].rounds.single().characters)
+        assertEquals(true, cycles[0].rounds.single().medalEarned)
+        assertEquals("October 2026", cycles[1].title)
+    }
+
+    @Test fun theaterDoesNotInventCyclesForMissingOrUnavailableData() {
+        assertTrue(ChroniclePresentationMapper.theaterCycles(DataValue.Missing).isEmpty())
+        assertTrue(ChroniclePresentationMapper.theaterCycles(DataValue.Unavailable).isEmpty())
+        val empty = DataValue.Available(obj("data" to StructuredData.ArrayValue(emptyList())), null)
+        assertTrue(ChroniclePresentationMapper.theaterCycles(empty).isEmpty())
+    }
+
 }
