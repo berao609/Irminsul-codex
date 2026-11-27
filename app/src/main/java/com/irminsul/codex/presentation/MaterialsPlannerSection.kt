@@ -145,8 +145,8 @@ fun MaterialsPlannerSection(
         val parts = selectedTargetId.split(":")
         val owner = characters.firstOrNull { it.id.toString() == parts.getOrNull(1) }
         when (val value = owner?.weapon) {
-            is DataValue.Available -> value.value.takeIf { it.id.toString() == parts.getOrNull(2) }
-            is DataValue.Stale -> value.value.takeIf { it.id.toString() == parts.getOrNull(2) }
+            is DataValue.Available -> value.value.takeIf { it.id.toString() == parts.getOrNull(2) && (it.rarity == 4 || it.rarity == 5) }
+            is DataValue.Stale -> value.value.takeIf { it.id.toString() == parts.getOrNull(2) && (it.rarity == 4 || it.rarity == 5) }
             else -> null
         }
     } else null
