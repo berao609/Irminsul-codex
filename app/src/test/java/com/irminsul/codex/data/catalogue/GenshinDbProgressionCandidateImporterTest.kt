@@ -50,7 +50,10 @@ class GenshinDbProgressionCandidateImporterTest {
         assertEquals("Albedo", result.subjectName)
         assertEquals(33, result.candidates.size)
         assertEquals(6, result.candidates.count { it.track == com.irminsul.codex.domain.model.UpgradeCostTrack.CHARACTER_ASCENSION })
-        assertEquals(9, result.candidates.count { it.track == com.irminsul.codex.domain.model.UpgradeCostTrack.TALENT_LEVEL })
+        assertEquals(27, result.candidates.count { it.track == com.irminsul.codex.domain.model.UpgradeCostTrack.TALENT_LEVEL })
+        listOf("normal", "skill", "burst").forEach { slot ->
+            assertEquals(9, result.candidates.count { it.talentSlot == slot })
+        }
         assertEquals(setOf("normal", "skill", "burst"), result.candidates.mapNotNull { it.talentSlot }.toSet())
         assertEquals(20, result.candidates.first().fromLevel)
         assertEquals(90, result.candidates.filter { it.track == com.irminsul.codex.domain.model.UpgradeCostTrack.CHARACTER_ASCENSION }.last().toLevel)
