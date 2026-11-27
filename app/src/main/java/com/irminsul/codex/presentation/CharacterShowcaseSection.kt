@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -124,7 +123,7 @@ fun CharacterShowcaseSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Icon(
+                AppIcon(
                     if (rosterExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = if (rosterExpanded) "Collapse character roster" else "Expand character roster"
                 )
@@ -556,8 +555,8 @@ private fun ShowcaseExpandableSection(
                 Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Text(summary, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(
-                imageVector = if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
+            AppIcon(
+                if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                 contentDescription = if (expanded) "Collapse $title" else "Expand $title"
             )
         }
@@ -625,8 +624,8 @@ private fun WeaponShowcaseRow(
                 )
                 if (stale) Text("Using older account data", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
             }
-            Icon(
-                imageVector = if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
+            AppIcon(
+                if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                 contentDescription = if (expanded) "Collapse weapon details" else "Expand weapon details"
             )
         }
