@@ -48,6 +48,18 @@ class AccountExportMapperTest {
         assertTrue(source.has("characters"))
     }
 
+    @Test fun mapsCharacterAscensionRankFromBaseOrDetailPayload() {
+        val source = export().put("characters", org.json.JSONArray()
+            .put(JSONObject()
+                .put("base", JSONObject().put("id", 10000002).put("level", 80).put("promote_level", 6)))
+            .put(JSONObject()
+                .put("base", JSONObject().put("id", 10000003).put("level", 70))
+                .put("promote_level", 5)))
+        val characters = (AccountExportMapper.map(source).characters as DataValue.Available).value
+        assertEquals(6, characters[0].ascensionLevel)
+        assertEquals(5, characters[1].ascensionLevel)
+    }
+
     @Test fun mapsProfileAbyssAndTheaterAsJsonIndependentStructuredData() {
         val source = export()
             .put("profile_and_exploration", JSONObject()
