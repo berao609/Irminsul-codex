@@ -4911,7 +4911,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
 - `docs/PROGRESS_MILESTONES.md`
 
-**Verification status:** Source and documentation committed. Debug CI and physical-device verification pending.
+**Verification status:** CI #801 exposed a missing `RoundedCornerShape` import; fixed in `081faa98399ae2d0f3918bf4f236bacd08e16f34`. CI #805 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Debug APK: `irminsul-codex-debug-v1.0.0-dev.805-vc807` (artifact ID `15181947395`). Physical-device verification pending.
 
 **Device checklist:**
 1. Open Tools and expand/collapse Materials Calculator.

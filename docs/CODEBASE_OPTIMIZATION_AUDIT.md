@@ -1326,7 +1326,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 13: Tools destination presentation extraction
 
-**Status:** Implemented; Debug CI and physical-device verification pending.
+**Status:** Implemented; CI #805 passed. Physical-device verification pending.
 
 **Implementation:**
 - Added `presentation/ToolsSection.kt` to own the Tools destination header, Materials Calculator card, and Lineup Simulator card/container.
@@ -1340,7 +1340,9 @@ Closing this audit does not mean the application is perfect or that every option
 - `app/src/main/java/com/irminsul/codex/MainActivity.kt`
 - `app/src/main/java/com/irminsul/codex/presentation/ToolsSection.kt`
 
-**Verification required:**
+**Automated verification:** CI #801 failed during Kotlin compilation because `RoundedCornerShape` was not imported in `ToolsSection.kt`. Added the missing import in commit `081faa98399ae2d0f3918bf4f236bacd08e16f34`. CI #805 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.805-vc807` (artifact ID `15181947395`).
+
+**Physical-device verification required:**
 1. Confirm Debug CI passes compilation, unit tests, Debug APK assembly, Room schema verification, signature verification, and artifact upload.
 2. Open Tools and expand/collapse Materials Calculator.
 3. Verify character and weapon material planner inputs and generated preview remain unchanged.
