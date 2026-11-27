@@ -376,6 +376,7 @@ private fun CodexScreen(
                         label = { Text("Visuals", fontSize = 10.sp) },
                         alwaysShowLabel = true
                     )
+                    Spacer(Modifier.weight(1f))
                     NavigationBarItem(
                         selected = selectedTab == CodexTab.TOOLS,
                         onClick = { selectedTab = CodexTab.TOOLS },
@@ -383,7 +384,6 @@ private fun CodexScreen(
                         label = { Text("Tools", fontSize = 10.sp) },
                         alwaysShowLabel = true
                     )
-                    Spacer(Modifier.weight(1f))
                     NavigationBarItem(
                         selected = selectedTab == CodexTab.ACCOUNT,
                         onClick = {
