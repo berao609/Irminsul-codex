@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.irminsul.codex.domain.model.DataValue
 import com.irminsul.codex.domain.model.StructuredData
 
@@ -43,35 +45,72 @@ fun ChronicleOverviewSection(accountCard: DataValue<StructuredData>, profileAndE
     val overview = ChroniclePresentationMapper.accountOverview(accountCard, profileAndExploration)
     val identity = overview.filter { it.label == "Player" || it.label == "Adventure Rank" }
     val statistics = overview.filterNot { it.label == "Player" || it.label == "Adventure Rank" }
+    val primaryStatistics = ChroniclePresentationMapper.primaryOverviewMetrics(statistics)
+    val secondaryStatistics = ChroniclePresentationMapper.secondaryOverviewMetrics(statistics)
+    var secondaryExpanded by remember(accountCard, profileAndExploration) { mutableStateOf(false) }
+
     ChronicleSection("Account Overview", "Your journey and collection at a glance") {
         if (overview.isEmpty()) {
             Text(chronicleAvailabilityText(profileAndExploration), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            if (identity.isNotEmpty()) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                identity.forEach { metric ->
-                    Column(
-                        Modifier.weight(1f).background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(14.dp)).padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(metric.label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                        Text(metric.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer, maxLines = 2)
+            if (identity.isNotEmpty()) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    identity.forEach { metric ->
+                        Column(
+                            Modifier.weight(1f).background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(14.dp)).padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(metric.label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text(metric.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer, maxLines = 2)
+                        }
                     }
                 }
             }
-            if (statistics.isNotEmpty()) {
-                Text("Progress & collectibles", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                statistics.chunked(3).forEach { row ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        row.forEach { metric ->
-                            Column(
-                                Modifier.weight(1f).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)).padding(9.dp),
-                                verticalArrangement = Arrangement.spacedBy(3.dp)
-                            ) {
-                                Text(metric.value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                                Text(metric.label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
-                            }
+            if (primaryStatistics.isNotEmpty()) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    primaryStatistics.forEach { metric ->
+                        Column(
+                            Modifier.weight(1f).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)).padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Text(metric.value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Text(metric.label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
                         }
-                        repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                    repeat(3 - primaryStatistics.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+            if (secondaryStatistics.isNotEmpty()) {
+                Row(
+                    Modifier.fillMaxWidth().clickable(role = Role.Button) { secondaryExpanded = !secondaryExpanded }.padding(vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        if (secondaryExpanded) "Additional statistics · ${secondaryStatistics.size}" else "View additional statistics · ${secondaryStatistics.size}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Icon(
+                        if (secondaryExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                        contentDescription = if (secondaryExpanded) "Collapse additional statistics" else "Expand additional statistics",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                if (secondaryExpanded) {
+                    secondaryStatistics.chunked(3).forEach { row ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { metric ->
+                                Column(
+                                    Modifier.weight(1f).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)).padding(9.dp),
+                                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                                ) {
+                                    Text(metric.value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                    Text(metric.label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+                                }
+                            }
+                            repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                        }
                     }
                 }
             }
@@ -82,29 +121,68 @@ fun ChronicleOverviewSection(accountCard: DataValue<StructuredData>, profileAndE
 @Composable
 fun ChronicleExplorationSection(value: DataValue<StructuredData>) {
     val regions = ChroniclePresentationMapper.explorationRegions(value)
+    var showAllRegions by remember(value) { mutableStateOf(false) }
     ChronicleSection("World Exploration", "Regional completion") {
         if (regions.isEmpty()) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                regions.forEachIndexed { index, region ->
-                    val alternate = index % 2 != 0
-                    val foreground = if (alternate) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
-                    Column(
-                        Modifier.width(196.dp).background(
-                            if (alternate) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                            RoundedCornerShape(14.dp)
-                        ).padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(region.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = foreground, maxLines = 2, minLines = 2)
-                        Text(region.percentageLabel, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = foreground)
-                        LinearProgressIndicator(region.progress, Modifier.fillMaxWidth().height(6.dp), color = MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.outlineVariant)
-                        Text("Main areas", style = MaterialTheme.typography.labelSmall, color = if (alternate) foreground else MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+            if (showAllRegions) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    regions.forEach { region -> RegionDetailCard(region) }
+                }
+            } else {
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    regions.forEach { region -> RegionOverviewCard(region) }
                 }
             }
+            TextButton(onClick = { showAllRegions = !showAllRegions }, modifier = Modifier.fillMaxWidth()) {
+                Text(if (showAllRegions) "Show fewer regions" else "View more regions")
+            }
         }
+    }
+}
+
+@Composable
+private fun RegionOverviewCard(region: ChronicleRegion) {
+    Column(
+        Modifier.width(196.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp)).padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(9.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            RegionEmblem(region, Modifier.size(40.dp))
+            Text(region.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 2, minLines = 2)
+        }
+        Text("Main Areas Only", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(region.percentageLabel, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        LinearProgressIndicator(region.progress, Modifier.fillMaxWidth().height(6.dp), color = MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.outlineVariant)
+    }
+}
+
+@Composable
+private fun RegionDetailCard(region: ChronicleRegion) {
+    Row(
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp)).padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        RegionEmblem(region, Modifier.size(56.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(region.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            LinearProgressIndicator(region.progress, Modifier.fillMaxWidth().height(6.dp), color = MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.outlineVariant)
+        }
+        Text(region.percentageLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun RegionEmblem(region: ChronicleRegion, modifier: Modifier = Modifier) {
+    if (!region.iconUrl.isNullOrBlank()) {
+        AsyncImage(
+            model = region.iconUrl,
+            contentDescription = "${region.name} emblem",
+            contentScale = ContentScale.Fit,
+            modifier = modifier
+        )
     }
 }
 

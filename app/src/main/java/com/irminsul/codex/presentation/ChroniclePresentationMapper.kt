@@ -4,7 +4,7 @@ import com.irminsul.codex.domain.model.DataValue
 import com.irminsul.codex.domain.model.StructuredData
 
 data class ChronicleMetric(val label: String, val value: String)
-data class ChronicleRegion(val name: String, val progress: Float, val percentageLabel: String)
+data class ChronicleRegion(val name: String, val progress: Float, val percentageLabel: String, val iconUrl: String? = null)
 enum class ChronicleRecordMode { SPIRAL_ABYSS, IMAGINARIUM_THEATER }
 
 object ChroniclePresentationMapper {
@@ -91,7 +91,11 @@ object ChroniclePresentationMapper {
             ChronicleRegion(
                 name = name,
                 progress = (percent / 100.0).coerceIn(0.0, 1.0).toFloat(),
-                percentageLabel = if (percent % 1.0 == 0.0) "${percent.toInt()}%" else "${"%.1f".format(java.util.Locale.ROOT, percent)}%"
+                percentageLabel = if (percent % 1.0 == 0.0) "${percent.toInt()}%" else "${"%.1f".format(java.util.Locale.ROOT, percent)}%",
+                iconUrl = sequenceOf(region.fields["icon"], region.fields["image"])
+                    .filterIsInstance<StructuredData.StringValue>()
+                    .map { it.value.trim() }
+                    .firstOrNull { it.startsWith("https://", ignoreCase = true) || it.startsWith("http://", ignoreCase = true) }
             )
         }
     }
