@@ -1149,3 +1149,17 @@ Closing this audit does not mean the application is perfect or that every option
 **Physical-device verification:** Pending. User must install the #745 Debug APK and verify both no-analysis and populated Visual Dashboard states, including assessment bars, recommendation/gap metrics, account-data coverage, and warning text.
 
 **Boundary:** Structural extraction only. No performance improvement is claimed. Do not begin another extraction until the user confirms the device checklist.
+
+
+### User-directed dashboard placement correction (2026-11-27)
+
+**Change:** After the initial Step 7 device observation showed the dashboard on every destination, the call site was restricted to CodexTab.HOME. The Account data coverage card was removed from VisualDashboardSection. The Home assessment bars and recommendation/gap metrics remain; Visuals analysis, Tools calculator, Account functions, and underlying analysis data were not intentionally changed.
+
+**Files:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/VisualDashboardSection.kt
+- README.md
+
+**Commits:** 7e0f86b36126654f5bd2b35a1b8122928a8424e0, a9fc65af97ea30c15a8a4b80f5a89c633a11bbf0, 901100de487339238d8ec8957919ea9cfecc7e13.
+
+**Verification:** Source committed; new CI and physical-device verification pending. The prior #745 result applies to the pre-correction source only. Install and test the new Debug APK before clearing Batch 6 Step 7 or beginning another extraction.
