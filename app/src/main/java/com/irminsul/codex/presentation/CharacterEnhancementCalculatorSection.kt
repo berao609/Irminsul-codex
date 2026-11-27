@@ -50,28 +50,6 @@ internal fun CharacterEnhancementCalculatorSection(
             .apply()
     }
 
-    var ascensionCandidates by remember(character.id) {
-        mutableStateOf<com.irminsul.codex.data.catalogue.GenshinDbUpgradeCostCandidate?>(null)
-    }
-    var candidateLoadFailed by remember(character.id) { mutableStateOf(false) }
-    LaunchedEffect(character.id) {
-        val loaded = withContext(Dispatchers.IO) {
-            runCatching {
-                BundledCharacterProgressionCandidateRepository.loadCandidates(context, character.id.toString())
-            }
-        }
-        loaded.onSuccess { result ->
-            ascensionCandidates = result?.candidates
-                ?.filter { it.track == com.irminsul.codex.domain.model.UpgradeCostTrack.CHARACTER_ASCENSION }
-                ?.let { it.firstOrNull() }
-            if (result == null) candidateLoadFailed = true
-            else {
-                // Keep the full imported candidate list below; this state only records successful loading.
-                candidateLoadFailed = false
-            }
-        }.onFailure { candidateLoadFailed = true }
-    }
-
     var loadedCandidates by remember(character.id) {
         mutableStateOf<List<com.irminsul.codex.data.catalogue.GenshinDbUpgradeCostCandidate>?>(null)
     }
