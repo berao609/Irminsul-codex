@@ -50,7 +50,7 @@ class WeaponUpgradePlanCandidateCalculatorTest {
 
     private fun request(
         rarity: WeaponExperienceRarity = WeaponExperienceRarity.FIVE_STAR,
-        current: Int = 20,
+        current: Int = 1,
         currentExp: Long = 0L,
         rank: Int = 0,
         target: Int = 90
