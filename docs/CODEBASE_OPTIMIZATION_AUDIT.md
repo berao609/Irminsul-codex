@@ -708,7 +708,7 @@ Closing this audit does not mean the application is perfect or that every option
 | 3 | AUD-006 CPU-heavy processing off main thread; AUD-011 Chronicle rendering follow-up | Cleared | CI #542 passed for processing and #555 passed for the Chronicle corrections. User confirmed responsive rendering, correct Account Overview statistics, working expandables, and no exposed technical IDs/URLs. |
 | 4 | AUD-007 Release test gate | CI passed; tagged-release path untested | CI #556 passed. The successful tagged-release publication path remains untested; no release was published. |
 | 5 | AUD-005 lazy roster grid | Cleared | CI #557 passed and user completed physical-device checks: grid scrolling, parent-page scrolling, filters, sorting, selection/detail updates, and responsiveness all worked. |
-| 6 | AUD-002 incremental UI extraction | In progress | First focused extraction moves the account Chronicle presentation into its own presentation file; continue with other cohesive sections only after verification. |
+| 6 | AUD-002 incremental UI extraction | In progress | Steps 1-8 cleared, including user-confirmed Step 8 device test; Step 9 Account Data Export extraction is implemented and awaiting CI/device verification. |
 | 7 | AUD-004 lifecycle-aware StateFlow collection | Not started | Low-risk lifecycle improvement. |
 | 8 | AUD-010 agent workflow efficiency | Not started | Keep safety and Git rules unconditional. |
 
