@@ -23,7 +23,14 @@ class CharacterUpgradePlanCandidateCalculatorTest {
             toLevel = to,
             talentSlot = null,
             gameVersion = "7.2",
-            costs = listOf(GenshinDbParsedCostItem(itemId, itemName, quantity)),
+            costs = if (itemId == "202") {
+                listOf(GenshinDbParsedCostItem(itemId, itemName, quantity))
+            } else {
+                listOf(
+                    GenshinDbParsedCostItem("202", "Mora", 100L),
+                    GenshinDbParsedCostItem(itemId, itemName, quantity)
+                )
+            },
             sourceReference = KnowledgeSourceReference(
                 "genshin-db-7.2",
                 "https://github.com/theBowja/genshin-db/blob/8e5badd60b5d894284ccc927a56c9683529d2592/src/data/English/characters/ayaka.json",

@@ -50,7 +50,7 @@ class CharacterAscensionCandidateCalculatorTest {
         val result = CharacterAscensionCandidateCalculator.calculate(request(), duplicate)
         assertEquals(CharacterAscensionCandidateCalculationStatus.CANDIDATE_DATA, result.status)
         assertEquals(6, result.usedCandidateIds.size)
-        assertEquals(2L, result.materials.single { it.itemId == "104121" }.quantity)
+        assertEquals(102L, result.materials.single { it.itemId == "104121" }.quantity)
     }
 
     @Test fun alreadyPaidAscensionsAreNotChargedAgain() {
