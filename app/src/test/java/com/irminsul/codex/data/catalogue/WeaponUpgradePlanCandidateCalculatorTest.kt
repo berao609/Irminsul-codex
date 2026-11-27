@@ -82,7 +82,7 @@ class WeaponUpgradePlanCandidateCalculatorTest {
             fiveStarCurve
         )
         assertEquals(expectedExperience.moraRequired + 10L, mora.quantity)
-        expectedExperience.materials.forEach { expected ->
+        expectedExperience.materials.filterNot { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }.forEach { expected ->
             assertEquals(
                 expected.quantity,
                 result.requirements.single { it.itemId == expected.itemId }.quantity
