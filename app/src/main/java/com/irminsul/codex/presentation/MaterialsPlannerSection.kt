@@ -99,6 +99,7 @@ fun MaterialsPlannerSection(
 
     val characterId = selectedTargetId.takeIf { it.startsWith("character:") }
         ?.removePrefix("character:")
+    val selectedCharacter = characters.firstOrNull { it.id.toString() == characterId }
     var normalTalentCurrent by remember(characterId) {
         mutableStateOf(preferences.getString("material_talent_normal_current_$characterId", "") ?: "")
     }
@@ -303,6 +304,14 @@ fun MaterialsPlannerSection(
             )
         }
         if (characterId != null) {
+            selectedCharacter?.let { character ->
+                CharacterEnhancementCalculatorSection(
+                    character = character,
+                    currentLevel = currentLevel,
+                    targetLevel = targetLevel,
+                    preferences = preferences
+                )
+            }
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(20.dp)
