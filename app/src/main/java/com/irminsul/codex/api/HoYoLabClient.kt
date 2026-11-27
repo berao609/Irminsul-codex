@@ -277,15 +277,7 @@ object HoYoLabClient {
                 null
             }
 
-            Result.success(
-                AccountProfile(
-                    nickname = card.optString("nickname").takeIf { it.isNotBlank() },
-                    uid = cleanUid,
-                    serverName = card.optString("region_name").takeIf { it.isNotBlank() }
-                        ?: card.optString("region").takeIf { it.isNotBlank() },
-                    avatarUrl = avatarUrl
-                )
-            )
+            Result.success(AccountProfileParser.parse(cleanUid, card, avatarUrl))
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (error: Exception) {
