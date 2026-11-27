@@ -1051,3 +1051,16 @@ Closing this audit does not mean the application is perfect or that every option
 7. Confirm existing saved plans remain intact.
 
 **Boundary:** Structural extraction only. No performance improvement is claimed.
+
+
+## Navigation adjustment during Batch 6 (user-directed scope)
+
+**Date:** 2026-11-27
+
+**Change:** Added the Tools destination to the bottom navigation and moved Materials Planner out of Visuals into Tools. The bottom-navigation order is Home, Visuals, centered AI action, Tools, Account. Removed the duplicate top-header Account shortcut; Account remains in bottom navigation.
+
+**Boundary:** This was a user-directed navigation/product adjustment alongside the ongoing responsibility-extraction batch, not an audit finding and not a performance optimization. Calculator calculation logic, planner preference keys, and account data were not intentionally changed.
+
+**Verification:** CI and physical-device verification pending. See Milestone 081.
+
+**Next audit action:** Continue Batch 6 one cohesive presentation extraction at a time after this change is verified. Do not start UI overhaul or change calculator internals.
