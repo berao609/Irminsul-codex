@@ -6,9 +6,9 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BundledCharacterProgressionCandidateRepositoryTest {
-    private fun stageCosts(keyPrefix: String, count: Int): JSONObject {
+    private fun stageCosts(keyPrefix: String, count: Int, firstIndex: Int = 1): JSONObject {
         val costs = JSONObject()
-        for (index in 1..count) {
+        for (index in firstIndex until firstIndex + count) {
             costs.put(
                 "$keyPrefix$index",
                 JSONArray().put(
@@ -34,7 +34,7 @@ class BundledCharacterProgressionCandidateRepositoryTest {
         if (includeTalents) {
             record.put(
                 "talents",
-                JSONObject().put("costs", stageCosts("lvl", 9))
+                JSONObject().put("costs", stageCosts("lvl", 9, firstIndex = 2))
             )
         } else {
             record.put("talents", JSONObject.NULL)
@@ -46,7 +46,7 @@ class BundledCharacterProgressionCandidateRepositoryTest {
         .put("schemaVersion", 1)
         .put("gameVersion", BundledCharacterProgressionCandidateRepository.GAME_VERSION)
         .put("sourceCommit", BundledCharacterProgressionCandidateRepository.SOURCE_COMMIT)
-        .put("characters", JSONArray().apply { records.forEach(::put) })
+        .put("characters", JSONArray().apply { records.forEach { put(it) } })
 
     @Test fun importsAscensionAndAllThreeIndependentTalentSlots() {
         val result = BundledCharacterProgressionCandidateRepository.parseCandidates(
