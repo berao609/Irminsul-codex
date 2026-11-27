@@ -9,6 +9,7 @@ import com.irminsul.codex.presentation.AccountAnalysisSection
 import com.irminsul.codex.presentation.InitialSignInSection
 import com.irminsul.codex.presentation.AccountCredentialsSection
 import com.irminsul.codex.presentation.AccountSettingsSection
+import com.irminsul.codex.presentation.AiAssistantSheet
 import com.irminsul.codex.presentation.ThemeMode
 import com.irminsul.codex.presentation.VisualDashboardSection
 
@@ -685,63 +686,10 @@ private fun CodexScreen(
         }
         }
         if (showAiSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showAiSheet = false },
+            AiAssistantSheet(
                 sheetState = aiSheetState,
-                containerColor = MaterialTheme.colorScheme.surface
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Outlined.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                        Text("Irminsul AI", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.weight(1f))
-                        TextButton(onClick = { showAiSheet = false }) { Text("Close") }
-                    }
-                    Card(
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 280.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            Text("Your account-aware assistant", fontWeight = FontWeight.SemiBold)
-                            Text(
-                                "Ask about your characters, builds, teams, and progression priorities.",
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                "The chat interface is ready for the AI integration. A provider is not connected yet, so responses are not active in this build.",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                    OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
-                        enabled = false,
-                        placeholder = { Text("AI chat will be available after provider setup") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp)
-                    )
-                    Text(
-                        "Your HoYoLAB authentication cookies will never be sent to an AI provider.",
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
+                onDismiss = { showAiSheet = false }
+            )
         }
     }
 }
