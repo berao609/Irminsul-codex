@@ -4531,3 +4531,30 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Test level gates, all three talent tracks, Mora aggregation, owned/remaining values, Traveler missing data, offline use, and independent weapon planning on device.
 
 **Result:** The Materials Planner now has a character-first automatic cost preview and a separate weapon workflow. Production approval and physical-device verification are not complete.
+
+
+## Milestone 081 - Tools Navigation and Materials Calculator Relocation
+
+**Date recorded:** 2026-11-27
+
+**Implemented:**
+- Added a dedicated Tools destination to bottom navigation: Home, Visuals, central AI action, Tools, Account.
+- Relocated Materials Calculator from Visuals to Tools. The existing planner component, calculations, preference-backed storage, and collapse state are retained.
+- Removed the duplicate Account shortcut from the top app header. Account remains available from the bottom navigation, which opens the credential-management context as before.
+- Updated README navigation description.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `README.md`
+
+**Verification status:** Source changes committed. CI and physical-device verification pending.
+
+**Device checklist:**
+1. Confirm navigation order is Home, Visuals, AI, Tools, Account.
+2. Open Tools and confirm Materials Calculator is available.
+3. Confirm calculator character and weapon flows still work, including saved manual tracking rows.
+4. Confirm Visuals no longer contains Materials Calculator.
+5. Confirm only one Account entry exists in navigation/header and it still opens account settings and credentials.
+6. Confirm switching tabs preserves expected state and scrolling.
+
+**Result:** The calculator now lives in Tools, while Visuals remains focused on account analysis and visual information. No calculation logic or saved preference keys were intentionally changed.
