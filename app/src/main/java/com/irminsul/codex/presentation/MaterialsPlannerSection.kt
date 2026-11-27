@@ -158,6 +158,7 @@ fun MaterialsPlannerSection(
         mutableStateOf(preferences.getString("material_weapon_target_$selectedWeaponId", "") ?: "")
     }
     var weaponMenuExpanded by remember { mutableStateOf(false) }
+    var manualTrackingExpanded by remember { mutableStateOf(false) }
     val selectedWeapon = if (selectedWeaponId.startsWith("weapon:")) {
         val parts = selectedWeaponId.split(":")
         val owner = characters.firstOrNull { it.id.toString() == parts.getOrNull(1) }
@@ -425,6 +426,14 @@ fun MaterialsPlannerSection(
             }
         }
 
+        OutlinedButton(
+            onClick = { manualTrackingExpanded = !manualTrackingExpanded },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text(if (manualTrackingExpanded) "Hide manual material tracking" else "Manual material tracking (optional)")
+        }
+        if (manualTrackingExpanded) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -559,6 +568,7 @@ fun MaterialsPlannerSection(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        }
     }
 }
 
