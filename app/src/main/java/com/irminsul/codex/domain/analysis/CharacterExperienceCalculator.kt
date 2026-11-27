@@ -19,7 +19,9 @@ data class CharacterExperienceCalculationRequest(
     val currentExperienceWithinLevel: Long,
     val targetLevel: Int,
     /** Highest level currently unlocked by the character's ascension state. */
-    val maximumUnlockedLevel: Int
+    val maximumUnlockedLevel: Int,
+    /** Highest level the plan intends to unlock after paying required ascension costs. */
+    val targetMaximumUnlockedLevel: Int = maximumUnlockedLevel
 )
 
 data class CharacterExperienceMaterialRequirement(
@@ -65,11 +67,13 @@ object CharacterExperienceCalculator {
         if (request.currentLevel !in 1..90 || request.targetLevel !in 1..90 ||
             request.targetLevel < request.currentLevel ||
             request.maximumUnlockedLevel !in supportedAscensionCaps ||
+            request.targetMaximumUnlockedLevel !in supportedAscensionCaps ||
+            request.targetMaximumUnlockedLevel < request.maximumUnlockedLevel ||
             request.currentLevel > request.maximumUnlockedLevel
         ) {
             return invalid(CharacterExperienceCalculationIssue.INVALID_LEVEL_RANGE)
         }
-        if (request.targetLevel > request.maximumUnlockedLevel) {
+        if (request.targetLevel > request.targetMaximumUnlockedLevel) {
             return invalid(CharacterExperienceCalculationIssue.TARGET_EXCEEDS_ASCENSION_CAP)
         }
         if (cumulativeExperienceByLevel.size != 90 ||

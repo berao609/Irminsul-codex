@@ -93,6 +93,34 @@ class CharacterExperienceCalculatorTest {
         assertTrue(calculated.materials.isEmpty())
     }
 
+
+    @Test fun futureLevelsCanBePlannedAcrossAscensionGatesWhenTargetCapIsIncluded() {
+        val calculated = result(
+            request(current = 20, target = 90, cap = 20).copy(targetMaximumUnlockedLevel = 90)
+        )
+        assertEquals(CharacterExperienceCalculationStatus.CANDIDATE_DATA, calculated.status)
+        assertEquals(8_242_475L, calculated.requiredExperience)
+        assertTrue(calculated.grantedExperience >= calculated.requiredExperience)
+        assertTrue(calculated.materials.isNotEmpty())
+    }
+
+    @Test fun targetAboveThePlannedAscensionCapIsRejected() {
+        val calculated = result(
+            request(current = 20, target = 50, cap = 20).copy(targetMaximumUnlockedLevel = 40)
+        )
+        assertEquals(CharacterExperienceCalculationStatus.INVALID_REQUEST, calculated.status)
+        assertEquals(CharacterExperienceCalculationIssue.TARGET_EXCEEDS_ASCENSION_CAP, calculated.issue)
+        assertTrue(calculated.materials.isEmpty())
+    }
+
+    @Test fun plannedAscensionCapCannotMoveBehindTheCurrentUnlockedCap() {
+        val calculated = result(
+            request(current = 20, target = 20, cap = 40).copy(targetMaximumUnlockedLevel = 20)
+        )
+        assertEquals(CharacterExperienceCalculationStatus.INVALID_REQUEST, calculated.status)
+        assertEquals(CharacterExperienceCalculationIssue.INVALID_LEVEL_RANGE, calculated.issue)
+    }
+
     @Test fun sameLevelDoesNotChargeForAlreadyCompletedProgression() {
         val calculated = result(request(current = 40, currentExp = 0L, target = 40, cap = 40))
         assertEquals(CharacterExperienceCalculationStatus.CANDIDATE_DATA, calculated.status)
