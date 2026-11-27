@@ -2,7 +2,7 @@ name: Build Debug APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "ui-revamp/**" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
