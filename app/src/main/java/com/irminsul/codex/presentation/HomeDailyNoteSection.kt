@@ -15,11 +15,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import com.irminsul.codex.api.DailyNote
 
 @Composable
@@ -172,17 +178,79 @@ fun HomeDailyNoteSection(
                                 null -> "Claim status unavailable"
                             }
                         )
-                        HomeDailyNoteMetric(
-                            modifier = Modifier.weight(1f),
-                            label = "Weekly Discounts",
-                            value = (note.remainResinDiscountNum?.toString() ?: "—") + "/" + (note.resinDiscountNumLimit?.toString() ?: "—"),
-                            status = if (note.remainResinDiscountNum != null && note.resinDiscountNumLimit != null) "Remaining" else "Availability unknown"
+                        HomeTransformerMetric(
+                            note = note,
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun HomeTransformerMetric(
+    note: DailyNote,
+    modifier: Modifier = Modifier
+) {
+    var remainingSeconds by remember(
+        note.transformerObtained,
+        note.transformerReached,
+        note.transformerRecoveryTimeSeconds
+    ) {
+        mutableLongStateOf(note.transformerRecoveryTimeSeconds ?: -1L)
+    }
+
+    LaunchedEffect(
+        note.transformerObtained,
+        note.transformerReached,
+        note.transformerRecoveryTimeSeconds
+    ) {
+        val initial = note.transformerRecoveryTimeSeconds
+        if (note.transformerObtained == true && note.transformerReached != true && initial != null) {
+            remainingSeconds = initial
+            while (remainingSeconds > 0L) {
+                delay(1_000L)
+                remainingSeconds = (remainingSeconds - 1L).coerceAtLeast(0L)
+            }
+        }
+    }
+
+    val value = when {
+        note.transformerObtained == false -> "—"
+        note.transformerObtained != true -> "—"
+        note.transformerReached == true || remainingSeconds == 0L -> "Ready"
+        remainingSeconds > 0L -> formatTransformerCooldown(remainingSeconds)
+        else -> "—"
+    }
+    val status = when {
+        note.transformerObtained == false -> "Not obtained"
+        note.transformerObtained != true -> "Availability unknown"
+        note.transformerReached == true || remainingSeconds == 0L -> "Cooldown complete"
+        remainingSeconds > 0L -> "Time remaining"
+        else -> "Cooldown unavailable"
+    }
+
+    HomeDailyNoteMetric(
+        modifier = modifier,
+        label = "Parametric Transformer",
+        value = value,
+        status = status
+    )
+}
+
+private fun formatTransformerCooldown(totalSeconds: Long): String {
+    val days = totalSeconds / 86_400L
+    val hours = (totalSeconds % 86_400L) / 3_600L
+    val minutes = (totalSeconds % 3_600L) / 60L
+    val seconds = totalSeconds % 60L
+    return buildList {
+        if (days > 0L) add("${days}d")
+        if (hours > 0L || days > 0L) add("${hours}h")
+        if (minutes > 0L || hours > 0L || days > 0L) add("${minutes}m")
+        add("${seconds}s")
+    }.joinToString(" ")
 }
 
 @Composable
