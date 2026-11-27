@@ -1509,7 +1509,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 19: Theme color-scheme presentation extraction
 
-**Status:** Implemented and committed; CI and physical-device verification pending.
+**Status:** User confirmed successful CI/build and physical-device testing. Exact workflow run and artifact identifiers were not supplied in the confirmation.
 
 **Implementation:**
 - Moved the existing light and dark Material 3 color-scheme definitions from `MainActivity.kt` into `presentation/CodexThemeColors.kt`.
@@ -1523,3 +1523,21 @@ Closing this audit does not mean the application is perfect or that every option
 - `app/src/main/java/com/irminsul/codex/presentation/CodexThemeColors.kt`
 
 **Boundary:** Presentation definition extraction only. No visual or performance improvement is claimed. CI and device verification are pending.
+
+
+### Batch 6 - Step 20: System-bar appearance presentation extraction
+
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Moved the existing status-bar and navigation-bar icon appearance SideEffect into `presentation/CodexSystemBars.kt`.
+- MainActivity still derives `useDarkTheme`, obtains the current Compose view, and supplies the Activity window.
+- Preserved the exact `WindowInsetsControllerCompat` assignments and SideEffect lifecycle.
+- Theme selection, preference persistence, edge-to-edge window setup, and MaterialTheme ownership remain in MainActivity.
+- No colors, layout, navigation, account state, retrieval, persistence, or calculator behavior changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexSystemBars.kt`
+
+**Boundary:** Presentation side-effect extraction only. No visual or performance improvement is claimed. CI and device verification are pending.
