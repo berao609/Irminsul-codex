@@ -40,7 +40,9 @@ jobs:
             echo "::error::Android SDK command-line tools were not found under $sdk_root."
             exit 1
           fi
+          set +o pipefail
           yes | "$sdkmanager_path" --licenses
+          set -o pipefail
           "$sdkmanager_path" --install "platforms;android-37" "build-tools;37.0.0" "platform-tools"
 
       - name: Configure persistent Debug signing
