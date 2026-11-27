@@ -162,9 +162,31 @@ object WeaponAscensionCostCalculator {
         }
 
         val totals = linkedMapOf<String, Long>()
+        val names = linkedMapOf<String, String>()
         try {
             requiredLevels.forEach { level ->
                 phasesByLevel.getValue(level).single().costs.forEach { item ->
+                    if (item.itemId.isBlank() || item.quantity <= 0L ||
+                        (item.itemName != null && item.itemName.isBlank())
+                    ) {
+                        return result(
+                            WeaponAscensionCostStatus.INVALID_CANDIDATE,
+                            requiredLevels = requiredLevels,
+                            issue = WeaponAscensionCostIssue.INVALID_COST_ITEM
+                        )
+                    }
+                    val itemName = item.itemName
+                    if (itemName != null) {
+                        val existingName = names[item.itemId]
+                        if (existingName != null && existingName != itemName) {
+                            return result(
+                                WeaponAscensionCostStatus.INVALID_CANDIDATE,
+                                requiredLevels = requiredLevels,
+                                issue = WeaponAscensionCostIssue.INVALID_COST_ITEM
+                            )
+                        }
+                        names[item.itemId] = itemName
+                    }
                     totals[item.itemId] = Math.addExact(totals[item.itemId] ?: 0L, item.quantity)
                 }
             }
@@ -174,7 +196,9 @@ object WeaponAscensionCostCalculator {
 
         return result(
             WeaponAscensionCostStatus.CANDIDATE_DATA,
-            requirements = totals.map { (id, quantity) -> WeaponExperienceMaterialRequirement(id, quantity) },
+            requirements = totals.map { (id, quantity) ->
+                WeaponExperienceMaterialRequirement(id, quantity, names[id])
+            },
             requiredLevels = requiredLevels
         )
     }
