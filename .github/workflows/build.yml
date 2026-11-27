@@ -207,7 +207,7 @@ jobs:
             echo "available=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run Room instrumentation tests on Android 17 API 37
+      - name: Run Room instrumentation tests on Android 17 API 37.2
         if: steps.room_tests.outputs.run == 'true'
         uses: reactivecircus/android-emulator-runner@v2
         env:
