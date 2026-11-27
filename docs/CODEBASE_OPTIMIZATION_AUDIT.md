@@ -1410,7 +1410,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 16: Home destination composition extraction
 
-**Status:** Implemented and committed; CI and physical-device verification pending.
+**Status:** Cleared after CI #815/#816 and user-confirmed physical-device verification.
 
 **Implementation:**
 - Added `presentation/HomeSection.kt` to compose the existing Home account overview, Daily Note, and Visual Dashboard sections in their original order.
@@ -1428,11 +1428,40 @@ Closing this audit does not mean the application is perfect or that every option
 - `760a08d6e08ef05fbbc4f1ff9e2e041245be272d` - extract Home destination composition.
 - `cf308f82ec5b571e8154e2f7a17baefce1e66eac` - delegate Home composition from MainActivity.
 
+**Automated verification:** CI #815 (run `45966978956`) and CI #816 (run `45966984614`) passed. Unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload passed; Room instrumentation tests were skipped by workflow conditions. Integration APK artifact: `irminsul-codex-debug-v1.0.0-dev.816-vc818` (artifact ID `15182808332`).
+
+**Physical-device verification:** User confirmed all checks clear, including account overview, Daily Note states/refresh, Visual Dashboard visibility, and the other destinations/tools.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 17: Account destination composition extraction
+
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Added `presentation/AccountSection.kt` to compose the existing account credentials panel, JSON export panel, and Account & settings section.
+- MainActivity continues to own UID/cookie values, credential visibility, theme state, export progress/status, and all callbacks.
+- Passed the existing visibility conditions explicitly so credential gating and export gating remain unchanged.
+- Reused `AccountCredentialsSection`, `AccountDataExportSection`, and `AccountSettingsSection` without changing their internal UI or behavior.
+- Preserved the original content order: credentials, export, then Account & settings.
+- Kept login, credential persistence/clearing, export orchestration, theme persistence, and navigation in CodexScreen.
+- No credential storage, account retrieval, export mapping, persistence, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountSection.kt`
+
+**Commits:**
+- `711efc64ced18833a16a079a66e89fbe28274a23` - extract Account destination composition.
+- `9d140637c24244cf17aee59b0a07fb23842264ba` - delegate Account composition from MainActivity.
+
 **Verification required:**
 1. Confirm Debug CI compilation, unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
-2. Verify Home account identity and snapshot summary with and without a saved snapshot.
-3. Verify Daily Note unavailable, loading, loaded, and refresh states.
-4. Verify the Visual Dashboard remains visible and populated/empty states are unchanged.
-5. Confirm Visuals, Tools, Account, navigation, AI placeholder, Materials Calculator, and Lineup Simulator remain functional.
+2. Verify Account credentials visibility, sign-in, save/sync, and clear-credentials behavior.
+3. Verify JSON export progress, status, and Save JSON action.
+4. Verify Appearance theme selection and persistence.
+5. Verify Manage HoYoLAB account and Hide account credentials controls.
+6. Confirm Home, Visuals, Tools, navigation, AI placeholder, Materials Calculator, and Lineup Simulator remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
