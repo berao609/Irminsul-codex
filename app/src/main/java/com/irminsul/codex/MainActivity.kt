@@ -13,6 +13,8 @@ import com.irminsul.codex.presentation.ScreenErrorBanner
 import com.irminsul.codex.presentation.HomeInitialLoadingIndicator
 import com.irminsul.codex.presentation.HomeSection
 import com.irminsul.codex.presentation.CodexScreenHeader
+import com.irminsul.codex.presentation.CodexDarkColors
+import com.irminsul.codex.presentation.CodexLightColors
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -52,7 +54,6 @@ import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -73,29 +74,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.irminsul.codex.domain.analysis.LineupSelectionRules
-
-private val CodexDarkColors = darkColorScheme(
-    primary = Color(0xFF80CBC4),
-    background = Color(0xFF0F1115),
-    surface = Color(0xFF171A21),
-    surfaceVariant = Color(0xFF1E222B),
-    onBackground = Color(0xFFE6E8EC),
-    onSurface = Color(0xFFE6E8EC),
-    onSurfaceVariant = Color(0xFF9AA0A6),
-    error = Color(0xFFEF5350)
-)
-
-private val CodexLightColors = lightColorScheme(
-    primary = Color(0xFF276B65),
-    onPrimary = Color.White,
-    background = Color(0xFFF7F8FA),
-    surface = Color(0xFFFFFFFF),
-    surfaceVariant = Color(0xFFE9EDF1),
-    onBackground = Color(0xFF171A21),
-    onSurface = Color(0xFF171A21),
-    onSurfaceVariant = Color(0xFF626B75),
-    error = Color(0xFFB3261E)
-)
 
 class MainActivity : ComponentActivity() {
     private lateinit var accountViewModel: AccountViewModel
