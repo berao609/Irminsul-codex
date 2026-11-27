@@ -38,7 +38,12 @@ fun MaterialsPlannerSection(
     preferences: SharedPreferences
 ) {
     var selectedTargetId by remember {
-        mutableStateOf(preferences.getString("material_target_id", "custom") ?: "custom")
+        mutableStateOf(
+            preferences.getString("material_target_id", null)
+                ?.takeIf { saved -> saved.startsWith("character:") && characters.any { it.id.toString() == saved.removePrefix("character:") } }
+                ?: characters.firstOrNull()?.let { "character:${it.id}" }
+                ?: "custom"
+        )
     }
     var customTargetName by remember {
         mutableStateOf(preferences.getString("material_custom_target", "") ?: "")
@@ -148,6 +153,13 @@ fun MaterialsPlannerSection(
         }
     } else null
 
+    LaunchedEffect(selectedWeaponId, weaponCurrentLevel, weaponTargetLevel) {
+        preferences.edit()
+            .putString("material_weapon_target_id", selectedWeaponId)
+            .putString("material_weapon_current_$selectedWeaponId", weaponCurrentLevel)
+            .putString("material_weapon_target_$selectedWeaponId", weaponTargetLevel)
+            .apply()
+    }
     LaunchedEffect(planStorageKey) {
         rows.clear()
         rows.addAll(loadManualMaterialPlanRows(preferences, planStorageKey))
@@ -184,18 +196,6 @@ fun MaterialsPlannerSection(
                 .apply()
         }
     }
-    LaunchedEffect(weaponPlanKey, plannedWeaponId, plannedWeaponName) {
-        preferences.edit()
-            .putString("material_planned_weapon_id_$weaponPlanKey", plannedWeaponId)
-            .putString("material_planned_weapon_name_$weaponPlanKey", plannedWeaponName)
-            .apply()
-    }
-    LaunchedEffect(weaponPlanKey, plannedWeaponId, plannedWeaponCurrent, plannedWeaponTarget) {
-        preferences.edit()
-            .putString("material_planned_weapon_current_$weaponPlanKey-$plannedWeaponId", plannedWeaponCurrent)
-            .putString("material_planned_weapon_target_$weaponPlanKey-$plannedWeaponId", plannedWeaponTarget)
-            .apply()
-    }
 
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -220,9 +220,9 @@ fun MaterialsPlannerSection(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text("1. Choose an upgrade target", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text("1. Choose a character", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
-                        "Each character and weapon keeps its own level range.",
+                        "Select a character from your account to calculate its upgrade materials.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -234,37 +234,23 @@ fun MaterialsPlannerSection(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            selectedTarget?.label ?: if (selectedTargetId == "custom") "Custom target" else "Choose target",
+                            selectedTarget?.label ?: "Choose character",
                             modifier = Modifier.weight(1f),
                             maxLines = 1
                         )
                         Text("⌄")
                     }
                     DropdownMenu(expanded = targetMenuExpanded, onDismissRequest = { targetMenuExpanded = false }) {
-                        targetOptions.forEach { option ->
+                        characterOptions.forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option.label) },
                                 onClick = { selectedTargetId = option.id; targetMenuExpanded = false }
                             )
                         }
-                        DropdownMenuItem(
-                            text = { Text("Custom target") },
-                            onClick = { selectedTargetId = "custom"; targetMenuExpanded = false }
-                        )
                     }
                 }
-                if (selectedTargetId == "custom") {
-                    OutlinedTextField(
-                        value = customTargetName,
-                        onValueChange = { customTargetName = it },
-                        label = { Text("Character or weapon name") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
                 Text(
-                    if (selectedTargetId.startsWith("character:")) "Character level" else "Weapon level",
+                    "Character level",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -300,14 +286,6 @@ fun MaterialsPlannerSection(
             )
         }
         if (characterId != null) {
-            selectedCharacter?.let { character ->
-                CharacterEnhancementCalculatorSection(
-                    character = character,
-                    currentLevel = currentLevel,
-                    targetLevel = targetLevel,
-                    preferences = preferences
-                )
-            }
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(20.dp)
@@ -366,62 +344,51 @@ fun MaterialsPlannerSection(
                 }
             }
 
+        if (selectedCharacter != null) {
+            CharacterEnhancementCalculatorSection(
+                character = selectedCharacter,
+                currentLevel = currentLevel,
+                targetLevel = targetLevel,
+                talentRanges = talentValues.mapNotNull { (track, _, levels) ->
+                    val current = levels.first.toIntOrNull()
+                    val target = levels.second.toIntOrNull()
+                    if (current != null && target != null) {
+                        com.irminsul.codex.data.catalogue.CharacterTalentLevelRange(track, current, target)
+                    } else null
+                },
+                preferences = preferences
+            )
+        }
+
+        if (weaponOptions.isNotEmpty()) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(20.dp)
             ) {
-                Column(
-                    Modifier.fillMaxWidth().padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Text("3. Planned weapon", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Choose the weapon this character is intended to equip.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Weapon calculator", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Box {
                         OutlinedButton(
                             onClick = { weaponMenuExpanded = true },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(
-                                plannedWeapon?.label ?: if (plannedWeaponId == "custom") "Choose or enter a weapon" else "Custom weapon",
-                                modifier = Modifier.weight(1f),
-                                maxLines = 1
-                            )
+                            Text(selectedWeaponOption?.label ?: "Choose weapon", modifier = Modifier.weight(1f), maxLines = 1)
                             Text("⌄")
                         }
                         DropdownMenu(expanded = weaponMenuExpanded, onDismissRequest = { weaponMenuExpanded = false }) {
-                            targetOptions.filter { it.id.startsWith("weapon:") }.forEach { option ->
+                            weaponOptions.forEach { option ->
                                 DropdownMenuItem(
                                     text = { Text(option.label) },
-                                    onClick = { plannedWeaponId = option.id; weaponMenuExpanded = false }
+                                    onClick = { selectedWeaponId = option.id; weaponMenuExpanded = false }
                                 )
                             }
-                            DropdownMenuItem(
-                                text = { Text("Custom weapon") },
-                                onClick = { plannedWeaponId = "custom"; weaponMenuExpanded = false }
-                            )
                         }
-                    }
-                    if (plannedWeaponId == "custom") {
-                        OutlinedTextField(
-                            value = plannedWeaponName,
-                            onValueChange = { plannedWeaponName = it },
-                            label = { Text("Weapon name") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
-                        )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         OutlinedTextField(
-                            value = plannedWeaponCurrent,
-                            onValueChange = { plannedWeaponCurrent = it.filter(Char::isDigit).take(3) },
+                            value = weaponCurrentLevel,
+                            onValueChange = { weaponCurrentLevel = it.filter(Char::isDigit).take(3) },
                             label = { Text("Current level") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
@@ -429,8 +396,8 @@ fun MaterialsPlannerSection(
                             shape = RoundedCornerShape(12.dp)
                         )
                         OutlinedTextField(
-                            value = plannedWeaponTarget,
-                            onValueChange = { plannedWeaponTarget = it.filter(Char::isDigit).take(3) },
+                            value = weaponTargetLevel,
+                            onValueChange = { weaponTargetLevel = it.filter(Char::isDigit).take(3) },
                             label = { Text("Target level") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
@@ -440,21 +407,13 @@ fun MaterialsPlannerSection(
                     }
                 }
             }
-        }
-
-        if (selectedWeapon == null) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Automatic costs are not connected yet", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        "Only reviewed, approved character and ascension costs can populate automatic requirements. Manual tracking remains available.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            selectedWeapon?.let { weapon ->
+                WeaponEnhancementCalculatorSection(
+                    weapon = weapon,
+                    currentLevel = weaponCurrentLevel,
+                    targetLevel = weaponTargetLevel,
+                    preferences = preferences
+                )
             }
         }
 
