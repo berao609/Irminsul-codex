@@ -938,6 +938,7 @@ private fun CodexScreen(
             )
         }
         }
+        }
         if (showAiSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showAiSheet = false },
