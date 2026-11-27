@@ -5162,3 +5162,37 @@ Extract the existing app-level theme composition from MainActivity without chang
 
 ### Boundary
 Composition extraction only. Theme selection, preference persistence, and screen state remain caller-owned. No visual or performance improvement is claimed.
+
+
+## Milestone 102 - Root Screen Composable Extraction
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+### Objective
+Move the existing root screen composable out of MainActivity while preserving its state ownership and behavior.
+
+### Implementation
+- Moved the existing `CodexScreen` composable into `presentation/CodexScreen.kt`.
+- MainActivity now owns Activity setup, ViewModel construction, edge-to-edge window setup, theme preference state/resolution/persistence, and invokes the extracted root screen.
+- The extracted composable retains its existing screen-local Compose state, callbacks, refresh/export/login orchestration, tab selection, and destination composition.
+- No state was moved into a new ViewModel or service; the composable body and parameter contract remain unchanged apart from visibility becoming internal.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreen.kt`
+
+### Verification
+- Source changes committed on `main`.
+- CI verification: pending.
+- Debug APK artifact: pending.
+- Physical-device verification: pending.
+
+### Device checklist
+1. Verify first-run sign-in and existing credential restoration.
+2. Verify sync, Daily Note refresh, JSON export, credential clearing, and theme persistence.
+3. Verify Home, Visuals, Tools, Account, and AI entry remain functional.
+
+### Boundary
+File/responsibility relocation only. Screen state ownership and behavior are unchanged. No performance improvement is claimed.
