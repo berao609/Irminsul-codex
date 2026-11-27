@@ -1086,12 +1086,9 @@ Closing this audit does not mean the application is perfect or that every option
 - Existing call sites remain in place and resolve through explicit imports.
 - Structural extraction only; no performance improvement is claimed.
 
-**Verification required:**
-1. Confirm Debug CI unit tests, Kotlin compilation, APK build, Room schema check, signature verification, and artifact upload.
-2. Inspect Home and Visuals metric cards, progress bars, Daily Note rows, and Resin recovery text on device.
-3. Confirm missing/zero values and duration labels render as before.
+**Verification record:** User confirmed CI #727 succeeded and the app was tested on a physical device. The user-confirmed device checklist passed. Exact checklist details and workflow artifact metadata were not independently retrieved.
 
-**Boundary:** Continue one cohesive extraction at a time. Keep calculator logic and the deferred UI redesign out of this step.
+**Boundary:** Structural extraction only. Keep calculator logic and the deferred UI redesign out of this step.
 
 
 ### Batch 6 - Step 6: Bottom navigation presentation extraction
@@ -1115,12 +1112,7 @@ Closing this audit does not mean the application is perfect or that every option
 - Account selection still opens the credential panel.
 - Structural extraction only; no performance improvement is claimed.
 
-**Verification required:**
-1. Confirm Debug CI unit tests, Kotlin compilation, APK build, Room schema check, signature verification, and artifact upload.
-2. On device, verify destination order, selected-tab indication, raised AI button, and Account credential-panel behavior.
-3. Verify tab switching and scrolling remain unchanged.
-
-**Verification record:** User confirmed CI #738 succeeded and device navigation testing passed, including the navigation behavior. No performance improvement is claimed.
+**Verification record:** User confirmed CI #738 succeeded and device navigation testing passed, including destination order, selected-tab indication, central AI action, and Account access. No performance improvement is claimed.
 
 **Boundary:** Do not alter tab behavior or begin the deferred UI redesign during this extraction.
 
