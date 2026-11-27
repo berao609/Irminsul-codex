@@ -5773,7 +5773,7 @@ Move the existing Batch 5 modernization from the API 36.1 dependency baseline to
 - Raised compileSdk to API 37.1 using `release(37) { minorApiLevel = 1 }`.
 - Kept targetSdk 36 and minSdk 26. Android 17 target-behavior opt-in is deferred until its behavior changes are audited.
 - Upgraded Compose BOM to stable 2026.11.01 and AndroidX Core KTX to 1.19.1 / Lifecycle to 2.11.1. Activity Compose 1.13.0 and Room 2.8.5 remain aligned.
-- Updated CI to install API 37 and Build Tools 37.0.0 and use the stable Android 17 API 37 emulator image.
+- Updated CI to install stable platform API 37.1 / Build Tools 37.0.0 and use the stable Android 17 API 37.2 QPR2 16 KB page-size emulator image.
 - Replaced `MigrationTestHelper` with a manually created version-1 SQLite fixture opened by the production Room database. The test still executes `MIGRATION_1_2`, exercises Room's schema validation, and verifies that migrated JSON chunks and metadata are preserved.
 - Removed the unused `room-testing` dependency to avoid the observed `FieldBundle$$serializer` / kotlinx-serialization runtime linkage failure.
 
@@ -5796,9 +5796,9 @@ Move the existing Batch 5 modernization from the API 36.1 dependency baseline to
 ### Verification
 
 - Run #915 failed at the Room migration instrumentation test with `AbstractMethodError` from `androidx.room.migration.bundle.FieldBundle$$serializer`. Unit tests passed; APK assembly and upload were skipped.
-- Run #920 is in progress on the latest branch head. It has not yet reached Android SDK installation at the time this record was written.
+- Run #918 failed because the emulator action requested the obsolete package ID `system-images;android-37;google_apis;x86_64`; the current image package uses `android-37.2` and `google_apis_ps16k`. Run #920 failed because CI requested `platforms;android-37`; the stable platform package uses `platforms;android-37.1`. Both failures occurred before instrumentation tests. The latest workflow commit corrects both package IDs; its CI run is pending.
 - No successful API 37.1 build, instrumentation test run, APK artifact, or physical-device verification is claimed.
 
 ### Next action
 
-Check run #920. If it succeeds, verify the uploaded APK and proceed to the Batch 5 device checklist. If it fails, inspect the first failing CI step and correct that issue within PR #13. Do not merge without the user's explicit approval.
+Check the next CI run for branch head `785474a5dd13f3b865c5697b39d5efd7c01d7173`. Confirm stable API 37.1 installation, API 37.2 emulator boot, Room migration tests, APK assembly, schema verification, signing, and artifact upload. Correct any remaining failure within PR #13. Do not merge without the user's explicit approval.
