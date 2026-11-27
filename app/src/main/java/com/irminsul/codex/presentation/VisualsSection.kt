@@ -33,6 +33,9 @@ fun VisualsSection(
             ChronicleOverviewSection(account.accountCard, account.profileAndExploration)
         }
 
+        // Keep this section visible even before an account snapshot exists.
+        ChronicleStygianOnslaughtSection(snapshot?.stygianOnslaught ?: DataValue.Missing)
+
         val rosterValue = snapshot?.characters
         val roster = when (rosterValue) {
             is DataValue.Available -> rosterValue.value
@@ -63,7 +66,6 @@ fun VisualsSection(
             ChronicleRecordSection("Spiral Abyss · Current Cycle", account.spiralAbyssCurrent, ChronicleRecordMode.SPIRAL_ABYSS)
             ChronicleRecordSection("Spiral Abyss · Previous Cycle", account.spiralAbyssPrevious, ChronicleRecordMode.SPIRAL_ABYSS)
             ChronicleRecordSection("Imaginarium Theater", account.imaginariumTheater, ChronicleRecordMode.IMAGINARIUM_THEATER)
-            ChronicleStygianOnslaughtSection(account.stygianOnslaught)
         }
 
         if (hasCredentials) {
