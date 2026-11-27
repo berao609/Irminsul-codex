@@ -35,9 +35,8 @@ import com.irminsul.codex.domain.model.DataValue
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -80,6 +79,7 @@ internal fun CodexScreen(
     var showCredentials by remember { mutableStateOf(uid.isBlank() || cookie.isBlank()) }
     var showWebLogin by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableStateOf(CodexTab.HOME) }
+    var visualsBackStack by rememberSaveable { mutableStateOf(listOf(VisualsDestination.OVERVIEW)) }
     var showAiSheet by remember { mutableStateOf(false) }
     var showMaterialsPlanner by remember { mutableStateOf(false) }
     var showLineupSimulator by remember { mutableStateOf(false) }
@@ -244,6 +244,24 @@ internal fun CodexScreen(
 
     val isInitialSignIn = selectedTab == CodexTab.HOME && (uid.isBlank() || cookie.isBlank())
 
+    fun navigateVisuals(destination: VisualsDestination) {
+        if (visualsBackStack.lastOrNull() != destination) {
+            visualsBackStack = visualsBackStack + destination
+        }
+    }
+
+    fun backFromVisuals() {
+        if (visualsBackStack.size > 1) {
+            visualsBackStack = visualsBackStack.dropLast(1)
+        }
+    }
+
+    BackHandler(
+        enabled = selectedTab == CodexTab.VISUALS && visualsBackStack.size > 1 && !showAiSheet
+    ) {
+        backFromVisuals()
+    }
+
     if (showWebLogin) {
         HoYoLabLoginDialog(
             onCookieCaptured = { handleWebLoginSuccess(it) },
@@ -272,50 +290,12 @@ internal fun CodexScreen(
                 onSignIn = { showWebLogin = true },
                 onClearSavedCredentials = { clearSavedCredentials() }
             )
-        } else {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        CodexScreenHeader(
-            uid = uid,
-            serverName = if (uid.isNotBlank()) HoYoLabClient.detectServer(uid) else null
-        )
-
-        AccountSection(
-            showCredentialsPanel = showCredentials && (
-                selectedTab == CodexTab.ACCOUNT || uid.isBlank() || cookie.isBlank()
-            ),
-            uid = uid,
-            onUidChange = { uid = it },
-            cookie = cookie,
-            onCookieChange = { cookie = it },
-            credentialLoadError = credentialLoadError,
-            isLoading = isLoading,
-            isExporting = accountExportState.isExporting,
-            onSignIn = { showWebLogin = true },
-            onClearSavedCredentials = { clearSavedCredentials() },
-            onSaveAndSync = { refreshData() },
-            showExportPanel = selectedTab == CodexTab.ACCOUNT && uid.isNotBlank() && cookie.isNotBlank(),
-            exportProgress = accountExportState.progress,
-            exportStatus = exportStatus,
-            isRestoringSnapshot = accountExportState.isRestoringSnapshot,
-            onExport = { extractAccountJson() },
-            showSettings = selectedTab == CodexTab.ACCOUNT,
-            themeMode = themeMode,
-            onThemeModeChange = onThemeModeChange,
-            showCredentials = showCredentials,
-            onManageAccount = { showCredentials = true },
-            onHideAccountCredentials = { showCredentials = false }
-        )
-
-
-        if (selectedTab == CodexTab.VISUALS) {
+        } else if (selectedTab == CodexTab.VISUALS) {
             VisualsSection(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                destination = visualsBackStack.last(),
+                onNavigate = ::navigateVisuals,
+                onBack = ::backFromVisuals,
                 snapshot = accountExportState.snapshot,
                 intelligenceOverview = accountExportState.intelligenceOverview,
                 isExporting = accountExportState.isExporting,
@@ -329,64 +309,108 @@ internal fun CodexScreen(
                 onShowAllRecommendationsChange = { showAllRecommendations = it },
                 onAnalyzeAccount = { accountViewModel.analyzeAccount(uid, cookie) }
             )
-        }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                CodexScreenHeader(
+                    uid = uid,
+                    serverName = if (uid.isNotBlank()) HoYoLabClient.detectServer(uid) else null
+                )
 
-        if (selectedTab == CodexTab.TOOLS) {
-            val toolsCharacters = when (val value = accountExportState.snapshot?.characters) {
-                is DataValue.Available -> value.value
-                is DataValue.Stale -> value.value
-                else -> emptyList()
-            }
-            val availableLineupIds = toolsCharacters.map { it.id }.toSet()
-            val activeLineupIds = selectedLineupCharacterIds.filter { it in availableLineupIds }
-            ToolsSection(
-                characters = toolsCharacters,
-                preferences = prefs,
-                showMaterialsPlanner = showMaterialsPlanner,
-                showLineupSimulator = showLineupSimulator,
-                selectedLineupCharacterIds = activeLineupIds,
-                rosterIsStale = accountExportState.snapshot?.characters is DataValue.Stale,
-                rosterIsPartial = accountExportState.snapshot?.sections?.get("characters")?.status?.name == "PARTIAL",
-                onToggleMaterialsPlanner = { showMaterialsPlanner = !showMaterialsPlanner },
-                onToggleLineupSimulator = { showLineupSimulator = !showLineupSimulator },
-                onToggleLineupCharacter = { characterId ->
-                    selectedLineupCharacterIds = LineupSelectionRules.toggle(activeLineupIds, characterId)
+                AccountSection(
+                    showCredentialsPanel = showCredentials && (
+                        selectedTab == CodexTab.ACCOUNT || uid.isBlank() || cookie.isBlank()
+                    ),
+                    uid = uid,
+                    onUidChange = { uid = it },
+                    cookie = cookie,
+                    onCookieChange = { cookie = it },
+                    credentialLoadError = credentialLoadError,
+                    isLoading = isLoading,
+                    isExporting = accountExportState.isExporting,
+                    onSignIn = { showWebLogin = true },
+                    onClearSavedCredentials = { clearSavedCredentials() },
+                    onSaveAndSync = { refreshData() },
+                    showExportPanel = selectedTab == CodexTab.ACCOUNT && uid.isNotBlank() && cookie.isNotBlank(),
+                    exportProgress = accountExportState.progress,
+                    exportStatus = exportStatus,
+                    isRestoringSnapshot = accountExportState.isRestoringSnapshot,
+                    onExport = { extractAccountJson() },
+                    showSettings = selectedTab == CodexTab.ACCOUNT,
+                    themeMode = themeMode,
+                    onThemeModeChange = onThemeModeChange,
+                    showCredentials = showCredentials,
+                    onManageAccount = { showCredentials = true },
+                    onHideAccountCredentials = { showCredentials = false }
+                )
+
+                if (selectedTab == CodexTab.TOOLS) {
+                    val toolsCharacters = when (val value = accountExportState.snapshot?.characters) {
+                        is DataValue.Available -> value.value
+                        is DataValue.Stale -> value.value
+                        else -> emptyList()
+                    }
+                    val availableLineupIds = toolsCharacters.map { it.id }.toSet()
+                    val activeLineupIds = selectedLineupCharacterIds.filter { it in availableLineupIds }
+                    ToolsSection(
+                        characters = toolsCharacters,
+                        preferences = prefs,
+                        showMaterialsPlanner = showMaterialsPlanner,
+                        showLineupSimulator = showLineupSimulator,
+                        selectedLineupCharacterIds = activeLineupIds,
+                        rosterIsStale = accountExportState.snapshot?.characters is DataValue.Stale,
+                        rosterIsPartial = accountExportState.snapshot?.sections?.get("characters")?.status?.name == "PARTIAL",
+                        onToggleMaterialsPlanner = { showMaterialsPlanner = !showMaterialsPlanner },
+                        onToggleLineupSimulator = { showLineupSimulator = !showLineupSimulator },
+                        onToggleLineupCharacter = { characterId ->
+                            selectedLineupCharacterIds = LineupSelectionRules.toggle(activeLineupIds, characterId)
+                        }
+                    )
                 }
-            )
-        }
 
-        (errorMessage ?: accountExportState.errorMessage)?.let { message ->
-            ScreenErrorBanner(message)
-        }
+                (errorMessage ?: accountExportState.errorMessage)?.let { message ->
+                    ScreenErrorBanner(message)
+                }
 
-        if (selectedTab == CodexTab.HOME && isLoading && dailyNote == null) {
-            HomeInitialLoadingIndicator()
-        }
+                if (selectedTab == CodexTab.HOME && isLoading && dailyNote == null) {
+                    HomeInitialLoadingIndicator()
+                }
 
-        if (selectedTab == CodexTab.HOME) {
-            val homeSnapshot = accountExportState.snapshot
-            val rosterCount = when (val roster = homeSnapshot?.characters) {
-                is DataValue.Available -> roster.value.size
-                is DataValue.Stale -> roster.value.size
-                else -> null
+                if (selectedTab == CodexTab.HOME) {
+                    val homeSnapshot = accountExportState.snapshot
+                    val rosterCount = when (val roster = homeSnapshot?.characters) {
+                        is DataValue.Available -> roster.value.size
+                        is DataValue.Stale -> roster.value.size
+                        else -> null
+                    }
+                    HomeSection(
+                        uid = uid,
+                        serverName = HoYoLabClient.detectServer(uid),
+                        accountProfile = accountProfile,
+                        rosterCount = rosterCount,
+                        exportedAt = homeSnapshot?.metadata?.exportedAt?.toString(),
+                        hasSnapshot = homeSnapshot != null,
+                        dailyNote = dailyNote,
+                        isLoading = isLoading,
+                        canSync = uid.isNotBlank() && cookie.isNotBlank(),
+                        isExporting = accountExportState.isExporting,
+                        intelligenceOverview = accountExportState.intelligenceOverview,
+                        onOpenAnalysis = {
+                            selectedTab = CodexTab.VISUALS
+                            visualsBackStack = listOf(
+                                VisualsDestination.OVERVIEW,
+                                VisualsDestination.ACCOUNT_ANALYSIS
+                            )
+                        },
+                        onRefreshDailyNote = { refreshData() }
+                    )
+                }
             }
-            HomeSection(
-                uid = uid,
-                serverName = HoYoLabClient.detectServer(uid),
-                accountProfile = accountProfile,
-                rosterCount = rosterCount,
-                exportedAt = homeSnapshot?.metadata?.exportedAt?.toString(),
-                hasSnapshot = homeSnapshot != null,
-                dailyNote = dailyNote,
-                isLoading = isLoading,
-                canSync = uid.isNotBlank() && cookie.isNotBlank(),
-                isExporting = accountExportState.isExporting,
-                intelligenceOverview = accountExportState.intelligenceOverview,
-                onOpenAnalysis = { selectedTab = CodexTab.VISUALS },
-                onRefreshDailyNote = { refreshData() }
-            )
-        }
-        }
         }
         if (showAiSheet) {
             AiAssistantSheet(
