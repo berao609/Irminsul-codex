@@ -24,6 +24,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.runtime.SideEffect
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -183,7 +184,7 @@ private fun CodexScreen(
     val credentialStore = remember(context) { HoYoLabCredentialStore(context.applicationContext) }
     val storedCookieResult = remember(credentialStore) { runCatching { credentialStore.getCookie() } }
     val scope = rememberCoroutineScope()
-    val accountExportState by accountViewModel.uiState.collectAsState()
+    val accountExportState by accountViewModel.uiState.collectAsStateWithLifecycle()
 
     var uid by remember { mutableStateOf(prefs.getString("uid", "") ?: "") }
     var credentialLoadError by remember { mutableStateOf(storedCookieResult.isFailure) }
