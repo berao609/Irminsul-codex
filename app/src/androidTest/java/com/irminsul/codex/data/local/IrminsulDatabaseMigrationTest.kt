@@ -1,25 +1,17 @@
 package com.irminsul.codex.data.local
 
-import androidx.room.testing.MigrationTestHelper
-import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+import androidx.room.Room
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class IrminsulDatabaseMigrationTest {
-    @get:Rule
-    val helper = MigrationTestHelper(
-        InstrumentationRegistry.getInstrumentation(),
-        IrminsulDatabase::class.java,
-        emptyList(),
-        FrameworkSQLiteOpenHelperFactory()
-    )
-
     @Test
     fun migratesVersionOneSnapshotsWithoutChangingTheirRawJsonOrMetadata() {
         val databaseName = "irminsul-migration-1-2-test"
@@ -35,7 +27,57 @@ class IrminsulDatabaseMigrationTest {
             append("""" }""".trim())
         }
 
-        helper.createDatabase(databaseName, 1).apply {
+        val legacyHelper = object : SQLiteOpenHelper(context, databaseName, null, 1) {
+            override fun onCreate(database: SQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE accounts (
+                        uid TEXT NOT NULL,
+                        server TEXT NOT NULL,
+                        createdAtEpochMillis INTEGER NOT NULL,
+                        lastUpdatedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(uid, server)
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE account_snapshots (
+                        snapshotId TEXT NOT NULL PRIMARY KEY,
+                        uid TEXT NOT NULL,
+                        server TEXT NOT NULL,
+                        exportedAt TEXT NOT NULL,
+                        exportedAtEpochMillis INTEGER NOT NULL,
+                        exportFormatVersion INTEGER NOT NULL,
+                        overallStatus TEXT NOT NULL,
+                        origin TEXT NOT NULL,
+                        rawJson TEXT NOT NULL,
+                        FOREIGN KEY(uid, server) REFERENCES accounts(uid, server)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    CREATE INDEX index_account_snapshots_uid_server_exportedAtEpochMillis
+                    ON account_snapshots(uid, server, exportedAtEpochMillis)
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    "CREATE TABLE room_master_table (id INTEGER PRIMARY KEY, identity_hash TEXT)"
+                )
+                database.execSQL(
+                    "INSERT OR REPLACE INTO room_master_table (id, identity_hash) " +
+                        "VALUES(42, '25361700f4d8b417e6c36322528b17f7')"
+                )
+            }
+
+            override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                error("Unexpected legacy database upgrade: $oldVersion to $newVersion")
+            }
+        }
+
+        legacyHelper.writableDatabase.apply {
             execSQL(
                 "INSERT INTO accounts(uid, server, createdAtEpochMillis, lastUpdatedAtEpochMillis) VALUES(?, ?, ?, ?)",
                 arrayOf<Any>("800000001", "os_asia", 1000L, 2000L)
@@ -44,16 +86,21 @@ class IrminsulDatabaseMigrationTest {
             insertLegacySnapshot("snapshot-large", largeJson, 4000L)
             close()
         }
+        legacyHelper.close()
 
-        val migrated = helper.runMigrationsAndValidate(
-            databaseName,
-            2,
-            true,
-            IrminsulDatabase.MIGRATION_1_2
+        val migrated = Room.databaseBuilder(
+            context,
+            IrminsulDatabase::class.java,
+            databaseName
         )
+            .addMigrations(IrminsulDatabase.MIGRATION_1_2)
+            .build()
 
         try {
-            val snapshots = migrated.query(
+            // Opening the production Room database executes MIGRATION_1_2 and
+            // performs Room's own schema validation without MigrationTestHelper.
+            val database = migrated.openHelper.writableDatabase
+            val snapshots = database.query(
                 """
                 SELECT snapshotId, uid, server, exportedAt, exportedAtEpochMillis,
                        exportFormatVersion, overallStatus, origin, rawJson
@@ -73,7 +120,7 @@ class IrminsulDatabaseMigrationTest {
                     assertEquals("hoyolab", cursor.getString(7))
                     assertEquals("", cursor.getString(8))
 
-                    val chunksCursor = migrated.query(
+                    val chunksCursor = database.query(
                         "SELECT content FROM account_snapshot_json_chunks WHERE snapshotId = ? ORDER BY chunkIndex",
                         arrayOf(snapshotId)
                     )
@@ -98,7 +145,7 @@ class IrminsulDatabaseMigrationTest {
                 }
             }
 
-            val accountCursor = migrated.query(
+            val accountCursor = database.query(
                 "SELECT createdAtEpochMillis, lastUpdatedAtEpochMillis FROM accounts WHERE uid = ? AND server = ?",
                 arrayOf("800000001", "os_asia")
             )
@@ -113,7 +160,7 @@ class IrminsulDatabaseMigrationTest {
         }
     }
 
-    private fun androidx.sqlite.db.SupportSQLiteDatabase.insertLegacySnapshot(
+    private fun SQLiteDatabase.insertLegacySnapshot(
         snapshotId: String,
         rawJson: String,
         timestamp: Long
