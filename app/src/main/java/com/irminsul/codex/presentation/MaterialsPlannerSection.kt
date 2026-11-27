@@ -43,16 +43,14 @@ fun MaterialsPlannerSection(
     var customTargetName by remember {
         mutableStateOf(preferences.getString("material_custom_target", "") ?: "")
     }
-    val targetOptions = buildList {
-        characters.forEach { character ->
-            add(
-                MaterialTargetOption(
-                    id = "character:" + character.id,
-                    label = "Character · " + (character.name ?: "Character #" + character.id),
-                    currentLevel = character.level
-                )
-            )
-        }
+    val characterOptions = characters.map { character ->
+        MaterialTargetOption(
+            id = "character:" + character.id,
+            label = character.name ?: "Character #" + character.id,
+            currentLevel = character.level
+        )
+    }
+    val weaponOptions = buildList {
         characters.forEach { character ->
             val weapon = when (val value = character.weapon) {
                 is DataValue.Available -> value.value
@@ -63,14 +61,14 @@ fun MaterialsPlannerSection(
                 add(
                     MaterialTargetOption(
                         id = "weapon:" + character.id + ":" + weapon.id,
-                        label = "Weapon · " + (weapon.name ?: "Weapon #" + weapon.id) + " (" + (character.name ?: "Equipped") + ")",
+                        label = (weapon.name ?: "Weapon #" + weapon.id) + " · " + (character.name ?: "Equipped character"),
                         currentLevel = weapon.level
                     )
                 )
             }
         }
     }
-    val selectedTarget = targetOptions.firstOrNull { it.id == selectedTargetId }
+    val selectedTarget = characterOptions.firstOrNull { it.id == selectedTargetId }
     val legacyTargetId = preferences.getString("material_target_id", "custom") ?: "custom"
     var currentLevel by remember(selectedTargetId) {
         val stored = preferences.getString("material_plan_current_$selectedTargetId", null)
@@ -123,27 +121,25 @@ fun MaterialsPlannerSection(
         Triple("skill", "Elemental Skill", skillTalentCurrent to skillTalentTarget),
         Triple("burst", "Elemental Burst", burstTalentCurrent to burstTalentTarget)
     )
-    val weaponPlanKey = characterId ?: "global"
-    var plannedWeaponId by remember(weaponPlanKey) {
-        mutableStateOf(preferences.getString("material_planned_weapon_id_$weaponPlanKey", "custom") ?: "custom")
-    }
-    var plannedWeaponName by remember(weaponPlanKey) {
-        mutableStateOf(preferences.getString("material_planned_weapon_name_$weaponPlanKey", "") ?: "")
-    }
-    val plannedWeapon = targetOptions.firstOrNull { it.id == plannedWeaponId }
-    var plannedWeaponCurrent by remember(weaponPlanKey, plannedWeaponId) {
+    var selectedWeaponId by remember {
         mutableStateOf(
-            preferences.getString("material_planned_weapon_current_$weaponPlanKey-$plannedWeaponId", null)
-                ?: plannedWeapon?.currentLevel?.toString().orEmpty()
+            preferences.getString("material_weapon_target_id", null)
+                ?: weaponOptions.firstOrNull()?.id.orEmpty()
         )
     }
-    var plannedWeaponTarget by remember(weaponPlanKey, plannedWeaponId) {
-        mutableStateOf(preferences.getString("material_planned_weapon_target_$weaponPlanKey-$plannedWeaponId", "") ?: "")
+    val selectedWeaponOption = weaponOptions.firstOrNull { it.id == selectedWeaponId }
+    var weaponCurrentLevel by remember(selectedWeaponId) {
+        mutableStateOf(
+            preferences.getString("material_weapon_current_$selectedWeaponId", null)
+                ?: selectedWeaponOption?.currentLevel?.toString().orEmpty()
+        )
+    }
+    var weaponTargetLevel by remember(selectedWeaponId) {
+        mutableStateOf(preferences.getString("material_weapon_target_$selectedWeaponId", "") ?: "")
     }
     var weaponMenuExpanded by remember { mutableStateOf(false) }
-
-    val selectedWeapon = if (selectedTargetId.startsWith("weapon:")) {
-        val parts = selectedTargetId.split(":")
+    val selectedWeapon = if (selectedWeaponId.startsWith("weapon:")) {
+        val parts = selectedWeaponId.split(":")
         val owner = characters.firstOrNull { it.id.toString() == parts.getOrNull(1) }
         when (val value = owner?.weapon) {
             is DataValue.Available -> value.value.takeIf { it.id.toString() == parts.getOrNull(2) && (it.rarity == 4 || it.rarity == 5) }
