@@ -5362,3 +5362,50 @@ Home presentation only. No account retrieval, persistence, data model, analysis,
 
 ### Boundary
 Home/profile and Daily Note presentation/data mapping only. No account snapshot schema, analysis engine, navigation, dependencies, or SDK changes.
+
+
+
+## Milestone 107 - UI Revamp Batch 3: Visuals Destination
+
+**Date recorded:** 2026-11-27  
+**Development phase:** UI Revamp - Batch 3  
+**Status:** Implemented on `ui-revamp/batch-3-visuals`; CI and physical-device verification pending.
+
+### Objective
+Reconstruct the Visuals destination around the agreed high-fidelity Battle Chronicles hierarchy while preserving existing account data, analysis, and interactions.
+
+### Implementation
+- Reorganized Visuals into a clear account journey: Account Overview, selected Character Showcase, World Exploration, game-mode records, and Account Analysis.
+- Moved the selected character detail presentation ahead of the expandable roster so character artwork, identity, equipment, stats, talents, and constellations lead the showcase; the roster remains available for selection.
+- Rebuilt Account Overview with a distinct player/adventure-rank identity region and a compact three-column progress/collectibles layout.
+- Reworked World Exploration into horizontally browsable regional progress panels with clearer region names, percentages, and progress bars.
+- Reworked Spiral Abyss and Imaginarium Theater record presentation to emphasize available star results and retain supporting record metrics.
+- Removed generic enclosing cards from Chronicle and Account Analysis section wrappers. Kept containers only where they communicate identity or group actual metric data.
+- Preserved the existing presentation mapper, source data, stale/missing/unavailable/failed distinctions, analysis engine, recommendation ordering, refresh action, and character selection behavior.
+- Kept Real-Time Notes exclusively on Home. No new dependencies, account endpoints, data fields, or calculation behavior were introduced.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterShowcaseSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountAnalysisSection.kt`
+
+### Verification
+- Implementation committed on `ui-revamp/batch-3-visuals`.
+- GitHub Actions: pending.
+- Debug APK artifact: pending.
+- Physical-device verification: pending user testing.
+
+### Device checklist
+1. Check the Visuals destination in Light, Dark, and System modes.
+2. Confirm Account Overview shows only source-backed player, rank, progression, and collectible values.
+3. Confirm selected character detail is visible before the expandable roster; selecting a roster portrait updates the detail view.
+4. Verify character artwork, equipment expansion, stats, talents, and constellations still render.
+5. Verify World Exploration horizontal scrolling, region names, percentages, and progress bars.
+6. Verify current/previous Spiral Abyss and Imaginarium Theater values, including missing, unavailable, stale, and failed states.
+7. Verify Account Analysis action, loading/error states, recommendation expansion, and data-coverage warnings.
+8. Confirm no Real-Time Notes appear in Visuals and Home remains unchanged.
+9. Confirm bottom navigation, AI sheet, Tools, and Account remain functional.
+
+### Boundary
+Visual presentation and composition only. No account retrieval, persistence, analysis calculations, mapper rules, navigation architecture, dependencies, or SDK changes.

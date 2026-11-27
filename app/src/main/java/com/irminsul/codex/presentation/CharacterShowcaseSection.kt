@@ -78,6 +78,8 @@ fun CharacterShowcaseSection(
         selectedElement != "All" || selectedWeaponType != "All"
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        CharacterShowcaseDetail(character = selected)
+
         Card(
             onClick = { rosterExpanded = !rosterExpanded },
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -239,7 +241,6 @@ fun CharacterShowcaseSection(
             }
         }
 
-        CharacterShowcaseDetail(character = selected)
     }
 }
 
