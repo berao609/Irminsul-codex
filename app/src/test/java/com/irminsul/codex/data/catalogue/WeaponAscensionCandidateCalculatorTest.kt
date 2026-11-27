@@ -90,6 +90,15 @@ class WeaponAscensionCandidateCalculatorTest {
         assertEquals(7L, result.materials.single().quantity)
     }
 
+    @Test fun noOpAtThePreviousLevelBoundaryRemainsValidAfterAscending() {
+        val result = WeaponAscensionCandidateCalculator.calculate(
+            request(currentLevel = 20, currentRank = 1, targetLevel = 20),
+            emptyList()
+        )
+        assertEquals(WeaponAscensionCandidateCalculationStatus.NO_ASCENSION_REQUIRED, result.status)
+        assertTrue(result.materials.isEmpty())
+    }
+
     @Test fun noAscensionCostIsRequiredWithinCurrentPhase() {
         val result = WeaponAscensionCandidateCalculator.calculate(
             request(currentLevel = 21, currentRank = 1, targetLevel = 40),
