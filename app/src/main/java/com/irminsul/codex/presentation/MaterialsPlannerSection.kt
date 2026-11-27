@@ -104,22 +104,37 @@ fun MaterialsPlannerSection(
         ?.removePrefix("character:")
     val selectedCharacter = characters.firstOrNull { it.id.toString() == characterId }
     var normalTalentCurrent by remember(characterId) {
-        mutableStateOf(preferences.getString("material_talent_normal_current_$characterId", "") ?: "")
+        mutableStateOf(
+            preferences.getString("material_talent_normal_current_$characterId", null)
+                ?: selectedCharacter?.skills?.firstOrNull { it.type == 1 }?.level?.toString().orEmpty()
+        )
     }
     var normalTalentTarget by remember(characterId) {
-        mutableStateOf(preferences.getString("material_talent_normal_target_$characterId", "") ?: "")
+        mutableStateOf(
+            preferences.getString("material_talent_normal_target_$characterId", null) ?: normalTalentCurrent
+        )
     }
     var skillTalentCurrent by remember(characterId) {
-        mutableStateOf(preferences.getString("material_talent_skill_current_$characterId", "") ?: "")
+        mutableStateOf(
+            preferences.getString("material_talent_skill_current_$characterId", null)
+                ?: selectedCharacter?.skills?.firstOrNull { it.type == 2 }?.level?.toString().orEmpty()
+        )
     }
     var skillTalentTarget by remember(characterId) {
-        mutableStateOf(preferences.getString("material_talent_skill_target_$characterId", "") ?: "")
+        mutableStateOf(
+            preferences.getString("material_talent_skill_target_$characterId", null) ?: skillTalentCurrent
+        )
     }
     var burstTalentCurrent by remember(characterId) {
-        mutableStateOf(preferences.getString("material_talent_burst_current_$characterId", "") ?: "")
+        mutableStateOf(
+            preferences.getString("material_talent_burst_current_$characterId", null)
+                ?: selectedCharacter?.skills?.firstOrNull { it.type == 3 }?.level?.toString().orEmpty()
+        )
     }
     var burstTalentTarget by remember(characterId) {
-        mutableStateOf(preferences.getString("material_talent_burst_target_$characterId", "") ?: "")
+        mutableStateOf(
+            preferences.getString("material_talent_burst_target_$characterId", null) ?: burstTalentCurrent
+        )
     }
     val talentValues = listOf(
         Triple("normal", "Normal Attack", normalTalentCurrent to normalTalentTarget),
