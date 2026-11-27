@@ -7,6 +7,9 @@ import com.irminsul.codex.presentation.HomeDailyNoteSection
 import com.irminsul.codex.presentation.AccountDataExportSection
 import com.irminsul.codex.presentation.AccountAnalysisSection
 import com.irminsul.codex.presentation.InitialSignInSection
+import com.irminsul.codex.presentation.AccountCredentialsSection
+import com.irminsul.codex.presentation.AccountSettingsSection
+import com.irminsul.codex.presentation.ThemeMode
 import com.irminsul.codex.presentation.VisualDashboardSection
 
 import android.content.Context
@@ -53,7 +56,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -103,17 +105,6 @@ private val CodexLightColors = lightColorScheme(
     onSurfaceVariant = Color(0xFF626B75),
     error = Color(0xFFB3261E)
 )
-
-private enum class ThemeMode(val label: String, val preferenceValue: String) {
-    SYSTEM("System", "system"),
-    LIGHT("Light", "light"),
-    DARK("Dark", "dark");
-
-    companion object {
-        fun fromPreference(value: String?): ThemeMode =
-            entries.firstOrNull { it.preferenceValue == value } ?: SYSTEM
-    }
-}
 
 class MainActivity : ComponentActivity() {
     private lateinit var accountViewModel: AccountViewModel
@@ -408,60 +399,18 @@ private fun CodexScreen(
         }
 
         if (showCredentials && (selectedTab == CodexTab.ACCOUNT || uid.isBlank() || cookie.isBlank())) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Button(
-                        onClick = { showWebLogin = true },
-                        enabled = !isLoading && !accountExportState.isExporting,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text("Sign in with HoYoLAB")
-                    }
-
-                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-
-                    OutlinedTextField(
-                        value = uid,
-                        onValueChange = { uid = it },
-                        label = { Text("Genshin UID (auto-filled on login)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = cookie,
-                        onValueChange = { cookie = it },
-                        label = { Text("HoYoLAB Cookie (ltoken_v2 / ltuid_v2)") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        maxLines = 3,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    if (credentialLoadError) {
-                        Text(
-                            "The saved session could not be unlocked. Clear it before signing in again.",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 12.sp
-                        )
-                        TextButton(onClick = { clearSavedCredentials() }) {
-                            Text("Clear saved credentials")
-                        }
-                    }
-                    OutlinedButton(
-                        onClick = { refreshData() },
-                        enabled = !isLoading && !accountExportState.isExporting,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(if (isLoading) "Syncing..." else "Save & Sync")
-                    }
-                }
-            }
+            AccountCredentialsSection(
+                uid = uid,
+                onUidChange = { uid = it },
+                cookie = cookie,
+                onCookieChange = { cookie = it },
+                credentialLoadError = credentialLoadError,
+                isLoading = isLoading,
+                isExporting = accountExportState.isExporting,
+                onSignIn = { showWebLogin = true },
+                onClearSavedCredentials = { clearSavedCredentials() },
+                onSaveAndSync = { refreshData() }
+            )
         }
 
         if (selectedTab == CodexTab.ACCOUNT && uid.isNotBlank() && cookie.isNotBlank()) {
@@ -630,61 +579,16 @@ private fun CodexScreen(
 
         if (selectedTab == CodexTab.ACCOUNT) {
             Text("Account & settings", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Appearance", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        "Choose how Irminsul Codex looks. System follows your device setting.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        ThemeMode.entries.forEach { mode ->
-                            FilterChip(
-                                selected = themeMode == mode,
-                                onClick = { onThemeModeChange(mode) },
-                                label = { Text(mode.label) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-            }
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("Irminsul Codex", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                    Text("Genshin Impact account intelligence", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(
-                        "The HoYoLAB session cookie is encrypted with Android Keystore. The UID is stored locally.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    if (uid.isNotBlank() || cookie.isNotBlank()) {
-                        OutlinedButton(
-                            onClick = { clearSavedCredentials() },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Sign out and clear saved credentials")
-                        }
-                        Text(
-                            "Saved account snapshots remain on this device.",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    if (uid.isNotBlank() && cookie.isNotBlank() && !showCredentials) {
-                        OutlinedButton(onClick = { showCredentials = true }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Manage HoYoLAB account")
-                        }
-                    }
-                    if (showCredentials && uid.isNotBlank() && cookie.isNotBlank()) {
-                        TextButton(onClick = { showCredentials = false }) { Text("Hide account credentials") }
-                    }
-                }
-            }
+            AccountSettingsSection(
+                themeMode = themeMode,
+                onThemeModeChange = onThemeModeChange,
+                uid = uid,
+                cookie = cookie,
+                showCredentials = showCredentials,
+                onClearSavedCredentials = { clearSavedCredentials() },
+                onManageAccount = { showCredentials = true },
+                onHideAccountCredentials = { showCredentials = false }
+            )
         }
 
         if (errorMessage != null || accountExportState.errorMessage != null) {
