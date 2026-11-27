@@ -277,14 +277,6 @@ fun MaterialsPlannerSection(
             }
         }
 
-        if (selectedWeapon != null) {
-            WeaponEnhancementCalculatorSection(
-                weapon = selectedWeapon,
-                currentLevel = currentLevel,
-                targetLevel = targetLevel,
-                preferences = preferences
-            )
-        }
         if (characterId != null) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -343,6 +335,7 @@ fun MaterialsPlannerSection(
                     }
                 }
             }
+        }
 
         if (selectedCharacter != null) {
             CharacterEnhancementCalculatorSection(
