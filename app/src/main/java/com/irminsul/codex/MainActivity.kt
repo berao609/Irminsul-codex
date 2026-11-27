@@ -13,9 +13,6 @@ import com.irminsul.codex.presentation.ScreenErrorBanner
 import com.irminsul.codex.presentation.HomeInitialLoadingIndicator
 import com.irminsul.codex.presentation.HomeSection
 import com.irminsul.codex.presentation.CodexScreenHeader
-import com.irminsul.codex.presentation.CodexDarkColors
-import com.irminsul.codex.presentation.CodexLightColors
-import com.irminsul.codex.presentation.CodexSystemBars
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -104,26 +101,19 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.DARK -> true
             }
             val view = LocalView.current
-            CodexSystemBars(
+            CodexAppTheme(
                 useDarkTheme = useDarkTheme,
                 window = window,
                 view = view
-            )
-
-            MaterialTheme(colorScheme = if (useDarkTheme) CodexDarkColors else CodexLightColors) {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    CodexScreen(
-                        accountViewModel = accountViewModel,
-                        themeMode = themeMode,
-                        onThemeModeChange = { selected ->
-                            themeMode = selected
-                            preferences.edit().putString("theme_mode", selected.preferenceValue).apply()
-                        }
-                    )
-                }
+            ) {
+                CodexScreen(
+                    accountViewModel = accountViewModel,
+                    themeMode = themeMode,
+                    onThemeModeChange = { selected ->
+                        themeMode = selected
+                        preferences.edit().putString("theme_mode", selected.preferenceValue).apply()
+                    }
+                )
             }
         }
     }
