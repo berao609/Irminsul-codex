@@ -111,7 +111,21 @@ class WeaponUpgradePlanCandidateCalculatorTest {
         )
         assertEquals(WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA, result.status)
         assertEquals(4L, result.requirements.single { it.itemId == "112023" }.quantity)
-        assertEquals(6L, result.requirements.single { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }.quantity - result.requirements.single { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }.quantity + 4L)
+        val expectedExperienceMora = WeaponExperienceCalculator.calculate(
+            com.irminsul.codex.domain.analysis.WeaponExperienceCalculationRequest(
+                rarity = WeaponExperienceRarity.FIVE_STAR,
+                currentLevel = 40,
+                currentExperienceWithinLevel = 0L,
+                targetLevel = 60,
+                maximumUnlockedLevel = 50,
+                targetMaximumUnlockedLevel = 60
+            ),
+            fiveStarCurve
+        ).moraRequired
+        assertEquals(
+            expectedExperienceMora + 100L,
+            result.requirements.single { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }.quantity
+        )
     }
 
     @Test fun rejectsCurrentExpInvalidAtCurrentAscensionCap() {
