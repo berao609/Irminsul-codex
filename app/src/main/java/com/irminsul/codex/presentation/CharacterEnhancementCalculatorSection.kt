@@ -59,8 +59,10 @@ internal fun CharacterEnhancementCalculatorSection(
                 BundledCharacterProgressionCandidateRepository.loadCandidates(context, character.id.toString())
             }
         }
-        loaded.onSuccess { loadedCandidates = it?.candidates }
-            .onFailure { candidateLoadFailed = true }
+        loaded.onSuccess { result ->
+            if (result == null) candidateLoadFailed = true
+            else loadedCandidates = result.candidates
+        }.onFailure { candidateLoadFailed = true }
     }
 
     val current = currentLevel.toIntOrNull()
