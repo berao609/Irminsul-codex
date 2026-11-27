@@ -5571,12 +5571,12 @@ The following is the initial candidate matrix, not a claim that the project has 
 | Kotlin / Compose compiler plugin | 2.4.21 | Latest stable Kotlin release at review time |
 | KSP | 2.3.12 | Supports KGP 2.3.20-2.4.x, AGP 8.13+, Gradle 8.13+, and JDK 17+ |
 | Compose BOM | 2026.07.01 | Latest stable Compose BOM before the Compose 1.12 line adopted API 37 |
-| compileSdk | API 36 | Stable Android 16 platform available to CI; keep aligned with the selected Compose release |
+| compileSdk | API 36.1 | Stable Android 16 QPR2 SDK; required by Core KTX 1.18.0 |
 | targetSdk | API 36 | Meets the current Google Play submission requirement |
 | Room | 2.8.5 | Current stable Room release; verify schema/migration compatibility |
-| Lifecycle | 2.11.1 | Current stable Lifecycle release |
+| Lifecycle | 2.10.0 | Latest stable Lifecycle release compatible with API 36.1; 2.11.x requires API 37 through Compose dependencies |
 | Activity Compose | 1.13.0 | Current stable Activity release |
-| Core KTX | 1.19.1 | Current stable Core release |
+| Core KTX | 1.18.0 | Current stable Core release compatible with API 36.1; 1.19.x requires API 37 |
 
 Official compatibility references reviewed:
 - [AGP release compatibility and Gradle requirements](https://developer.android.com/build/releases/about-agp)
@@ -5586,6 +5586,7 @@ Official compatibility references reviewed:
 - [Compose April 2026 stable release](https://developer.android.com/blog/posts/whats-new-in-the-jetpack-compose-april-26-release)
 - [Compose August 2026 release](https://android-developers.googleblog.com/2026/08/jetpack-compose-august-2026-release.html)
 - [CompileSdk minor API level DSL](https://developer.android.com/reference/tools/gradle-api/9.5/com/android/build/api/dsl/CompileSdkSpec)
+- [Android 16 QPR2 SDK setup](https://developer.android.com/about/versions/16/qpr2/setup-sdk)
 - [Google Play target API requirement](https://support.google.com/googleplay/android-developer/answer/11926878)
 
 ### Migration requirements
