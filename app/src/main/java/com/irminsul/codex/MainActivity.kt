@@ -3,19 +3,17 @@ package com.irminsul.codex
 import com.irminsul.codex.presentation.CodexBottomNavigationBar
 import com.irminsul.codex.presentation.CodexTab
 
-import com.irminsul.codex.presentation.HomeDailyNoteSection
-import com.irminsul.codex.presentation.HomeAccountOverviewSection
 import com.irminsul.codex.presentation.AccountDataExportSection
 import com.irminsul.codex.presentation.InitialSignInSection
 import com.irminsul.codex.presentation.AccountCredentialsSection
 import com.irminsul.codex.presentation.AccountSettingsSection
 import com.irminsul.codex.presentation.AiAssistantSheet
 import com.irminsul.codex.presentation.ThemeMode
-import com.irminsul.codex.presentation.VisualDashboardSection
 import com.irminsul.codex.presentation.ToolsSection
 import com.irminsul.codex.presentation.VisualsSection
 import com.irminsul.codex.presentation.ScreenErrorBanner
 import com.irminsul.codex.presentation.HomeInitialLoadingIndicator
+import com.irminsul.codex.presentation.HomeSection
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -488,24 +486,20 @@ private fun CodexScreen(
                 is DataValue.Stale -> roster.value.size
                 else -> null
             }
-            HomeAccountOverviewSection(
+            HomeSection(
                 uid = uid,
                 serverName = HoYoLabClient.detectServer(uid),
                 rosterCount = rosterCount,
                 exportedAt = homeSnapshot?.metadata?.exportedAt?.toString(),
                 hasSnapshot = homeSnapshot != null,
-                onOpenAnalysis = { selectedTab = CodexTab.VISUALS }
-            )
-
-            HomeDailyNoteSection(
-                note = dailyNote,
+                dailyNote = dailyNote,
                 isLoading = isLoading,
                 canSync = uid.isNotBlank() && cookie.isNotBlank(),
                 isExporting = accountExportState.isExporting,
-                onRefresh = { refreshData() }
+                intelligenceOverview = accountExportState.intelligenceOverview,
+                onOpenAnalysis = { selectedTab = CodexTab.VISUALS },
+                onRefreshDailyNote = { refreshData() }
             )
-
-            VisualDashboardSection(accountExportState.intelligenceOverview)
         }
         }
         }
