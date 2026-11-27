@@ -19,17 +19,31 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.irminsul.codex.data.catalogue.BundledWeaponAscensionCandidateRepository
+import com.irminsul.codex.data.catalogue.GenshinDbUpgradeCostCandidate
 import com.irminsul.codex.data.catalogue.GenshinWeaponExperienceCurveCandidate
+import com.irminsul.codex.data.catalogue.WeaponAscensionCandidateCalculationRequest
+import com.irminsul.codex.data.catalogue.WeaponAscensionCandidateCalculationStatus
+import com.irminsul.codex.data.catalogue.WeaponAscensionCandidateCalculator
 import com.irminsul.codex.domain.analysis.WeaponExperienceCalculationRequest
 import com.irminsul.codex.domain.analysis.WeaponExperienceCalculationStatus
 import com.irminsul.codex.domain.analysis.WeaponExperienceCalculator
 import com.irminsul.codex.domain.analysis.WeaponExperienceRarity
 import com.irminsul.codex.domain.model.WeaponSnapshot
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private val weaponAscensionLevelCaps = listOf(20, 40, 50, 60, 70, 80, 90)
+
+private data class WeaponMaterialDisplayRequirement(
+    val itemId: String,
+    val itemName: String,
+    val quantity: Long
+)
 
 private fun weaponMaterialName(itemId: String): String = when (itemId) {
     WeaponExperienceCalculator.MYSTIC_ENHANCEMENT_ORE_ITEM_ID -> "Mystic Enhancement Ore"
@@ -46,6 +60,7 @@ internal fun WeaponEnhancementCalculatorSection(
     targetLevel: String,
     preferences: SharedPreferences
 ) {
+    val context = LocalContext.current.applicationContext
     val rarity = when (weapon.rarity) {
         4 -> WeaponExperienceRarity.FOUR_STAR
         5 -> WeaponExperienceRarity.FIVE_STAR
@@ -59,6 +74,20 @@ internal fun WeaponEnhancementCalculatorSection(
     }
     LaunchedEffect(weapon.id, currentExperience) {
         preferences.edit().putString("weapon_plan_current_exp_${weapon.id}", currentExperience).apply()
+    }
+
+    var ascensionCandidates by remember(weapon.id) {
+        mutableStateOf<List<GenshinDbUpgradeCostCandidate>?>(null)
+    }
+    var candidateLoadFailed by remember(weapon.id) { mutableStateOf(false) }
+    LaunchedEffect(weapon.id) {
+        val loaded = withContext(Dispatchers.IO) {
+            runCatching {
+                BundledWeaponAscensionCandidateRepository.loadCandidates(context, weapon.id.toString())
+            }
+        }
+        loaded.onSuccess { ascensionCandidates = it }
+            .onFailure { candidateLoadFailed = true }
     }
 
     val current = currentLevel.toIntOrNull()
@@ -92,6 +121,44 @@ internal fun WeaponEnhancementCalculatorSection(
         )
     } else null
 
+    val ascensionCalculation = if (
+        weapon.rarity in 4..5 &&
+        weapon.ascensionLevel != null &&
+        current != null && target != null &&
+        current in 1..90 && target in current..90 &&
+        ascensionCandidates != null
+    ) {
+        WeaponAscensionCandidateCalculator.calculate(
+            WeaponAscensionCandidateCalculationRequest(
+                weaponId = weapon.id.toString(),
+                rarity = weapon.rarity,
+                currentLevel = current,
+                currentAscensionRank = weapon.ascensionLevel,
+                targetLevel = target,
+                gameVersion = BundledWeaponAscensionCandidateRepository.GAME_VERSION
+            ),
+            ascensionCandidates.orEmpty()
+        )
+    } else null
+
+    val ascensionDataComplete = ascensionCalculation?.status in setOf(
+        WeaponAscensionCandidateCalculationStatus.CANDIDATE_DATA,
+        WeaponAscensionCandidateCalculationStatus.NO_ASCENSION_REQUIRED
+    )
+    val displayRequirements = if (calculation != null) {
+        val totals = linkedMapOf<String, Pair<String, Long>>()
+        calculation.materials.forEach { item ->
+            totals[item.itemId] = weaponMaterialName(item.itemId) to item.quantity
+        }
+        if (ascensionDataComplete) {
+            ascensionCalculation?.materials.orEmpty().forEach { item ->
+                val existing = totals[item.itemId]
+                totals[item.itemId] = item.itemName to Math.addExact(existing?.second ?: 0L, item.quantity)
+            }
+        }
+        totals.map { (id, value) -> WeaponMaterialDisplayRequirement(id, value.first, value.second) }
+    } else emptyList()
+
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(20.dp)
@@ -103,7 +170,7 @@ internal fun WeaponEnhancementCalculatorSection(
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text("Weapon enhancement", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(
-                    "${weapon.name ?: "Selected weapon"} · ${weapon.rarity ?: "?"}-star · Ore-only estimate",
+                    "${weapon.name ?: "Selected weapon"} · ${weapon.rarity ?: "?"}-star · 4-star/5-star calculator",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -153,14 +220,45 @@ internal fun WeaponEnhancementCalculatorSection(
                 )
                 calculation != null -> {
                     Text(
-                        "Required EXP: ${calculation.requiredExperience} · Mora: ${calculation.moraRequired}",
+                        "Required EXP: ${calculation.requiredExperience}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold
                     )
-                    if (calculation.materials.isEmpty()) {
-                        Text("No enhancement materials required for this level range.")
+
+                    when {
+                        weapon.ascensionLevel == null -> Text(
+                            "Ascension rank is missing from the account snapshot. Only enhancement ore costs can be calculated.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        ascensionCandidates == null && !candidateLoadFailed -> Text(
+                            "Loading offline ascension materials…",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        candidateLoadFailed -> Text(
+                            "The bundled ascension dataset could not be read. Ascension costs are unavailable.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        ascensionCalculation?.status == WeaponAscensionCandidateCalculationStatus.COST_DATA_INCOMPLETE -> Text(
+                            "Ascension costs are incomplete for this weapon at the level-${ascensionCalculation.missingFromLevel} gate. Listed totals exclude all ascension materials and ascension Mora.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        ascensionCalculation?.status == WeaponAscensionCandidateCalculationStatus.OVERLAPPING_SEGMENTS ||
+                            ascensionCalculation?.status == WeaponAscensionCandidateCalculationStatus.INVALID_CANDIDATE_DATA ||
+                            ascensionCalculation?.status == WeaponAscensionCandidateCalculationStatus.QUANTITY_OVERFLOW -> Text(
+                            "Ascension source data failed validation. Ascension costs are withheld.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    if (displayRequirements.isEmpty()) {
+                        Text("No materials required for this level range.")
                     } else {
-                        calculation.materials.forEach { requirement ->
+                        displayRequirements.forEach { requirement ->
                             val ownedKey = "weapon_plan_owned_${weapon.id}_${requirement.itemId}"
                             var owned by remember(weapon.id, requirement.itemId) {
                                 mutableStateOf(preferences.getString(ownedKey, "") ?: "")
@@ -170,7 +268,7 @@ internal fun WeaponEnhancementCalculatorSection(
                             }
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(
-                                    "${weaponMaterialName(requirement.itemId)} · Required: ${requirement.quantity}",
+                                    "${requirement.itemName} · Required: ${requirement.quantity}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -196,7 +294,7 @@ internal fun WeaponEnhancementCalculatorSection(
                         }
                     }
                     Text(
-                        "Ore-only candidate estimate. Future ascension materials, enemy drops, and weapon fodder are not included yet. Source permission and review are pending.",
+                        "Weapon EXP and ascension requirements use version-pinned Genshin-DB 7.2 candidate data. This source is not yet permission-reviewed or promoted to trusted knowledge. Weapon fodder is not included; enhancement ore is calculated instead.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
