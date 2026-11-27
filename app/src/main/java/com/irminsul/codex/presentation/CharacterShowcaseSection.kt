@@ -10,13 +10,11 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -127,7 +125,7 @@ fun CharacterShowcaseSection(
                     )
                 }
                 Icon(
-                    if (rosterExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                    if (rosterExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = if (rosterExpanded) "Collapse character roster" else "Expand character roster"
                 )
             }
@@ -559,7 +557,7 @@ private fun ShowcaseExpandableSection(
                 Text(summary, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Icon(
-                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                imageVector = if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                 contentDescription = if (expanded) "Collapse $title" else "Expand $title"
             )
         }
@@ -628,7 +626,7 @@ private fun WeaponShowcaseRow(
                 if (stale) Text("Using older account data", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
             }
             Icon(
-                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                imageVector = if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                 contentDescription = if (expanded) "Collapse weapon details" else "Expand weapon details"
             )
         }
