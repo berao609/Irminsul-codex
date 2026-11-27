@@ -279,7 +279,7 @@ private fun CharacterShowcasePreview(
                         modifier = Modifier.width(58.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { onCharacterSelected(character.id) }
+                            .clickable { onOpenCharacter(character.id) }
                             .padding(5.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -321,7 +321,7 @@ private fun CharacterShowcasePreview(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    AppIcon(AppIconName.BACK, contentDescription = "Open character details")
+                    AppIcon(AppIconName.CHEVRON_RIGHT, contentDescription = "Open character details")
                 }
             }
         }
@@ -350,7 +350,7 @@ private fun ChronicleModePreview(
                 Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(summary, style = MaterialTheme.typography.bodyMedium)
             }
-            AppIcon(AppIconName.BACK, contentDescription = "View $title details")
+            AppIcon(AppIconName.CHEVRON_RIGHT, contentDescription = "View $title details")
         }
     }
 }
