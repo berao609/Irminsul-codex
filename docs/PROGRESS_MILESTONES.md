@@ -4879,7 +4879,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
 - `docs/PROGRESS_MILESTONES.md`
 
-**Verification status:** Source and documentation committed. Debug CI and physical-device verification pending.
+**Verification status:** CI #799 initially failed during Kotlin compilation because the snapshot timestamp argument was `Instant?` while the presentation component expects `String?`. Corrected the call site in commit `9d4c66ca656d8d0b764597e4be73f90b557f59db`; CI #800 passed. Physical-device verification remains pending.
 
 **Device checklist:**
 1. Verify the Adventurer account card with and without configured credentials.
@@ -4889,3 +4889,36 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 5. Confirm Daily Note, Visual Dashboard, Tools, Account, Materials Calculator, and Lineup Simulator remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+## Milestone 093 - Tools Destination Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 by extracting the Tools destination container from MainActivity.
+
+**Implemented:**
+- Added `presentation/ToolsSection.kt` for the Tools heading, Materials Calculator card, and Lineup Simulator card/container.
+- MainActivity supplies the existing character roster, SharedPreferences, expansion state, active lineup selection, roster freshness/completeness flags, and callbacks.
+- Kept state ownership, roster interpretation, and lineup selection-rule orchestration in CodexScreen.
+- Reused the existing MaterialsPlannerSection and LineupSimulatorSection without changing their internal behavior.
+- Preserved labels, descriptions, expand/collapse affordances, selected-character count, and existing selection behavior.
+- No calculator logic, account retrieval, persistence, navigation, or lineup-analysis capability was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ToolsSection.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** Source and documentation committed. Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Open Tools and expand/collapse Materials Calculator.
+2. Verify character and weapon selectors, level/talent inputs, and generated material preview remain unchanged.
+3. Expand/collapse Lineup Simulator.
+4. Verify selected count, four-character limit, add/remove behavior, and element summary.
+5. Verify stale/partial roster warnings remain visible when applicable.
+6. Confirm Home, Visuals, Account, navigation, and AI placeholder sheet remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement or new calculator/lineup capability is claimed.
