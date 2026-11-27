@@ -13,6 +13,7 @@ import com.irminsul.codex.presentation.AccountSettingsSection
 import com.irminsul.codex.presentation.AiAssistantSheet
 import com.irminsul.codex.presentation.ThemeMode
 import com.irminsul.codex.presentation.VisualDashboardSection
+import com.irminsul.codex.presentation.ToolsSection
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -49,9 +50,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,9 +70,7 @@ import com.irminsul.codex.presentation.ChronicleRecordMode
 import com.irminsul.codex.presentation.ChronicleOverviewSection
 import com.irminsul.codex.presentation.ChronicleExplorationSection
 import com.irminsul.codex.presentation.ChronicleRecordSection
-import com.irminsul.codex.presentation.LineupSimulatorSection
 import com.irminsul.codex.presentation.CharacterShowcaseSection
-import com.irminsul.codex.presentation.MaterialsPlannerSection
 import com.irminsul.codex.presentation.formatGameDescription
 import com.irminsul.codex.presentation.sortCharactersByRelease
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
@@ -488,95 +484,27 @@ private fun CodexScreen(
         }
 
         if (selectedTab == CodexTab.TOOLS) {
-            Text("Tools", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-            Text(
-                "Calculators and utilities for account progression.",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            val materialCharacters = when (val value = accountExportState.snapshot?.characters) {
+            val toolsCharacters = when (val value = accountExportState.snapshot?.characters) {
                 is DataValue.Available -> value.value
                 is DataValue.Stale -> value.value
                 else -> emptyList()
             }
-            Card(
-                modifier = Modifier.fillMaxWidth().clickable {
-                    showMaterialsPlanner = !showMaterialsPlanner
-                },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Outlined.Build, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("Materials Calculator", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Automatically plan character and weapon upgrade materials",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Icon(
-                        if (showMaterialsPlanner) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                        contentDescription = if (showMaterialsPlanner) "Collapse Materials Calculator" else "Expand Materials Calculator"
-                    )
-                }
-            }
-            if (showMaterialsPlanner) {
-                MaterialsPlannerSection(
-                    characters = materialCharacters,
-                    preferences = prefs
-                )
-            }
-
-            val lineupCharacters = when (val value = accountExportState.snapshot?.characters) {
-                is DataValue.Available -> value.value
-                is DataValue.Stale -> value.value
-                else -> emptyList()
-            }
-            val availableLineupIds = lineupCharacters.map { it.id }.toSet()
+            val availableLineupIds = toolsCharacters.map { it.id }.toSet()
             val activeLineupIds = selectedLineupCharacterIds.filter { it in availableLineupIds }
-            Card(
-                modifier = Modifier.fillMaxWidth().clickable {
-                    showLineupSimulator = !showLineupSimulator
-                },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("Lineup Simulator", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "${activeLineupIds.size}/4 characters selected",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Icon(
-                        if (showLineupSimulator) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                        contentDescription = if (showLineupSimulator) "Collapse Lineup Simulator" else "Expand Lineup Simulator"
-                    )
+            ToolsSection(
+                characters = toolsCharacters,
+                preferences = prefs,
+                showMaterialsPlanner = showMaterialsPlanner,
+                showLineupSimulator = showLineupSimulator,
+                selectedLineupCharacterIds = activeLineupIds,
+                rosterIsStale = accountExportState.snapshot?.characters is DataValue.Stale,
+                rosterIsPartial = accountExportState.snapshot?.sections?.get("characters")?.status?.name == "PARTIAL",
+                onToggleMaterialsPlanner = { showMaterialsPlanner = !showMaterialsPlanner },
+                onToggleLineupSimulator = { showLineupSimulator = !showLineupSimulator },
+                onToggleLineupCharacter = { characterId ->
+                    selectedLineupCharacterIds = LineupSelectionRules.toggle(activeLineupIds, characterId)
                 }
-            }
-            if (showLineupSimulator) {
-                LineupSimulatorSection(
-                    characters = lineupCharacters,
-                    selectedCharacterIds = activeLineupIds,
-                    rosterIsStale = accountExportState.snapshot?.characters is DataValue.Stale,
-                    rosterIsPartial = accountExportState.snapshot?.sections?.get("characters")?.status?.name == "PARTIAL",
-                    onToggleCharacter = { characterId ->
-                        selectedLineupCharacterIds = LineupSelectionRules.toggle(activeLineupIds, characterId)
-                    }
-                )
-            }
+            )
         }
 
         if (selectedTab == CodexTab.ACCOUNT) {
