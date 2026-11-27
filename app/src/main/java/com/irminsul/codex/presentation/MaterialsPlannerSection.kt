@@ -59,7 +59,7 @@ fun MaterialsPlannerSection(
                 is DataValue.Stale -> value.value
                 else -> null
             }
-            if (weapon != null && weapon.rarity in listOf(4, 5)) {
+            if (weapon != null && (weapon.rarity == 4 || weapon.rarity == 5)) {
                 add(
                     MaterialTargetOption(
                         id = "weapon:" + character.id + ":" + weapon.id,
