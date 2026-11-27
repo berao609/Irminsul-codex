@@ -13,6 +13,7 @@ import com.irminsul.codex.presentation.ScreenErrorBanner
 import com.irminsul.codex.presentation.HomeInitialLoadingIndicator
 import com.irminsul.codex.presentation.HomeSection
 import com.irminsul.codex.presentation.CodexScreenHeader
+import com.irminsul.codex.presentation.CodexAppTheme
 
 import android.content.Context
 import android.content.SharedPreferences
