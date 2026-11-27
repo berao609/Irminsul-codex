@@ -5076,7 +5076,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 
 **Date recorded:** 2026-11-27  
 **Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
-**Status:** Implemented and committed; CI and physical-device verification pending.
+**Status:** User confirmed successful CI/build and physical-device testing. Exact workflow run and artifact identifiers were not supplied in the confirmation.
 
 ### Objective
 Move the existing Material 3 light and dark color-scheme definitions out of MainActivity without changing theme behavior.
@@ -5099,3 +5099,32 @@ Move the existing Material 3 light and dark color-scheme definitions out of Main
 
 ### Remaining work
 Run Debug CI, inspect the resulting artifact, and verify System/Light/Dark appearance plus all existing destinations and navigation on the physical device.
+
+
+## Milestone 100 - System-Bar Appearance Presentation Extraction
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+### Objective
+Move the existing system-bar icon appearance side effect out of MainActivity without changing behavior.
+
+### Implementation
+- Added `presentation/CodexSystemBars.kt` to apply the existing status-bar and navigation-bar icon appearance using `WindowInsetsControllerCompat`.
+- MainActivity supplies the existing `useDarkTheme`, current Compose view, and Activity window.
+- Preserved the original SideEffect and both appearance assignments.
+- Theme selection, preference persistence, edge-to-edge setup, and MaterialTheme ownership remain in MainActivity.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexSystemBars.kt`
+
+### Verification
+- Source changes committed on `main`.
+- CI verification: pending.
+- Debug APK artifact: pending.
+- Physical-device verification: pending.
+
+### Remaining work
+Run Debug CI, inspect the resulting artifact, and verify status/navigation bar icon contrast in System, Light, and Dark modes, plus existing navigation and account functionality.
