@@ -5062,7 +5062,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `752f6be52ea92866384937a90ee8cdf9bd34510d` - add header component.
 - `dde97640026e75ed78f3bedf566a85882660bc4f` - integrate header component.
 
-**Verification status:** Source changes committed. CI and physical-device verification pending.
+**Verification status:** User confirmed physical-device testing passed. CI verification remains unconfirmed in the currently available evidence.
 
 **Device checklist:**
 1. Confirm the title appears correctly.
