@@ -149,13 +149,21 @@ fun VisualsSection(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         } else {
-                            CharacterShowcaseSection(
-                                characters = roster,
-                                selectedCharacterId = selectedCharacterId,
-                                onCharacterSelected = onCharacterSelected,
-                                initialRosterExpanded = true,
-                                showSelectedDetail = false
-                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                CharacterShowcaseSection(
+                                    characters = roster,
+                                    selectedCharacterId = selectedCharacterId,
+                                    onCharacterSelected = onCharacterSelected,
+                                    initialRosterExpanded = true,
+                                    showSelectedDetail = false
+                                )
+                                TextButton(
+                                    onClick = { onNavigate(VisualsDestination.CHARACTER_DETAILS) },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("View Selected Character")
+                                }
+                            }
                         }
                     }
 
@@ -169,6 +177,11 @@ fun VisualsSection(
                                 Text("Open Character Roster")
                             }
                         } else {
+                            CharacterDetailSelector(
+                                characters = availableCharacters,
+                                selectedCharacterId = character.id,
+                                onCharacterSelected = onCharacterSelected
+                            )
                             CharacterShowcaseDetail(character)
                         }
                     }
@@ -320,6 +333,39 @@ private fun CharacterShowcasePreview(
                     }
                     AppIcon(AppIconName.CHEVRON_RIGHT, contentDescription = "Open character details")
                 }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun CharacterDetailSelector(
+    characters: List<CharacterSnapshot>,
+    selectedCharacterId: Int,
+    onCharacterSelected: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(9.dp)
+    ) {
+        sortCharactersByRelease(characters).forEach { character ->
+            val selected = character.id == selectedCharacterId
+            Column(
+                modifier = Modifier.width(58.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { onCharacterSelected(character.id) }
+                    .padding(5.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                AsyncImage(
+                    model = character.avatarIcon,
+                    contentDescription = "${character.name ?: "Character"} portrait",
+                    modifier = Modifier.size(44.dp).clip(RoundedCornerShape(9.dp))
+                )
+                Text(character.name ?: "Character #${character.id}", style = MaterialTheme.typography.labelSmall, maxLines = 1)
             }
         }
     }
