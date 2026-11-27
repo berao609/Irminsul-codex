@@ -5473,7 +5473,7 @@ Presentation-only reference fidelity work. No account retrieval, raw source sche
 
 **Date recorded:** 2026-11-27  
 **Development phase:** UI Revamp - Batch 4  
-**Status:** Implemented and merged in PRs #7 and #8; automated verification pending; physical-device verification pending.
+**Status:** Implemented, merged, and CI-verified in PRs #7 and #8; physical-device verification pending.
 
 ### Objective
 Extend the existing Visuals Battle Chronicle experience with source-backed Stygian Onslaught data while establishing a typed domain boundary for this additional Chronicle section. This is part of the ongoing UI revamp, not a separate task.
@@ -5509,9 +5509,12 @@ Extend the existing Visuals Battle Chronicle experience with source-backed Stygi
 
 ### Verification
 - PR #7 merged as `d34dede92c5fc557ae1b50df4b585cdb31ad67c9`; PR #8 merged as `2fd8d3d7ff14418a211e5976f8a598783b9bc63e`.
-- Automated tests and Debug APK build: pending GitHub Actions.
+- GitHub Actions [run #883](https://github.com/berao609/Irminsul-codex/actions/runs/46017911203) succeeded for PR #7's merge commit. Unit tests, Room instrumentation tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact uploads succeeded.
+- GitHub Actions [run #884](https://github.com/berao609/Irminsul-codex/actions/runs/46018327952) succeeded for PR #8's merge commit. Unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact uploads succeeded. Room instrumentation tests were correctly skipped because PR #8 changed no persistence or snapshot-model code.
+- Latest Debug APK: `irminsul-codex-debug-v1.0.0-dev.884-vc886`, artifact ID `15207231460`, SHA-256 `38f044b90e71d48367f372afc25c39e45e5e727996c0a5f4817f95dfa9be838c`.
+- Room schema artifact ID: `15207725741`; SHA-256 `bc3887f3199ac6c94af8895d458a449df68ebccf414b7778a58d8ddb547c126f`.
 - Physical-device verification: pending user testing.
-- Room schema: no change expected because the new typed field is derived from the existing persisted raw export.
+- No Room schema migration was required; the typed Stygian summary is derived from the existing persisted raw index payload.
 
 ### Device checklist
 1. Verify Stygian Onslaught appears in Visuals when the index response includes the supported fields.
@@ -5521,4 +5524,4 @@ Extend the existing Visuals Battle Chronicle experience with source-backed Stygi
 5. Confirm existing Account Overview, Exploration, Character Showcase, Abyss, Theater, Account Analysis, navigation, Home, and Tools remain functional.
 
 ### Boundary
-This milestone adds typed Stygian summary mapping and Visuals presentation only. It does not add an unverified Stygian detail endpoint, historical cycle/team records, a separate cloud service, or a Room migration. Further Chronicle endpoint expansion remains part of the same ongoing UI revamp batch plan and must be evidence-led.
+This milestone adds typed Stygian summary mapping, Visuals presentation, and a dedicated local Battle Chronicle collector. It does not add an unverified Stygian detail endpoint, historical cycle/team records, a separate cloud service, or a Room migration. Further Chronicle endpoint expansion remains part of the same ongoing UI revamp batch plan and must be evidence-led.
