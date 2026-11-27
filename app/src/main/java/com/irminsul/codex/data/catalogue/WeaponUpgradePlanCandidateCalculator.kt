@@ -64,13 +64,16 @@ object WeaponUpgradePlanCandidateCalculator {
             request.currentLevel > levelCaps[request.currentAscensionLevel]
         ) return invalid()
 
+        val currentCap = levelCaps[request.currentAscensionLevel]
+        val plannedCap = maxOf(currentCap, levelCaps.first { request.targetLevel <= it })
         val expResult = WeaponExperienceCalculator.calculate(
             WeaponExperienceCalculationRequest(
                 rarity = request.rarity,
                 currentLevel = request.currentLevel,
                 currentExperienceWithinLevel = request.currentExperienceWithinLevel,
                 targetLevel = request.targetLevel,
-                maximumUnlockedLevel = levelCaps[request.currentAscensionLevel]
+                maximumUnlockedLevel = currentCap,
+                targetMaximumUnlockedLevel = plannedCap
             ),
             cumulativeExperienceByLevel
         )
@@ -106,6 +109,7 @@ object WeaponUpgradePlanCandidateCalculator {
             } catch (_: ArithmeticException) {
                 return false
             }
+            if (old != null && old.first != itemName) return false
             totals[itemId] = (old?.first ?: itemName) to next
             return true
         }
@@ -130,9 +134,9 @@ object WeaponUpgradePlanCandidateCalculator {
             status = if (missing.isEmpty()) WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA
                 else WeaponUpgradePlanCandidateStatus.INCOMPLETE,
             experience = expResult,
-            requirements = totals.map { (id, value) ->
+            requirements = if (missing.isEmpty()) totals.map { (id, value) ->
                 WeaponUpgradePlanCandidateRequirement(id, value.first, value.second)
-            },
+            } else emptyList(),
             missingAscensionFromLevels = missing
         )
     }
