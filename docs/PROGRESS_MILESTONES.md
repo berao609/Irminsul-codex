@@ -4444,3 +4444,41 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 
 **Result:** The app now has a version-pinned offline candidate source and repository for character ascension and talent costs. This is a data foundation, not yet a completed user-facing automatic character calculator.
 
+
+
+## Milestone 079 - Character Level and Ascension Planner Integration
+
+**Date recorded:** 2026-11-27  
+**Scope:** Connect the version-pinned offline character progression candidates and existing character EXP/ascension calculations to the Materials Planner. This increment covers character level progression only; talent costs remain a separate milestone.
+
+**Implemented:**
+- Added `CharacterEnhancementCalculatorSection` using the existing `CharacterUpgradePlanCandidateCalculator`.
+- Loads the selected character's version-pinned progression candidates from Android assets.
+- Uses the account snapshot's current ascension rank and the planner's current/target level fields.
+- Adds a persisted current EXP-within-level input.
+- Combines character EXP, ascension materials, and Mora using the existing candidate plan calculator.
+- Displays material requirements with optional owned quantities and remaining quantities.
+- Withholds combined totals when the source dataset cannot load, the ascension rank is missing, or required ascension data is incomplete/invalid.
+- Keeps all costs explicitly labelled as candidate data; no promotion to trusted production costs occurs.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterEnhancementCalculatorSection.kt` (new)
+- `app/src/main/java/com/irminsul/codex/presentation/MaterialsPlannerSection.kt`
+
+**Commits:**
+- `7bee675c36650b2b48fc137ef79a43aa727e8b4b`
+- `7d2891eaadaa1d762ffd0976652fc581772a0e73`
+- `5d5d87b8df859db5778adfe32d3676b996f09414`
+
+**Verification status:**
+- Source integration is committed.
+- GitHub Actions verification is pending; do not treat this milestone as CI-verified until the new Debug workflow completes successfully.
+- Physical-device verification is pending. Test current EXP, cross-ascension targets, missing ascension rank, offline loading, owned/remaining quantities, and preservation of existing weapon/manual plans.
+
+**Remaining work:**
+- Add and verify automated coverage for the character UI integration where the existing test architecture supports it.
+- Complete independent Normal Attack, Elemental Skill, and Elemental Burst cost calculations in the next milestone.
+- Combine all character level and talent requirements into one material list without double-counting Mora.
+- Keep Traveler talent requirements incomplete until separately sourced and reviewed data is available.
+
+**Result:** Character level/ascension candidate calculations are now connected to the Materials Planner UI. CI and physical-device verification remain pending.
