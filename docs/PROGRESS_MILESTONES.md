@@ -5570,7 +5570,7 @@ The following is the initial candidate matrix, not a claim that the project has 
 | Gradle | 9.7.0 | Latest Gradle version within Kotlin 2.4.21's documented fully supported range; exceeds AGP 9.3.1 minimum 9.5.0 |
 | Kotlin / Compose compiler plugin | 2.4.21 | Latest stable Kotlin release at review time |
 | KSP | 2.3.12 | Supports KGP 2.3.20-2.4.x, AGP 8.13+, Gradle 8.13+, and JDK 17+ |
-| Compose BOM | 2026.07.01 | Latest stable Compose BOM before the Compose 1.12 line adopted API 37 |
+| Compose BOM | 2026.06.01 | Latest stable Compose BOM for the API 36-compatible Compose 1.11.4 line |
 | compileSdk | API 36.1 | Stable Android 16 QPR2 SDK; required by Core KTX 1.18.0 |
 | targetSdk | API 36 | Meets the current Google Play submission requirement |
 | Room | 2.8.5 | Current stable Room release; verify schema/migration compatibility |
@@ -5591,12 +5591,12 @@ Official compatibility references reviewed:
 
 ### Migration requirements
 
-**Compose/API compatibility correction:** The November 2026 Compose 1.13 BOM requires compileSdk 37.1. CI run #900 confirmed the hosted SDK manager cannot install a stable `platforms;android-37` package. Do not use a preview platform for this production app. Use the latest stable Compose 1.11 line (BOM 2026.07.01) with compileSdk 36 and revisit Compose 1.12+ only when API 37 is released as a stable SDK.
-1. Recheck the compatibility matrix against official release notes immediately before implementation. Prefer the latest stable versions that are mutually supported; do not use alpha, beta, RC, or dynamic dependency versions. Compose 1.12+ requires API 37; the CI runner did not expose a stable API 37 platform package, so remain on Compose 1.11.4 / BOM 2026.06.01 and compileSdk 36 until API 37 is stable and installable.
+**Compose/API compatibility correction:** The November 2026 Compose 1.13 BOM requires compileSdk 37.1. CI run #900 confirmed the hosted SDK manager cannot install a stable `platforms;android-37` package. Do not use a preview platform for this production app. Use the latest stable Compose 1.11.4 line (BOM 2026.06.01) with compileSdk 36.1 and revisit Compose 1.12+ only when API 37 is released as a stable SDK.
+1. Recheck the compatibility matrix against official release notes immediately before implementation. Prefer the latest stable versions that are mutually supported; do not use alpha, beta, RC, or dynamic dependency versions. Compose 1.12+ requires API 37; the CI runner did not expose a stable API 37 platform package, so remain on Compose 1.11.4 / BOM 2026.06.01 and compileSdk 36.1 until API 37 is stable and installable.
 2. Migrate AGP 9 built-in Kotlin correctly. Remove the redundant `org.jetbrains.kotlin.android` plugin where required; retain and align the Kotlin Compose compiler plugin. Inspect AGP 9 DSL and build behavior changes rather than suppressing migration warnings blindly.
 3. Upgrade KSP independently to a version supported by the selected KGP/AGP/Gradle combination. Keep Room's compiler and runtime versions aligned.
 4. Review every existing library individually. Do not force unrelated major migrations (for example Coil 2 to Coil 3) merely to claim that every dependency is newest. Preserve behavior and update only where compatibility, security, maintenance, or platform support justifies it.
-5. Compile against API 36 and raise targetSdk to 36. Audit Android 16 behavior changes: edge-to-edge is enforced, predictive back is enabled by default, and orientation/resizability restrictions are ignored on displays at least 600dp wide. The manifest currently declares no orientation lock; MainActivity already enables edge-to-edge. Verify insets, nested Visuals back handling, and responsive layouts. Keep minSdk 26 unless a demonstrated dependency requirement forces a separately reviewed decision.
+5. Compile against API 36.1 and raise targetSdk to 36. Audit Android 16 behavior changes: edge-to-edge is enforced, predictive back is enabled by default, and orientation/resizability restrictions are ignored on displays at least 600dp wide. The manifest currently declares no orientation lock; MainActivity already enables edge-to-edge. Verify insets, nested Visuals back handling, and responsive layouts. Keep minSdk 26 unless a demonstrated dependency requirement forces a separately reviewed decision.
 6. Update CI Gradle setup and Android emulator API coherently. Preserve persistent Debug signing, version-code calculation, Room schema verification, signature verification, artifact naming, and temporary-keystore cleanup.
 7. Add/adjust dependency-resolution and build checks so future incompatible AAR metadata, plugin, Kotlin, or SDK combinations fail before a UI batch is treated as ready.
 8. Preserve the existing single-module native Kotlin/Compose architecture, local-first design, account data integrity, export compatibility, and all Batch 5 UI behavior.
