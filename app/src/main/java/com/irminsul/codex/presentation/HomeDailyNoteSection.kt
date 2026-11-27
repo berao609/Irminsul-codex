@@ -176,7 +176,7 @@ fun HomeDailyNoteSection(
                             modifier = Modifier.weight(1f),
                             label = "Weekly Discounts",
                             value = (note.remainResinDiscountNum?.toString() ?: "—") + "/" + (note.resinDiscountNumLimit?.toString() ?: "—"),
-                            status = "Remaining"
+                            status = if (note.remainResinDiscountNum != null && note.resinDiscountNumLimit != null) "Remaining" else "Availability unknown"
                         )
                     }
                 }
