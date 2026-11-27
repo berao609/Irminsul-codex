@@ -11,3 +11,14 @@ internal enum class VisualsDestination(val title: String) {
     STYGIAN_ONSLAUGHT("Stygian Onslaught"),
     ACCOUNT_ANALYSIS("Account Analysis")
 }
+
+internal object VisualsNavigationStack {
+    fun navigate(
+        current: List<VisualsDestination>,
+        destination: VisualsDestination
+    ): List<VisualsDestination> =
+        if (current.lastOrNull() == destination) current else current + destination
+
+    fun back(current: List<VisualsDestination>): List<VisualsDestination> =
+        if (current.size > 1) current.dropLast(1) else current
+}
