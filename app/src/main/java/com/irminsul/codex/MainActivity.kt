@@ -15,6 +15,7 @@ import com.irminsul.codex.presentation.HomeSection
 import com.irminsul.codex.presentation.CodexScreenHeader
 import com.irminsul.codex.presentation.CodexDarkColors
 import com.irminsul.codex.presentation.CodexLightColors
+import com.irminsul.codex.presentation.CodexSystemBars
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -28,8 +29,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.compose.runtime.SideEffect
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -105,11 +104,11 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.DARK -> true
             }
             val view = LocalView.current
-            SideEffect {
-                val controller = WindowInsetsControllerCompat(window, view)
-                controller.isAppearanceLightStatusBars = !useDarkTheme
-                controller.isAppearanceLightNavigationBars = !useDarkTheme
-            }
+            CodexSystemBars(
+                useDarkTheme = useDarkTheme,
+                window = window,
+                view = view
+            )
 
             MaterialTheme(colorScheme = if (useDarkTheme) CodexDarkColors else CodexLightColors) {
                 Surface(
