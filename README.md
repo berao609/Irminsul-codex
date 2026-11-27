@@ -268,10 +268,10 @@ Irminsul-codex/
 
 Responsible for:
 
-* Main application interface and existing Daily Note presentation.
+* Screen-level composition, navigation state, and coordination of extracted presentation sections.
 * Credential entry and orchestration through `HoYoLabCredentialStore` for Keystore-backed cookie encryption; non-sensitive UID and theme preferences remain in SharedPreferences.
-* Daily Note synchronization actions.
-* Saving account JSON exports through Android's document picker.
+* Daily Note synchronization and account-export actions, including document-picker coordination.
+* Retaining screen-owned state and callbacks passed into presentation components.
 
 ### `api/HoYoLabClient.kt`
 
