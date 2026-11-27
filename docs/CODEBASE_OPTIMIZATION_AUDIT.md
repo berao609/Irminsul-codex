@@ -1271,3 +1271,28 @@ Closing this audit does not mean the application is perfect or that every option
 6. Confirm Home, Visuals, Tools, Materials Calculator, Lineup Simulator, and navigation remain unaffected.
 
 **Boundary:** Structural extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 11: AI assistant sheet presentation extraction
+
+**Status:** Implemented; CI and physical-device verification pending.
+
+**Implementation:**
+- Extracted the existing AI placeholder ModalBottomSheet into `presentation/AiAssistantSheet.kt`.
+- MainActivity now delegates to `AiAssistantSheet`, passing the existing remembered SheetState and dismissal callback.
+- Kept `showAiSheet`, bottom-navigation launch behavior, and sheet-state ownership in `CodexScreen`.
+- Preserved the title, placeholder explanation, disabled input, cookie privacy statement, dimensions, colors, spacing, and dismissal behavior.
+- No AI provider, message handling, account context transfer, or chat functionality was added.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AiAssistantSheet.kt`
+
+**Verification required:**
+1. Confirm Debug CI passes compilation, unit tests, Debug APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Open the centered AI action and verify the sheet opens with unchanged placeholder content.
+3. Verify Close and swipe dismissal both work.
+4. Verify keyboard/navigation-bar insets and sheet scrolling/layout remain correct.
+5. Confirm all four destinations and their existing features remain unaffected.
+
+**Boundary:** Structural extraction only. AI remains inactive; no provider or chat behavior is claimed.
