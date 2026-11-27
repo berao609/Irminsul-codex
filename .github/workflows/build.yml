@@ -3,6 +3,8 @@ name: Build Debug APK
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -26,7 +28,12 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: '8.14.8'
+          gradle-version: '9.5.0'
+
+      - name: Install Android compile SDK platform
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-37" "build-tools;37.0.0" "platform-tools"
 
       - name: Configure persistent Debug signing
         shell: bash
@@ -196,7 +203,7 @@ jobs:
         env:
           ANDROID_I_WANT_MY_TCG: ${{ steps.kvm.outputs.available != 'true' && 'yes' || '' }}
         with:
-          api-level: 34
+          api-level: 36
           arch: x86_64
           target: google_apis
           profile: pixel_2
