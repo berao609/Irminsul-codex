@@ -4558,3 +4558,29 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 6. Confirm switching tabs preserves expected state and scrolling.
 
 **Result:** The calculator now lives in Tools, while Visuals remains focused on account analysis and visual information. No calculation logic or saved preference keys were intentionally changed.
+
+
+## Milestone 082 - Dashboard Metric Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by moving shared dashboard metric presentation helpers out of the oversized activity source.
+
+**Implemented:**
+- Extracted AssessmentBar, MetricTile, and DailyNoteMetricRow composables, plus formatDuration, into presentation/DashboardMetrics.kt.
+- Updated MainActivity imports while preserving existing call sites and helper behavior.
+- No data, state ownership, calculations, persistence, navigation, or calculator behavior intentionally changed.
+
+**Files changed:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/DashboardMetrics.kt
+- docs/CODEBASE_OPTIMIZATION_AUDIT.md
+- docs/PROGRESS_MILESTONES.md
+
+**Verification status:** Source extraction prepared for CI. Automated verification and physical-device testing are pending. No performance improvement is claimed.
+
+**Device checklist:**
+1. Inspect Home and Visuals metric cards and progress bars.
+2. Verify Daily Note metric rows and their status labels.
+3. Verify Resin recovery text for unavailable, zero, and positive recovery times.
+4. Confirm Home and Visuals navigation and account data remain unchanged.
