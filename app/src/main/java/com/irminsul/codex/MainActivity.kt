@@ -6,7 +6,6 @@ import com.irminsul.codex.presentation.CodexTab
 import com.irminsul.codex.presentation.HomeDailyNoteSection
 import com.irminsul.codex.presentation.HomeAccountOverviewSection
 import com.irminsul.codex.presentation.AccountDataExportSection
-import com.irminsul.codex.presentation.AccountAnalysisSection
 import com.irminsul.codex.presentation.InitialSignInSection
 import com.irminsul.codex.presentation.AccountCredentialsSection
 import com.irminsul.codex.presentation.AccountSettingsSection
@@ -14,6 +13,7 @@ import com.irminsul.codex.presentation.AiAssistantSheet
 import com.irminsul.codex.presentation.ThemeMode
 import com.irminsul.codex.presentation.VisualDashboardSection
 import com.irminsul.codex.presentation.ToolsSection
+import com.irminsul.codex.presentation.VisualsSection
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -65,12 +65,6 @@ import com.irminsul.codex.data.repository.HoYoLabAccountRepository
 import com.irminsul.codex.data.export.JsonDocumentWriter
 import com.irminsul.codex.data.local.IrminsulDatabase
 import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
-import com.irminsul.codex.presentation.ChroniclePresentationRules
-import com.irminsul.codex.presentation.ChronicleRecordMode
-import com.irminsul.codex.presentation.ChronicleOverviewSection
-import com.irminsul.codex.presentation.ChronicleExplorationSection
-import com.irminsul.codex.presentation.ChronicleRecordSection
-import com.irminsul.codex.presentation.CharacterShowcaseSection
 import com.irminsul.codex.presentation.formatGameDescription
 import com.irminsul.codex.presentation.sortCharactersByRelease
 import com.irminsul.codex.presentation.viewmodel.AccountViewModel
@@ -423,60 +417,16 @@ private fun CodexScreen(
 
 
         if (selectedTab == CodexTab.VISUALS) {
-            accountExportState.snapshot?.let { snapshot ->
-                Text(
-                    text = "Account Chronicle",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                ChronicleOverviewSection(snapshot.accountCard, snapshot.profileAndExploration)
-                ChronicleExplorationSection(snapshot.profileAndExploration)
-                ChronicleRecordSection("Spiral Abyss · Current Cycle", snapshot.spiralAbyssCurrent, ChronicleRecordMode.SPIRAL_ABYSS)
-                ChronicleRecordSection("Spiral Abyss · Previous Cycle", snapshot.spiralAbyssPrevious, ChronicleRecordMode.SPIRAL_ABYSS)
-                ChronicleRecordSection("Imaginarium Theater", snapshot.imaginariumTheater, ChronicleRecordMode.IMAGINARIUM_THEATER)
-            }
-        }
-
-        if (selectedTab == CodexTab.VISUALS) {
-            val roster = when (val value = accountExportState.snapshot?.characters) {
-                is DataValue.Available -> value.value
-                is DataValue.Stale -> value.value
-                else -> emptyList()
-            }
-            if (roster.isNotEmpty()) {
-                CharacterShowcaseSection(
-                    characters = roster,
-                    selectedCharacterId = selectedCharacterId,
-                    onCharacterSelected = { selectedCharacterId = it }
-                )
-            } else {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("Character Showcase", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Run Analyze Account to retrieve your character roster and open detailed character profiles here.",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-
-        if (selectedTab == CodexTab.VISUALS && uid.isNotBlank() && cookie.isNotBlank()) {
-            AccountAnalysisSection(
-                report = accountExportState.intelligenceOverview,
-                characters = (accountExportState.snapshot?.characters as? DataValue.Available)?.value.orEmpty(),
+            VisualsSection(
+                snapshot = accountExportState.snapshot,
+                intelligenceOverview = accountExportState.intelligenceOverview,
                 isExporting = accountExportState.isExporting,
                 isRestoringSnapshot = accountExportState.isRestoringSnapshot,
                 isAnalyzing = accountExportState.isAnalyzingIntelligence,
                 errorMessage = accountExportState.intelligenceErrorMessage,
-                hasSnapshot = accountExportState.snapshot != null,
+                hasCredentials = uid.isNotBlank() && cookie.isNotBlank(),
+                selectedCharacterId = selectedCharacterId,
+                onCharacterSelected = { selectedCharacterId = it },
                 showAllRecommendations = showAllRecommendations,
                 onShowAllRecommendationsChange = { showAllRecommendations = it },
                 onAnalyzeAccount = { accountViewModel.analyzeAccount(uid, cookie) }
