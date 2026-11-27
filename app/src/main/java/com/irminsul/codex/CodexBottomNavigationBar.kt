@@ -15,11 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-enum class CodexTab(val label: String, val preferenceValue: String) {
-    HOME("Home", "home"),
-    VISUALS("Visuals", "visuals"),
-    TOOLS("Tools", "tools"),
-    ACCOUNT("Account", "account")
+enum class CodexTab(val label: String) {
+    HOME("Home"),
+    VISUALS("Visuals"),
+    TOOLS("Tools"),
+    ACCOUNT("Account")
 }
 
 @Composable
