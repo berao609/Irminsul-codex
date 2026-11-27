@@ -4788,7 +4788,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `README.md`
 - `docs/PROGRESS_MILESTONES.md`
 
-**Verification status:** Source committed. CI and physical-device verification pending.
+**Verification status:** CI #778 passed. The user confirmed successful physical-device testing.
 
 **Device checklist:**
 1. Confirm Lineup Simulator is absent from Visuals.
@@ -4799,4 +4799,4 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 6. Confirm switching tabs preserves the expected selection state.
 7. Confirm Materials Calculator and the remaining tabs still work.
 
-**Result:** Lineup Simulator is now grouped with the app's calculators and utilities in Tools. Its existing selection behavior and trust limitations are unchanged.
+**Result:** Lineup Simulator is now grouped with the app's calculators and utilities in Tools. CI #778 passed and the user confirmed successful physical-device testing. Its existing selection behavior and trust limitations are unchanged.
