@@ -1210,7 +1210,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 9: Account Data Export presentation extraction
 
-**Status:** Source extraction committed; CI verification pending.
+**Status:** Cleared after CI #767 and user-confirmed physical-device verification.
 
 **Implementation:**
 - Extracted the Account Data Export card into `presentation/AccountDataExportSection.kt`.
@@ -1225,8 +1225,22 @@ Closing this audit does not mean the application is perfect or that every option
 
 **Static verification:** MainActivity delegates only the Account Data Export card presentation. All callbacks and state inputs remain owned by CodexScreen.
 
-**Automated verification:** Pending a fresh Debug CI run.
+**Automated verification:** CI #767 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions.
 
-**Physical-device verification:** Pending. Test Account-tab visibility with and without credentials, export progress/status presentation, Save JSON disabled state during export and snapshot restoration, successful save, cancellation, and unaffected Home, Visuals, and Tools behavior.
+**Physical-device verification:** User confirmed successful testing. Individual checklist items were not separately enumerated.
 
-**Boundary:** Structural extraction only. Do not change JSON export behavior or calculator logic.
+**Boundary:** Structural extraction only. JSON export behavior and calculator logic remain unchanged. Step 9 is cleared.
+
+
+### User-directed UI refinement - First-run sign-in (2026-11-27)
+
+**Status:** Implemented; CI and device verification pending.
+
+**Change:** Replaced the initial Home credential-entry card with a centered, width-constrained first-run sign-in card. The first-run card contains only app identity, brief guidance, and the HoYoLAB sign-in action, with loading/error feedback as needed. UID and cookie fields and Save & Sync remain available in Account for manual recovery.
+
+**Files:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/InitialSignInSection.kt
+- README.md
+
+**Boundary:** Preserve WebView authentication, secure cookie storage, automatic UID detection, Daily Note synchronization, and Account manual fallback. No calculator or export changes.
