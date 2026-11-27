@@ -4357,3 +4357,32 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Verify future-level planning on-device after a successful APK build.
 
 **Result:** The weapon EXP calculator can now calculate ore requirements across planned ascension phases instead of incorrectly rejecting every target above the current cap. Ascension materials are not yet included in the displayed totals.
+
+
+## Milestone 077 - Combined Weapon Upgrade Plan Regression Matrix
+
+**Date recorded:** 2026-11-27  
+**Scope:** Strengthen end-to-end regression coverage for the integrated 4-star/5-star weapon EXP and ascension candidate planner.
+
+**Implemented:**
+- Added target-level coverage for 20, 40, 50, 60, 70, 80, and 90 for both supported weapon rarities.
+- Added combined-plan checks with current partial EXP for both rarities.
+- Added repeated ascension material-ID aggregation coverage across multiple stages.
+- Retained existing checks for Mora aggregation, completed ascension exclusion, missing-stage total withholding, invalid current EXP, conflicting material names, and quantity overflow.
+
+**Files changed:**
+- `app/src/test/java/com/irminsul/codex/data/catalogue/WeaponUpgradePlanCandidateCalculatorTest.kt`
+
+**Verification:** CI and physical-device verification are pending. Record actual workflow run, artifact, and user device confirmation before marking either complete.
+
+**Current boundary:**
+- The combined weapon calculator is integrated into the Materials Planner.
+- The current display provides material names, required quantities, optional owned quantities, and remaining quantities. Material icon/metadata presentation remains incomplete.
+- Weapon cost records remain candidate data pending source permission and human review.
+- Only 4-star and 5-star weapons are supported. Weapon fodder remains excluded.
+
+**Next work:**
+- Verify the regression suite and Debug APK workflow.
+- Complete material icon/metadata presentation without fabricating missing metadata.
+- Perform physical-device checks for cross-ascension plans and owned/remaining quantities.
+
