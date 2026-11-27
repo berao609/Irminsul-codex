@@ -5128,3 +5128,37 @@ Move the existing system-bar icon appearance side effect out of MainActivity wit
 
 ### Remaining work
 Run Debug CI, inspect the resulting artifact, and verify status/navigation bar icon contrast in System, Light, and Dark modes, plus existing navigation and account functionality.
+
+
+## Milestone 101 - App Theme Composition Extraction
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+### Objective
+Extract the existing app-level theme composition from MainActivity without changing theme behavior.
+
+### Implementation
+- Added `presentation/CodexAppTheme.kt` to compose the existing system-bar appearance effect, Material 3 color scheme, and root Surface.
+- MainActivity retains theme preference state, System/Light/Dark resolution, preference persistence, Activity window/view acquisition, and CodexScreen state.
+- Preserved the existing color-scheme selection, Surface background, fill-size modifier, and system-bar effect.
+- Step 20 system-bar appearance extraction was confirmed by the user as successfully tested. Exact CI run and artifact identifiers were not supplied.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexAppTheme.kt`
+
+### Verification
+- Source changes committed on `main`.
+- CI verification: pending.
+- Debug APK artifact: pending.
+- Physical-device verification: pending.
+
+### Device checklist
+1. Verify System, Light, and Dark modes, including status/navigation bar icon contrast.
+2. Verify theme preference persistence after restart.
+3. Confirm sign-in, Home, Visuals, Tools, Account, and AI entry remain functional.
+
+### Boundary
+Composition extraction only. Theme selection, preference persistence, and screen state remain caller-owned. No visual or performance improvement is claimed.
