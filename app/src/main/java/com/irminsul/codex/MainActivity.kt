@@ -4,6 +4,7 @@ import com.irminsul.codex.presentation.CodexBottomNavigationBar
 import com.irminsul.codex.presentation.CodexTab
 
 import com.irminsul.codex.presentation.HomeDailyNoteSection
+import com.irminsul.codex.presentation.AccountDataExportSection
 import com.irminsul.codex.presentation.VisualDashboardSection
 
 import android.content.Context
@@ -452,59 +453,13 @@ private fun CodexScreen(
         }
 
         if (selectedTab == CodexTab.ACCOUNT && uid.isNotBlank() && cookie.isNotBlank()) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Text(
-                        text = "Account Data Export",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Extracts profile, exploration, all character builds (weapons, artifacts, talents), Spiral Abyss, and Imaginarium Theater.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    if (accountExportState.progress != null) {
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(4.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = accountExportState.progress!!,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    if (exportStatus != null) {
-                        Text(
-                            text = exportStatus!!,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    Button(
-                        onClick = { extractAccountJson() },
-                        enabled = !accountExportState.isExporting && !accountExportState.isRestoringSnapshot,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text(if (accountExportState.isExporting) "Extracting..." else "Save JSON")
-                    }
-                }
-            }
+            AccountDataExportSection(
+                progress = accountExportState.progress,
+                exportStatus = exportStatus,
+                isExporting = accountExportState.isExporting,
+                isRestoringSnapshot = accountExportState.isRestoringSnapshot,
+                onExport = { extractAccountJson() }
+            )
         }
 
         if (selectedTab == CodexTab.VISUALS) {
