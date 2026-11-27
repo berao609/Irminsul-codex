@@ -1244,3 +1244,30 @@ Closing this audit does not mean the application is perfect or that every option
 - README.md
 
 **Boundary:** Preserve WebView authentication, secure cookie storage, automatic UID detection, Daily Note synchronization, and Account manual fallback. No calculator or export changes.
+
+
+### Batch 6 - Step 10: Account settings and credentials presentation extraction
+
+**Status:** Implemented; CI and physical-device verification pending.
+
+**Implementation:**
+- Extracted the Account credential-entry card into `presentation/AccountSettingsSection.kt` as `AccountCredentialsSection`.
+- Extracted the Account appearance and app/session-management cards into the same file as `AccountSettingsSection`.
+- Moved `ThemeMode` into the presentation package; preference values and System/Light/Dark behavior are unchanged.
+- Kept UID, cookie, credential visibility, loading/export state, secure credential storage, sign-in, sign-out, and refresh orchestration in `CodexScreen`.
+- Preserved existing labels, visibility conditions, callbacks, and disabled states.
+- No credential format/storage, account retrieval, export, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountSettingsSection.kt`
+
+**Verification required:**
+1. Confirm Debug CI passes compilation, unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. On device, open Account and verify appearance selection persists for System, Light, and Dark.
+3. Verify Sign in with HoYoLAB, UID/cookie editing, credential-unlock error and clear action, and Save & Sync.
+4. Verify sign-out clears credentials while preserving saved account snapshots.
+5. Verify Manage/Hide HoYoLAB account controls and Account Data Export still work.
+6. Confirm Home, Visuals, Tools, Materials Calculator, Lineup Simulator, and navigation remain unaffected.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed.
