@@ -1437,7 +1437,20 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 17: Account destination composition extraction
 
-**Status:** Implemented and committed; CI and physical-device verification pending.
+**Status:** Cleared after CI #819/#823 and user-confirmed physical-device verification.
+
+**Implementation:** The Account destination composition is delegated to `presentation/AccountSection.kt`. MainActivity retains credential/theme/export state and callbacks. The integration initially retained a duplicate legacy `AccountSettingsSection` call, causing CI #820/#822 to fail compilation with an unresolved reference after the extraction. Removed that stale block in the focused fix commit `13950fa0f122d233e6f43b238de5a3e0ecd530aa`.
+
+**Commits:**
+- `711efc64ced18833a16a079a66e89fbe28274a23` - extract Account destination composition.
+- `9d140637c24244cf17aee59b0a07fb23842264ba` - delegate Account composition from MainActivity.
+- `13950fa0f122d233e6f43b238de5a3e0ecd530aa` - remove duplicate legacy settings rendering.
+
+**Automated verification:** Component CI #819 passed. Initial integration CI #820 and documentation CI #821/#822 failed on the stale `AccountSettingsSection` reference. Corrected integration CI #823 (run `45968107535`) passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Debug APK: `irminsul-codex-debug-v1.0.0-dev.823-vc825` (artifact ID `15184221465`).
+
+**Physical-device verification:** User confirmed successful testing and all clear.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
 
 **Implementation:**
 - Added `presentation/AccountSection.kt` to compose the existing account credentials panel, JSON export panel, and Account & settings section.
