@@ -196,7 +196,7 @@ internal fun WeaponEnhancementCalculatorSection(
                         }
                     }
                     Text(
-                        "Candidate data only. This preview uses ore materials, not weapon fodder. Ascension materials and enemy drops are not included. Source permission and review are pending.",
+                        "Ore-only candidate estimate. Future ascension materials, enemy drops, and weapon fodder are not included yet. Source permission and review are pending.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
