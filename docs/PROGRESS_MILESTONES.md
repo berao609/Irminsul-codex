@@ -5473,7 +5473,7 @@ Presentation-only reference fidelity work. No account retrieval, raw source sche
 
 **Date recorded:** 2026-11-27  
 **Development phase:** UI Revamp - Batch 4  
-**Status:** Implemented, merged, and CI-verified in PRs #7 and #8; physical-device verification pending.
+**Status:** Implemented, merged, and CI-verified in PRs #7 and #8; partially device-verified on 2026-11-28 (mode visibility and initial expanded state confirmed; detailed behavior remains unverified).
 
 ### Objective
 Extend the existing Visuals Battle Chronicle experience with source-backed Stygian Onslaught data while establishing a typed domain boundary for this additional Chronicle section. This is part of the ongoing UI revamp, not a separate task.
@@ -5513,7 +5513,7 @@ Extend the existing Visuals Battle Chronicle experience with source-backed Stygi
 - GitHub Actions [run #884](https://github.com/berao609/Irminsul-codex/actions/runs/46018327952) succeeded for PR #8's merge commit. Unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact uploads succeeded. Room instrumentation tests were correctly skipped because PR #8 changed no persistence or snapshot-model code.
 - Latest Debug APK: `irminsul-codex-debug-v1.0.0-dev.884-vc886`, artifact ID `15207231460`, SHA-256 `38f044b90e71d48367f372afc25c39e45e5e727996c0a5f4817f95dfa9be838c`.
 - Room schema artifact ID: `15207725741`; SHA-256 `bc3887f3199ac6c94af8895d458a449df68ebccf414b7778a58d8ddb547c126f`.
-- Physical-device verification: pending user testing.
+- Physical-device verification (2026-11-28): user confirmed Spiral Abyss, Imaginarium Theater, and Stygian Onslaught all appear in Visuals and are expanded on entry. This verifies section visibility and the current default-expanded behavior only; detail completeness, navigation, and all data fields remain unverified.
 - No Room schema migration was required; the typed Stygian summary is derived from the existing persisted raw index payload.
 
 ### Device checklist
@@ -5525,3 +5525,107 @@ Extend the existing Visuals Battle Chronicle experience with source-backed Stygi
 
 ### Boundary
 This milestone adds typed Stygian summary mapping, Visuals presentation, and a dedicated local Battle Chronicle collector. It does not add an unverified Stygian detail endpoint, historical cycle/team records, a separate cloud service, or a Room migration. Further Chronicle endpoint expansion remains part of the same ongoing UI revamp batch plan and must be evidence-led.
+
+
+---
+
+# Active UI Revamp Continuation Plan
+**Updated:** 2026-11-28  
+**Plan status:** Active; next implementation batch not started  
+**Reference authority:** `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md`, especially its updated Section 10, plus `docs/Irminsul Codex UI Design Instructions.md`.
+
+This is the continuation of the existing UI revamp. It does not create a separate product task or supersede completed milestones 107-109.
+
+## Current verified position
+
+- Milestones 107-109 established the Visuals overview, reference-aligned account/exploration/character presentation, and typed Chronicle coverage.
+- PRs #7 and #8 delivered the initial Stygian summary and Theater mapping; the latest relevant implementation merge is `2272910489dbf672466f165e19d4a4ec6e88a621`. The latest reference-document commit on `main` is `3dc6ad9610843b1e566ef8851b61365d4e801121`.
+- User device check (2026-11-28): Spiral Abyss, Imaginarium Theater, and Stygian Onslaught all appear in Visuals and are expanded on entry.
+- Current source still renders Visuals as one long vertical composition (`VisualsSection.kt`). Shared `ChronicleSection()` starts expanded (`remember(title) { mutableStateOf(true) }`). This matches the observed device behavior but is not the intended final navigation model.
+- No standalone UI revamp implementation-plan file was found in the repository. This active continuation plan is recorded here beside the milestone history to avoid creating a duplicate plan document.
+
+## Locked direction and constraints
+
+1. Reconstruct the top-level Battle Chronicles overview as a compact landing page, not a long page of fully expanded feature content.
+2. Use concise, source-backed previews with clear entry actions. Detailed content belongs on dedicated destinations.
+3. Preserve the four existing bottom destinations (Home, Visuals, Tools, Account) and the centered AI action. Add nested destinations under Visuals; do not add or fake a new bottom-navigation destination.
+4. Detail destinations need their own title/back action, independent scrolling, and appropriate state preservation. Returning from a detail page should restore the Visuals overview position and relevant selections.
+5. Keep the reference's distinct composition and mode identity. Do not replace it with generic cards or a uniform metrics dashboard.
+6. Preserve missing, null, malformed, unavailable, stale, failed, and actual-zero distinctions. Never invent record fields, region progress, or account values.
+7. Stygian's currently validated source supports the best-record name and difficulty only. Do not imply that historical cycles, teams, or detailed challenge statistics are available until their source is validated.
+8. Do not add a runtime Battle Chronicles dependency, WebView, scraping, remote CSS, or a mandatory backend. Keep implementation native Compose and local-first.
+9. **System icon preference:** use Lucide icons for application/system UI icons. Centralize them through the shared app icon wrapper/registry (create or extend one only if the code audit shows it is needed). Preserve Genshin character, weapon, element, rarity, region, and mode artwork as game assets; do not replace those with Lucide.
+10. Lucide dependency is a candidate, not yet approved for wholesale migration: pilot `com.composables:icons-lucide-android:2.2.1` against the current Kotlin 2.0.0, AGP 8.5.0, and Compose BOM 2024.06.00 stack. Verify resolution, drawable resource names, APK build, and rendered appearance before migrating. Audit all Material icon usages first; remove the Material Icons Extended dependency only if no remaining usages require it.
+
+## Batch 5 - Visuals Navigation and Overview Hierarchy
+
+**Next implementation batch.**
+
+### 5.1 Rebuild the Visuals landing page
+- Reproduce the top-most Battle Chronicles overview hierarchy from the updated reference.
+- Keep the account identity/overview compact, retaining the existing primary/secondary statistics behavior.
+- Keep My Characters as a horizontal portrait selector with a compact selected-character preview and a clear route to the full roster/details.
+- Keep World Exploration as horizontal region previews using the reference's `Main Areas Only` treatment and a dedicated View More destination.
+- Present Spiral Abyss, Imaginarium Theater, and Stygian Onslaught as compact mode-specific summaries with clear detail entry points.
+- Keep Account Analysis as a concise preview/entry point; preserve its current calculation, recommendation ordering, and source-state behavior.
+- Remove the current requirement that all Chronicle content be expanded inline. Do not merely change every section's default to collapsed; replace the long-form inline presentation with purposeful summaries and navigation.
+
+### 5.2 Establish nested Visuals navigation
+- Add an internal destination/state model for Visuals pages without changing the four primary bottom-navigation destinations.
+- Support back navigation and direct transitions among the Visuals landing page and its child pages.
+- Give each destination its own scroll container and preserve the overview scroll/selection state when returning.
+- Ensure system back and visible back controls behave consistently.
+- Keep the implementation incremental and compatible with the existing app architecture; do not introduce a navigation dependency or broad navigation rewrite without demonstrated need.
+
+### 5.3 Add the Lucide compatibility pilot
+- Inspect all current system icon usages and any existing shared icon wrapper before changing dependencies.
+- Add the Android vector-resource artifact as a pilot only; verify the exact generated resource names from the resolved artifact rather than assuming them.
+- Replace a small representative set of app-shell/navigation/action icons with Lucide through the shared wrapper.
+- Build and inspect the APK in Light and Dark themes. Check optical sizing, tinting, accessibility descriptions, and APK/resource impact.
+- If compatible, migrate remaining system icons in a controlled follow-up and remove Material Icons Extended only after a full usage audit. If incompatible, stop and document the blocker; do not silently switch to a newer incompatible stack.
+
+### Batch 5 acceptance checks
+- Visuals opens to a compact Battle Chronicles overview, not the current long expanded page.
+- All three Chronicle modes remain visible as summaries when their data is available; tapping each opens its own detail destination.
+- Character, exploration, and analysis entry points remain usable.
+- Back navigation restores the overview position and selected character/region where applicable.
+- Home, Tools, Account, AI sheet, refresh/analyze actions, and existing account data behavior remain intact.
+- Light, Dark, and System themes; edge-to-edge insets; narrow-screen layout; touch targets; and accessibility semantics are checked.
+- Lucide pilot resolves and builds before wider icon migration is accepted.
+- Automated tests/build and physical-device verification are recorded separately.
+
+## Batch 6 - Battle Chronicle Detail Experiences
+
+- Build dedicated Spiral Abyss, Imaginarium Theater, and Stygian Onslaught pages using validated source fields and reference-specific layouts.
+- Spiral Abyss: current/previous cycle context, floor/chamber grouping, stars, teams, character presentation, and available record details.
+- Theater: nested cycle structure, act/round details, available character levels/lineups, medals/blessings, and period navigation only where the payload supports them.
+- Stygian: begin with the validated best-record name/difficulty summary. Investigate historical phases, teams, and challenge details through captured exports/validated endpoint responses before modeling or displaying them.
+- Keep per-section retrieval status and provenance. Add parser/mapper tests for valid, missing, malformed, and failed data. No fabricated placeholders that look like real records.
+
+## Batch 7 - World Exploration Detail and Data Hierarchy
+
+- Build the dedicated vertically stacked exploration page.
+- Extend the model/mapper to represent parent regions and nested subareas (for example, subareas belonging to Liyue) only where the source export provides reliable grouping.
+- Add region progression systems (Statues, offerings, and similar levels) only when source-backed.
+- Preserve overview carousel values and detail-page totals without double-counting or conflating parent and child percentages.
+- Add mapper tests for grouping, missing values, and incomplete source sections.
+
+## Batch 8 - Character and Weapon Reference Fidelity
+
+- Refine the dedicated Character Roster and Character Details destinations against the reference, preserving the horizontal selector/detail relationship and source-backed character artwork.
+- Implement the Weapon Roster as a dedicated destination with the reference-matched rarity and weapon-type filter layout and roster grid.
+- Filters must operate on the actual roster, support clear/reset behavior, and expose selected state accessibly. Do not add unnecessary sorting controls or unrelated rarity categories.
+- Preserve the existing character/weapon detail data and approved artwork-loading path. Do not fabricate passive descriptions or other missing fields.
+- Validate the roster and details on-device in both themes and narrow layouts.
+
+## Cross-batch data and verification gates
+
+- Before adding or expanding a data field, inspect the raw account export and current mapper/model. Use Lemur DevTools or another read-only capture only when a specific missing source field needs validation.
+- Keep retrieval, domain mapping, presentation state, and Compose rendering responsibilities separated.
+- Add deterministic tests for new mapping/navigation state behavior. Do not let UI code parse raw JSON or orchestrate network requests.
+- Record exact source files, commits, CI run/artifacts, and user device checks in the relevant milestone. A successful build is not physical-device verification.
+- Do not mark a batch complete while any known regression or unverified acceptance item is hidden.
+
+## Immediate next action
+
+Start Batch 5 by auditing the current navigation state handling, `VisualsSection.kt`, all system icon usages, and the existing shared icon wrapper (if any). Then implement the Visuals overview and nested navigation foundation, with the Lucide dependency limited to the compatibility pilot. Do not begin detailed Chronicle endpoint expansion until the new navigation structure is in place.
