@@ -111,7 +111,10 @@ fun ChronicleExplorationSection(value: DataValue<StructuredData>) {
 @Composable
 fun ChronicleRecordSection(title: String, value: DataValue<StructuredData>, mode: ChronicleRecordMode) {
     val metrics = ChroniclePresentationMapper.recordMetrics(value, mode)
-    val stars = metrics.firstOrNull { it.label == "Stars" }
+    val primaryMetric = when (mode) {
+        ChronicleRecordMode.SPIRAL_ABYSS -> metrics.firstOrNull { it.label == "Best Floor" }
+        ChronicleRecordMode.IMAGINARIUM_THEATER -> metrics.firstOrNull { it.label == "Difficulty" }
+    } ?: metrics.firstOrNull { it.label == "Stars" }
     ChronicleSection(title, when (mode) {
         ChronicleRecordMode.SPIRAL_ABYSS -> "Spiral Abyss battle record"
         ChronicleRecordMode.IMAGINARIUM_THEATER -> "Imaginarium Theater record"
@@ -119,7 +122,7 @@ fun ChronicleRecordSection(title: String, value: DataValue<StructuredData>, mode
         if (metrics.isEmpty()) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            stars?.let {
+            primaryMetric?.let {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(it.value, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -128,7 +131,7 @@ fun ChronicleRecordSection(title: String, value: DataValue<StructuredData>, mode
                     }
                 }
             }
-            val supporting = metrics.filterNot { it == stars }
+            val supporting = metrics.filterNot { it == primaryMetric }
             if (supporting.isNotEmpty()) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 supporting.forEach { metric ->

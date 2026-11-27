@@ -5409,3 +5409,14 @@ Reconstruct the Visuals destination around the agreed high-fidelity Battle Chron
 
 ### Boundary
 Visual presentation and composition only. No account retrieval, persistence, analysis calculations, mapper rules, navigation architecture, dependencies, or SDK changes.
+
+
+### Reference-alignment correction (2026-11-27)
+- Re-reviewed the actual HTML exports after the first Batch 3 CI attempt. The first implementation did not fully reflect the reference: the account summary lacked its primary/secondary expandable metric hierarchy, and the character showcase lacked the compact horizontal portrait selector.
+- Added a primary account-stat row with expandable secondary statistics.
+- Added a horizontal, release-ordered character portrait selector before the selected character detail, matching the reference's selector/detail relationship. The existing expanded roster remains available as a supplementary selection surface.
+- Exploration cards now use the reference's exact `Main Areas Only` descriptor.
+- Game-mode primary metrics are now mode-specific: Best Floor for Spiral Abyss and Difficulty for Imaginarium Theater, with Stars as fallback.
+- The current `AccountSnapshot` has no Stygian Onslaught section. The reference includes it, but this batch does not fabricate or add a data source for it.
+- Added the missing `dp` import to `VisualsSection.kt`, which caused CI run #877 to fail during Kotlin compilation.
+- This correction is still pending CI and device verification.

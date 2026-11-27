@@ -78,6 +78,32 @@ fun CharacterShowcaseSection(
         selectedElement != "All" || selectedWeaponType != "All"
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            sortCharactersByRelease(characters).forEach { character ->
+                val isSelected = character.id == selected.id
+                Column(
+                    modifier = Modifier
+                        .width(58.dp)
+                        .clickable { onCharacterSelected(character.id) }
+                        .then(if (isSelected) Modifier.background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)) else Modifier)
+                        .padding(5.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    ShowcaseArtwork(
+                        url = character.avatarIcon,
+                        description = "${character.name ?: "Character"} portrait",
+                        fallback = elementGlyph(character.element),
+                        modifier = Modifier.size(44.dp).clip(RoundedCornerShape(10.dp))
+                    )
+                    Text(character.name ?: "Character #${character.id}", style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                }
+            }
+        }
         CharacterShowcaseDetail(character = selected)
 
         Card(
