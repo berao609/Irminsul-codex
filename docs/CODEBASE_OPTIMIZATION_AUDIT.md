@@ -1483,7 +1483,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 18: Screen header presentation extraction
 
-**Status:** Implemented and committed; CI and physical-device verification pending.
+**Status:** Physical-device verification passed by user; CI verification remains unconfirmed in the currently available evidence.
 
 **Implementation:**
 - Added `presentation/CodexScreenHeader.kt` to render the existing app title and optional UID/server identity line.
