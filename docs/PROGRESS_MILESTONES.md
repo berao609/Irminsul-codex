@@ -5039,3 +5039,34 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 **Verification status:** Cleared. Component CI #819 passed. Initial integration CI #820 and documentation CI #821/#822 failed on a stale duplicate `AccountSettingsSection` reference in MainActivity. Removed the duplicate block in fix commit `13950fa0f122d233e6f43b238de5a3e0ecd530aa`. Corrected integration CI #823 (run `45968107535`) passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Debug APK: `irminsul-codex-debug-v1.0.0-dev.823-vc825` (artifact ID `15184221465`). User confirmed successful physical-device testing and all clear.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+
+## Milestone 098 - Screen Header Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 Batch 6 by extracting the existing app title and UID/server identity header.
+
+**Implemented:**
+- Added `presentation/CodexScreenHeader.kt` for the title and optional UID/server line.
+- MainActivity retains UID ownership and server-label derivation.
+- Preserved existing text, typography, colors, alignment, spacing, and conditional identity display.
+- No navigation, account state, retrieval, or persistence behavior changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreenHeader.kt`
+
+**Commits:**
+- `752f6be52ea92866384937a90ee8cdf9bd34510d` - add header component.
+- `dde97640026e75ed78f3bedf566a85882660bc4f` - integrate header component.
+
+**Verification status:** Source changes committed. CI and physical-device verification pending.
+
+**Device checklist:**
+1. Confirm the title appears correctly.
+2. Confirm UID/server line appears only when UID is available and displays the correct server.
+3. Confirm all destinations, bottom navigation, and AI entry remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
