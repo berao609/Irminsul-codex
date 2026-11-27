@@ -4386,3 +4386,57 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Complete material icon/metadata presentation without fabricating missing metadata.
 - Perform physical-device checks for cross-ascension plans and owned/remaining quantities.
 
+
+## Milestone 078 - Offline Character Progression Candidate Dataset
+
+**Date recorded:** 2026-11-27  
+**Scope:** Bundle version-pinned character ascension and talent-cost source records for offline use. This milestone establishes the character progression dataset and loader; it does not yet connect the character calculator to the Materials Planner UI.
+
+**Implemented:**
+- Bundled all 126 English character records from Genshin-DB game-data snapshot 7.2, split across 15 numbered JSON assets for predictable Android asset loading.
+- Included character ID, name, rarity, six ascension-stage cost arrays, and the matching talent-cost payload when the upstream record exists.
+- Bundled talent costs for 122 character records. Four Traveler variants (Aether, Lumine, Manekin, and Manekina) have no matching per-character talent JSON in this source snapshot; their talent data remains explicitly missing rather than fabricated.
+- Pinned every asset chunk to upstream commit `8e5badd60b5d894284ccc927a56c9683529d2592`; the repository rejects chunks with a different game version, source commit, or schema version.
+- Added `BundledCharacterProgressionCandidateRepository` to load candidate records from Android assets and pass them through the existing `GenshinDbProgressionCandidateImporter`.
+- Preserved separate Normal Attack, Elemental Skill, and Elemental Burst candidate tracks using the existing talent-slot mapping.
+- Added repository tests for all three talent slots, immutable source provenance, missing Traveler talent data, unknown characters, duplicate IDs, malformed records, and version/source mismatch.
+- Added explicit Genshin-DB MIT attribution and redistribution notice.
+
+**Data inventory:**
+- Character records: 126
+- Records with matching talent-cost payloads: 122
+- Records without matching talent-cost payloads: 4
+- Asset chunks: 15
+- Combined serialized asset size: approximately 405 KB
+
+**Source and permission:**
+- Source: https://github.com/theBowja/genshin-db
+- Immutable source commit: `8e5badd60b5d894284ccc927a56c9683529d2592`
+- Source license: MIT; copyright and permission notice retained in `app/src/main/assets/genshin_db/GENSHIN_DB_ATTRIBUTION.md`.
+- These are still candidate game facts. The MIT license permits redistribution of the source dataset but does not independently verify game values. No automatic promotion into trusted production costs occurs.
+
+**Files changed:**
+- `app/src/main/assets/genshin_db/characters_7_2_01.json` through `characters_7_2_15.json`
+- `app/src/main/assets/genshin_db/GENSHIN_DB_ATTRIBUTION.md`
+- `app/src/main/java/com/irminsul/codex/data/catalogue/BundledCharacterProgressionCandidateRepository.kt`
+- `app/src/test/java/com/irminsul/codex/data/catalogue/BundledCharacterProgressionCandidateRepositoryTest.kt`
+
+**Commits:**
+- Dataset chunks: `c5c6065`, `b62f11b`, `54ec93c`, `01d2804`, `a991682`, `8d6fa00`, `679c85b`, `7b9e8b6`, `7f3ebbd`, `230f8c2`, `0313925`, `c0e9d84`, `bd35106`, `f1a2e03`, `43549d7`
+- Repository: `64ca4c8`
+- Tests: `71f8b2c`, `3cfcdb9`
+- Attribution: `8a1a28c`
+
+**Verification status:**
+- Source inventory verified against the pinned upstream Git tree: 126 character records, 122 matching talent-cost payloads, no duplicate character IDs, and all 15 chunks share the same version and source commit.
+- Unit tests and Debug APK CI: pending.
+- Physical-device verification: pending; no Materials Planner UI behavior was changed in this dataset/loader increment.
+
+**Remaining work:**
+- Verify repository tests and the Debug APK workflow.
+- Integrate character level/ascension and independent talent calculations into the shared Materials Planner plan.
+- Keep missing Traveler talent records incomplete until a separately sourced and reviewed dataset is available.
+- Preserve the separate character EXP curve and its existing candidate provenance.
+
+**Result:** The app now has a version-pinned offline candidate source and repository for character ascension and talent costs. This is a data foundation, not yet a completed user-facing automatic character calculator.
+
