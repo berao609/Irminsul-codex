@@ -2,11 +2,9 @@ package com.irminsul.codex
 
 import com.irminsul.codex.presentation.CodexBottomNavigationBar
 import com.irminsul.codex.presentation.CodexTab
+import com.irminsul.codex.presentation.AccountSection
 
-import com.irminsul.codex.presentation.AccountDataExportSection
 import com.irminsul.codex.presentation.InitialSignInSection
-import com.irminsul.codex.presentation.AccountCredentialsSection
-import com.irminsul.codex.presentation.AccountSettingsSection
 import com.irminsul.codex.presentation.AiAssistantSheet
 import com.irminsul.codex.presentation.ThemeMode
 import com.irminsul.codex.presentation.ToolsSection
@@ -390,30 +388,32 @@ private fun CodexScreen(
             }
         }
 
-        if (showCredentials && (selectedTab == CodexTab.ACCOUNT || uid.isBlank() || cookie.isBlank())) {
-            AccountCredentialsSection(
-                uid = uid,
-                onUidChange = { uid = it },
-                cookie = cookie,
-                onCookieChange = { cookie = it },
-                credentialLoadError = credentialLoadError,
-                isLoading = isLoading,
-                isExporting = accountExportState.isExporting,
-                onSignIn = { showWebLogin = true },
-                onClearSavedCredentials = { clearSavedCredentials() },
-                onSaveAndSync = { refreshData() }
-            )
-        }
-
-        if (selectedTab == CodexTab.ACCOUNT && uid.isNotBlank() && cookie.isNotBlank()) {
-            AccountDataExportSection(
-                progress = accountExportState.progress,
-                exportStatus = exportStatus,
-                isExporting = accountExportState.isExporting,
-                isRestoringSnapshot = accountExportState.isRestoringSnapshot,
-                onExport = { extractAccountJson() }
-            )
-        }
+        AccountSection(
+            showCredentialsPanel = showCredentials && (
+                selectedTab == CodexTab.ACCOUNT || uid.isBlank() || cookie.isBlank()
+            ),
+            uid = uid,
+            onUidChange = { uid = it },
+            cookie = cookie,
+            onCookieChange = { cookie = it },
+            credentialLoadError = credentialLoadError,
+            isLoading = isLoading,
+            isExporting = accountExportState.isExporting,
+            onSignIn = { showWebLogin = true },
+            onClearSavedCredentials = { clearSavedCredentials() },
+            onSaveAndSync = { refreshData() },
+            showExportPanel = selectedTab == CodexTab.ACCOUNT && uid.isNotBlank() && cookie.isNotBlank(),
+            exportProgress = accountExportState.progress,
+            exportStatus = exportStatus,
+            isRestoringSnapshot = accountExportState.isRestoringSnapshot,
+            onExport = { extractAccountJson() },
+            showSettings = selectedTab == CodexTab.ACCOUNT,
+            themeMode = themeMode,
+            onThemeModeChange = onThemeModeChange,
+            showCredentials = showCredentials,
+            onManageAccount = { showCredentials = true },
+            onHideAccountCredentials = { showCredentials = false }
+        )
 
 
         if (selectedTab == CodexTab.VISUALS) {
