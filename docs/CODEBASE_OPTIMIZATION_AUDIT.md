@@ -1119,12 +1119,12 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 7: Visual Dashboard presentation extraction
 
-**Status:** Source extraction and Debug CI verified; physical-device verification pending.
+**Status:** Cleared after corrected placement CI #752 and user-confirmed physical-device verification.
 
 **Implementation:**
 - Moved the Visual Dashboard presentation into `presentation/VisualDashboardSection.kt`.
 - MainActivity now delegates rendering through `VisualDashboardSection(accountExportState.intelligenceOverview)`.
-- Preserved the no-analysis state, assessment bars, recommendation/gap metrics, account-data coverage, and warning presentation.
+- Preserved the no-analysis state, assessment bars, and recommendation/gap metrics. The later user-directed correction removed the account-data coverage card and restricted the dashboard to Home.
 - Reused the existing `AssessmentBar` and `MetricTile` helpers from `DashboardMetrics.kt`.
 - Kept account analysis, state ownership, data mapping, navigation, and calculator behavior unchanged.
 - Corrected the missing Compose `dp` import after CI #744 exposed the compile error.
@@ -1146,7 +1146,7 @@ Closing this audit does not mean the application is perfect or that every option
 - Debug APK: `irminsul-codex-debug-v1.0.0-dev.745-vc747` (artifact ID `15175399449`, archive SHA-256 `442e74e737e89fcdce84800ae0b349e6aa77897ccb712f9f6fc272276295b266`).
 - Room schema artifact: `irminsul-room-schema-v2-run-745` (artifact ID `15175592695`).
 
-**Physical-device verification:** Pending. User must install the #745 Debug APK and verify both no-analysis and populated Visual Dashboard states, including assessment bars, recommendation/gap metrics, account-data coverage, and warning text.
+**Physical-device verification:** The original #745 dashboard extraction was superseded by the user-directed Home-only placement and coverage-card removal. CI #752 passed for the corrected source, and the user confirmed the corrected build was tested successfully on a physical device.
 
 **Boundary:** Structural extraction only. No performance improvement is claimed. Do not begin another extraction until the user confirms the device checklist.
 
@@ -1162,4 +1162,38 @@ Closing this audit does not mean the application is perfect or that every option
 
 **Commits:** 7e0f86b36126654f5bd2b35a1b8122928a8424e0, a9fc65af97ea30c15a8a4b80f5a89c633a11bbf0, 901100de487339238d8ec8957919ea9cfecc7e13.
 
-**Verification:** Source committed; new CI and physical-device verification pending. The prior #745 result applies to the pre-correction source only. Install and test the new Debug APK before clearing Batch 6 Step 7 or beginning another extraction.
+**Verification:** CI #752 passed for the corrected source; user confirmed successful physical-device testing. Batch 6 Step 7 is cleared.
+
+
+### Batch 6 - Step 8: Home Daily Note presentation extraction
+
+**Status:** Source extraction committed; Debug CI verification pending.
+
+**Implementation:**
+- Extracted the Home Daily Note empty state and populated Resin, expedition, Realm Currency, commission, weekly discount, and refresh presentation into `presentation/HomeDailyNoteSection.kt`.
+- Kept Daily Note retrieval, loading state, credential checks, refresh callback, and export-in-progress state owned by `CodexScreen`.
+- Preserved the existing nullable-value display behavior, Resin progress/recovery rules, refresh enablement, and visual content.
+- Kept the initial loading indicator in MainActivity at its existing position to preserve Home layout order.
+- No API, parsing, account state, persistence, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeDailyNoteSection.kt`
+
+**Commits:**
+- `816288d4847ace9ec2c74eeba1b46ba1c5492370` - add extracted Home Daily Note section.
+- `f12e48f2eb10738d47397d3c7f396fd1f611a81a` - replace inline Daily Note UI with component call.
+- `33c360f31862361630c9b0fb306df85f8598b89a` - trim unused imports in extracted component.
+- `5a8884338f7f8cd86763fa41552352833c3288c4` - add component import to MainActivity.
+
+**Static verification:** MainActivity delegates empty and populated Daily Note presentation to the new component. The extracted component retains all four DailyNoteMetricRow calls and the original refresh/loading/empty-state conditions. Automated CI and physical-device verification remain pending.
+
+**Device checklist:**
+1. Home loading indicator appears while Daily Note is loading with no cached note.
+2. Empty Daily Note state and Sync Daily Note action appear only when credentials are available and loading is complete.
+3. Populated Resin value, maximum, progress, and recovery status are unchanged, including unavailable and full-resin states.
+4. Expedition, Realm Currency, commission reward, and weekly Resin discount values/statuses remain correct, including null values.
+5. Refresh Notes button and disabled/loading behavior remain correct.
+6. Visuals, Tools, and Account navigation and existing features remain unaffected.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed. Do not begin another extraction until CI and physical-device verification pass.
