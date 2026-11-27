@@ -4322,3 +4322,38 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Add an end-to-end regression test proving EXP ores, Mora, ascension materials, and enemy drops aggregate without double-counting Mora.
 
 **Result:** A deterministic stage-aware weapon ascension candidate calculator now exists and is covered by regression tests. It is not yet wired to a bundled weapon-cost dataset or the user-facing calculator.
+
+## Milestone 076 - Weapon EXP Plans Across Ascension Gates
+
+**Date recorded:** 2026-11-27  
+**Scope:** Allow the weapon EXP calculator to calculate a desired target level beyond the weapon's current ascension cap, while preserving the current level/EXP validation and per-phase ore rounding.
+
+**Implemented:**
+- Kept the weapon's current unlocked level cap separate from the planned target cap.
+- Added `targetMaximumUnlockedLevel` to the weapon EXP request. It defaults to the current cap for compatibility with existing callers.
+- Validates that both caps are supported ascension boundaries and that the planned cap does not move backward.
+- Preserves current EXP validation against the actual current cap; a weapon already at its current level cap cannot claim additional within-level EXP.
+- Updated the Materials Planner preview to derive the planned target cap from the requested target level, allowing plans such as level 20/20 to level 90.
+- Preserves independent ore rounding at each ascension boundary.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/domain/analysis/WeaponExperienceCalculator.kt`
+- `app/src/test/java/com/irminsul/codex/domain/analysis/WeaponExperienceCalculatorTest.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/WeaponEnhancementCalculatorSection.kt`
+
+**Commits:**
+- `8ffdcdb26ec73bedc5ed575d37a0f0ee8d26f62e`
+- `009a61e385d6ce9f9360c83251e6cec82f486ba2`
+- `621a56d11cfe2238b608a2545b594b87c3f37bfa`
+
+**Verification status:**
+- CI #615, #616, and #617 are running at time of recording.
+- Physical-device verification is pending. The updated target-level behavior is visible in the Materials Planner.
+
+**Remaining work:**
+- Connect the candidate ascension calculator to a versioned offline weapon-cost dataset.
+- Combine weapon EXP ores/Mora with weapon ascension materials and enemy drops in one result, avoiding duplicate Mora.
+- Keep candidate source status visible until data rights and human review are resolved.
+- Verify future-level planning on-device after a successful APK build.
+
+**Result:** The weapon EXP calculator can now calculate ore requirements across planned ascension phases instead of incorrectly rejecting every target above the current cap. Ascension materials are not yet included in the displayed totals.
