@@ -16,7 +16,6 @@ fun VisualDashboardSection(report: AccountIntelligenceOverview?) {
     fontSize = 13.sp,
     color = MaterialTheme.colorScheme.onSurfaceVariant
     )
-    val report = accountExportState.intelligenceOverview
     if (report == null) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
