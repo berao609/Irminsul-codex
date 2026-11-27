@@ -55,7 +55,7 @@ fun HomeAccountOverviewSection(
                         contentDescription = "HoYoLAB profile avatar",
                         modifier = Modifier.size(72.dp).clip(CircleShape),
                         contentScale = ContentScale.Crop,
-                        loading = { ProfileAvatarFallback(accountProfile.nickname) },
+                        loading = { ProfileAvatarFallback(accountProfile?.nickname) },
                         error = { ProfileAvatarFallback(accountProfile.nickname) }
                     )
                 } else {
