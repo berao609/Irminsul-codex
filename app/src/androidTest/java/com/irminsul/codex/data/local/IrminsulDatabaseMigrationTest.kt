@@ -38,7 +38,7 @@ class IrminsulDatabaseMigrationTest {
         helper.createDatabase(databaseName, 1).apply {
             execSQL(
                 "INSERT INTO accounts(uid, server, createdAtEpochMillis, lastUpdatedAtEpochMillis) VALUES(?, ?, ?, ?)",
-                arrayOf("800000001", "os_asia", 1000L, 2000L)
+                arrayOf<Any>("800000001", "os_asia", 1000L, 2000L)
             )
             insertLegacySnapshot("snapshot-small", smallJson, 3000L)
             insertLegacySnapshot("snapshot-large", largeJson, 4000L)
@@ -125,7 +125,7 @@ class IrminsulDatabaseMigrationTest {
                 exportFormatVersion, overallStatus, origin, rawJson
             ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
             """.trimIndent(),
-            arrayOf(
+            arrayOf<Any>(
                 snapshotId,
                 "800000001",
                 "os_asia",
