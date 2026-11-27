@@ -20,6 +20,7 @@ internal enum class AppIconName(val resourceId: Int) {
     ACCOUNT(R.drawable.lucide_ic_user_round),
     AI_ASSISTANT(R.drawable.lucide_ic_sparkles),
     BACK(R.drawable.lucide_ic_arrow_left),
+    CHEVRON_RIGHT(R.drawable.lucide_ic_chevron_right),
     EXPAND_LESS(R.drawable.lucide_ic_chevron_up),
     EXPAND_MORE(R.drawable.lucide_ic_chevron_down)
 }
