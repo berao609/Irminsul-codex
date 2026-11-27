@@ -5317,7 +5317,7 @@ Home presentation only. No account retrieval, persistence, data model, analysis,
 
 **Date recorded:** 2026-11-27  
 **Development phase:** Home follow-up  
-**Status:** Implemented on `main`; automated verification pending; physical-device verification pending.
+**Status:** Implemented and automated verification successful; physical-device verification pending.
 
 ### Requested changes
 - Replace the Home Weekly Discounts metric with the Parametric Transformer cooldown.
@@ -5345,10 +5345,12 @@ Home presentation only. No account retrieval, persistence, data model, analysis,
 - `README.md`
 
 ### Verification
-- Source changes committed; exact current main SHA to be confirmed after CI.
-- Unit tests and Debug APK build: pending.
-- APK artifact: pending.
-- Physical-device verification: pending.
+- Main implementation commit: `c062890bbc857ae789a29871fa96a4eba8d243b7`.
+- GitHub Actions run #875: successful. [Build and test results](https://github.com/berao609/Irminsul-codex/actions/runs/45999159450).
+- Unit tests, Debug APK build, Room schema check, APK signature verification, and artifact upload: successful.
+- Debug APK artifact ID: `15197008745`; name: `irminsul-codex-debug-v1.0.0-dev.875-vc877`.
+- Room schema artifact ID: `15197213103`; name: `irminsul-room-schema-v2-run-875`.
+- Physical-device verification: pending user testing.
 
 ### Device checklist
 1. Confirm IGN, UID, profile avatar, and server appear after login and remain after app restart.
