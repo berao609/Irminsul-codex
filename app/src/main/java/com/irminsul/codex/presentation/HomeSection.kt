@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.irminsul.codex.api.AccountProfile
 import com.irminsul.codex.api.DailyNote
 import com.irminsul.codex.domain.model.AccountIntelligenceOverview
 
@@ -12,6 +13,7 @@ import com.irminsul.codex.domain.model.AccountIntelligenceOverview
 fun HomeSection(
     uid: String,
     serverName: String,
+    accountProfile: AccountProfile?,
     rosterCount: Int?,
     exportedAt: String?,
     hasSnapshot: Boolean,
@@ -30,6 +32,7 @@ fun HomeSection(
         HomeAccountOverviewSection(
             uid = uid,
             serverName = serverName,
+            accountProfile = accountProfile,
             rosterCount = rosterCount,
             exportedAt = exportedAt,
             hasSnapshot = hasSnapshot,
