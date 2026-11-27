@@ -115,6 +115,7 @@ object ChroniclePresentationMapper {
     private fun StructuredData?.objectFields(): Map<String, StructuredData> =
         (this as? StructuredData.ObjectValue)?.fields.orEmpty()
 
+    @kotlin.jvm.JvmName("displayNullableScalar")
     private fun StructuredData?.displayScalar(): String? = when (this) {
         is StructuredData.StringValue -> value.takeIf { it.isNotBlank() }
         is StructuredData.NumberValue -> value
