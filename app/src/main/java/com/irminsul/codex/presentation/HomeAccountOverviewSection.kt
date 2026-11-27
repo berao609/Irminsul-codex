@@ -44,13 +44,13 @@ fun HomeAccountOverviewSection(
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
-                    text = if (uid.isNotBlank()) uid.trim() else "No account connected",
+                    text = if (uid.isNotBlank()) "Genshin Impact" else "No account connected",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
-                    text = if (uid.isNotBlank()) serverName.ifBlank { "Genshin Impact account" }
+                    text = if (uid.isNotBlank()) serverName.ifBlank { "Server unavailable" } + " Server"
                     else "Connect your HoYoLAB account from Account to get started",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
