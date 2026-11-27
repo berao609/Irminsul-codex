@@ -1545,7 +1545,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 21: App theme composition extraction
 
-**Status:** Implemented and committed; CI and physical-device verification pending.
+**Status:** CI #845 succeeded; user confirmed physical-device testing passed. Exact workflow run ID and artifact ID were not supplied.
 
 **Implementation:**
 - Added `presentation/CodexAppTheme.kt` to compose the existing system-bar appearance effect, Material 3 color scheme, and root Surface.
