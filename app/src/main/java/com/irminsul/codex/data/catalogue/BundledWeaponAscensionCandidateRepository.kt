@@ -1,10 +1,9 @@
 package com.irminsul.codex.data.catalogue
 
 import android.content.Context
-import com.irminsul.codex.domain.model.GenshinDbUpgradeCostCandidate
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
-import java.util.Base64
+import android.util.Base64
 import java.util.zip.GZIPInputStream
 import java.time.Instant
 
@@ -22,7 +21,7 @@ object BundledWeaponAscensionCandidateRepository {
     fun loadCandidates(context: Context, weaponId: String): List<GenshinDbUpgradeCostCandidate> {
         require(weaponId.isNotBlank()) { "A weapon ID is required." }
         val encoded = context.assets.open(ASSET_PATH).bufferedReader().use { it.readText() }
-        val compressed = Base64.getDecoder().decode(encoded.trim())
+        val compressed = Base64.decode(encoded.trim(), Base64.DEFAULT)
         val json = GZIPInputStream(ByteArrayInputStream(compressed)).bufferedReader().use { it.readText() }
         val root = JSONObject(json)
         val weapons = root.getJSONObject("data")
