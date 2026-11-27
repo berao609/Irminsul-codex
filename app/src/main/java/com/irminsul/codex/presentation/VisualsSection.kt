@@ -6,10 +6,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -163,9 +160,9 @@ fun VisualsSection(
                     }
 
                     VisualsDestination.CHARACTER_DETAILS -> {
-                        val character = snapshot?.characters.charactersOrEmpty()
-                            .firstOrNull { it.id == selectedCharacterId }
-                            ?: snapshot?.characters.charactersOrEmpty()?.firstOrNull()
+                        val availableCharacters = snapshot?.characters?.charactersOrEmpty() ?: emptyList()
+                        val character = availableCharacters.firstOrNull { it.id == selectedCharacterId }
+                            ?: availableCharacters.firstOrNull()
                         if (character == null) {
                             Text("Select a character from your roster to view its details.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             TextButton(onClick = { onNavigate(VisualsDestination.CHARACTER_ROSTER) }) {
@@ -208,7 +205,7 @@ fun VisualsSection(
                         if (hasCredentials) {
                             AccountAnalysisSection(
                                 report = intelligenceOverview,
-                                characters = snapshot?.characters.charactersOrEmpty(),
+                                characters = snapshot?.characters?.charactersOrEmpty() ?: emptyList(),
                                 isExporting = isExporting,
                                 isRestoringSnapshot = isRestoringSnapshot,
                                 isAnalyzing = isAnalyzing,
