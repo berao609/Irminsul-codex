@@ -1505,3 +1505,21 @@ Closing this audit does not mean the application is perfect or that every option
 3. Confirm Home, Visuals, Tools, Account, navigation, and AI entry remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 19: Theme color-scheme presentation extraction
+
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Moved the existing light and dark Material 3 color-scheme definitions from `MainActivity.kt` into `presentation/CodexThemeColors.kt`.
+- MainActivity imports and applies the same `CodexDarkColors` and `CodexLightColors` values.
+- Preserved every color value and the existing System/Light/Dark selection logic.
+- Theme preference ownership, persistence, system-bar icon handling, and MaterialTheme application remain in MainActivity.
+- No UI behavior, account state, navigation, retrieval, persistence, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexThemeColors.kt`
+
+**Boundary:** Presentation definition extraction only. No visual or performance improvement is claimed. CI and device verification are pending.
