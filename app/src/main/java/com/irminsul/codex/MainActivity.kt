@@ -5,6 +5,7 @@ import com.irminsul.codex.presentation.CodexTab
 
 import com.irminsul.codex.presentation.HomeDailyNoteSection
 import com.irminsul.codex.presentation.AccountDataExportSection
+import com.irminsul.codex.presentation.InitialSignInSection
 import com.irminsul.codex.presentation.VisualDashboardSection
 
 import android.content.Context
@@ -316,7 +317,7 @@ private fun CodexScreen(
                     if (uid.isNotBlank()) {
                         refreshData(uid, capturedCookie)
                     } else {
-                        errorMessage = "Signed in! Enter your Genshin UID below and tap Save & Sync."
+                        errorMessage = "Could not detect your Genshin UID from this HoYoLAB session. Open Account to enter your UID manually, then tap Save & Sync."
                     }
                 }
         }
@@ -346,6 +347,8 @@ private fun CodexScreen(
         }
     }
 
+    val isInitialSignIn = selectedTab == CodexTab.HOME && (uid.isBlank() || cookie.isBlank())
+
     if (showWebLogin) {
         HoYoLabLoginDialog(
             onCookieCaptured = { handleWebLoginSuccess(it) },
@@ -365,6 +368,16 @@ private fun CodexScreen(
             )
         }
     ) { innerPadding ->
+        if (isInitialSignIn) {
+            InitialSignInSection(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                isLoading = isLoading,
+                credentialLoadError = credentialLoadError,
+                errorMessage = errorMessage,
+                onSignIn = { showWebLogin = true },
+                onClearSavedCredentials = { clearSavedCredentials() }
+            )
+        } else {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -924,6 +937,7 @@ private fun CodexScreen(
                 onRefresh = { refreshData() }
             )
         }
+        }
         if (showAiSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showAiSheet = false },
@@ -983,16 +997,5 @@ private fun CodexScreen(
                 }
             }
         }
-
-
-    }
     }
 }
-
-
-
-
-
-
-
-
