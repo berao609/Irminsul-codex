@@ -89,7 +89,7 @@ class GenshinDbProgressionCandidateImporterTest {
         )
         assertEquals(GenshinDbProgressionImportStatus.PARTIAL, result.status)
         assertEquals(6, result.candidates.size)
-        assertTrue(result.missingComponents.any { it.startsWith("talent_costs:") })
+        assertTrue(result.missingComponents.any { it.startsWith("talent_costs_") })
     }
 
     @Test fun malformedEntityIdentityIsReportedWithoutCandidates() {
