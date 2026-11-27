@@ -4,6 +4,17 @@ import com.irminsul.codex.domain.model.DataValue
 import com.irminsul.codex.domain.model.StructuredData
 
 data class ChronicleMetric(val label: String, val value: String)
+data class ChronicleTheaterRound(val roundNumber: String, val medalEarned: Boolean?, val characters: List<String>)
+data class ChronicleTheaterCycle(
+    val title: String,
+    val difficulty: String?,
+    val medals: String?,
+    val roundsCompleted: String?,
+    val coins: String?,
+    val bonusCharacters: String?,
+    val rentedCharacters: String?,
+    val rounds: List<ChronicleTheaterRound>
+)
 data class ChronicleRegion(val name: String, val progress: Float, val percentageLabel: String, val iconUrl: String? = null)
 enum class ChronicleRecordMode { SPIRAL_ABYSS, IMAGINARIUM_THEATER }
 
@@ -103,6 +114,61 @@ object ChroniclePresentationMapper {
 
     private fun StructuredData?.objectFields(): Map<String, StructuredData> =
         (this as? StructuredData.ObjectValue)?.fields.orEmpty()
+
+    private fun StructuredData?.displayScalar(): String? = when (this) {
+        is StructuredData.StringValue -> value.takeIf { it.isNotBlank() }
+        is StructuredData.NumberValue -> value
+        is StructuredData.BooleanValue -> if (value) "Yes" else "No"
+        else -> null
+    }
+
+    fun theaterCycles(value: DataValue<StructuredData>): List<ChronicleTheaterCycle> {
+        val root = availableObject(value) ?: return emptyList()
+        val records = root["data"] as? StructuredData.ArrayValue ?: return emptyList()
+        return records.items.mapNotNull { item ->
+            val record = item.objectFields()
+            if (record["has_data"] == StructuredData.BooleanValue(false)) return@mapNotNull null
+            val stat = record["stat"].objectFields()
+            val schedule = record["schedule"].objectFields()
+            val start = schedule["start_date_time"].objectFields()
+            val month = start["month"].displayScalar()?.toIntOrNull()
+            val year = start["year"].displayScalar()
+            val title = if (month != null && year != null) {
+                "${monthName(month)} $year"
+            } else {
+                schedule["schedule_id"].displayScalar()?.let { "Cycle $it" } ?: "Theater cycle"
+            }
+            val detail = record["detail"].objectFields()
+            val rounds = (detail["rounds_data"] as? StructuredData.ArrayValue)?.items.orEmpty().mapNotNull { roundValue ->
+                val round = roundValue.objectFields()
+                val roundId = round["round_id"].displayScalar() ?: return@mapNotNull null
+                val avatars = (round["avatars"] as? StructuredData.ArrayValue)?.items.orEmpty()
+                    .mapNotNull { avatar -> avatar.objectFields()["name"].displayScalar()?.takeIf { it.isNotBlank() } }
+                ChronicleTheaterRound(
+                    roundNumber = roundId,
+                    medalEarned = (round["is_get_medal"] as? StructuredData.BooleanValue)?.value,
+                    characters = avatars
+                )
+            }
+            ChronicleTheaterCycle(
+                title = title,
+                difficulty = stat["difficulty_id"].displayScalar(),
+                medals = stat["medal_num"].displayScalar(),
+                roundsCompleted = stat["max_round_id"].displayScalar(),
+                coins = stat["coin_num"].displayScalar(),
+                bonusCharacters = stat["avatar_bonus_num"].displayScalar(),
+                rentedCharacters = stat["rent_cnt"].displayScalar(),
+                rounds = rounds
+            )
+        }
+    }
+
+    private fun monthName(month: Int): String = when (month) {
+        1 -> "January"; 2 -> "February"; 3 -> "March"; 4 -> "April"
+        5 -> "May"; 6 -> "June"; 7 -> "July"; 8 -> "August"
+        9 -> "September"; 10 -> "October"; 11 -> "November"; 12 -> "December"
+        else -> "Unknown month"
+    }
 
     fun recordMetrics(value: DataValue<StructuredData>, mode: ChronicleRecordMode): List<ChronicleMetric> {
         val fields = availableObject(value) ?: return emptyList()

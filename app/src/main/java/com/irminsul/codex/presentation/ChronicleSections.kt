@@ -189,15 +189,14 @@ private fun RegionEmblem(region: ChronicleRegion, modifier: Modifier = Modifier)
 
 @Composable
 fun ChronicleRecordSection(title: String, value: DataValue<StructuredData>, mode: ChronicleRecordMode) {
+    if (mode == ChronicleRecordMode.IMAGINARIUM_THEATER) {
+        ChronicleTheaterSection(title, value)
+        return
+    }
     val metrics = ChroniclePresentationMapper.recordMetrics(value, mode)
-    val primaryMetric = when (mode) {
-        ChronicleRecordMode.SPIRAL_ABYSS -> metrics.firstOrNull { it.label == "Best Floor" }
-        ChronicleRecordMode.IMAGINARIUM_THEATER -> metrics.firstOrNull { it.label == "Difficulty" }
-    } ?: metrics.firstOrNull { it.label == "Stars" }
-    ChronicleSection(title, when (mode) {
-        ChronicleRecordMode.SPIRAL_ABYSS -> "Spiral Abyss battle record"
-        ChronicleRecordMode.IMAGINARIUM_THEATER -> "Imaginarium Theater record"
-    }) {
+    val primaryMetric = metrics.firstOrNull { it.label == "Best Floor" }
+        ?: metrics.firstOrNull { it.label == "Stars" }
+    ChronicleSection(title, "Spiral Abyss battle record") {
         if (metrics.isEmpty()) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
@@ -210,13 +209,56 @@ fun ChronicleRecordSection(title: String, value: DataValue<StructuredData>, mode
                     }
                 }
             }
-            val supporting = metrics.filterNot { it == primaryMetric }
-            if (supporting.isNotEmpty()) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                supporting.forEach { metric ->
-                    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(metric.label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(metric.value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            metrics.filterNot { it == primaryMetric }.forEach { metric ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text(metric.label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(metric.value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChronicleTheaterSection(title: String, value: DataValue<StructuredData>) {
+    val cycles = ChroniclePresentationMapper.theaterCycles(value)
+    ChronicleSection(title, "Imaginarium Theater · recorded cycles") {
+        if (cycles.isEmpty()) {
+            Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            cycles.forEachIndexed { index, cycle ->
+                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(cycle.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    val metrics = listOfNotNull(
+                        cycle.difficulty?.let { ChronicleMetric("Difficulty", it) },
+                        cycle.medals?.let { ChronicleMetric("Medals", it) },
+                        cycle.roundsCompleted?.let { ChronicleMetric("Rounds", it) },
+                        cycle.coins?.let { ChronicleMetric("Fantasia Flowers", it) },
+                        cycle.bonusCharacters?.let { ChronicleMetric("Bonus Characters", it) },
+                        cycle.rentedCharacters?.let { ChronicleMetric("Rented Characters", it) }
+                    )
+                    metrics.forEach { metric ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(metric.label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(metric.value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    if (cycle.rounds.isNotEmpty()) {
+                        Text("Round results", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        cycle.rounds.forEach { round ->
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Round ${round.roundNumber}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                    round.medalEarned?.let {
+                                        Text(if (it) "Medal earned" else "No medal", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                                if (round.characters.isNotEmpty()) {
+                                    Text(round.characters.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
                     }
                 }
             }

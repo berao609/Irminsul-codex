@@ -119,7 +119,7 @@ object AccountExportMapper {
             val challenge = (stats["hard_challenge"] as? StructuredData.ObjectValue)?.fields.orEmpty()
             val name = (challenge["name"] as? StructuredData.StringValue)?.value
                 ?.trim()?.takeIf { it.isNotEmpty() }
-            val difficulty = when (val raw = stats["difficulty"]) {
+            val difficulty = when (val raw = challenge["difficulty"]) {
                 is StructuredData.NumberValue -> raw.value
                 is StructuredData.StringValue -> raw.value.trim().takeIf { it.isNotEmpty() }
                 else -> null
