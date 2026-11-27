@@ -4,6 +4,7 @@ import com.irminsul.codex.presentation.CodexBottomNavigationBar
 import com.irminsul.codex.presentation.CodexTab
 
 import com.irminsul.codex.presentation.HomeDailyNoteSection
+import com.irminsul.codex.presentation.HomeAccountOverviewSection
 import com.irminsul.codex.presentation.AccountDataExportSection
 import com.irminsul.codex.presentation.AccountAnalysisSection
 import com.irminsul.codex.presentation.InitialSignInSection
@@ -618,60 +619,19 @@ private fun CodexScreen(
         }
 
         if (selectedTab == CodexTab.HOME) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Adventurer account", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(
-                        text = if (uid.isNotBlank()) "UID ${uid.trim()}" else "No account configured",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Text(
-                        text = if (uid.isNotBlank()) HoYoLabClient.detectServer(uid) else "Connect your HoYoLAB account in Account",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            val homeSnapshot = accountExportState.snapshot
+            val rosterCount = when (val roster = homeSnapshot?.characters) {
+                is DataValue.Available -> roster.value.size
+                is DataValue.Stale -> roster.value.size
+                else -> null
             }
-            accountExportState.snapshot?.let { snapshot ->
-                val rosterCount = when (val roster = snapshot.characters) {
-                    is com.irminsul.codex.domain.model.DataValue.Available -> roster.value.size
-                    is com.irminsul.codex.domain.model.DataValue.Stale -> roster.value.size
-                    else -> null
-                }
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Text("Account snapshot", fontWeight = FontWeight.SemiBold)
-                            Text(
-                                text = rosterCount?.let { "$it characters retrieved" } ?: "Character roster unavailable",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "Last retrieved: ${snapshot.metadata.exportedAt}",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        TextButton(onClick = { selectedTab = CodexTab.VISUALS }) {
-                            Text("Analysis")
-                        }
-                    }
-                }
-            }
+            HomeAccountOverviewSection(
+                uid = uid,
+                serverName = HoYoLabClient.detectServer(uid),
+                rosterCount = rosterCount,
+                exportedAt = homeSnapshot?.metadata?.exportedAt,
+                onOpenAnalysis = { selectedTab = CodexTab.VISUALS }
+            )
 
             HomeDailyNoteSection(
                 note = dailyNote,
