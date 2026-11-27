@@ -1167,7 +1167,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 8: Home Daily Note presentation extraction
 
-**Status:** Source extraction committed; Debug CI verification pending.
+**Status:** Cleared after CI #756 and user-confirmed physical-device verification.
 
 **Implementation:**
 - Extracted the Home Daily Note empty state and populated Resin, expedition, Realm Currency, commission, weekly discount, and refresh presentation into `presentation/HomeDailyNoteSection.kt`.
@@ -1195,7 +1195,7 @@ Closing this audit does not mean the application is perfect or that every option
 - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.756-vc758` (artifact ID `15176821455`; archive SHA-256 `b3db8ba816b58d7b4cc540c29f2f4e120b83a5b678d02a40c2be062ac2ccd12e`).
 - Room schema artifact: `irminsul-room-schema-v2-run-756` (artifact ID `15177590028`; archive SHA-256 `29ce4a60b14fb46e8b8ce683adde365adf5730634be678a9142e70bf9bac677b`).
 
-**Physical-device verification:** Pending user installation and completion of the checklist below.
+**Physical-device verification:** User confirmed that Debug APK #756 was tested successfully on the physical device. Individual checklist items were not separately enumerated.
 
 **Device checklist:**
 1. Home loading indicator appears while Daily Note is loading with no cached note.
@@ -1205,4 +1205,28 @@ Closing this audit does not mean the application is perfect or that every option
 5. Refresh Notes button and disabled/loading behavior remain correct.
 6. Visuals, Tools, and Account navigation and existing features remain unaffected.
 
-**Boundary:** Structural extraction only. No performance improvement is claimed. Do not begin another extraction until CI and physical-device verification pass.
+**Boundary:** Structural extraction only. No performance improvement is claimed. Step 8 is cleared.
+
+
+### Batch 6 - Step 9: Account Data Export presentation extraction
+
+**Status:** Source extraction committed; CI verification pending.
+
+**Implementation:**
+- Extracted the Account Data Export card into `presentation/AccountDataExportSection.kt`.
+- MainActivity passes the existing progress text, export status, exporting/restoring flags, and export callback into the section.
+- Kept account export orchestration, UID/cookie validation, ViewModel calls, document-picker handling, JSON writing, and result state in `CodexScreen`.
+- Preserved the Account-tab and nonblank-credential visibility condition, progress/status messages, button label, and disabled state.
+- No export format, retrieval, persistence, credential, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountDataExportSection.kt`
+
+**Static verification:** MainActivity delegates only the Account Data Export card presentation. All callbacks and state inputs remain owned by CodexScreen.
+
+**Automated verification:** Pending a fresh Debug CI run.
+
+**Physical-device verification:** Pending. Test Account-tab visibility with and without credentials, export progress/status presentation, Save JSON disabled state during export and snapshot restoration, successful save, cancellation, and unaffected Home, Visuals, and Tools behavior.
+
+**Boundary:** Structural extraction only. Do not change JSON export behavior or calculator logic.
