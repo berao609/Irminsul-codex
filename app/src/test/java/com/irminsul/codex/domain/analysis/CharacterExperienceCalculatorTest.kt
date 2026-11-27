@@ -89,6 +89,14 @@ class CharacterExperienceCalculatorTest {
         assertTrue(calculated.materials.isEmpty())
     }
 
+    @Test fun levelNinetyIsAValidNoOpTargetWithZeroCurrentExperience() {
+        val calculated = result(request(current = 90, currentExp = 0L, target = 90, cap = 90))
+        assertEquals(CharacterExperienceCalculationStatus.CANDIDATE_DATA, calculated.status)
+        assertEquals(0L, calculated.requiredExperience)
+        assertEquals(0L, calculated.grantedExperience)
+        assertTrue(calculated.materials.isEmpty())
+    }
+
     @Test fun rejectsExperienceAtOrAboveTheNextLevelBoundary() {
         val calculated = result(request(current = 20, currentExp = 14_875L, target = 40, cap = 40))
         assertEquals(CharacterExperienceCalculationIssue.INVALID_CURRENT_EXPERIENCE, calculated.issue)

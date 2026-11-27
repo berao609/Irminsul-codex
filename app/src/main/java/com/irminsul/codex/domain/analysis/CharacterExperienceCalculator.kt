@@ -84,9 +84,13 @@ object CharacterExperienceCalculator {
         val nextLevelTotal = if (request.currentLevel == 90) currentTotal
             else cumulativeExperienceByLevel[request.currentLevel]
         val currentLevelCapacity = nextLevelTotal - currentTotal
-        if (request.currentExperienceWithinLevel < 0L ||
-            request.currentExperienceWithinLevel >= currentLevelCapacity
-        ) {
+        val currentExperienceIsValid = if (request.currentLevel == 90) {
+            request.currentExperienceWithinLevel == 0L
+        } else {
+            request.currentExperienceWithinLevel >= 0L &&
+                request.currentExperienceWithinLevel < currentLevelCapacity
+        }
+        if (!currentExperienceIsValid) {
             return invalid(CharacterExperienceCalculationIssue.INVALID_CURRENT_EXPERIENCE)
         }
 
