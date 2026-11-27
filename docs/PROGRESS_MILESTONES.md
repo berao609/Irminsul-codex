@@ -4693,7 +4693,9 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `33c360f31862361630c9b0fb306df85f8598b89a`
 - `5a8884338f7f8cd86763fa41552352833c3288c4`
 
-**Verification status:** Source committed. Debug CI and physical-device verification pending.
+**Verification status:** CI #756 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Physical-device verification pending.
+
+**CI evidence:** [Workflow #756](https://github.com/berao609/Irminsul-codex/actions/runs/45951308270). Debug APK artifact `irminsul-codex-debug-v1.0.0-dev.756-vc758` (ID `15176821455`, SHA-256 `b3db8ba816b58d7b4cc540c29f2f4e120b83a5b678d02a40c2be062ac2ccd12e`).
 
 **Device checklist:**
 1. Confirm loading indicator, empty state, and Sync Daily Note action.
