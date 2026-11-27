@@ -1300,7 +1300,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 12: Home account overview presentation extraction
 
-**Status:** Implemented; Debug CI and physical-device verification pending.
+**Status:** Implemented; CI #800 passed. Physical-device verification pending.
 
 **Implementation:**
 - Extracted the Home Adventurer account card and Account snapshot card into `presentation/HomeAccountOverviewSection.kt`.
@@ -1313,11 +1313,39 @@ Closing this audit does not mean the application is perfect or that every option
 - `app/src/main/java/com/irminsul/codex/MainActivity.kt`
 - `app/src/main/java/com/irminsul/codex/presentation/HomeAccountOverviewSection.kt`
 
-**Verification required:**
-1. Confirm Debug CI passes compilation, unit tests, Debug APK assembly, Room schema verification, signature verification, and artifact upload.
-2. On device, verify the Adventurer account card with and without configured credentials.
+**Automated verification:** CI #799 failed at Kotlin compilation because `Instant?` was passed to the component's `String?` timestamp parameter. The call site was corrected with `toString()` in commit `9d4c66ca656d8d0b764597e4be73f90b557f59db`. CI #800 passed.
+
+**Physical-device verification pending:**
+1. Verify the Adventurer account card with and without configured credentials.
 3. Verify the Account snapshot card appears only when a snapshot exists and displays the correct roster count/unavailable state and timestamp.
 4. Verify Analysis opens Visuals.
 5. Confirm Daily Note, Visual Dashboard, all other destinations, Materials Calculator, and Lineup Simulator remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 13: Tools destination presentation extraction
+
+**Status:** Implemented; Debug CI and physical-device verification pending.
+
+**Implementation:**
+- Added `presentation/ToolsSection.kt` to own the Tools destination header, Materials Calculator card, and Lineup Simulator card/container.
+- MainActivity now derives the account roster and active lineup IDs, and passes existing preferences, expansion state, roster freshness/completeness flags, and callbacks into the component.
+- Kept expansion state, selected lineup IDs, roster interpretation, and selection-rule orchestration in CodexScreen.
+- Reused the existing `MaterialsPlannerSection` and `LineupSimulatorSection`; their internal behavior and calculation logic were not changed.
+- Preserved card labels, descriptions, expand/collapse affordances, selected-character count, and the existing four-character selection behavior.
+- No calculator data, account retrieval, persistence, navigation, or lineup analysis behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ToolsSection.kt`
+
+**Verification required:**
+1. Confirm Debug CI passes compilation, unit tests, Debug APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Open Tools and expand/collapse Materials Calculator.
+3. Verify character and weapon material planner inputs and generated preview remain unchanged.
+4. Expand/collapse Lineup Simulator; verify the selected count, four-slot limit, add/remove behavior, and element summary.
+5. Verify stale/partial roster warnings remain visible when applicable.
+6. Confirm Home, Visuals, Account, navigation, and AI placeholder sheet remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance or new calculator/lineup capability is claimed.
