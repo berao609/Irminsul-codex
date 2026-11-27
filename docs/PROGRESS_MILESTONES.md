@@ -439,6 +439,7 @@ Make the existing selected-section account export more reliable and auditable wi
 
 - `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
 - `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
 - `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
 
 ### Verification
@@ -3247,7 +3248,7 @@ Rechecked current `AGENTS.md`, `README.md`, `docs/SPECS.md`, `docs/PROGRESS_MILE
 **Date recorded:** 2026-11-25  
 **Development phase:** Phase 3 - Account Intelligence Experience  
 **Milestone scope:** Restore the latest locally saved account snapshot and rebuild its deterministic analysis when the app opens, without repeating account JSON retrieval.  
-**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+**Status:** Implementation committed; CI verification passed; physical-device verification passed, with active-save cancellation retained as a follow-up.
 
 ### Active Memory Recall and repository verification
 
@@ -3730,3 +3731,1797 @@ Install the latest Debug artifact from Build #470 (`v1.0.0-dev.470-vc472`) and t
 **CI:** Run #492 started for this commit: https://github.com/berao609/Irminsul-codex/actions/runs/45802370862
 
 **Verification boundary:** Compilation, tests, APK packaging, and device rendering are not yet confirmed. This is a data-faithful expandable first pass, not the final polished Battle Chronicle visual treatment. Follow-up work should replace generic nested-data presentation with purpose-built overview, exploration, chest, and game-mode layouts after confirming the exact export keys and payload shapes.
+
+
+## Milestone 059 - HoYoLAB Credential Protection and Room Migration Integrity
+
+**Status:** Implementation committed; CI verification passed; physical-device verification passed.
+
+### Implemented
+
+- Added `HoYoLabCredentialStore`, which encrypts the HoYoLAB session cookie with AES-GCM using an Android Keystore-held key.
+- Persisted only encrypted cookie ciphertext in app-private SharedPreferences. The UID and theme preference remain non-sensitive preferences.
+- Added automatic migration of the legacy plaintext cookie on first read. The legacy value is removed only after encryption succeeds. Decryption/corruption errors are surfaced so the user can explicitly clear the unusable saved credential.
+- Added an Account-screen sign-out action that clears the saved UID, encrypted/legacy cookie values, and in-memory credentials while retaining local account snapshots.
+- Added Android instrumentation coverage for encryption and restoration through a new store instance, legacy-cookie migration, replacement, clearing, and corrupted ciphertext behavior.
+- Added a version-1 Room schema snapshot and a migration test that creates a version-1 database, migrates small and multi-chunk JSON snapshots, and checks raw JSON reconstruction and metadata/account preservation.
+- Configured the Room schema directory as Android instrumentation-test assets so `MigrationTestHelper` can load historical schema files.
+- Added the generated version-2 Room schema snapshot to version control.
+- Updated README architecture/security descriptions to identify the credential-store boundary and Keystore-backed encryption.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/integration/security/HoYoLabCredentialStore.kt`
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/androidTest/java/com/irminsul/codex/integration/security/HoYoLabCredentialStoreTest.kt`
+- `app/src/androidTest/java/com/irminsul/codex/data/local/IrminsulDatabaseMigrationTest.kt`
+- `app/build.gradle.kts`
+- `gradle/libs.versions.toml`
+- `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/1.json`
+- `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/2.json`
+- `README.md`
+
+### Implementation commits
+
+- `a060320a9dca3e9a3536fd63d67142063b3a1771` - credential protection and initial migration test.
+- `dcaa806645354e97776816faebfc8d3169bfdfab` - package Room schema history as instrumentation-test assets.
+- `2dc605dc467d719a9f184dd1c2cf5fc98577a6ec` - preserve the generated Room version-2 schema.
+- `e0d57b1a8e0b321a654fc3cc2e4bc872799f40b5` - align README with secure credential storage.
+
+### CI verification
+
+- **Run #520, attempt 1:** Failed because Maven Central returned HTTP 429 while resolving `kotlin-stdlib:1.9.20` for the instrumentation test host.
+- **Run #520, attempt 2:** Exposed a test configuration defect: `MigrationTestHelper` could not find the version-1 schema because the schema directory was not packaged as androidTest assets.
+- **Run #521:** Passed on commit `dcaa806645354e97776816faebfc8d3169bfdfab`. Unit tests passed; all 8 Android instrumentation tests passed; Debug APK build, Room schema generation check, APK signature verification, and artifact upload passed.
+  - Run: https://github.com/berao609/Irminsul-codex/actions/runs/45847411030
+  - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.521-vc523` (ID `15131419035`)
+  - Room schema artifact: `irminsul-room-schema-v2-run-521` (ID `15131059231`)
+- **Run #522:** Passed on commit `2dc605dc467d719a9f184dd1c2cf5fc98577a6ec`. Unit tests, Debug APK build, generated schema check, signature verification, and artifact upload passed. Instrumentation tests were skipped because this commit only added the committed schema snapshot.
+  - Run: https://github.com/berao609/Irminsul-codex/actions/runs/45847457876
+  - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.522-vc524` (ID `15131764251`)
+  - Room schema artifact: `irminsul-room-schema-v2-run-522` (ID `15132685195`)
+
+### Verification boundary and next actions
+
+- CI verified the credential-store instrumentation tests and version-1-to-2 Room migration test on an Android API 34 emulator.
+- Physical-device checks passed: the saved session survived installation and app restarts; sign-out returned to login while the local character roster remained available; fresh login succeeded and remained connected after another restart.
+- The encrypted bytes stored on the physical device were not directly inspected. Encryption-at-rest behavior is covered by automated tests.
+## Milestone 060 - JSON Export Save-Result Integrity
+
+**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+
+### Implemented
+
+- Fixed the Android document-save callback so a null output stream is treated as a failed save instead of silently reporting success.
+- Extracted the UTF-8 document write into a small testable JsonDocumentWriter.
+- The writer returns the byte count only after the stream has been written and closed successfully. Open, write, and close failures propagate to the caller.
+- The UI displays the saved-file success message only after the writer completes. Failed writes clear the success status and show an error. A cancelled document picker is reported as cancelled.
+- Added unit tests for exact UTF-8 output, null output stream, stream-open failure, write failure, and close failure.
+- No export payload shape, source-data preservation, account retrieval, Room persistence, credential handling, or export-format version was changed.
+
+### Files changed
+
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/data/export/JsonDocumentWriter.kt
+- app/src/test/java/com/irminsul/codex/data/export/JsonDocumentWriterTest.kt
+
+### Implementation commits
+
+- a509acede2a9540a593f29cac141d66207f1458b - add testable JSON document writer.
+- c62e9f73b1a73e686f54d1516bf6e134ca14716d - add JSON document writer failure tests.
+- d4c0369295d788bf224d4a23a35fa78f0683fd14 - prevent false success on JSON export failure.
+- f2f83954342b8ffccbfc455774bf25eb209df676 - import the JSON document writer in MainActivity.
+
+### CI verification
+
+- CI runs #526, #527, #529, and final integrated run #530 passed. Run #528 failed before the final import/integration commits; the final run #530 passed on commit `ec38bc7895aa399b11e6c4da47e681cd6562860c`.
+- Final run: https://github.com/berao609/Irminsul-codex/actions/runs/45850549052
+
+### Physical-device verification
+
+- User confirmed the export flow is clear and the save result is understandable.
+- Follow-up observation: after saving begins, there is no cancel control. Add a safe cancellation action in a future relevant batch. This is a follow-up UX requirement, not a failure of the false-success fix.
+
+### Verification boundary
+
+- The automated writer tests cover successful UTF-8 output, null stream, open failure, write failure, and close failure.
+- The final integrated CI run passed. Do not claim that an in-progress write can currently be cancelled.
+
+## Milestone 061 - CPU-Bound Account Processing Dispatch
+
+**Status:** Implementation committed; CI verification passed; physical-device verification pending.
+
+### Implemented
+
+- Moved HoYoLAB export JSON-to-domain mapping to an injected CPU dispatcher, defaulting to `Dispatchers.Default`.
+- Moved deterministic account analysis in AccountViewModel to an injected CPU dispatcher.
+- Moved Room snapshot JSON chunk splitting, chunk joining, and restored snapshot mapping to an injected CPU dispatcher.
+- Kept Room DAO queries and transactions as suspend Room operations on Room-managed executors.
+- Preserved coroutine cancellation propagation.
+- Added tests confirming repository mapping, ViewModel analysis, and Room snapshot restoration mapping execute away from the caller thread.
+- Added cancellation coverage for export mapping.
+- No new dependencies, Room schema changes, export-format changes, or deterministic analysis rule changes.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/data/repository/HoYoLabAccountRepository.kt`
+- `app/src/main/java/com/irminsul/codex/data/local/repository/RoomAccountSnapshotStore.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/viewmodel/AccountViewModel.kt`
+- `app/src/test/java/com/irminsul/codex/data/repository/HoYoLabAccountRepositoryTest.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/viewmodel/AccountViewModelTest.kt`
+- `app/src/androidTest/java/com/irminsul/codex/data/local/RoomAccountSnapshotStoreTest.kt`
+
+### Implementation commits
+
+- `6f752366f7f16388bbc9425fb2c9e4053615514a` - dispatch export mapping.
+- `9f7ae9a737a151ebe5ff83dcee9f176efe0ef087` - test export mapping dispatcher and cancellation.
+- `c861864694c8cfa9662e4dd00d9b61b2b189c371` - dispatch snapshot chunk preparation and restoration mapping.
+- `d061d1a3777b068a85ef70ec3ebfba2135b2869c` - dispatch deterministic analysis.
+- `27be3508de96b886b8047d4dabe8639de6910020` - make analysis dispatcher injectable for tests.
+- `a04882154cf51234d364a74c0ef9fb748e72f374` - test analysis dispatcher.
+- `b1760fba239f83108c8cbc987493320d093ae5a4` - test Room restoration dispatcher.
+- `448d2823745bd169dcfb72f152f8d45d0ae8240f`, `3a88ba07452fac7c3236f687aa11487b5fcc509f`, `393e117c8112c87a604441e4f80cd0184dbf38e0` - correct off-caller thread assertions.
+- `d87193175dbd415328ef9d844aaa45b2267145ce` - keep ViewModel tests deterministic with an injected test dispatcher.
+- `9bc551fe1b59ff08c244fbb398d684a7973c01c8` - add missing instrumentation assertion import.
+
+### CI verification
+
+- **Run #541:** Passed unit tests, Debug APK build, Room schema verification, and APK signature verification. Room instrumentation tests were skipped because the run did not include an instrumentation-test source change.
+- **Run #542:** Passed all workflow steps on commit `9bc551fe1b59ff08c244fbb398d684a7973c01c8`, including unit tests, Room instrumentation tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload.
+  - Run: https://github.com/berao609/Irminsul-codex/actions/runs/45853412200
+  - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.542-vc544` (ID `15134681823`, SHA-256 `b0cf7d0f602c3f179f1f9580ecf8c18185be434a9c830f660a99e3b45a00086b`)
+  - Room schema artifact: `irminsul-room-schema-v2-run-542` (ID `15135495906`)
+
+### Verification boundary and next actions
+
+- CI confirms unit and Android instrumentation tests, Debug APK packaging, Room schema verification, and APK signature verification.
+- No comparable baseline System Trace was captured before the dispatcher changes. No quantified speedup or frame-time improvement is claimed.
+- Physical-device checks remain: fresh account retrieval, app restart and cached snapshot restoration, full-roster deterministic analysis, and confirmation that the UI remains responsive during these operations.
+- Clear this milestone only after the physical-device checks are completed. The next optimization batch is AUD-007, Release test gate.
+
+
+## Milestone 062 - Bounded Account Chronicle Rendering
+
+**Status:** Implementation committed; CI verification pending; physical-device verification pending.
+
+### Trigger
+
+During physical-device testing of Debug build #542, account retrieval and account information were correct, but expanding Account Chronicles caused visible FPS drops. World Exploration & Collectibles was the most affected section. The expanded UI also displayed raw URLs, image/icon paths, and internal identifiers.
+
+Static inspection found that the Chronicle renderer recursively composed every nested object and array immediately. This was consistent with the reported behavior, but no runtime trace or quantified frame-time measurement was available.
+
+### Implemented
+
+- Changed Chronicle rendering to show immediate object fields while keeping nested objects and arrays collapsed by default.
+- Expanded arrays now use a bounded-height lazy list with stable item keys, avoiding eager composition of every entry.
+- Added presentation rules to hide technical field names (IDs, URL/image/icon/path/source metadata) and remote URLs/artwork filenames.
+- Preserved meaningful profile, region, level, exploration, and achievement fields when supplied by the source.
+- Kept source StructuredData unchanged. No export, mapper, Room schema, persistence, or account-analysis behavior was changed.
+- Preserved section status handling for available, stale, missing, unavailable, and failed data.
+- Kept the dedicated Character Showcase as the primary detailed character presentation.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationRules.kt` (new)
+- `app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationRulesTest.kt` (new)
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+
+- Unit tests added for technical-key filtering, URL/artwork-filename suppression, and retention of meaningful account values.
+- CI result: pending.
+- Debug APK artifact: pending.
+- Physical-device checks: pending. The user must retest World Exploration & Collectibles, the remaining Chronicle sections, and data/export integrity after installing the new build.
+
+### Verification boundary
+
+This change defers nested traversal and lazy-composes expanded array rows. A measurable FPS improvement is not claimed until device retesting or comparable profiling confirms it. The original #542 build remains the comparison point; Batch 3 is not cleared yet.
+
+
+## Milestone 063 - Replace Generic Chronicle Payload Rendering
+
+**Date recorded:** 2026-11-27  
+**Scope:** Remove the failed generic raw-payload Chronicle renderer and replace it with allowlisted section-specific summaries.
+
+**Implementation status:** Prepared in this commit. Account overview and mode summaries use explicit field allowlists. World exploration uses named region cards in a horizontal strip with normalized progress values. Raw IDs, URLs, image paths, nested source metadata, and unknown fields are not rendered. Original StructuredData and JSON export remain unchanged.
+
+**Reason for replacement:** The user tested the previous bounded recursive renderer and reported worse lag plus continued exposure of reference IDs and URLs. The prior implementation is considered failed.
+
+**Verification status:** CI pending for this commit. Physical-device verification pending. No performance improvement is claimed before the replacement is installed and retested.
+
+**Known limitation:** The export's exact exploration and mode payload variants are not fully represented by repository fixtures. The new presentation intentionally shows only supported allowlisted fields; unsupported variants remain hidden rather than falling back to raw rendering.
+
+
+## Milestone 064 - Correct Chronicle Renderer Compilation Error
+
+**Date recorded:** 2026-11-27  
+**Scope:** Correct the duplicate Compose annotation identified by Debug CI #550.
+
+**Trigger:** CI #550 failed during `app:compileDebugKotlin` with `MainActivity.kt:2837:1: This annotation is not repeatable.` Inspection confirmed two consecutive `@Composable` annotations immediately before `ChronicleOverviewSection`.
+
+**Correction:** Removed the duplicate annotation. The function retains one `@Composable` annotation. No presentation behavior, source data, or export logic was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** Correction committed; fresh CI pending. CI #550 did not reach unit tests, APK build, signature verification, or artifact upload. Physical-device verification of the allowlisted Chronicle renderer remains pending. No performance improvement is claimed.
+
+
+## Milestone 065 - Release Unit-Test Gate
+
+**Date recorded:** 2026-11-27  
+**Scope:** Prevent official Release APK signing and publication when tagged-source JVM unit tests fail.
+
+**Implemented:**
+- Added `gradle testDebugUnitTest --no-daemon` to the Release workflow after tag/version validation and Gradle setup.
+- The test gate runs before Release keystore decoding, APK build/signing, signature verification, and GitHub Release publication.
+- A failing test terminates the job before any signing or publication step.
+- Kept Room instrumentation tests under the existing Debug CI policy. Relevant persistence/schema changes and manual full-test runs continue to execute the emulator suite.
+- Updated `RELEASE_PROCESS.md` with the Release test-gate behavior and coverage boundary.
+- Closed Batch 3 in the optimization audit after CI #542/#555 and successful physical-device verification.
+
+**Files changed:**
+- `.github/workflows/release.yml`
+- `RELEASE_PROCESS.md`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** Implementation committed; main-branch CI pending. The successful tagged-release publication path has not been run. No test tag was created and no official release was published.
+
+**Coverage boundary:** Official releases run JVM unit tests against the tagged source. Room instrumentation tests are not repeated per release; they remain gated by relevant Debug workflow changes or manual full-test runs.
+
+
+## Milestone 066 - Lazy Character Roster Grid
+
+**Date recorded:** 2026-11-27  
+**Scope:** Reduce eager composition of the expanded character roster while preserving its existing behavior.
+
+**Implemented:**
+- Replaced the eager three-column `Column`/row/card tree with a three-column `LazyVerticalGrid`.
+- Added stable character-ID item keys.
+- Bounded the nested grid viewport to a maximum of four estimated card rows, allowing the lazy grid to operate safely inside the existing vertically scrollable Visuals page.
+- Memoized roster filter choices and filtered/sorted results against their input state.
+- Preserved search, element/weapon/rarity/level filters, sort direction, selected-character highlighting, and the detail panel during this performance-only change.
+- Added no dependencies and changed no account data, persistence, or deterministic analysis behavior.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** CI #557 passed; physical-device verification passed.
+
+**Device test checklist:**
+1. Passed: the final character is reachable by scrolling inside the grid.
+2. Passed: the surrounding Visuals page scrolls when swiping outside the grid.
+3. Passed: search, element, weapon, rarity, minimum/maximum level filters, and Clear filters.
+4. Passed: Name, Level, Rarity, and Friendship sorting in both directions.
+5. Passed: selecting characters updates highlighting and the detail panel.
+6. Passed: collapsing/reopening and scrolling remain responsive.
+
+**Verification boundary:** No runtime trace, composition count, frame-time comparison, or memory benchmark has been captured. The user confirmed normal, responsive device behavior; no quantified performance improvement is claimed.
+
+**Follow-up UI requirements recorded for a separate focused change:**
+- Remove the Rarity filter entirely.
+- Remove all sorting controls and sorting options.
+- Display characters in chronological release order, oldest first, by default.
+- Give 5-star character cards a permanent gold background and 4-star cards a permanent purple background.
+- Add a subtle selection highlight without replacing the permanent rarity background.
+
+
+## Milestone 067 - Extract Account Chronicle Presentation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Begin AUD-002 by separating cohesive Account Chronicle UI from the oversized MainActivity source file.
+
+**Implemented:**
+- Moved Account Overview, World Exploration & Collectibles, and Chronicle record summary composables into `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`.
+- Kept the composables' existing parameters, mapper calls, expansion behavior, and visual content unchanged.
+- Updated MainActivity imports and retained its existing Chronicle call sites.
+- Left Daily Note metrics, materials planning, lineup simulation, and character showcase untouched.
+
+**Verification status:** CI pending; physical-device verification pending.
+
+**Verification checklist:**
+1. Confirm the app builds and unit tests pass.
+2. Open Visuals and verify Account Overview.
+3. Verify World Exploration & Collectibles and its region cards.
+4. Verify current/previous Spiral Abyss and Imaginarium Theater sections.
+5. Expand and collapse each Chronicle section and confirm the page remains responsive.
+
+**Boundary:** This is a structural extraction, not a UI redesign or performance optimization claim.
+
+
+## Milestone 068 - Extract Lineup Simulator Presentation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Continue AUD-002 by separating the Lineup Simulator UI from the oversized MainActivity source file.
+
+**Implemented:**
+- Moved the Lineup Simulator composable into `presentation/LineupSimulatorSection.kt`.
+- Kept selection state, active-roster filtering, stale/partial status derivation, and toggle callbacks in `CodexScreen`.
+- Kept `LineupSelectionRules` unchanged in the domain layer.
+- Moved lineup-specific artwork and element fallback helpers with the extracted presentation.
+- Preserved the four-slot layout, selection order, full-team behavior, roster warnings, and descriptive-only element summary.
+- No account data, persistence, navigation, or analysis behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/LineupSimulatorSection.kt`
+
+**Commits:**
+- `e2e21c3703f733448e7918ea7be7ad2de3b52636`
+- `21b68f750a54fce3f5115146225cfca1638bda7b`
+
+**Verification status:** Physical-device verification passed (user confirmed checklist clear on 2026-11-27). CI remains pending and is not claimed as passed.
+
+**Device verification:** User confirmed the device checklist is clear on 2026-11-27. The following behaviors were included in the checklist: expand the section, add/remove characters, preserve slot order and the four-character limit, confirm roster warnings/empty state, and collapse/reopen without losing selection.
+
+**Remaining verification:** Debug CI compilation, unit tests, APK build, schema verification, and signature verification have not been confirmed.
+
+**Result:** Extraction verified and cleared. Structural extraction only; no performance improvement is claimed.
+
+
+## Milestone 069 - Extract Character Showcase Presentation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Continue AUD-002 by separating the Character Showcase UI from the oversized MainActivity source file.
+
+**Implemented:**
+- Moved the Character Showcase roster, filters, selected-character detail profile, talent and constellation details, weapon and artifact inspection, and supporting presentation helpers into `presentation/CharacterShowcaseSection.kt`.
+- Kept selected-character ID and selection callback ownership in `CodexScreen`.
+- Kept roster search, filters, and expansion state local to the Character Showcase presentation.
+- Preserved release ordering, rarity card backgrounds, selection highlight, filters, lazy grid, character details, weapon passive lookup, and artifact/talent/constellation interactions.
+- No account model, persistence, navigation, analysis, or product behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterShowcaseSection.kt`
+
+**Commits:**
+- `96628ec862051308703c0a90e783bf77bbcac8c6`
+- `f3ca764cfb0c22291cd92baeceb753679369e5cc`
+- `177c74737e4097d1187499784ff5fd253f15d551`
+- `6aa462c0743264f2a48311d20ed6b17c181ea59c`
+- `6ab25a876e7aed9e7db4f92e1cad7743ab5a0fc9`
+
+**Static source verification:** MainActivity imports and calls the extracted composable; its previous private implementation is absent; selected-character ownership remains in CodexScreen; roster and detail components are present in the new presentation file.
+
+**Verification status:** CI #581 passed; physical-device verification passed (user confirmed all checklist items).
+
+**CI correction record:** Initial Debug CI attempts found missing coroutine imports in the extracted file and a shared avatar fallback still referenced by the recommendation card in MainActivity. Both issues were corrected in commits `6aa462c` and `6ab25a8`. Subsequent CI reruns are pending; do not treat the earlier failed runs as passing.
+
+**Device checklist:**
+1. Open Visuals and expand Character Roster.
+2. Verify newest-first release order, portrait cards, permanent rarity backgrounds, and selected-card highlight.
+3. Test search, element and weapon filters, level range, and Clear filters.
+4. Select multiple characters and confirm the detail panel follows the selected character.
+5. Inspect talents, constellations, weapon passive, weapon stats, artifacts, and artifact substats.
+6. Collapse/reopen the roster and confirm the selected character remains selected.
+
+**Verification completed:** CI #581 passed compilation, unit tests, APK build, Room schema verification, APK signature verification, and artifact upload. User installed build #581 and confirmed the device checklist passed.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed.
+
+
+## Milestone 070 - Character Showcase Extraction Verification
+
+**Date recorded:** 2026-11-27  
+**Scope:** Close AUD-002 Character Showcase presentation extraction after automated and physical-device verification.
+
+**Verification:**
+- Debug CI runs #579, #580, and #581 passed after the initial compile issues were corrected.
+- Run #581 verified compilation, unit tests, Debug APK build, Room schema verification, signature verification, and artifact upload.
+- User installed build #581 and confirmed all Character Showcase device checklist items passed.
+
+**Result:** Character Showcase extraction is cleared. Continue AUD-002 with one focused presentation extraction at a time.
+
+**Boundary:** No measured performance improvement is claimed.
+
+
+## Milestone 071 - Extract Materials Planner Presentation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Continue AUD-002 by separating the Materials Planner UI and its presentation-local persistence helpers from MainActivity.
+
+**Implemented:**
+- Moved Materials Planner composable, target option/row models, preference-backed state, and manual material JSON serialization helpers into `presentation/MaterialsPlannerSection.kt`.
+- Kept MainActivity's existing call site and supplied the extracted composable through an import.
+- Preserved existing SharedPreferences keys, saved-row serialization, and domain calculation logic.
+- No intentional behavior or persistence format change.
+
+**Commits:**
+- `1336b1de15c3920fcd3fd34409743efec8135cd0`
+- `9f19650b11a6180696b988c5baaa01c9d7cccf26`
+
+**Verification status:** CI runs #584 and #585 are pending. Physical-device verification is pending.
+
+**Boundary:** Structural extraction only; no measured performance improvement is claimed.
+
+
+## Milestone 072 - Genshin DB Progression Candidate Import Foundation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Connect the existing Genshin-DB cost parser to stable character/weapon progression identities while preserving the candidate-versus-verified trust boundary.
+
+**Implemented:**
+- Corrected Genshin-DB `ascend1` through `ascend6` level ranges to 20→40, 40→50, 50→60, 60→70, 70→80, and 80→90.
+- Added optional character `ascensionLevel` mapping from source `promote_level`; missing values remain null and zero is preserved.
+- Added stable, source-attributed candidate mapping for parsed upgrade-cost segments.
+- Added character import for ascension and separate Normal Attack, Elemental Skill, and Elemental Burst talent tracks.
+- Added weapon ascension import.
+- Preserved incomplete stages and invalid data as explicit import issues.
+- Character level EXP and weapon level EXP are explicitly reported as missing. The importer therefore returns partial coverage rather than pretending the progression dataset is complete.
+- Candidate data is not promoted to verified calculation records. No source permission is approved and no automatic cost dataset is connected to the Materials Planner UI.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinDbCostParser.kt`
+- `app/src/test/java/com/irminsul/codex/data/catalogue/GenshinDbCostParserTest.kt`
+- `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
+- `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinDbUpgradeCostCandidateMapper.kt`
+- `app/src/test/java/com/irminsul/codex/data/catalogue/GenshinDbUpgradeCostCandidateMapperTest.kt`
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinDbProgressionCandidateImporter.kt`
+- `app/src/test/java/com/irminsul/codex/data/catalogue/GenshinDbProgressionCandidateImporterTest.kt`
+
+**Commits:**
+- `f5a26e3576cc03bff1b2568138f46154180e65a9`
+- `2383c78db6ae379e2e67d428565f3f98b3cc8749`
+- `b82e69955b601cc0f6037c82c02ccbbaafdb9a90`
+- `e753dde949bdeecafd99ac82285c8165bc9eda1f`
+- `3be0b925f71e6afe86b896d6844fc7762d9ae9e8`
+- `ab986aceea117a4f8a38a9e1e341410699daa9b8`
+- `012b76623d8fc9fa16099d134bb72b03b2c04a9f`
+
+**Verification:**
+- CI #594 passed parser regression tests, Debug APK build, schema verification, signature verification, and artifact upload.
+- CI #595 passed after character ascension rank was added to the snapshot model.
+- CI #596 passed candidate-mapper tests.
+- CI #599 passed unit tests, Debug APK build, Room schema verification, signature verification, and artifact upload.
+- Intermediate failures were not hidden: #593 exposed the old ascension-range test expectation; #597 and #598 exposed incorrect importer test assertions. The assertions were corrected and the final #599 run passed.
+- CI #599: https://github.com/berao609/Irminsul-codex/actions/runs/45922119144
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.599-vc601` (artifact ID `15165061135`).
+- APK artifact SHA-256: `947ea64e01adcb586ee5eb21d4f0d6c90f52641c4537634e542462e1f06052f4`.
+
+**Physical-device verification:** Not performed. This milestone changes domain/data parsing only and introduces no visible UI or persistence behavior.
+
+**Remaining work:**
+- Add verified character EXP and weapon EXP progression curves.
+- Complete material metadata and source attribution review.
+- Verify source reuse/redistribution terms before bundling data.
+- Promote only reviewed, complete records into the calculation catalogue.
+- Connect the verified records to automatic character/weapon target inputs and the Materials Planner UI.
+
+**Result:** Progression data can now be imported as stable, provenance-carrying candidates. This is not yet a complete or user-facing automatic materials calculator.
+
+
+## Milestone 073 - Character EXP Progression Candidate Calculator
+
+**Date recorded:** 2026-11-27  
+**Scope:** Add the shared character level EXP curve and a deterministic candidate calculator without bypassing the verified-cost trust boundary.
+
+**Implemented:**
+- Added the complete cumulative Character EXP curve for levels 1-90, indexed once for all characters rather than duplicated per character.
+- Added candidate provenance and a separate CC BY-SA 3.0 attribution/license notice for the adapted Genshin Impact Wiki table. The dataset remains marked `CANDIDATE` and source permission remains `PENDING_REVIEW`; it is not promoted into the trusted material catalogue.
+- Added a pure character EXP calculation path accepting current level, current EXP within that level, target level, and the maximum level unlocked by ascension.
+- Enforced valid ascension caps (20, 40, 50, 60, 70, 80, 90), level bounds, within-level EXP bounds, and monotonic progression data.
+- Calculated Hero's Wit (Genshin-DB ID 104003), Adventurer's Experience (104002), Wanderer's Advice (104001), and Mora (202).
+- Rounded book requirements independently at each ascension phase, matching the published 1→90 material totals: 415 Hero's Wit, 11 Adventurer's Experience, 12 Wanderer's Advice, and 1,673,400 Mora.
+- Exposed required EXP, granted EXP, wasted EXP, and Mora totals. Candidate results are explicitly labelled `CANDIDATE_DATA`, not verified production costs.
+- Added regression coverage for all level checkpoints, full 1→20 and 1→90 totals, partial current-level EXP, ascension-cap restrictions, maximum level, malformed curves, and source-review state.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinCharacterExperienceCurveCandidate.kt`
+- `app/src/main/java/com/irminsul/codex/domain/analysis/CharacterExperienceCalculator.kt`
+- `app/src/test/java/com/irminsul/codex/domain/analysis/CharacterExperienceCalculatorTest.kt`
+
+**Commits:**
+- `ffcaf73edaecba26a5c77a39e8a4cfeec11efcf9`
+- `9187f4fdd33c910af2cd4115624e5d1e532eed14`
+- `1bb0f273ca470527c1a6a50899366f7efda0860b`
+
+**Verification:**
+- CI #601 and #602 failed because the initial implementation rounded the entire requested level range as one batch, which did not match the published per-ascension-phase book counts. This was corrected; failures were not hidden.
+- CI #603 passed all 310 unit tests, Debug APK build, Room schema snapshot verification, Debug APK signature verification, and artifact upload. Room instrumentation tests were skipped because this change does not modify Room schema or persistence.
+- CI #603: https://github.com/berao609/Irminsul-codex/actions/runs/45922802196
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.603-vc605` (artifact ID `15165486192`).
+- APK artifact SHA-256: `f1d5a22eec0f65d7922f5043b841f21d3ff4df839bbae9512caeb49d0cc6f6ce`.
+
+**Physical-device verification:** Not required for this data/domain-only step; the new calculator is not yet connected to the Materials Planner UI.
+
+**Remaining work:**
+- Add rarity-specific weapon EXP curves and the corresponding weapon EXP/Mora/Enhancement Ore calculator.
+- Complete source/license review before promotion into trusted calculation data.
+- Connect reviewed character and weapon progression data to the automatic Materials Planner.
+
+**Result:** Character EXP requirements can now be calculated deterministically for a target level range, including ascension-phase rounding and material totals. This is a tested candidate calculation foundation, not yet a user-facing or verified production calculator.
+
+
+## Milestone 074 - 4-Star and 5-Star Weapon EXP Candidate Calculator
+
+**Date recorded:** 2026-11-27  
+**Scope:** Add ore-only weapon enhancement calculations for 4-star and 5-star weapons. Lower-rarity weapons and weapon fodder are explicitly outside this calculator's scope.
+
+**Implemented:**
+- Added separate 90-level cumulative EXP curves for 4-star and 5-star weapons.
+- Adapted the 4-star and 5-star weapon EXP tables from the Genshin Impact Wiki, with CC BY-SA 3.0 attribution and share-alike notice. Both datasets remain `CANDIDATE` with `PENDING_REVIEW` permission; neither is promoted into trusted production costs.
+- Added a deterministic calculator accepting weapon rarity, current level, current within-level EXP, target level, and current ascension-unlocked level cap.
+- Enforced ascension caps at levels 20, 40, 50, 60, 70, 80, and 90.
+- Calculated Mystic Enhancement Ore (104013), Fine Enhancement Ore (104012), Enhancement Ore (104011), and Mora (202).
+- Limited enhancement input to ore materials. Weapon fodder EXP is intentionally excluded.
+- Rounded ore EXP independently at each ascension phase because excess EXP cannot carry through a weapon level cap.
+- Added tests for both complete curves, full level 1-to-90 totals, phase rounding, current partial EXP, ascension cap restrictions, maximum-level no-op behavior, malformed curves, and candidate provenance.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinWeaponExperienceCurveCandidate.kt`
+- `app/src/main/java/com/irminsul/codex/domain/analysis/WeaponExperienceCalculator.kt`
+- `app/src/test/java/com/irminsul/codex/domain/analysis/WeaponExperienceCalculatorTest.kt`
+
+**Implementation commit:**
+- `4bdbd4db75fb42442a86677afe11d2d758caac0d`
+
+**Source references:**
+- 4-star weapon EXP: https://genshin-impact.fandom.com/wiki/Weapon_EXP/4-Star_Weapons
+- 5-star weapon EXP: https://genshin-impact.fandom.com/wiki/Weapon_EXP/5-Star_Weapons
+- Weapon Enhancement Material values: https://genshin-impact.fandom.com/wiki/Weapon_Enhancement_Material
+- Item IDs cross-check: Enhancement Ore 104011, Fine Enhancement Ore 104012, Mystic Enhancement Ore 104013.
+
+**Verification status at recording:**
+- CI #605 is running: https://github.com/berao609/Irminsul-codex/actions/runs/45923403862
+- Unit tests, Debug APK build, signature verification, and artifact upload are pending CI completion.
+- No physical-device verification has been performed. This is a domain/data foundation and is not connected to the Materials Planner UI.
+
+**Reference full-level ore-only totals (per-phase rounding):**
+- 4-star: 6,042,650 required EXP; 600 Mystic Ore, 19 Fine Ore, 15 Enhancement Ore; 604,400 Mora; 1,350 excess EXP.
+- 5-star: 9,064,450 required EXP; 903 Mystic Ore, 15 Fine Ore, 13 Enhancement Ore; 906,520 Mora; 750 excess EXP.
+
+**Remaining work:**
+- Complete CI verification and update this milestone with the result and artifact evidence.
+- Complete source permission/review before any promotion into trusted calculation data.
+- Integrate weapon EXP results with weapon ascension costs and the shared Materials Planner flow.
+- Connect 4-star/5-star weapon selection and target-level controls to the user-facing calculator.
+
+**Result:** A tested-in-progress candidate foundation exists for ore-only enhancement of 4-star and 5-star weapons. It does not yet constitute a complete user-facing automatic weapon calculator.
+
+## Milestone 075 - Weapon Ascension Candidate Cost Calculator
+
+**Date recorded:** 2026-11-27  
+**Scope:** Add deterministic calculation for weapon ascension materials using the existing Genshin-DB candidate importer output. This increment does not approve candidate data or connect a production dataset to the Materials Planner.
+
+**Implemented:**
+- Added `WeaponAscensionCandidateCalculator` in the data/catalogue layer, reusing the existing `GenshinDbUpgradeCostCandidate` model and importer output.
+- Restricted calculations to 4-star and 5-star weapons.
+- Derives the ascension gates required by the selected target level and starts at the weapon's current ascension rank, so already-paid stages are not charged again.
+- Aggregates Mora, weapon ascension materials, and enemy drops by item ID across the required stages.
+- Preserves source material names for candidate display and rejects conflicting names for the same item ID.
+- Returns explicit incomplete, invalid, overlapping, and quantity-overflow states. Partial material totals are withheld when required candidate stages are missing or invalid.
+- Does not convert candidates into trusted `UpgradeCostRecord` values or bypass source permission and human review.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/catalogue/WeaponAscensionCandidateCalculator.kt` (new)
+- `app/src/test/java/com/irminsul/codex/data/catalogue/WeaponAscensionCandidateCalculatorTest.kt` (new)
+
+**Commits:**
+- `043b84004db12d5941bd0d3997f7d3ada917bc45`
+- `2c8a75a31bc76a6da850909605fbdd21e41c3348`
+
+**Verification status:**
+- CI #612: running at time of recording.
+- CI #613: running at time of recording.
+- Physical-device verification: not applicable to this data/domain-only increment; no visible UI behavior changed.
+
+**Remaining work:**
+- Provide a versioned offline candidate dataset for weapon ascension costs for 4-star and 5-star weapons.
+- Resolve material display metadata and source attribution/reuse review without promoting unapproved data.
+- Connect candidate weapon ascension costs with the ore-only EXP calculation in the Materials Planner, showing an explicit candidate/incomplete state.
+- Allow target levels beyond the currently unlocked ascension cap only when the plan includes the required ascension stages, while retaining correct per-phase EXP rounding.
+- Add an end-to-end regression test proving EXP ores, Mora, ascension materials, and enemy drops aggregate without double-counting Mora.
+
+**Result:** A deterministic stage-aware weapon ascension candidate calculator now exists and is covered by regression tests. It is not yet wired to a bundled weapon-cost dataset or the user-facing calculator.
+
+## Milestone 076 - Weapon EXP Plans Across Ascension Gates
+
+**Date recorded:** 2026-11-27  
+**Scope:** Allow the weapon EXP calculator to calculate a desired target level beyond the weapon's current ascension cap, while preserving the current level/EXP validation and per-phase ore rounding.
+
+**Implemented:**
+- Kept the weapon's current unlocked level cap separate from the planned target cap.
+- Added `targetMaximumUnlockedLevel` to the weapon EXP request. It defaults to the current cap for compatibility with existing callers.
+- Validates that both caps are supported ascension boundaries and that the planned cap does not move backward.
+- Preserves current EXP validation against the actual current cap; a weapon already at its current level cap cannot claim additional within-level EXP.
+- Updated the Materials Planner preview to derive the planned target cap from the requested target level, allowing plans such as level 20/20 to level 90.
+- Preserves independent ore rounding at each ascension boundary.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/domain/analysis/WeaponExperienceCalculator.kt`
+- `app/src/test/java/com/irminsul/codex/domain/analysis/WeaponExperienceCalculatorTest.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/WeaponEnhancementCalculatorSection.kt`
+
+**Commits:**
+- `8ffdcdb26ec73bedc5ed575d37a0f0ee8d26f62e`
+- `009a61e385d6ce9f9360c83251e6cec82f486ba2`
+- `621a56d11cfe2238b608a2545b594b87c3f37bfa`
+
+**Verification status:**
+- CI #615, #616, and #617 are running at time of recording.
+- Physical-device verification is pending. The updated target-level behavior is visible in the Materials Planner.
+
+**Remaining work:**
+- Connect the candidate ascension calculator to a versioned offline weapon-cost dataset.
+- Combine weapon EXP ores/Mora with weapon ascension materials and enemy drops in one result, avoiding duplicate Mora.
+- Keep candidate source status visible until data rights and human review are resolved.
+- Verify future-level planning on-device after a successful APK build.
+
+**Result:** The weapon EXP calculator can now calculate ore requirements across planned ascension phases instead of incorrectly rejecting every target above the current cap. Ascension materials are not yet included in the displayed totals.
+
+
+## Milestone 077 - Combined Weapon Upgrade Plan Regression Matrix
+
+**Date recorded:** 2026-11-27  
+**Scope:** Strengthen end-to-end regression coverage for the integrated 4-star/5-star weapon EXP and ascension candidate planner.
+
+**Implemented:**
+- Added target-level coverage for 20, 40, 50, 60, 70, 80, and 90 for both supported weapon rarities.
+- Added combined-plan checks with current partial EXP for both rarities.
+- Added repeated ascension material-ID aggregation coverage across multiple stages.
+- Retained existing checks for Mora aggregation, completed ascension exclusion, missing-stage total withholding, invalid current EXP, conflicting material names, and quantity overflow.
+
+**Files changed:**
+- `app/src/test/java/com/irminsul/codex/data/catalogue/WeaponUpgradePlanCandidateCalculatorTest.kt`
+
+**Verification:** CI and physical-device verification are pending. Record actual workflow run, artifact, and user device confirmation before marking either complete.
+
+**Current boundary:**
+- The combined weapon calculator is integrated into the Materials Planner.
+- The current display provides material names, required quantities, optional owned quantities, and remaining quantities. Material icon/metadata presentation remains incomplete.
+- Weapon cost records remain candidate data pending source permission and human review.
+- Only 4-star and 5-star weapons are supported. Weapon fodder remains excluded.
+
+**Next work:**
+- Verify the regression suite and Debug APK workflow.
+- Complete material icon/metadata presentation without fabricating missing metadata.
+- Perform physical-device checks for cross-ascension plans and owned/remaining quantities.
+
+
+## Milestone 078 - Offline Character Progression Candidate Dataset
+
+**Date recorded:** 2026-11-27  
+**Scope:** Bundle version-pinned character ascension and talent-cost source records for offline use. This milestone establishes the character progression dataset and loader; it does not yet connect the character calculator to the Materials Planner UI.
+
+**Implemented:**
+- Bundled all 126 English character records from Genshin-DB game-data snapshot 7.2, split across 15 numbered JSON assets for predictable Android asset loading.
+- Included character ID, name, rarity, six ascension-stage cost arrays, and the matching talent-cost payload when the upstream record exists.
+- Bundled talent costs for 122 character records. Four Traveler variants (Aether, Lumine, Manekin, and Manekina) have no matching per-character talent JSON in this source snapshot; their talent data remains explicitly missing rather than fabricated.
+- Pinned every asset chunk to upstream commit `8e5badd60b5d894284ccc927a56c9683529d2592`; the repository rejects chunks with a different game version, source commit, or schema version.
+- Added `BundledCharacterProgressionCandidateRepository` to load candidate records from Android assets and pass them through the existing `GenshinDbProgressionCandidateImporter`.
+- Preserved separate Normal Attack, Elemental Skill, and Elemental Burst candidate tracks using the existing talent-slot mapping.
+- Added repository tests for all three talent slots, immutable source provenance, missing Traveler talent data, unknown characters, duplicate IDs, malformed records, and version/source mismatch.
+- Added explicit Genshin-DB MIT attribution and redistribution notice.
+
+**Data inventory:**
+- Character records: 126
+- Records with matching talent-cost payloads: 122
+- Records without matching talent-cost payloads: 4
+- Asset chunks: 15
+- Combined serialized asset size: approximately 405 KB
+
+**Source and permission:**
+- Source: https://github.com/theBowja/genshin-db
+- Immutable source commit: `8e5badd60b5d894284ccc927a56c9683529d2592`
+- Source license: MIT; copyright and permission notice retained in `app/src/main/assets/genshin_db/GENSHIN_DB_ATTRIBUTION.md`.
+- These are still candidate game facts. The MIT license permits redistribution of the source dataset but does not independently verify game values. No automatic promotion into trusted production costs occurs.
+
+**Files changed:**
+- `app/src/main/assets/genshin_db/characters_7_2_01.json` through `characters_7_2_15.json`
+- `app/src/main/assets/genshin_db/GENSHIN_DB_ATTRIBUTION.md`
+- `app/src/main/java/com/irminsul/codex/data/catalogue/BundledCharacterProgressionCandidateRepository.kt`
+- `app/src/test/java/com/irminsul/codex/data/catalogue/BundledCharacterProgressionCandidateRepositoryTest.kt`
+
+**Commits:**
+- Dataset chunks: `c5c6065`, `b62f11b`, `54ec93c`, `01d2804`, `a991682`, `8d6fa00`, `679c85b`, `7b9e8b6`, `7f3ebbd`, `230f8c2`, `0313925`, `c0e9d84`, `bd35106`, `f1a2e03`, `43549d7`
+- Repository: `64ca4c8`
+- Tests: `71f8b2c`, `3cfcdb9`
+- Attribution: `8a1a28c`
+
+**Verification status:**
+- Source inventory verified against the pinned upstream Git tree: 126 character records, 122 matching talent-cost payloads, no duplicate character IDs, and all 15 chunks share the same version and source commit.
+- CI #691 failed because a weapon combined-plan regression test expected 100 ascension Mora while its fixture supplied 10. The fixture-derived expectation was corrected in commit `18b293ad4de5ab26dadae8121bf5c45d61abe65d`; the failure was not hidden.
+- CI #692 passed: 375 unit tests, Debug APK assembly, Room schema snapshot verification, Debug APK signature verification, and artifact uploads. Room instrumentation tests were skipped because no Room schema or persistence code changed.
+- CI #692: https://github.com/berao609/Irminsul-codex/actions/runs/45934729313
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.692-vc694` (artifact ID `15170345820`, archive SHA-256 `12fface025e0316ba16559cb3965dea2c07f1e8e62c4297913946212df91077a`).
+- Room schema artifact: `irminsul-room-schema-v2-run-692` (artifact ID `15170480105`).
+- Physical-device verification: not required for this data/loader-only milestone; no Materials Planner UI behavior changed.
+
+**Remaining work:**
+- Verify repository tests and the Debug APK workflow.
+- Integrate character level/ascension and independent talent calculations into the shared Materials Planner plan.
+- Keep missing Traveler talent records incomplete until a separately sourced and reviewed dataset is available.
+- Preserve the separate character EXP curve and its existing candidate provenance.
+
+**Result:** The app now has a version-pinned offline candidate source and repository for character ascension and talent costs. This is a data foundation, not yet a completed user-facing automatic character calculator.
+
+
+
+## Milestone 079 - Character Level and Ascension Planner Integration
+
+**Date recorded:** 2026-11-27  
+**Scope:** Connect the version-pinned offline character progression candidates and existing character EXP/ascension calculations to the Materials Planner. This increment covers character level progression only; talent costs remain a separate milestone.
+
+**Implemented:**
+- Added `CharacterEnhancementCalculatorSection` using the existing `CharacterUpgradePlanCandidateCalculator`.
+- Loads the selected character's version-pinned progression candidates from Android assets.
+- Uses the account snapshot's current ascension rank and the planner's current/target level fields.
+- Adds a persisted current EXP-within-level input.
+- Combines character EXP, ascension materials, and Mora using the existing candidate plan calculator.
+- Displays material requirements with optional owned quantities and remaining quantities.
+- Withholds combined totals when the source dataset cannot load, the ascension rank is missing, or required ascension data is incomplete/invalid.
+- Keeps all costs explicitly labelled as candidate data; no promotion to trusted production costs occurs.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterEnhancementCalculatorSection.kt` (new)
+- `app/src/main/java/com/irminsul/codex/presentation/MaterialsPlannerSection.kt`
+
+**Commits:**
+- `7bee675c36650b2b48fc137ef79a43aa727e8b4b`
+- `7d2891eaadaa1d762ffd0976652fc581772a0e73`
+- `5d5d87b8df859db5778adfe32d3676b996f09414`
+
+**Verification status:**
+- Source integration is committed.
+- GitHub Actions verification is pending; do not treat this milestone as CI-verified until the new Debug workflow completes successfully.
+- Physical-device verification is pending. Test current EXP, cross-ascension targets, missing ascension rank, offline loading, owned/remaining quantities, and preservation of existing weapon/manual plans.
+
+**Remaining work:**
+- Add and verify automated coverage for the character UI integration where the existing test architecture supports it.
+- Complete independent Normal Attack, Elemental Skill, and Elemental Burst cost calculations in the next milestone.
+- Combine all character level and talent requirements into one material list without double-counting Mora.
+- Keep Traveler talent requirements incomplete until separately sourced and reviewed data is available.
+
+**Result:** Character level/ascension candidate calculations are now connected to the Materials Planner UI. CI and physical-device verification remain pending.
+
+
+## Milestone 080 - Automatic Character Materials Preview and Planner Separation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Deliver the requested character-first enhancement workflow using the bundled version-pinned candidate dataset. Keep candidate costs explicitly distinct from approved production cost records.
+
+**Implemented:**
+- Added `CharacterFullUpgradePlanCandidateCalculator` to combine the existing character EXP/ascension plan with independent Normal Attack, Skill, and Burst talent tracks.
+- Talent costs are selected by character ID, game version, talent slot, and exact level segment. Unchanged tracks incur no cost.
+- Missing talent stages withhold the entire combined total. Invalid/overlapping records and quantity overflow also withhold totals.
+- Mora and duplicate material IDs are aggregated across character levels, ascension, and all three talent tracks.
+- Character ascension rank mapping now falls back from the character detail payload to the outer character payload when the nested base object omits `promote_level`.
+- Current talent levels are prefilled from account skill records when their types are available; target levels default to the current levels.
+- Character selection is now separate from weapon selection. The character calculator no longer includes a planned-weapon editor.
+- Weapon selection and weapon level controls now have their own independent planner section.
+- Manual material tracking is collapsed and labelled optional. Existing stored rows are retained.
+- Character material requirements display source-derived material names, required quantities, optional owned quantities, and remaining quantities.
+- Current character EXP adjustment is optional and defaults to zero.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/catalogue/CharacterFullUpgradePlanCandidateCalculator.kt` (new)
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterEnhancementCalculatorSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/MaterialsPlannerSection.kt`
+- `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/test/java/com/irminsul/codex/data/catalogue/CharacterFullUpgradePlanCandidateCalculatorTest.kt` (new)
+- `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
+- `README.md`
+
+**Important data status:**
+- The calculator currently previews costs from bundled Genshin-DB 7.2 candidate records and the character EXP curve.
+- This implementation does not promote candidate data into approved production `UpgradeCostRecord` records.
+- Traveler talent data and any missing candidate stages remain incomplete; combined totals are withheld rather than shown as complete.
+
+**Verification status:**
+- CI runs #709, #710, #711, and #712 passed.
+- CI run #713 passed for the milestone documentation commit.
+- CI run #714 passed unit tests, built the Debug APK, verified its signature, and uploaded the artifact. Room instrumentation tests were skipped by the workflow condition.
+- Latest calculator code commit: `d8ae884367b063492575872786e448404fe2c61c`.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.714-vc716` (artifact ID `15172589288`).
+- Earlier failures #703, #705, #706, and #707 were tied to an initial test assertion, an outdated composable call, and intermediate UI brace/structure edits. Later runs #704 and #708 passed after corrections.
+- Physical-device testing is pending. CI #714 produced the Debug APK; no device installation or functional test has been confirmed.
+
+**Remaining work:**
+- Verify current talent-level mapping against real exported account snapshots.
+- Review Genshin-DB source permissions, cost correctness, and material metadata before any production approval.
+- Test level gates, all three talent tracks, Mora aggregation, owned/remaining values, Traveler missing data, offline use, and independent weapon planning on device.
+
+**Result:** The Materials Planner now has a character-first automatic cost preview and a separate weapon workflow. Production approval and physical-device verification are not complete.
+
+
+## Milestone 081 - Tools Navigation and Materials Calculator Relocation
+
+**Date recorded:** 2026-11-27
+
+**Implemented:**
+- Added a dedicated Tools destination to bottom navigation: Home, Visuals, central AI action, Tools, Account.
+- Relocated Materials Calculator from Visuals to Tools. The existing planner component, calculations, preference-backed storage, and collapse state are retained.
+- Removed the duplicate Account shortcut from the top app header. Account remains available from the bottom navigation, which opens the credential-management context as before.
+- Updated README navigation description.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `README.md`
+
+**Verification status:** User confirmed physical-device testing passed. CI verification remains unconfirmed in the currently available evidence.
+
+**Device checklist:**
+1. Confirm navigation order is Home, Visuals, AI, Tools, Account.
+2. Open Tools and confirm Materials Calculator is available.
+3. Confirm calculator character and weapon flows still work, including saved manual tracking rows.
+4. Confirm Visuals no longer contains Materials Calculator.
+5. Confirm only one Account entry exists in navigation/header and it still opens account settings and credentials.
+6. Confirm switching tabs preserves expected state and scrolling.
+
+**Result:** The calculator now lives in Tools, while Visuals remains focused on account analysis and visual information. No calculation logic or saved preference keys were intentionally changed.
+
+
+## Milestone 082 - Dashboard Metric Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by moving shared dashboard metric presentation helpers out of the oversized activity source.
+
+**Implemented:**
+- Extracted AssessmentBar, MetricTile, and DailyNoteMetricRow composables, plus formatDuration, into presentation/DashboardMetrics.kt.
+- Updated MainActivity imports while preserving existing call sites and helper behavior.
+- No data, state ownership, calculations, persistence, navigation, or calculator behavior intentionally changed.
+
+**Files changed:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/DashboardMetrics.kt
+- docs/CODEBASE_OPTIMIZATION_AUDIT.md
+- docs/PROGRESS_MILESTONES.md
+
+**Verification status:** User confirmed Debug CI run #727 succeeded and the app was tested on a physical device. The user-confirmed device checklist passed. No workflow run ID, artifact ID, or artifact checksum was independently retrieved in this session. No performance improvement is claimed.
+
+**Device verification:** User confirmed the app was tested and passed after CI #727. Exact device checklist details were not separately itemized in the confirmation.
+
+
+## Milestone 083 - Bottom Navigation Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by extracting the bottom navigation and central AI action from MainActivity.
+
+**Implemented:**
+- Moved the bottom navigation bar and raised AI action into CodexBottomNavigationBar.kt.
+- Moved CodexTab into the same presentation file.
+- Kept selected-tab state and Account credential-panel behavior in CodexScreen through callbacks.
+- Preserved the existing Home, Visuals, AI, Tools, Account arrangement.
+
+**Files changed:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/CodexBottomNavigationBar.kt
+- docs/CODEBASE_OPTIMIZATION_AUDIT.md
+- docs/PROGRESS_MILESTONES.md
+
+**Verification status:** CI #738 succeeded. User confirmed physical-device navigation testing passed, including navigation order, tab selection, central AI action, and Account access. No performance improvement is claimed.
+
+
+## Milestone 084 - Visual Dashboard Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by extracting the Visual Dashboard composable from MainActivity without changing analysis behavior.
+
+**Implemented:**
+- Extracted Visual Dashboard rendering into `presentation/VisualDashboardSection.kt`.
+- MainActivity delegates to `VisualDashboardSection(accountExportState.intelligenceOverview)`.
+- Preserved no-analysis state, assessment bars, recommendation/gap metrics, account-data coverage, and warning text.
+- Reused the shared `AssessmentBar` and `MetricTile` presentation helpers.
+- Kept state ownership, analysis logic, account mapping, navigation, and calculator behavior unchanged.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualDashboardSection.kt`
+
+**Commits:**
+- Extraction/integration and source corrections: `9f730e5c510b73bfe5600107c91b9a1d7724268b`, `9840297f1afab04fb8962da2055ba7639f4fdf78`, `82c764635e4166005e4f42754964c30bc835acb9`, `43f0b5de84d7c52b126439cf8b8cf164650aca48`, `2e2d505956a1c9e21ea4e4ecf3508b785ec891cc`, `6bdceb471321b727bee9f22b0aeb97167e2c6273`, `756f2fa6d7a23ae8e8c26a23b541bff8d7dbe937`.
+
+**Verification:**
+- CI #744 failed on a missing Compose `dp` import; corrected in the final commit.
+- CI #745 passed unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions.
+- Workflow: https://github.com/berao609/Irminsul-codex/actions/runs/45948947383
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.745-vc747` (ID `15175399449`; SHA-256 `442e74e737e89fcdce84800ae0b349e6aa77897ccb712f9f6fc272276295b266`).
+- Room schema artifact: `irminsul-room-schema-v2-run-745` (ID `15175592695`).
+- Physical-device verification: pending user installation and Visuals dashboard checklist.
+
+**Result:** Visual Dashboard presentation is extracted and CI-verified. Device verification remains outstanding; no performance improvement is claimed.
+
+
+## Milestone 085 - Home-Only Visual Dashboard and Coverage Panel Removal
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Correct dashboard placement after device observation and simplify the dashboard presentation.
+
+**Implemented:**
+- Restricted VisualDashboardSection to the Home destination. It no longer appears on Visuals, Tools, or Account.
+- Removed the Account data coverage card from the Visual Dashboard.
+- Preserved the Home dashboard's no-analysis state, character assessment, recommendation count, and confirmed-gap metrics.
+- Kept Visuals account analysis and its existing recommendation/character content, Tools calculator, Account functions, and underlying analysis data unchanged.
+- Updated README navigation and feature descriptions.
+
+**Files changed:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/VisualDashboardSection.kt
+- README.md
+
+**Commits:**
+- 7e0f86b36126654f5bd2b35a1b8122928a8424e0 - restrict dashboard to Home.
+- a9fc65af97ea30c15a8a4b80f5a89c633a11bbf0 - remove dashboard coverage card.
+- 901100de487339238d8ec8957919ea9cfecc7e13 - update README.
+
+**Verification status:** CI #752 passed for the corrected source. User confirmed successful physical-device testing.
+
+**Device checklist:**
+1. Home shows the Visual Dashboard exactly once.
+2. Dashboard has no Account data coverage card.
+3. Visuals has no Visual Dashboard; account analysis, recommendations, character showcase, and other Visuals content remain.
+4. Tools has no Visual Dashboard; Materials Calculator remains available and usable.
+5. Account has no Visual Dashboard; account settings and export remain available.
+6. Switch between all destinations and confirm content and scrolling remain correct.
+
+**Result:** Dashboard presentation is limited to Home and no longer includes the account data coverage panel. Automated and physical-device verification are pending.
+
+
+## Milestone 086 - Home Daily Note Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by extracting the Home Daily Note presentation from MainActivity.
+
+**Implemented:**
+- Added `presentation/HomeDailyNoteSection.kt` for the Daily Note empty state and populated Resin, expedition, Realm Currency, commission, weekly discount, and refresh UI.
+- MainActivity delegates the Daily Note content to the extracted component.
+- Kept retrieval, loading, credentials, export state, and refresh action ownership in CodexScreen.
+- Preserved nullable-value display, Resin progress/recovery rules, button enablement, and the existing loading-indicator position.
+- No API, parsing, persistence, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeDailyNoteSection.kt`
+
+**Commits:**
+- `816288d4847ace9ec2c74eeba1b46ba1c5492370`
+- `f12e48f2eb10738d47397d3c7f396fd1f611a81a`
+- `33c360f31862361630c9b0fb306df85f8598b89a`
+- `5a8884338f7f8cd86763fa41552352833c3288c4`
+
+**Verification status:** CI #756 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Physical-device verification pending.
+
+**CI evidence:** [Workflow #756](https://github.com/berao609/Irminsul-codex/actions/runs/45951308270). Debug APK artifact `irminsul-codex-debug-v1.0.0-dev.756-vc758` (ID `15176821455`, SHA-256 `b3db8ba816b58d7b4cc540c29f2f4e120b83a5b678d02a40c2be062ac2ccd12e`).
+
+**Device checklist:**
+1. Confirm loading indicator, empty state, and Sync Daily Note action.
+2. Confirm Resin value, maximum, progress, recovery, and full-resin states.
+3. Confirm expedition, Realm Currency, commission, and weekly discount values/statuses, including unavailable values.
+4. Confirm Refresh Notes and loading/disabled behavior.
+5. Confirm other tabs and their existing features remain unaffected.
+
+**Result:** Daily Note presentation is separated from MainActivity while state and data retrieval remain screen-owned. CI #756 passed, and the user confirmed successful physical-device testing.
+
+
+## Milestone 087 - Account Data Export Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by extracting the Account Data Export card presentation from MainActivity.
+
+**Implemented:**
+- Added `presentation/AccountDataExportSection.kt`.
+- MainActivity delegates the Account Data Export card while passing existing progress, export status, exporting/restoring flags, and the export callback.
+- Kept UID/cookie checks, export orchestration, ViewModel interaction, document-picker handling, JSON writing, and state ownership in CodexScreen.
+- Preserved Account-tab visibility conditions, progress/status messaging, Save JSON label, and disabled behavior.
+- No export format, account retrieval, persistence, credentials, navigation, or calculator logic was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountDataExportSection.kt`
+
+**Verification status:** CI #767 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. User confirmed successful physical-device testing.
+
+**Device checklist:**
+1. Confirm the Account Data Export card appears only on Account when both UID and cookie are present.
+2. Confirm it is hidden when credentials are missing.
+3. Confirm progress and export status messages remain visible at the correct times.
+4. Confirm Save JSON is disabled during export and snapshot restoration, and shows Extracting... while exporting.
+5. Confirm successful save and document-picker cancellation still report the correct result.
+6. Confirm Home, Visuals, Tools, navigation, and Materials Calculator remain unaffected.
+
+**Result:** Account Data Export presentation is separated from MainActivity. Export behavior remains screen-owned and unchanged. CI #767 passed, and the user confirmed successful physical-device testing.
+
+
+## Milestone 088 - Centered First-Run Sign-In
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Simplify the first-launch sign-in experience.
+
+**Implemented:**
+- Added `presentation/InitialSignInSection.kt` with a centered, width-constrained sign-in card.
+- The initial Home screen now shows only the Irminsul Codex heading, short connection guidance, and the Sign in with HoYoLAB action, plus relevant loading or authentication error feedback.
+- Removed the Genshin UID field, HoYoLAB cookie field, divider, and Save & Sync button from the first-run card.
+- Kept manual UID/cookie entry and Save & Sync available from the Account destination as a recovery/fallback path.
+- Preserved embedded HoYoLAB WebView authentication, secure cookie storage, automatic UID detection, and Daily Note synchronization.
+- Updated the UID-detection failure message to direct the user to Account for manual entry.
+- No credential format, storage, API, account retrieval, navigation order, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/InitialSignInSection.kt`
+- `README.md`
+
+**Verification status:** CI #774 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. User confirmed successful physical-device testing.
+
+**Device checklist:**
+1. On a fresh install, confirm the sign-in card is centered in the available screen area.
+2. Confirm the initial card has no UID field, cookie field, divider, or Save & Sync button.
+3. Confirm Sign in with HoYoLAB opens the existing WebView login and automatic UID detection/sync still works.
+4. Confirm loading and authentication error feedback remains readable.
+5. Confirm Account still exposes manual UID/cookie entry and Save & Sync as fallback.
+6. Confirm existing signed-in startup, navigation, account export, and Materials Calculator remain unaffected.
+
+**Result:** First-run sign-in presentation is simplified; manual credential recovery remains available under Account. CI #774 passed and the user confirmed successful physical-device testing.
+
+
+## Milestone 089 - Lineup Simulator Relocation to Tools
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Move the existing Lineup Simulator from Visuals to Tools without changing its behavior.
+
+**Implemented:**
+- Removed the collapsible Lineup Simulator card and content from Visuals.
+- Added the same collapsible simulator to Tools, alongside Materials Calculator.
+- Preserved the four-character selection limit, selection order, removal/toggle behavior, roster-derived character data, element summary, and stale/partial roster warnings.
+- Kept lineup selection and expansion state screen-owned. No persistence or team-analysis capability was added.
+- Updated README navigation and feature descriptions.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `README.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** CI #778 passed. The user confirmed successful physical-device testing.
+
+**Device checklist:**
+1. Confirm Lineup Simulator is absent from Visuals.
+2. Confirm Lineup Simulator appears in Tools alongside Materials Calculator.
+3. Confirm expanding/collapsing the simulator works.
+4. Confirm owned character portraits, four slots, add/remove behavior, and element summary work.
+5. Confirm stale/partial roster warnings remain visible when applicable.
+6. Confirm switching tabs preserves the expected selection state.
+7. Confirm Materials Calculator and the remaining tabs still work.
+
+**Result:** Lineup Simulator is now grouped with the app's calculators and utilities in Tools. CI #778 passed and the user confirmed successful physical-device testing. Its existing selection behavior and trust limitations are unchanged.
+
+
+## Milestone 090 - Account Settings and Credentials Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 by separating Account credential and settings presentation from MainActivity.
+
+**Implemented:**
+- Added `presentation/AccountSettingsSection.kt` with `AccountCredentialsSection` for manual UID/cookie entry, HoYoLAB sign-in, credential-unlock error, clear action, and Save & Sync.
+- Added `AccountSettingsSection` for appearance selection and account/session management.
+- Moved `ThemeMode` into the presentation package while preserving preference keys and System/Light/Dark behavior.
+- Kept credential values, visibility, loading/export state, secure storage, and all orchestration in CodexScreen.
+- Preserved existing visibility conditions, labels, callbacks, and disabled states.
+- No credential storage, account retrieval, export, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountSettingsSection.kt`
+
+**Verification status:** Source extraction committed; Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Verify System, Light, and Dark selection and persistence.
+2. Verify HoYoLAB sign-in, manual UID/cookie entry, credential error/clear, and Save & Sync.
+3. Verify sign-out clears credentials while retaining saved account snapshots.
+4. Verify Manage/Hide HoYoLAB account controls and Save JSON.
+5. Confirm Home, Visuals, Tools, Materials Calculator, and Lineup Simulator remain unchanged.
+
+**Boundary:** Structural extraction only; no performance improvement is claimed.
+
+
+## Milestone 091 - AI Assistant Sheet Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 by extracting the existing AI placeholder bottom sheet from MainActivity.
+
+**Implemented:**
+- Added `presentation/AiAssistantSheet.kt`.
+- MainActivity delegates the sheet UI and passes its existing remembered SheetState and dismissal callback.
+- Kept sheet visibility, state ownership, and bottom-navigation launch handling in CodexScreen.
+- Preserved all existing placeholder copy, disabled input, cookie privacy statement, styling, insets, and dismissal behavior.
+- Did not add AI provider integration or active chat behavior.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AiAssistantSheet.kt`
+
+**Verification status:** Source extraction committed; Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Open the centered AI action and verify the sheet content and layout.
+2. Verify Close and swipe dismissal.
+3. Verify keyboard/navigation-bar insets.
+4. Confirm Home, Visuals, Tools, Account, Materials Calculator, and Lineup Simulator remain functional.
+
+**Boundary:** Structural extraction only; AI remains inactive.
+
+
+## Milestone 092 - Home Account Overview Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by extracting the Home account identity and saved-snapshot summary cards from MainActivity.
+
+**Implemented:**
+- Added `presentation/HomeAccountOverviewSection.kt` for the Adventurer account and Account snapshot cards.
+- MainActivity derives roster count and passes UID, detected server, snapshot timestamp, and the Analysis callback.
+- Kept snapshot state, roster interpretation, server detection, and navigation ownership in CodexScreen.
+- Preserved existing card visibility, text, unavailable-roster handling, timestamp, styling, and Analysis navigation.
+- No retrieval, persistence, account analysis, navigation structure, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeAccountOverviewSection.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** CI #799 initially failed during Kotlin compilation because the snapshot timestamp argument was `Instant?` while the presentation component expects `String?`. Corrected the call site in commit `9d4c66ca656d8d0b764597e4be73f90b557f59db`; CI #800 passed. Physical-device verification remains pending.
+
+**Device checklist:**
+1. Verify the Adventurer account card with and without configured credentials.
+2. Verify the Account snapshot card appears only when a snapshot exists.
+3. Verify roster count, unavailable-roster fallback, and last-retrieved timestamp.
+4. Tap Analysis and confirm it opens Visuals.
+5. Confirm Daily Note, Visual Dashboard, Tools, Account, Materials Calculator, and Lineup Simulator remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+## Milestone 093 - Tools Destination Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 by extracting the Tools destination container from MainActivity.
+
+**Implemented:**
+- Added `presentation/ToolsSection.kt` for the Tools heading, Materials Calculator card, and Lineup Simulator card/container.
+- MainActivity supplies the existing character roster, SharedPreferences, expansion state, active lineup selection, roster freshness/completeness flags, and callbacks.
+- Kept state ownership, roster interpretation, and lineup selection-rule orchestration in CodexScreen.
+- Reused the existing MaterialsPlannerSection and LineupSimulatorSection without changing their internal behavior.
+- Preserved labels, descriptions, expand/collapse affordances, selected-character count, and existing selection behavior.
+- No calculator logic, account retrieval, persistence, navigation, or lineup-analysis capability was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ToolsSection.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** CI #801 exposed a missing `RoundedCornerShape` import; fixed in `081faa98399ae2d0f3918bf4f236bacd08e16f34`. CI #805 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Debug APK: `irminsul-codex-debug-v1.0.0-dev.805-vc807` (artifact ID `15181947395`). Physical-device verification pending.
+
+**Device checklist:**
+1. Open Tools and expand/collapse Materials Calculator.
+2. Verify character and weapon selectors, level/talent inputs, and generated material preview remain unchanged.
+3. Expand/collapse Lineup Simulator.
+4. Verify selected count, four-character limit, add/remove behavior, and element summary.
+5. Verify stale/partial roster warnings remain visible when applicable.
+6. Confirm Home, Visuals, Account, navigation, and AI placeholder sheet remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement or new calculator/lineup capability is claimed.
+
+
+## Milestone 094 - Visuals Destination Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 Batch 6 by extracting the Visuals destination composition from MainActivity.
+
+**Implemented:**
+- Added `presentation/VisualsSection.kt` for Account Chronicle, Character Showcase (including its empty state), and Account Analysis composition.
+- MainActivity passes the existing account snapshot, intelligence overview, loading/error flags, credential availability, selected character, recommendation expansion state, and callbacks.
+- Kept screen state, snapshot ownership, credential checks, analysis invocation, and navigation in CodexScreen.
+- Preserved section order, stale-roster display, empty-state copy, Account Analysis credential gating, and its existing character input behavior.
+- No retrieval, mapping, persistence, analysis rules, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Commits:**
+- `c573d32169aa2d117c25d04faf8e1345989efcfd` - add Visuals destination presentation.
+- `92319ddc68a925f0d63c71fe9062c94853215ed9` - delegate Visuals composition from MainActivity.
+
+**Verification status:** Source changes committed. Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Verify Account Chronicle overview and World Exploration & Collectibles.
+2. Verify current and previous Spiral Abyss and Imaginarium Theater sections.
+3. Verify Character Showcase roster, selection, and no-roster empty state.
+4. Verify Account Analysis refresh, loading/error feedback, recommendations, and credential visibility conditions.
+5. Confirm Home, Tools, Account, navigation, and AI placeholder remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+## Milestone 095 - Shared Screen Feedback Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 Batch 6 by extracting shared screen feedback presentation from MainActivity.
+
+**Implemented:**
+- Added `presentation/ScreenFeedbackSections.kt` with `ScreenErrorBanner` and `HomeInitialLoadingIndicator`.
+- MainActivity delegates the existing shared error card and Home initial loading indicator.
+- Preserved error precedence, banner colors/shape/text/padding, and original placement.
+- Preserved the exact Home loading condition and indicator alignment/spacing.
+- Kept error/loading state ownership and all retrieval/navigation behavior in CodexScreen.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ScreenFeedbackSections.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Commits:**
+- `45123d072e4676c3c6fb32e2d0307d3acb06cb53` - add shared feedback presentation.
+- `39e0901c3ddda2cf69c1aefd68899e2fd5e53943` - delegate feedback rendering from MainActivity.
+
+**Verification status:** CI #811 (run `45966052224`) and CI #812 (run `45966055782`) passed. Unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload passed; Room instrumentation tests were skipped by workflow conditions. Integration Debug APK: `irminsul-codex-debug-v1.0.0-dev.812-vc814` (artifact ID `15182921675`). The user confirmed all physical-device checks clear, including loading feedback, error display/precedence, banner styling/placement, and all destinations.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+## Milestone 096 - Home Destination Composition Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 Batch 6 by extracting the Home destination composition from MainActivity.
+
+**Implemented:**
+- Added `presentation/HomeSection.kt` to compose the existing Home account overview, Daily Note, and Visual Dashboard sections in their original order.
+- MainActivity continues to derive and own roster count, server name, snapshot timestamp, credential availability, and all screen state.
+- Passed existing data and callbacks to HomeSection; UID/cookie, snapshot, Daily Note, loading/error, and intelligence state plus refresh/navigation orchestration remain in CodexScreen.
+- Reused existing presentation components without changing their internal behavior.
+- Preserved the Home destination condition, loading indicator placement, snapshot visibility, Daily Note sync/refresh behavior, and Visual Dashboard display.
+- No retrieval, mapping, persistence, analysis, navigation structure, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeSection.kt`
+
+**Commits:**
+- `760a08d6e08ef05fbbc4f1ff9e2e041245be272d` - extract Home destination composition.
+- `cf308f82ec5b571e8154e2f7a17baefce1e66eac` - delegate Home composition from MainActivity.
+
+**Verification status:** CI #815 (run `45966978956`) and CI #816 (run `45966984614`) passed. Unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload passed; Room instrumentation tests were skipped by workflow conditions. Integration Debug APK: `irminsul-codex-debug-v1.0.0-dev.816-vc818` (artifact ID `15182808332`). User confirmed all physical-device checks clear, including account overview, Daily Note states/refresh, Visual Dashboard visibility, and other destinations/tools.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+## Milestone 097 - Account Destination Composition Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 Batch 6 by extracting Account destination composition from MainActivity.
+
+**Implemented:**
+- Added `presentation/AccountSection.kt` to compose the existing credentials panel, JSON export panel, and Account & settings section.
+- MainActivity continues to own UID/cookie values, credential visibility, theme state, export progress/status, and all callbacks.
+- Passed existing visibility conditions explicitly, preserving credential and export gating.
+- Reused existing account presentation components without changing their internal UI or behavior.
+- Preserved the original content order and kept sign-in, credential storage, export, theme persistence, and navigation orchestration in CodexScreen.
+- No credential storage, account retrieval, export mapping, persistence, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountSection.kt`
+
+**Commits:**
+- `711efc64ced18833a16a079a66e89fbe28274a23` - extract Account destination composition.
+- `9d140637c24244cf17aee59b0a07fb23842264ba` - delegate Account composition from MainActivity.
+
+**Verification status:** Cleared. Component CI #819 passed. Initial integration CI #820 and documentation CI #821/#822 failed on a stale duplicate `AccountSettingsSection` reference in MainActivity. Removed the duplicate block in fix commit `13950fa0f122d233e6f43b238de5a3e0ecd530aa`. Corrected integration CI #823 (run `45968107535`) passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Debug APK: `irminsul-codex-debug-v1.0.0-dev.823-vc825` (artifact ID `15184221465`). User confirmed successful physical-device testing and all clear.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+
+## Milestone 098 - Screen Header Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 Batch 6 by extracting the existing app title and UID/server identity header.
+
+**Implemented:**
+- Added `presentation/CodexScreenHeader.kt` for the title and optional UID/server line.
+- MainActivity retains UID ownership and server-label derivation.
+- Preserved existing text, typography, colors, alignment, spacing, and conditional identity display.
+- No navigation, account state, retrieval, or persistence behavior changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreenHeader.kt`
+
+**Commits:**
+- `752f6be52ea92866384937a90ee8cdf9bd34510d` - add header component.
+- `dde97640026e75ed78f3bedf566a85882660bc4f` - integrate header component.
+
+**Verification status:** User confirmed physical-device testing passed. CI verification remains unconfirmed in the currently available evidence.
+
+**Device checklist:**
+1. Confirm the title appears correctly.
+2. Confirm UID/server line appears only when UID is available and displays the correct server.
+3. Confirm all destinations, bottom navigation, and AI entry remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+## Milestone 099 - Theme Color-Scheme Presentation Extraction
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
+**Status:** User confirmed successful CI/build and physical-device testing. Exact workflow run and artifact identifiers were not supplied in the confirmation.
+
+### Objective
+Move the existing Material 3 light and dark color-scheme definitions out of MainActivity without changing theme behavior.
+
+### Implementation
+- Added `presentation/CodexThemeColors.kt` with the existing `CodexDarkColors` and `CodexLightColors` definitions.
+- MainActivity imports and applies those definitions.
+- All color values remain unchanged.
+- Theme selection, preference persistence, system-bar icon handling, and MaterialTheme ownership remain in MainActivity.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexThemeColors.kt`
+
+### Verification
+- Source changes are committed on `main`.
+- CI verification: pending.
+- Debug APK artifact: pending.
+- Physical-device verification: pending.
+
+### Remaining work
+Run Debug CI, inspect the resulting artifact, and verify System/Light/Dark appearance plus all existing destinations and navigation on the physical device.
+
+
+## Milestone 100 - System-Bar Appearance Presentation Extraction
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+### Objective
+Move the existing system-bar icon appearance side effect out of MainActivity without changing behavior.
+
+### Implementation
+- Added `presentation/CodexSystemBars.kt` to apply the existing status-bar and navigation-bar icon appearance using `WindowInsetsControllerCompat`.
+- MainActivity supplies the existing `useDarkTheme`, current Compose view, and Activity window.
+- Preserved the original SideEffect and both appearance assignments.
+- Theme selection, preference persistence, edge-to-edge setup, and MaterialTheme ownership remain in MainActivity.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexSystemBars.kt`
+
+### Verification
+- Source changes committed on `main`.
+- CI verification: pending.
+- Debug APK artifact: pending.
+- Physical-device verification: pending.
+
+### Remaining work
+Run Debug CI, inspect the resulting artifact, and verify status/navigation bar icon contrast in System, Light, and Dark modes, plus existing navigation and account functionality.
+
+
+## Milestone 101 - App Theme Composition Extraction
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
+**Status:** Implemented, committed, CI #845 passed, and physical-device verified by user.
+
+### Objective
+Extract the existing app-level theme composition from MainActivity without changing theme behavior.
+
+### Implementation
+- Added `presentation/CodexAppTheme.kt` to compose the existing system-bar appearance effect, Material 3 color scheme, and root Surface.
+- MainActivity retains theme preference state, System/Light/Dark resolution, preference persistence, Activity window/view acquisition, and CodexScreen state.
+- Preserved the existing color-scheme selection, Surface background, fill-size modifier, and system-bar effect.
+- Step 20 system-bar appearance extraction was confirmed by the user as successfully tested. Exact CI run and artifact identifiers were not supplied.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexAppTheme.kt`
+
+### Verification
+- Source changes committed on `main`.
+- CI verification: pending.
+- Debug APK artifact: pending.
+- Physical-device verification: pending.
+
+### Device checklist
+1. Verify System, Light, and Dark modes, including status/navigation bar icon contrast.
+2. Verify theme preference persistence after restart.
+3. Confirm sign-in, Home, Visuals, Tools, Account, and AI entry remain functional.
+
+### Boundary
+Composition extraction only. Theme selection, preference persistence, and screen state remain caller-owned. No visual or performance improvement is claimed.
+
+
+## Milestone 102 - Root Screen Composable Extraction
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Batch 6 - AUD-002 incremental UI responsibility extraction  
+**Status:** Implemented and committed; CI #852 passed; physical-device verification pending.
+
+### Objective
+Move the existing root screen composable out of MainActivity while preserving its state ownership and behavior.
+
+### Implementation
+- Moved the existing `CodexScreen` composable into `presentation/CodexScreen.kt`.
+- MainActivity now owns Activity setup, ViewModel construction, edge-to-edge window setup, theme preference state/resolution/persistence, and invokes the extracted root screen.
+- The extracted composable retains its existing screen-local Compose state, callbacks, refresh/export/login orchestration, tab selection, and destination composition.
+- No state was moved into a new ViewModel or service; the composable body and parameter contract remain unchanged apart from visibility becoming internal.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreen.kt`
+
+### Verification
+- Source changes committed on `main`.
+- CI verification: pending.
+- Debug APK artifact: pending.
+- Physical-device verification: pending.
+
+### Device checklist
+1. Verify first-run sign-in and existing credential restoration.
+2. Verify sync, Daily Note refresh, JSON export, credential clearing, and theme persistence.
+3. Verify Home, Visuals, Tools, Account, and AI entry remain functional.
+
+### Boundary
+File/responsibility relocation only. Screen state ownership and behavior are unchanged. No performance improvement is claimed.
+
+
+## Milestone 103 - Agent Context Retrieval Efficiency
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Batch 8 - AUD-010 agent workflow efficiency  
+**Status:** Implemented and committed; CI verification pending.
+
+### Objective
+Reduce unnecessary repository context loading for narrow tasks without weakening project, privacy, testing, cancellation, or Git safety requirements.
+
+### Implementation
+- Replaced the blanket minimum-reading list in root `AGENTS.md` with task-specific context retrieval rules.
+- Kept relevant source/test inspection and current branch/commit checks mandatory.
+- Made README, technical specifications, milestone history, release instructions, Gradle configuration, and workflows conditional on the task they govern.
+- Explicitly requires agents to retrieve relevant context without loading unrelated documents.
+
+### Files changed
+- `AGENTS.md`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+- Static instruction review completed.
+- CI verification: pending.
+- Physical-device verification: not applicable; no app behavior changed.
+
+### Boundary
+This is an agent workflow instruction change. It does not alter application source, runtime behavior, build configuration, dependencies, or product architecture.
+
+
+## Milestone 104 - UI Revamp Batch 1: Design-System Foundation
+
+**Date recorded:** 2026-11-27  
+**Development phase:** UI Revamp - Batch 1  
+**Status:** Implemented on `ui-revamp/batch-1-design-foundation`; CI and physical-device verification pending.
+
+### Objective
+Establish the shared theme foundation for the agreed high-fidelity Battle Chronicles, anti-slop, Android-native UI direction without redesigning individual screens.
+
+### Implementation
+- Replaced the former teal Material 3 primary palette with Archival Gold for Dark (`#D3BC8E`) and Light (`#8E6E35`) themes.
+- Added coordinated Light/Dark surface, text, outline, and status color roles.
+- Added shared Light/Dark Genshin element and character-rarity semantic palettes.
+- Added `CodexDesignTokens.kt` with the shared 4/8dp spacing family, Material typography roles, standard shapes, and a tabular-numeric text style.
+- Integrated shared colors, typography, and shapes through `CodexAppTheme`.
+- Preserved existing System/Light/Dark selection, preference persistence, edge-to-edge setup, and system-bar icon handling.
+- No dependencies, SDK levels, screen layouts, navigation, account behavior, or calculation logic were changed.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/presentation/CodexThemeColors.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexDesignTokens.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexAppTheme.kt`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+- Source implementation: committed on the Batch 1 branch.
+- Debug build and automated tests: pending GitHub Actions.
+- APK artifact: pending.
+- Physical-device verification: pending user testing.
+
+### Device checklist
+1. Verify System, Light, and Dark appearance modes.
+2. Check primary actions and text contrast in both themes.
+3. Check system-bar icon contrast and edge-to-edge content.
+4. Confirm Home, Visuals, Tools, Account, and AI sheet still render and function.
+5. Confirm theme preference remains saved after restarting the app.
+
+### Boundary
+Theme and shared-token foundation only. No individual screen redesign is included in Batch 1.
+
+
+## Milestone 105 - UI Revamp Batch 2: Home Destination
+
+**Date recorded:** 2026-11-27  
+**Development phase:** UI Revamp - Batch 2  
+**Status:** Implemented on `ui-revamp/batch-2-home`; CI and physical-device verification pending.
+
+### Objective
+Reconstruct Home as a coherent, touch-first account landing page using the shared design foundation, while preserving existing account, Daily Note, and intelligence data behavior.
+
+### Implementation
+- Rebuilt Home composition with deliberate section spacing based on shared design tokens.
+- Reworked the account identity region into a prominent Archival Gold profile surface, avoiding a duplicate UID already shown in the app header.
+- Reorganized snapshot information into a compact hierarchy with retrieved character count, retrieval timestamp, and the existing Visuals analysis destination.
+- Rebuilt Real-Time Notes for narrow Android screens: prominent Resin and recovery state, a readable progress bar when source values are available, and a two-column layout for expeditions, Realm Currency, commissions, and weekly discounts.
+- Kept missing values visibly unavailable; no null values are converted to zero or false.
+- Consolidated the Home intelligence summary into one surface with assessment bars and compact recommendation/gap totals.
+- Preserved the existing refresh callback, loading/export enablement, analysis navigation, and account-intelligence source model.
+- Kept Real-Time Notes on Home. No exploration or game-mode data was invented or duplicated from Visuals; Home currently receives no source-backed exploration/game-mode preview models.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/presentation/HomeSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeAccountOverviewSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeDailyNoteSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualDashboardSection.kt`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+- Implementation source committed on the Batch 2 branch.
+- Automated tests and Debug APK build: pending merge-triggered GitHub Actions.
+- APK artifact: pending.
+- Physical-device verification: pending user testing.
+
+### Device checklist
+1. Check Home in Light, Dark, and System modes.
+2. Verify profile and snapshot layout with and without an account snapshot.
+3. Verify Daily Note with valid, zero, and unavailable values.
+4. Check narrow-screen wrapping, Resin progress, recovery text, and all four metric values.
+5. Verify Refresh remains disabled during loading/export and triggers the existing refresh flow.
+6. Verify View analysis opens Visuals and the Home intelligence summary remains consistent.
+7. Confirm other destinations, bottom navigation, and AI sheet remain functional.
+
+### Boundary
+Home presentation only. No account retrieval, persistence, data model, analysis, navigation architecture, dependency, or SDK changes.
+
+
+## Milestone 106 - Home Profile Identity and Parametric Transformer
+
+**Date recorded:** 2026-11-27  
+**Development phase:** Home follow-up  
+**Status:** Implemented and automated verification successful; physical-device verification pending.
+
+### Requested changes
+- Replace the Home Weekly Discounts metric with the Parametric Transformer cooldown.
+- Show the signed-in Genshin IGN, UID, HoYoLAB profile avatar, and game server in the Adventurer Profile surface.
+
+### Implementation
+- Daily Note parsing now preserves transformer ownership, reached state, and validated `Day/Hour/Minute/Second` recovery time. Missing or malformed values remain unavailable.
+- The Home transformer metric displays Not obtained, cooldown remaining, Ready, or an explicit unavailable state. A local Compose countdown ticks once per second from the last server-reported cooldown; refresh remains the source of truth.
+- Added best-effort HoYoLAB profile retrieval using the game record card for IGN/server/UID and the community user profile for `avatar_url`. Avatar failure does not hide valid game identity.
+- The Home profile card now shows the profile image with an initials fallback, IGN, UID, and readable server name.
+- Profile retrieval runs alongside the existing Daily Note refresh workflow. Clearing credentials clears the in-memory profile.
+- Added parser tests for transformer ready/cooldown/malformed states and account profile mapping.
+- Updated README Home feature description.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
+- `app/src/main/java/com/irminsul/codex/api/DailyNoteParser.kt`
+- `app/src/main/java/com/irminsul/codex/api/AccountProfileParser.kt` (new)
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreen.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeAccountOverviewSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeDailyNoteSection.kt`
+- `app/src/test/java/com/irminsul/codex/api/DailyNoteParserTest.kt`
+- `app/src/test/java/com/irminsul/codex/api/AccountProfileParserTest.kt` (new)
+- `README.md`
+
+### Verification
+- Main implementation commit: `c062890bbc857ae789a29871fa96a4eba8d243b7`.
+- GitHub Actions run #875: successful. [Build and test results](https://github.com/berao609/Irminsul-codex/actions/runs/45999159450).
+- Unit tests, Debug APK build, Room schema check, APK signature verification, and artifact upload: successful.
+- Debug APK artifact ID: `15197008745`; name: `irminsul-codex-debug-v1.0.0-dev.875-vc877`.
+- Room schema artifact ID: `15197213103`; name: `irminsul-room-schema-v2-run-875`.
+- Physical-device verification: pending user testing.
+
+### Device checklist
+1. Confirm IGN, UID, profile avatar, and server appear after login and remain after app restart.
+2. Confirm avatar fallback works if the profile image cannot load.
+3. Confirm account switching and sign-out do not show the previous account's profile.
+4. Confirm Parametric Transformer states: not obtained, cooldown, ready, and unavailable.
+5. Confirm cooldown ticks down and refresh reconciles it with the server response.
+6. Confirm Weekly Discounts is no longer displayed and the rest of Daily Note remains intact.
+
+### Boundary
+Home/profile and Daily Note presentation/data mapping only. No account snapshot schema, analysis engine, navigation, dependencies, or SDK changes.
+
+
+
+## Milestone 107 - UI Revamp Batch 3: Visuals Destination
+
+**Date recorded:** 2026-11-27  
+**Development phase:** UI Revamp - Batch 3  
+**Status:** Implemented and CI-verified; physical-device verification pending.
+
+### Objective
+Reconstruct the Visuals destination around the agreed high-fidelity Battle Chronicles hierarchy while preserving existing account data, analysis, and interactions.
+
+### Implementation
+- Reorganized Visuals into a clear account journey: Account Overview, selected Character Showcase, World Exploration, game-mode records, and Account Analysis.
+- Moved the selected character detail presentation ahead of the expandable roster so character artwork, identity, equipment, stats, talents, and constellations lead the showcase; the roster remains available for selection.
+- Rebuilt Account Overview with a distinct player/adventure-rank identity region and a compact three-column progress/collectibles layout.
+- Reworked World Exploration into horizontally browsable regional progress panels with clearer region names, percentages, and progress bars.
+- Reworked Spiral Abyss and Imaginarium Theater record presentation to emphasize available star results and retain supporting record metrics.
+- Removed generic enclosing cards from Chronicle and Account Analysis section wrappers. Kept containers only where they communicate identity or group actual metric data.
+- Preserved the existing presentation mapper, source data, stale/missing/unavailable/failed distinctions, analysis engine, recommendation ordering, refresh action, and character selection behavior.
+- Kept Real-Time Notes exclusively on Home. No new dependencies, account endpoints, data fields, or calculation behavior were introduced.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterShowcaseSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountAnalysisSection.kt`
+
+### Verification
+- Implementation committed on `ui-revamp/batch-3-visuals`.
+- GitHub Actions: pending.
+- Debug APK artifact: pending.
+- Physical-device verification: pending user testing.
+
+### Device checklist
+1. Check the Visuals destination in Light, Dark, and System modes.
+2. Confirm Account Overview shows only source-backed player, rank, progression, and collectible values.
+3. Confirm selected character detail is visible before the expandable roster; selecting a roster portrait updates the detail view.
+4. Verify character artwork, equipment expansion, stats, talents, and constellations still render.
+5. Verify World Exploration horizontal scrolling, region names, percentages, and progress bars.
+6. Verify current/previous Spiral Abyss and Imaginarium Theater values, including missing, unavailable, stale, and failed states.
+7. Verify Account Analysis action, loading/error states, recommendation expansion, and data-coverage warnings.
+8. Confirm no Real-Time Notes appear in Visuals and Home remains unchanged.
+9. Confirm bottom navigation, AI sheet, Tools, and Account remain functional.
+
+### Boundary
+Visual presentation and composition only. No account retrieval, persistence, analysis calculations, mapper rules, navigation architecture, dependencies, or SDK changes.
+
+
+### Reference-alignment correction (2026-11-27)
+- Re-reviewed the actual HTML exports after the first Batch 3 CI attempt. The first implementation did not fully reflect the reference: the account summary lacked its primary/secondary expandable metric hierarchy, and the character showcase lacked the compact horizontal portrait selector.
+- Added the horizontal, release-ordered character portrait selector before the selected character detail, matching the reference's selector/detail relationship. The existing expanded roster remains available as a supplementary selection surface.
+- Corrected game-mode primary metrics: Best Floor for Spiral Abyss and Difficulty for Imaginarium Theater, with Stars as fallback.
+- The account summary hierarchy and exact `Main Areas Only` label were not actually completed in this correction; they were completed in Milestone 108.
+- The current `AccountSnapshot` has no Stygian Onslaught section. The reference includes it, but this batch does not fabricate or add a data source for it.
+- Added the missing `dp` import to `VisualsSection.kt`, which caused CI run #877 to fail during Kotlin compilation.
+- GitHub Actions run #878 succeeded for merge commit `e74f2c1ff7360444415ef097dd4b3f50264e6888`; Debug APK artifact ID `15198589056` (`irminsul-codex-debug-v1.0.0-dev.878-vc880`). Physical-device verification remains pending.
+
+## Milestone 108 - UI Revamp Batch 3.1: Reference Fidelity Completion
+
+**Date recorded:** 2026-11-27  
+**Development phase:** UI Revamp - Batch 3.1  
+**Status:** Implemented, merged, and CI-verified; physical-device verification pending.
+
+### Objective
+Close the verified Batch 3 presentation gaps using the consolidated Battle Chronicle references without changing account retrieval, persistence, analysis, or navigation architecture.
+
+### Implementation
+- Rebuilt Account Overview's statistics hierarchy: Active Days, Achievements, and Characters are the primary row; remaining supported progression/collectible statistics are behind an explicit expand/collapse control.
+- Reworked World Exploration into compact horizontal region cards with the exact `Main Areas Only` label, source-backed region emblem URLs when present, and a `View more regions` action that switches to a vertically stacked detail presentation. Missing emblems remain omitted rather than replaced with invented assets.
+- Increased the selected-character portrait prominence and placed identity/progression details in a distinct contextual hero surface. The current account model provides a portrait URL, not verified full-body splash artwork; no URL is synthesized and no new asset source is introduced.
+- Preserved the existing character selection, equipment, attributes, talents, constellations, game-mode records, and Account Analysis behavior.
+- Stygian Onslaught remains excluded because `AccountSnapshot` has no corresponding source-backed section or validated payload mapping.
+- No new dependencies, endpoints, persisted fields, calculation behavior, or navigation destinations were introduced.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationMapper.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterShowcaseSection.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationMapperTest.kt`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+- Implementation merged in PR #5, main commit `786bea41a058754f3a42b6cf17b0077edd8180f4`.
+- Follow-up test correction and milestone record merged in PR #6, commit `e1110d9174e2b6a5257a50c0430c1399c3dff232`.
+- GitHub Actions run #880 initially failed one new grouping assertion; the mapper was corrected in PR #6.
+- GitHub Actions run [#881](https://github.com/berao609/Irminsul-codex/actions/runs/46010779366) succeeded. Unit tests, Debug APK build, Room schema snapshot verification/upload, APK signature verification, and both artifact uploads succeeded. Room instrumentation tests were correctly skipped because no persistence or database code changed.
+- Debug APK: `irminsul-codex-debug-v1.0.0-dev.881-vc883`, artifact ID `15203742837`, archive SHA-256 `1cfa60f13a89b453e75cc39948d7e4a620f5c22662ca707d5cf7dd43cc0ed793`.
+- Room schema artifact ID: `15203702406`.
+- Physical-device verification: partially tested by user; tested portions clear; remaining Batch 3.1 checklist items remain open and unverified.
+
+### Device checklist
+1. Check Visuals in Light, Dark, and System modes.
+2. Confirm Account Overview shows identity, the three primary statistics, and collapsed additional statistics; expand/collapse the secondary group.
+3. Confirm missing primary metrics do not become zero or get replaced with unrelated metrics.
+4. Confirm World Exploration horizontal cards show `Main Areas Only`, source-backed emblem where present, percentage, and progress bar.
+5. Tap `View more regions`; confirm all available regions appear as a vertical list; collapse back to the horizontal carousel.
+6. Confirm selected-character portrait/identity hero is larger and readable on narrow screens.
+7. Confirm character selection, weapon/artifact expansion, attributes, talents, and constellations remain functional.
+8. Confirm Spiral Abyss and Imaginarium Theater current/previous records and unavailable states remain intact.
+9. Confirm Account Analysis, bottom navigation, AI sheet, Tools, and Account remain functional.
+
+### Boundary
+Presentation-only reference fidelity work. No account retrieval, raw source schema, persistence, analysis calculations, navigation architecture, dependencies, or SDK changes.
+
+
+## Milestone 109 - UI Revamp Batch 4: Expanded Battle Chronicle Coverage
+
+**Date recorded:** 2026-11-27  
+**Development phase:** UI Revamp - Batch 4  
+**Status:** Implemented, merged, and CI-verified in PRs #7 and #8; physical-device verification pending.
+
+### Objective
+Extend the existing Visuals Battle Chronicle experience with source-backed Stygian Onslaught data while establishing a typed domain boundary for this additional Chronicle section. This is part of the ongoing UI revamp, not a separate task.
+
+### Retrieval finding
+- The existing HoYoLAB `/index` request already returns the Battle Chronicle `stats` object.
+- Independent read-only endpoint research identifies `stats.hard_challenge.name` as the Stygian Onslaught best-record field and `stats.difficulty` as its difficulty field. See [HoYoLAB Genshin Battle Chronicle MCP field notes](https://glama.ai/mcp/servers/danisec/hoyolab-mcp), which document these fields and warn that the upstream endpoints are unofficial and undocumented.
+- No additional network request is added for this summary. The app reuses the retained `profile_and_exploration` payload and its existing section provenance/timestamp, avoiding redundant retrieval.
+- This does not establish that every detailed Stygian cycle/team field is available through the current account index. Detailed record retrieval remains subject to separate endpoint and response validation.
+
+### Implementation
+- Added `StygianOnslaughtSnapshot` as a typed domain model with optional best-record name and difficulty.
+- Derived the model from `profile_and_exploration.stats.hard_challenge.name` and `profile_and_exploration.stats.difficulty`.
+- Preserved missing, unavailable, failed, and stale source states. Missing record fields are not converted into fabricated values.
+- Added a dedicated Stygian Onslaught section to Visuals.
+- Kept the original raw export payload unchanged; no Room schema migration or new dependency was required.
+- Added mapper tests for valid values, missing fields, and failed index retrieval.
+- Extracted Battle Chronicle retrieval into `BattleChronicleCollector`, which independently coordinates the index, current/previous Spiral Abyss, and Imaginarium Theater requests while the account retrieval workflow continues to coordinate identity, Daily Note, and character requests.
+- Kept the four Chronicle requests concurrent and mapped each response into its own export section with independent source/timestamp/status.
+- Added collector tests for endpoint routing, independent section mapping, sibling success when one endpoint fails, and cancellation propagation.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
+- `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
+- `app/src/main/java/com/irminsul/codex/api/BattleChronicleCollector.kt`
+- `app/src/test/java/com/irminsul/codex/api/BattleChronicleCollectorTest.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
+- `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
+- `README.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+- PR #7 merged as `d34dede92c5fc557ae1b50df4b585cdb31ad67c9`; PR #8 merged as `2fd8d3d7ff14418a211e5976f8a598783b9bc63e`.
+- GitHub Actions [run #883](https://github.com/berao609/Irminsul-codex/actions/runs/46017911203) succeeded for PR #7's merge commit. Unit tests, Room instrumentation tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact uploads succeeded.
+- GitHub Actions [run #884](https://github.com/berao609/Irminsul-codex/actions/runs/46018327952) succeeded for PR #8's merge commit. Unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact uploads succeeded. Room instrumentation tests were correctly skipped because PR #8 changed no persistence or snapshot-model code.
+- Latest Debug APK: `irminsul-codex-debug-v1.0.0-dev.884-vc886`, artifact ID `15207231460`, SHA-256 `38f044b90e71d48367f372afc25c39e45e5e727996c0a5f4817f95dfa9be838c`.
+- Room schema artifact ID: `15207725741`; SHA-256 `bc3887f3199ac6c94af8895d458a449df68ebccf414b7778a58d8ddb547c126f`.
+- Physical-device verification: pending user testing.
+- No Room schema migration was required; the typed Stygian summary is derived from the existing persisted raw index payload.
+
+### Device checklist
+1. Verify Stygian Onslaught appears in Visuals when the index response includes the supported fields.
+2. Verify the best-record name and difficulty match the source data.
+3. Verify missing fields do not display invented values or misleading zeros.
+4. Verify failed/unavailable index data is communicated without crashing or hiding unrelated Chronicle sections.
+5. Confirm existing Account Overview, Exploration, Character Showcase, Abyss, Theater, Account Analysis, navigation, Home, and Tools remain functional.
+
+### Boundary
+This milestone adds typed Stygian summary mapping, Visuals presentation, and a dedicated local Battle Chronicle collector. It does not add an unverified Stygian detail endpoint, historical cycle/team records, a separate cloud service, or a Room migration. Further Chronicle endpoint expansion remains part of the same ongoing UI revamp batch plan and must be evidence-led.

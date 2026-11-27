@@ -7,10 +7,13 @@ import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
 import com.irminsul.codex.data.mapper.AccountExportMapper
 import com.irminsul.codex.domain.model.AccountExport
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.asCoroutineDispatcher
+import java.util.concurrent.Executors
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -70,6 +73,38 @@ class RoomAccountSnapshotStoreTest {
         store.save(toExport(exportJson("2026-11-25T08:30:00Z", "os_usa")))
         assertEquals(1, store.getHistory("800000001", "os_asia").size)
         assertEquals(1, store.getHistory("800000001", "os_usa").size)
+    }
+
+    @Test
+    fun mapsRestoredSnapshotsOnInjectedCpuDispatcher() = runBlocking {
+        val executor = Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "room-snapshot-mapper-test")
+        }
+        val dispatcher = executor.asCoroutineDispatcher()
+        try {
+            val callerThread = Thread.currentThread().name
+            val mappingThreads = mutableListOf<String>()
+            val store = RoomAccountSnapshotStore(
+                database = database,
+                mapExport = { json ->
+                    mappingThreads += Thread.currentThread().name
+                    AccountExportMapper.map(JSONObject(json))
+                },
+                cpuDispatcher = dispatcher
+            )
+            val json = exportJson("2026-11-25T08:00:00Z")
+            store.save(toExport(json))
+
+            val latest = store.getLatest("800000001")
+            val history = store.getHistory("800000001", "os_asia")
+
+            assertEquals(json, latest?.rawJson)
+            assertEquals(json, history.single().rawJson)
+            assertEquals(2, mappingThreads.size)
+            assertTrue(mappingThreads.all { it != callerThread })
+        } finally {
+            dispatcher.close()
+        }
     }
 
     private fun toExport(json: String) =

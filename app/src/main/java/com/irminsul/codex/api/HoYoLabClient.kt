@@ -31,18 +31,30 @@ data class DailyNote(
     val currentHomeCoin: Int?,
     val maxHomeCoin: Int?,
     val currentExpeditionNum: Int?,
-    val maxExpeditionNum: Int?
+    val maxExpeditionNum: Int?,
+    val transformerObtained: Boolean?,
+    val transformerRecoveryTimeSeconds: Long?,
+    val transformerReached: Boolean?
 )
 
-private data class FetchedExportResponse(
-    val response: JSONObject,
-    val source: String,
-    val retrievedAt: String
+data class AccountProfile(
+    val nickname: String?,
+    val uid: String,
+    val serverName: String?,
+    val avatarUrl: String?
+)
+
+private data class InitialAccountFetches(
+    val accountCard: FetchedExportResponse?,
+    val dailyNote: FetchedExportResponse,
+    val characterRoster: FetchedExportResponse,
+    val battleChronicle: BattleChronicleResponses
 )
 
 object HoYoLabClient {
     private const val API_BASE = "https://sg-public-api.hoyolab.com/event/game_record/genshin/api"
     private const val RECORD_CARD_URL = "https://bbs-api-os.hoyolab.com/game_record/card/wapi/getGameRecordCard"
+    private const val USER_INFO_URL = "https://bbs-api-os.hoyolab.com/community/user/wapi/getUserFullInfo"
     private const val DS_SALT = "6s25p5ox5y14umn1p61aqyyvbvvl3lrt"
     private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
@@ -216,6 +228,64 @@ object HoYoLabClient {
         }
     }
 
+
+    /**
+     * Retrieves the signed-in Genshin profile card and the HoYoLAB profile avatar.
+     * Avatar lookup is best-effort; profile identity remains usable if that endpoint
+     * is unavailable or the user has no public avatar URL.
+     */
+    suspend fun fetchAccountProfile(uid: String, cookie: String): Result<AccountProfile> = withContext(Dispatchers.IO) {
+        try {
+            val cleanUid = uid.trim()
+            val hoyolabUid = extractCookieValue(cookie, "ltuid_v2")
+                ?: extractCookieValue(cookie, "ltuid")
+                ?: extractCookieValue(cookie, "account_id")
+                ?: return@withContext Result.failure(Exception("HoYoLAB account ID is unavailable."))
+
+            val cardResponse = fetchRawGet("$RECORD_CARD_URL?uid=$hoyolabUid&gids=2", cookie)
+            if (cardResponse.optInt("retcode", -1) != 0) {
+                return@withContext Result.failure(
+                    Exception(cardResponse.optString("message", "Could not retrieve the Genshin profile card."))
+                )
+            }
+            val cards = cardResponse.optJSONObject("data")?.optJSONArray("list")
+                ?: return@withContext Result.failure(Exception("Genshin profile card is unavailable."))
+            var selectedCard: JSONObject? = null
+            for (index in 0 until cards.length()) {
+                val card = cards.optJSONObject(index) ?: continue
+                if (card.optInt("game_id") == 2 &&
+                    (card.optString("game_role_id") == cleanUid || selectedCard == null)
+                ) {
+                    selectedCard = card
+                    if (card.optString("game_role_id") == cleanUid) break
+                }
+            }
+            val card = selectedCard
+                ?: return@withContext Result.failure(Exception("No Genshin profile is linked to this HoYoLAB account."))
+            if (card.optString("game_role_id").isNotBlank() && card.optString("game_role_id") != cleanUid) {
+                return@withContext Result.failure(Exception("The HoYoLAB profile does not match the signed-in Genshin UID."))
+            }
+
+            val avatarUrl = try {
+                val userResponse = fetchRawGet("$USER_INFO_URL?uid=$hoyolabUid&gids=2", cookie)
+                userResponse.optJSONObject("data")
+                    ?.optJSONObject("user_info")
+                    ?.optString("avatar_url")
+                    ?.takeIf { it.startsWith("https://") }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            }
+
+            Result.success(AccountProfileParser.parse(cleanUid, card, avatarUrl))
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            Result.failure(error)
+        }
+    }
+
     suspend fun fetchDailyNote(uid: String, cookie: String): Result<DailyNote> = withContext(Dispatchers.IO) {
         try {
             val cleanUid = uid.trim()
@@ -258,11 +328,6 @@ object HoYoLabClient {
                         }
                     } else null
                 }
-                val indexDeferred = async {
-                    requestSafely("HoYoLAB index") {
-                        fetchRawGet("$API_BASE/index?server=$server&role_id=$cleanUid", cookie)
-                    }
-                }
                 val dailyDeferred = async {
                     requestSafely("HoYoLAB dailyNote") {
                         fetchRawGet("$API_BASE/dailyNote?server=$server&role_id=$cleanUid", cookie)
@@ -274,40 +339,24 @@ object HoYoLabClient {
                         fetchRawPost("$API_BASE/character/list", payload, cookie)
                     }
                 }
-                val abyssCurDeferred = async {
-                    requestSafely("HoYoLAB spiralAbyss schedule 1") {
-                        fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=1", cookie)
-                    }
-                }
-                val abyssPrevDeferred = async {
-                    requestSafely("HoYoLAB spiralAbyss schedule 2") {
-                        fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=2", cookie)
-                    }
-                }
-                val theaterDeferred = async {
-                    requestSafely("HoYoLAB role_combat") {
-                        fetchRawGet("$API_BASE/role_combat?server=$server&role_id=$cleanUid&need_detail=true", cookie)
-                    }
+                val chronicleDeferred = async {
+                    BattleChronicleCollector(API_BASE) { source, url ->
+                        requestSafely(source) { fetchRawGet(url, cookie) }
+                    }.collect(cleanUid, server)
                 }
 
-                listOf(
-                    cardDeferred.await(),
-                    indexDeferred.await(),
-                    dailyDeferred.await(),
-                    listDeferred.await(),
-                    abyssCurDeferred.await(),
-                    abyssPrevDeferred.await(),
-                    theaterDeferred.await()
+                InitialAccountFetches(
+                    accountCard = cardDeferred.await(),
+                    dailyNote = dailyDeferred.await(),
+                    characterRoster = listDeferred.await(),
+                    battleChronicle = chronicleDeferred.await()
                 )
             }
 
-            val cardFetched = fetched[0]
-            val indexFetched = fetched[1]!!
-            val dailyFetched = fetched[2]!!
-            val rosterFetched = fetched[3]!!
-            val abyssCurrentFetched = fetched[4]!!
-            val abyssPreviousFetched = fetched[5]!!
-            val theaterFetched = fetched[6]!!
+            val cardFetched = fetched.accountCard
+            val dailyFetched = fetched.dailyNote
+            val rosterFetched = fetched.characterRoster
+            val chronicleResponses = fetched.battleChronicle
 
             val sectionResults = linkedMapOf<String, ExportSectionResult>()
 
@@ -446,12 +495,6 @@ object HoYoLabClient {
                 )
             }
 
-            val profileResult = sectionFromResponse(
-                indexFetched,
-                "Profile and exploration",
-                propertyMap = propertyMap
-            )
-            sectionResults["profile_and_exploration"] = profileResult
             sectionResults["daily_note"] = sectionFromResponse(
                 dailyFetched,
                 "Daily Note",
@@ -479,21 +522,7 @@ object HoYoLabClient {
                 )
             }
 
-            sectionResults["spiral_abyss_current"] = sectionFromResponse(
-                abyssCurrentFetched,
-                "Current Spiral Abyss",
-                propertyMap = propertyMap
-            )
-            sectionResults["spiral_abyss_previous"] = sectionFromResponse(
-                abyssPreviousFetched,
-                "Previous Spiral Abyss",
-                propertyMap = propertyMap
-            )
-            sectionResults["imaginarium_theater"] = sectionFromResponse(
-                theaterFetched,
-                "Imaginarium Theater",
-                propertyMap = propertyMap
-            )
+            sectionResults.putAll(chronicleResponses.toExportSections(propertyMap))
 
             val exportTimestamp = nowUtc()
             val root = AccountExportAssembler.assemble(

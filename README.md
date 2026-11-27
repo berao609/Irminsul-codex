@@ -6,7 +6,7 @@ Irminsul Codex is an Android application designed to help Genshin Impact players
 
 The product's primary purpose is to turn account data into actionable in-app intelligence. Irminsul Codex aims to identify development priorities, analyze account weaknesses, optimize farming, evaluate potential pulls, and help players decide what to focus on next. Account retrieval supports this analysis; JSON export is an optional utility for third-party readers and backups.
 
-> **Project Status:** Early development. The app has three bottom-navigation destinations: Home, Visuals, and Account. A raised AI action sits at the center of the bottom bar and opens a chat-style bottom sheet. Visuals contains the character showcase, account analysis, dashboard, and a collapsible Materials Planner. Account contains appearance settings, HoYoLAB account management, and optional JSON export. The interface uses an edge-to-edge layout and supports System, Light, and Dark appearance modes, with the selected preference saved locally. Home presents account identity, the latest retrieved snapshot summary, and Daily Note activity such as Resin, commissions, expeditions, and Realm Currency. Visuals combines the deterministic account-analysis workflow, one consistent balanced recommendation order, evidence-backed recommendations, and visual summaries in one destination. The AI bottom sheet establishes the chat interface, but BYOAI is not connected or active yet. Account contains HoYoLAB account management and the optional JSON export action. Account retrieval, Daily Note synchronization, Room-backed snapshot persistence, and deterministic account analysis remain available. The broader Account Command Center, detailed finding/recommendation drill-downs, account history, integrated BYOAI assistant, and wider progression features remain planned.
+> **Project Status:** Early development. The app has four bottom-navigation destinations: Home, Visuals, Tools, and Account. A raised AI action sits at the center of the bottom bar and opens a chat-style bottom sheet. Tools hosts calculators and utilities, including the Materials Calculator. Account access is consolidated in the bottom navigation. Visuals contains the character showcase and account analysis. Tools contains the Materials Calculator and Lineup Simulator. Account contains appearance settings, HoYoLAB account management, and optional JSON export. The interface uses an edge-to-edge layout and supports System, Light, and Dark appearance modes, with the selected preference saved locally. Home presents the signed-in Genshin IGN, UID, HoYoLAB profile avatar, server, latest retrieved snapshot summary, Real-Time Notes including Resin and Parametric Transformer cooldown, and the Visual Dashboard. Visuals combines the deterministic account-analysis workflow, one consistent balanced recommendation order, evidence-backed recommendations, and visual summaries in one destination. The AI bottom sheet establishes the chat interface, but BYOAI is not connected or active yet. Account contains HoYoLAB account management and the optional JSON export action. Account retrieval, Daily Note synchronization, Room-backed snapshot persistence, and deterministic account analysis remain available. The broader Account Command Center, detailed finding/recommendation drill-downs, account history, integrated BYOAI assistant, and wider progression features remain planned.
 
 ---
 
@@ -36,8 +36,8 @@ The product's primary purpose is to turn account data into actionable in-app int
 
 | Feature | Description |
 |---|---|
-| HoYoLAB Login | Embedded WebView login and authentication cookie capture. |
-| Manual Credentials | Manual entry of Genshin UID and HoYoLAB cookie. |
+| HoYoLAB Login | Centered first-run sign-in card with embedded WebView login and authentication cookie capture. |
+| Manual Credentials | Manual UID and HoYoLAB cookie entry remains available under Account as a fallback. |
 | Account Detection | Detects the Genshin Impact server from the account UID. |
 | Daily Note | Retrieves daily account activity information. |
 | Resin Tracking | Displays current Resin, maximum capacity, and estimated recovery time. |
@@ -48,17 +48,18 @@ The product's primary purpose is to turn account data into actionable in-app int
 | Account Data Retrieval | Retrieves selected account information for the existing app workflow. |
 | Optional JSON Export | Exports selected account data for third-party readers and backups. |
 | Local Snapshot Persistence | Saves account exports in bounded JSON chunks in Room, migrates existing snapshots, and restores the latest saved snapshot and deterministic analysis on app startup without downloading the account JSON again. |
-| Account Intelligence | Provides a dedicated Analyze Account action and displays character assessment, recommendations, account gaps, and data coverage independently of JSON export, within the Visuals page. |
+| Account Intelligence | Provides a dedicated Analyze Account action in Visuals and displays character assessment, recommendations, and account-gap analysis independently of JSON export. |
 | Artifact Equipment State | Unequipped or partially equipped artifact slots are valid player choices and do not generate completeness recommendations by themselves; unavailable artifact data remains distinguishable. |
 | Recommendation Prioritization | Presents evidence-backed findings in one consistent balanced order; the current analysis does not offer selectable analysis modes. |
 | Navigation and AI Entry Point | Provides Home, Visuals, and Account destinations, with a prominent centered AI action that opens a bottom-sheet chat interface. |
 | Edge-to-Edge Layout | Extends app surfaces behind the Android status and navigation bars while preserving system-bar controls. |
 | Appearance Settings | Supports System, Light, and Dark themes with a saved user preference. |
-| Home Dashboard | Shows account identity, retrieved snapshot summary, and Daily Note activity. |
-| Account Analysis and Visual Dashboard | Combines analysis controls, recommendations, and visual summaries on the Visuals page. |
+| Home Dashboard | Shows the signed-in Genshin IGN, UID, HoYoLAB profile avatar, server, retrieved snapshot summary, and Real-Time Notes including the Parametric Transformer cooldown. |
+| Account Analysis and Visual Dashboard | Visuals contains analysis controls, recommendations, and account details. Home displays the Visual Dashboard summary. |
+| Stygian Onslaught | Visuals displays the Battle Chronicle best-record name and difficulty when those fields are returned by the account index. |
 | Character Showcase | Displays the selected character's detailed profile while keeping the full roster behind an expandable portrait grid. The roster supports name search, element/weapon-type/rarity/level filters, and sorting by name, level, rarity, or friendship. Character profiles include level, element, weapon, artifacts and stats, talents, and constellations. Uses source-provided artwork with fallbacks and distinguishes missing or stale equipment data. |
-| Materials Planner | Available inside Visuals. Character and weapon targets have independent saved level ranges; each character has separate current/target levels for Normal Attack, Skill, and Burst, plus a per-character customizable planned weapon and weapon level range. Existing manually entered material rows remain locally saved. A typed, provenance-validated material catalogue and adapter to the verified cost calculator are implemented, but no approved automatic cost dataset is connected yet, so the UI clearly keeps manual quantities separate from verified costs. |
-| Lineup Simulator | Provides a collapsible four-character team sandbox inside Visuals. Players can select up to four owned characters, remove or reorder selections by toggling them, and inspect the elements represented. It does not yet claim team synergy, role coverage, reaction quality, or combat performance. Stale and partial roster states are disclosed. |
+| Materials Planner | Available inside Tools. The character calculator has its own character selector, current/target character levels, and independent Normal Attack, Skill, and Burst level ranges. It generates one combined preview material list from the bundled, version-pinned Genshin-DB 7.2 character ascension and talent data plus the character EXP curve, with optional owned and remaining quantities. The weapon calculator has a separate weapon selector and level range. Manual custom material rows remain saved and available as an optional secondary workflow. Automatic character costs are currently candidate previews, not approved production cost records. |
+| Lineup Simulator | Provides a collapsible four-character team sandbox inside Tools. Players can select up to four owned characters, remove or reorder selections by toggling them, and inspect the elements represented. It does not yet claim team synergy, role coverage, reaction quality, or combat performance. Stale and partial roster states are disclosed. |
 | AI Chat Surface | Opens from the centered AI action as a chat-style bottom sheet. Provider connection and response generation are not active yet. |
 | Account and Export | Provides appearance settings, HoYoLAB account management, and optional JSON export through the Account destination and top-bar Account shortcut. |
 
@@ -71,7 +72,7 @@ The product's primary purpose is to turn account data into actionable in-app int
 - Expanded account analytics, interactive charts, detailed tables, and progression tracking.
 - Broader account gap analysis beyond the implemented roster and character-equipment gap foundation.
 - Farming and Resin optimization.
-- Verified upgrade-cost catalogue integration to automatically populate the Manual Materials Planner. No redistribution-approved production cost dataset is connected yet.
+- Review and approve the version-pinned character cost data before promoting its current automatic preview calculations to production-trusted costs. The current character calculator uses candidate data only.
 - Character and weapon pull evaluation.
 - External Genshin game-knowledge integration for patch-aware character meta, build and weapon recommendations, observed usage, and account-aware pull evaluation. Candidate community sources include KeqingMains and Prydwen; access, attribution, freshness, and redistribution terms must be validated before integration.
 - AI-powered account assistant.
@@ -100,7 +101,8 @@ Screenshots will be added as the application interface develops.
 | Authentication | Android WebView |
 | Data Format | JSON |
 | Structured Local Storage | Room (account records and raw historical snapshots) |
-| Preferences | SharedPreferences (including the current credential flow; not encrypted) |
+| Preferences | SharedPreferences (non-sensitive settings and encrypted credential ciphertext) |
+| Credential Encryption | AES-GCM with Android Keystore-backed key material |
 | Build System | Gradle |
 | Continuous Integration | GitHub Actions |
 
@@ -237,6 +239,9 @@ Irminsul-codex/
 │   │       │       ├── presentation/
 │   │       │       │   └── viewmodel/
 │   │       │       │       └── AccountViewModel.kt
+│   │       │       ├── integration/
+│   │       │       │   └── security/
+│   │       │       │       └── HoYoLabCredentialStore.kt
 │   │       │       └── ui/
 │   │       │           └── HoYoLabLoginDialog.kt
 │   │       └── AndroidManifest.xml
@@ -264,10 +269,10 @@ Irminsul-codex/
 
 Responsible for:
 
-* Main application interface and existing Daily Note presentation.
-* Credential entry and the current SharedPreferences handling.
-* Daily Note synchronization actions.
-* Saving account JSON exports through Android's document picker.
+* Screen-level composition, navigation state, and coordination of extracted presentation sections, including the first-run sign-in experience.
+* Credential entry and orchestration through `HoYoLabCredentialStore` for Keystore-backed cookie encryption; non-sensitive UID and theme preferences remain in SharedPreferences.
+* Daily Note synchronization and account-export actions, including document-picker coordination.
+* Retaining screen-owned state and callbacks passed into presentation components.
 
 ### `api/HoYoLabClient.kt`
 
@@ -294,6 +299,10 @@ Contains the Room database, account and snapshot entities, DAO, and local snapsh
 ### `data/repository/HoYoLabAccountRepository.kt`
 
 Adapts the existing HoYoLAB JSON export operation and AccountExportMapper to the domain repository contract.
+
+### `integration/security/HoYoLabCredentialStore.kt`
+
+Encrypts the HoYoLAB session cookie with AES-GCM using a key held by Android Keystore. It migrates the legacy plaintext preference after successful encryption and provides credential clearing. Only ciphertext is persisted in SharedPreferences.
 
 ### `ui/HoYoLabLoginDialog.kt`
 
@@ -570,17 +579,19 @@ Account authentication and API credentials require careful handling.
 
 ### Current Implementation
 
-* HoYoLAB authentication cookies are stored using ordinary Android SharedPreferences.
+* The HoYoLAB session cookie is encrypted with AES-GCM using a key generated and held by Android Keystore. Only the encrypted ciphertext is persisted in app-private SharedPreferences.
 
-* Masking credentials in the interface does not encrypt their stored values.
+* Existing installations migrate the legacy plaintext cookie to encrypted storage on first read. The legacy preference is removed after successful encryption.
+
+* The UID remains in ordinary app-private preferences because it is not an authentication secret.
+
+* The Account screen provides an explicit sign-out action that clears the saved UID, encrypted cookie, and in-memory credentials. Locally saved account snapshots are retained.
 
 * The login WebView clears its cookies, cache, history, and form data after authentication capture or dismissal.
 
 * The Android manifest sets `allowBackup` to `false`.
 
 ### Planned Improvements
-
-* Android Keystore-backed credential protection.
 
 * Secure AI API key storage.
 
@@ -592,7 +603,7 @@ Account authentication and API credentials require careful handling.
 
 * Separation of HoYoLAB credentials and AI provider credentials.
 
-> Important: Current credential storage should not be considered encrypted or production-grade secure storage.
+> Credential encryption protects the saved session cookie at rest within the app's private storage. It does not protect against a fully compromised device or a malicious process running with the app's privileges.
 
 Users should never share their HoYoLAB authentication cookies or AI API keys.
 

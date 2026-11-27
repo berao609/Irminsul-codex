@@ -3,6 +3,8 @@ package com.irminsul.codex.presentation.viewmodel
 import androidx.lifecycle.ViewModelStore
 import com.irminsul.codex.data.mapper.AccountExportMapper
 import com.irminsul.codex.domain.model.AccountExport
+import com.irminsul.codex.domain.model.AccountSnapshot
+import com.irminsul.codex.domain.analysis.AccountIntelligenceEngine
 import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
 import com.irminsul.codex.domain.repository.AccountRepository
 import com.irminsul.codex.domain.repository.AccountSnapshotStore
@@ -11,6 +13,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.asCoroutineDispatcher
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -56,7 +62,7 @@ class AccountViewModelTest {
                     return Result.success(export)
                 }
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.exportAccount("800000001", "test-cookie")
@@ -100,7 +106,7 @@ class AccountViewModelTest {
                     onProgress: (String) -> Unit
                 ): Result<AccountExport> = Result.success(export)
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.analyzeAccount("800000001", "test-cookie")
@@ -136,7 +142,7 @@ class AccountViewModelTest {
                     return Result.failure(IllegalStateException("unexpected network call"))
                 }
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(export))
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(export), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.restoreLatestSnapshot("800000001")
@@ -170,7 +176,7 @@ class AccountViewModelTest {
                     onProgress: (String) -> Unit
                 ): Result<AccountExport> = Result.failure(IllegalStateException("network unavailable"))
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(export))
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(export), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.restoreLatestSnapshot("800000001")
@@ -202,7 +208,7 @@ class AccountViewModelTest {
                     onProgress: (String) -> Unit
                 ): Result<AccountExport> = Result.failure(IllegalStateException("network unavailable"))
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.exportAccount("800000001", "test-cookie")
@@ -232,7 +238,7 @@ class AccountViewModelTest {
                     return Result.failure(IllegalStateException("should not be called"))
                 }
             }
-            val viewModel = AccountViewModel(repository, NoOpSnapshotStore())
+            val viewModel = AccountViewModel(repository, NoOpSnapshotStore(), UnconfinedTestDispatcher())
             store.put("account", viewModel)
 
             viewModel.exportAccount("", "")
@@ -262,7 +268,7 @@ class AccountViewModelTest {
             val repository = object : AccountRepository {
                 override suspend fun fetchAccountExport(uid: String, cookie: String, onProgress: (String) -> Unit): Result<AccountExport> = Result.success(export)
             }
-            val viewModel = AccountViewModel(repository, snapshotStore)
+            val viewModel = AccountViewModel(repository, snapshotStore, UnconfinedTestDispatcher())
             store.put("account", viewModel)
             viewModel.exportAccount("800000001", "test-cookie")
             assertSame(export, savedExport)
@@ -272,6 +278,53 @@ class AccountViewModelTest {
             assertEquals("Account retrieved, but local saving failed: database unavailable", viewModel.uiState.value.errorMessage)
         } finally {
             store.clear()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun runsDeterministicAnalysisOnInjectedCpuDispatcher() = runBlocking {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+        val store = ViewModelStore()
+        val executor = Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "account-analysis-test")
+        }
+        val dispatcher = executor.asCoroutineDispatcher()
+        val analysisStarted = CountDownLatch(1)
+        val callerThread = Thread.currentThread().name
+        var analysisThread: String? = null
+        try {
+            val export = AccountExport(
+                snapshot = AccountExportMapper.map(JSONObject(rawJson)),
+                rawJson = rawJson
+            )
+            val repository = object : AccountRepository {
+                override suspend fun fetchAccountExport(
+                    uid: String,
+                    cookie: String,
+                    onProgress: (String) -> Unit
+                ): Result<AccountExport> = Result.success(export)
+            }
+            val viewModel = AccountViewModel(
+                repository = repository,
+                snapshotStore = NoOpSnapshotStore(),
+                cpuDispatcher = dispatcher,
+                analyzeIntelligence = { snapshot: AccountSnapshot, goal ->
+                    analysisThread = Thread.currentThread().name
+                    analysisStarted.countDown()
+                    AccountIntelligenceEngine.analyze(snapshot, goal)
+                }
+            )
+            store.put("account", viewModel)
+
+            viewModel.analyzeAccount("800000001", "test-cookie")
+
+            assertTrue("Analysis did not start on the injected dispatcher.", analysisStarted.await(5, TimeUnit.SECONDS))
+            assertNotNull(analysisThread)
+            assertNotEquals(callerThread, analysisThread)
+        } finally {
+            store.clear()
+            dispatcher.close()
             Dispatchers.resetMain()
         }
     }

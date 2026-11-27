@@ -10,12 +10,14 @@ class GenshinDbCostParserTest {
         val result = GenshinDbCostParser.parseCharacterAscensionCosts(ascensionCosts())
         assertEquals(CatalogueCostParseStatus.COMPLETE, result.status)
         assertEquals(
-            listOf(1 to 20, 20 to 40, 40 to 50, 50 to 60, 60 to 70, 70 to 80),
+            listOf(20 to 40, 40 to 50, 50 to 60, 60 to 70, 70 to 80, 80 to 90),
             result.segments.map { it.fromLevel to it.toLevel }
         )
         assertEquals("202", result.segments.first().costs.first().itemId)
         assertEquals("Mora", result.segments.first().costs.first().itemName)
         assertEquals(10_000L, result.segments.first().costs.first().quantity)
+        assertEquals(20, result.segments.first().fromLevel)
+        assertEquals(90, result.segments.last().toLevel)
     }
 
     @Test fun weaponAscensionUsesTheSameAscensionRanges() {
@@ -50,7 +52,7 @@ class GenshinDbCostParserTest {
         val result = GenshinDbCostParser.parseWeaponAscensionCosts(costs)
         assertEquals(CatalogueCostParseStatus.COMPLETE, result.status)
         assertTrue(result.segments[2].costs.isEmpty())
-        assertEquals(40 to 50, result.segments[2].fromLevel to result.segments[2].toLevel)
+        assertEquals(50 to 60, result.segments[2].fromLevel to result.segments[2].toLevel)
     }
 
     @Test fun rejectsMalformedStageAndMaterialRecords() {

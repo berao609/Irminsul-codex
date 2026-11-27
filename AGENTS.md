@@ -6,17 +6,19 @@ Irminsul Codex is a native Android application for Genshin Impact account data r
 
 This file provides repository-wide instructions for AI coding agents and automated contributors. Follow it before making changes.
 
-## Required reading
+## Task-specific context retrieval
 
-Before changing code or project behavior, inspect the relevant current files. At minimum:
+Always read this file first. Then retrieve only the additional repository context that is relevant to the current task.
 
-1. `README.md` for the current product scope, implemented features, limitations, and roadmap.
-2. `docs/SPECS.md` for the agreed product and technical architecture.
-3. `docs/PROGRESS_MILESTONES.md` for completed work, verification evidence, outstanding checks, and the next development checkpoint.
-4. `version.properties` and `RELEASE_PROCESS.md` before changing application versions, signing, or release workflows.
-5. Relevant source files, tests, Gradle configuration, and GitHub Actions workflows for the task.
+- **Always:** Inspect the exact source files, tests, and configuration that the change can affect. Check the current branch and relevant recent commits before editing.
+- **Product behavior or user-facing UI:** Read the relevant README sections for implemented behavior, limitations, and navigation. Read `docs/SPECS.md` when the task changes agreed product behavior, architecture, data ownership, privacy, or technical boundaries.
+- **Architecture or data-model changes:** Read the relevant sections of `docs/SPECS.md`, plus the affected domain/data/presentation source and tests.
+- **Continuing existing work or recording a milestone:** Read the relevant entries in `docs/PROGRESS_MILESTONES.md` and the active audit/plan. Retrieve broader history only when it affects the change.
+- **Build, dependency, or CI changes:** Inspect the relevant Gradle files, version catalog, and affected GitHub Actions workflow. Check dependency use before adding, removing, or updating dependencies.
+- **Versioning, signing, or release changes:** Read `version.properties` and `RELEASE_PROCESS.md` before making changes.
+- **Narrow bug fixes or isolated refactors:** Do not load unrelated product specifications, release instructions, or the full milestone history when the affected source, tests, and directly relevant documentation provide sufficient context.
 
-Do not assume an earlier chat, plan, or milestone description is more current than the repository. Recheck files when the task changes.
+Do not skip a source or instruction that is relevant merely to reduce context. Do not read unrelated material merely because it exists. Reassess the required context when the task changes.
 
 ## Architecture and implementation principles
 
@@ -87,3 +89,20 @@ Do not assume an earlier chat, plan, or milestone description is more current th
 ## User workflow
 
 The project owner primarily works from an Android phone using Termux, GitHub, and Obsidian. Give concise, sequential instructions when a manual device action is needed. Avoid assuming desktop-only tools are available. Do not ask the user to paste credentials or secrets into chat.
+
+## Runtime architecture guardrails
+
+Apply these execution patterns when they fit the affected workflow. They strengthen the layered architecture above; they do not authorize a broad rewrite or require a prescribed package tree.
+
+- **MVVM with unidirectional state flow:** ViewModels own screen-level state and expose observable immutable UI state. UI emits user actions; ViewModels coordinate use cases and publish state changes. Composables render state and forward actions. Do not put account calculations, raw JSON parsing, credential handling, or network orchestration in Composables.
+- **Lifecycle-aware observation:** Collect observable ViewModel state with lifecycle-aware Compose APIs. Keep transient UI events distinct from durable screen state. Preserve state across navigation or configuration changes only where the workflow requires it.
+- **Cache-first, stale-while-revalidate:** When valid cached account data exists, render it promptly while refresh proceeds independently. Show its freshness and refresh status accurately. A refresh must not replace useful content with a blocking spinner or erase the last successful snapshot on failure. Replace cached sections only with validated results for those sections.
+- **Section-aware synchronization:** Keep retrieval, freshness, and failure state independent for each account section. Partial success must remain usable and visible. Do not mark a whole snapshot complete when required sections failed or were not retrieved.
+- **Explicit asynchronous ownership:** Run network and disk work away from the main thread using appropriate coroutine dispatchers. Keep dispatcher choice testable where practical. Propagate cancellation; never convert CancellationException into an ordinary failure. Cancel obsolete work when its owning screen, request, or conversation no longer needs it. Do not launch unmanaged work from Composables.
+- **Repository and use-case boundaries:** ViewModels coordinate application workflows through domain-facing contracts. Repositories coordinate local and remote data sources; mappers validate and translate external representations. Keep provider-specific request details and persistence implementation types out of domain models and UI state.
+- **Lightweight composition:** Keep dependency construction explicit through a small application composition root or an equally lightweight established mechanism. Do not introduce a DI framework, annotation processor, or new Gradle module without a demonstrated benefit. Reuse existing networking and persistence dependencies when suitable.
+- **Cache integrity:** Treat cache entries as data with provenance, schema/version information, and timestamps. Validate data before publishing it as current. Preserve last-known-good data on transient failures, and make cache invalidation, migration, and pruning deliberate. Do not let a cache hide authentication expiry, malformed responses, or stale data.
+- **Incremental serialization:** Prefer typed models at stable application boundaries. Migrate legacy JSON handling gradually, with fixtures and compatibility tests. Preserve required raw/source information and the existing export contract unless a separately approved change intentionally versions it. Never perform a lossy conversion merely to simplify UI models.
+- **AI transport and orchestration:** Keep provider adapters behind provider-independent contracts. Streaming is a transport capability, not a domain dependency; support it where the selected provider offers it and provide clear completion, failure, and cancellation behavior. Build minimal, task-relevant context from normalized account data and deterministic results. Never send credentials, unrelated raw payloads, or unreviewed external knowledge as trusted facts.
+- **Kotlin safety:** Avoid destructuring a List into more than five values; Kotlin's standard list component operators cover only the first five positions. Prefer named result models or indexed access for larger result sets.
+- **Architecture is evidence-led:** These patterns describe desired responsibilities, not mandatory class names, file names, or a fixed directory layout. Inspect the current code and reuse sound existing structures. Refactor only when it improves correctness, testability, reliability, or maintainability for the active task.

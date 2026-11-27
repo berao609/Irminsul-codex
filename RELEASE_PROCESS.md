@@ -49,7 +49,9 @@ The first configured release is `1.0.0` with version code `2`, which is greater 
 
 - Official releases are created only by pushing a version tag such as `v1.0.0`.
 - The tag must exactly match `VERSION_NAME` in the tagged source.
-- The release workflow builds a signed Release APK, verifies its signature, calculates a SHA-256 checksum, and publishes both files in a GitHub Release.
+- The release workflow runs `gradle testDebugUnitTest --no-daemon` against the tagged source before decoding the Release keystore or building/signing the APK. A failing unit test stops the job before publication.
+- After the test gate passes, the workflow builds a signed Release APK, verifies its signature, calculates a SHA-256 checksum, and publishes both files in a GitHub Release.
+- Room instrumentation tests are not repeated for every official release. They remain part of the Debug CI gate for relevant persistence/schema changes and manual full-test runs.
 - The release workflow stops if required signing secrets are missing or the tag and version metadata do not match.
 
 ## 3. One-time signing key setup
@@ -110,7 +112,7 @@ For each official release:
 3. Commit and push the version change to `main`.
 4. Confirm all four GitHub Actions signing secrets are configured.
 5. Create and push a matching Git tag. For example, if the file says `VERSION_NAME=1.0.1`, create tag `v1.0.1`.
-6. Open the repository's **Actions** tab and monitor **Publish Android Release**.
+6. Open the repository's **Actions** tab and monitor **Publish Android Release**. Confirm the tagged-source unit-test gate passes before the signing/build steps proceed.
 7. Confirm the workflow succeeds and verify that the GitHub Release contains:
    - `app-release.apk`
    - `app-release.apk.sha256`
@@ -133,6 +135,8 @@ After the first official Release APK is installed, future APKs signed with the s
 ## 6. Current limitations and safeguards
 
 - The repository currently has no Gradle Wrapper. CI uses the explicitly configured Gradle 8.14.8 distribution. Adding and validating the Gradle Wrapper is a separate build-foundation improvement.
+- The Release workflow runs the tagged-source JVM unit-test gate before signing and publication. It does not run Room instrumentation tests on every release; those remain covered by the Debug CI policy for relevant changes.
+- The workflow's successful tagged-release publication path still requires verification during the first controlled official release.
 - The Release workflow verifies APK signing before publication, but the first release still needs a real-device installation/update test.
 - The current app stores some account credentials in ordinary SharedPreferences. Release signing does not make that storage encrypted or production-secure.
 - Do not create the first official version tag until the signing key is backed up, all four Actions secrets are configured, and the Release workflow can run.

@@ -54,6 +54,9 @@ jobs:
             exit 1
           fi
 
+      - name: Run release unit-test gate
+        run: gradle testDebugUnitTest --no-daemon
+
       - name: Decode release keystore
         shell: bash
         env:

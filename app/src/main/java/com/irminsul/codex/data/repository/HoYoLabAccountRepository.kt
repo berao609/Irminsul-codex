@@ -5,6 +5,9 @@ import com.irminsul.codex.data.mapper.AccountExportMapper
 import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.model.AccountSnapshot
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.irminsul.codex.domain.repository.AccountRepository
 import org.json.JSONObject
 
@@ -12,7 +15,8 @@ import org.json.JSONObject
  * Adapts the existing HoYoLAB JSON export workflow to the domain repository contract.
  *
  * Export retrieval and mapping are injectable so the adapter can be tested without
- * network access or real account credentials.
+ * network access or real account credentials. CPU-bound JSON mapping runs on the
+ * injected dispatcher rather than the caller (normally the main) thread.
  */
 class HoYoLabAccountRepository(
     private val exportJson: suspend (
@@ -24,7 +28,8 @@ class HoYoLabAccountRepository(
     },
     private val mapExport: (String) -> AccountSnapshot = { json ->
         AccountExportMapper.map(JSONObject(json))
-    }
+    },
+    private val cpuDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : AccountRepository {
 
     override suspend fun fetchAccountExport(
@@ -36,7 +41,8 @@ class HoYoLabAccountRepository(
         return exportResult.fold(
             onSuccess = { json ->
                 try {
-                    Result.success(AccountExport(snapshot = mapExport(json), rawJson = json))
+                    val snapshot = withContext(cpuDispatcher) { mapExport(json) }
+                    Result.success(AccountExport(snapshot = snapshot, rawJson = json))
                 } catch (cancelled: CancellationException) {
                     throw cancelled
                 } catch (error: Exception) {

@@ -84,6 +84,9 @@ object AccountExportMapper {
             DataValue.Unavailable -> DataValue.Unavailable
         }
 
+        val profileAndExplorationValue = mapStructuredSection(root, "profile_and_exploration", sections)
+        val stygianOnslaughtValue = mapStygianOnslaught(profileAndExplorationValue)
+
         val snapshot = AccountSnapshot(
             identity = identity,
             metadata = SnapshotMetadata(exportedAt, root.optInt("export_format_version", 0)),
@@ -93,11 +96,12 @@ object AccountExportMapper {
             accountCard = mapStructuredSection(root, "account_card", sections),
             characterRosterSource = mapStructuredSection(root, "character_roster_source", sections),
             characterDetailSource = mapStructuredSection(root, "character_detail_source", sections),
-            profileAndExploration = mapStructuredSection(root, "profile_and_exploration", sections),
+            profileAndExploration = profileAndExplorationValue,
             spiralAbyssCurrent = mapStructuredSection(root, "spiral_abyss_current", sections),
             spiralAbyssPrevious = mapStructuredSection(root, "spiral_abyss_previous", sections),
             imaginariumTheater = mapStructuredSection(root, "imaginarium_theater", sections),
             sections = sections,
+            stygianOnslaught = stygianOnslaughtValue,
             characterCollectionIntegrity = characterMapping?.second ?: CharacterCollectionIntegrity(),
             characterBuildValidation = buildValidation,
             characterStatReconciliation = statReconciliation,
@@ -105,6 +109,34 @@ object AccountExportMapper {
         )
         val withCoverage = snapshot.copy(sectionCoverage = AccountSnapshotCoverageAnalyzer.assess(snapshot))
         return withCoverage.copy(sectionFreshness = AccountSnapshotFreshnessAnalyzer.assess(withCoverage))
+    }
+
+    /** Maps the Chronicle index's nested stats.hard_challenge summary without adding a redundant request. */
+    private fun mapStygianOnslaught(value: DataValue<StructuredData>): DataValue<StygianOnslaughtSnapshot> {
+        fun parse(data: StructuredData): StygianOnslaughtSnapshot? {
+            val rootFields = (data as? StructuredData.ObjectValue)?.fields ?: return null
+            val stats = (rootFields["stats"] as? StructuredData.ObjectValue)?.fields ?: return null
+            val challenge = (stats["hard_challenge"] as? StructuredData.ObjectValue)?.fields.orEmpty()
+            val name = (challenge["name"] as? StructuredData.StringValue)?.value
+                ?.trim()?.takeIf { it.isNotEmpty() }
+            val difficulty = when (val raw = stats["difficulty"]) {
+                is StructuredData.NumberValue -> raw.value
+                is StructuredData.StringValue -> raw.value.trim().takeIf { it.isNotEmpty() }
+                else -> null
+            }
+            if (name == null && difficulty == null) return null
+            return StygianOnslaughtSnapshot(bestRecordName = name, difficulty = difficulty)
+        }
+
+        return when (value) {
+            is DataValue.Available -> parse(value.value)?.let { DataValue.Available(it, value.retrievedAt) }
+                ?: DataValue.Missing
+            is DataValue.Stale -> parse(value.value)?.let { DataValue.Stale(it, value.lastRetrievedAt) }
+                ?: DataValue.Missing
+            is DataValue.Failed -> value
+            DataValue.Missing -> DataValue.Missing
+            DataValue.Unavailable -> DataValue.Unavailable
+        }
     }
 
     private fun mapStructuredSection(root: JSONObject, key: String, sections: Map<String, AccountSectionMetadata>): DataValue<StructuredData> {
@@ -218,7 +250,8 @@ object AccountExportMapper {
             baseProperties = item.optJSONArray("base_properties")?.let(::mapStats).orEmpty(),
             extraProperties = item.optJSONArray("extra_properties")?.let(::mapStats).orEmpty(),
             elementProperties = item.optJSONArray("element_properties")?.let(::mapStats).orEmpty(),
-            avatarIcon = base.stringOrNull("icon") ?: item.stringOrNull("icon") ?: base.stringOrNull("image")
+            avatarIcon = base.stringOrNull("icon") ?: item.stringOrNull("icon") ?: base.stringOrNull("image"),
+            ascensionLevel = base.intOrNull("promote_level") ?: item.intOrNull("promote_level")
         )
     }
 

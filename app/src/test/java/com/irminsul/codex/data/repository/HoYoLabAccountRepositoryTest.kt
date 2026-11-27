@@ -4,6 +4,8 @@ import com.irminsul.codex.domain.model.AccountExport
 import com.irminsul.codex.domain.model.AccountSnapshot
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.asCoroutineDispatcher
+import java.util.concurrent.Executors
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -95,4 +97,47 @@ class HoYoLabAccountRepositoryTest {
             assertEquals("cancelled", cancelled.message)
         }
     }
+    @Test
+    fun mapsSuccessfulExportOnInjectedCpuDispatcher() = runBlocking {
+        val executor = Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "account-export-mapper-test")
+        }
+        val dispatcher = executor.asCoroutineDispatcher()
+        try {
+            val callerThread = Thread.currentThread().name
+            var mappingThread: String? = null
+            val repository = HoYoLabAccountRepository(
+                exportJson = { _, _, _ -> Result.success(validExport) },
+                mapExport = { json ->
+                    mappingThread = Thread.currentThread().name
+                    com.irminsul.codex.data.mapper.AccountExportMapper.map(org.json.JSONObject(json))
+                },
+                cpuDispatcher = dispatcher
+            )
+
+            val result = repository.fetchAccountExport("800000001", "test-cookie")
+
+            assertTrue(result.isSuccess)
+            assertNotNull(mappingThread)
+            assertNotEquals(callerThread, mappingThread)
+        } finally {
+            dispatcher.close()
+        }
+    }
+
+    @Test
+    fun preservesCancellationThrownByExportMapper() = runBlocking {
+        val repository = HoYoLabAccountRepository(
+            exportJson = { _, _, _ -> Result.success(validExport) },
+            mapExport = { throw CancellationException("mapping cancelled") }
+        )
+
+        try {
+            repository.fetchAccountExport("800000001", "test-cookie")
+            fail("Expected mapper cancellation to propagate.")
+        } catch (cancelled: CancellationException) {
+            assertEquals("mapping cancelled", cancelled.message)
+        }
+    }
+
 }

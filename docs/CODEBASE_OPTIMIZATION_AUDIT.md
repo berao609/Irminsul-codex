@@ -1,0 +1,1634 @@
+# Codebase Optimization Audit - Progress Queue
+
+## Project identity
+
+- **Repository:** `berao609/Irminsul-codex`
+- **Working branch:** `main` (repository default branch, per `AGENTS.md`)
+- **Record purpose:** Track the phased codebase optimization audit independently of the development milestone history.
+- **Audit mode:** Investigation completed. Remediation is proceeding in separately authorized, focused implementation batches.
+- **Overall status:** In progress
+- **Current phase:** Remediation Batch 8 - AUD-010 (task-specific agent context retrieval)
+- **Last updated:** 2026-11-27
+
+## 1. Objective
+
+Conduct a comprehensive, evidence-based review of the current Irminsul Codex codebase before further feature implementation. Identify actual defects, avoidable complexity, performance risks, architectural weaknesses, build and testing inefficiencies, and worthwhile simplifications.
+
+The audit must help answer:
+
+1. What does the repository currently contain and how is it organized?
+2. Which parts are already sound and should be preserved?
+3. Where is complexity, duplication, coupling, or unnecessary work present?
+4. Are there measurable or credible performance, reliability, privacy, or maintainability risks?
+5. Which improvements are necessary, which are optional, and which are not justified?
+6. What is the safest and most efficient order for any later remediation?
+
+The goal is not to rewrite the application or minimize code at the expense of correctness. Retain necessary validation, security, accessibility, error handling, tests, and clear architecture.
+
+## 2. Governing constraints
+
+- Follow the repository's current `AGENTS.md`, `README.md`, `docs/SPECS.md`, and `docs/PROGRESS_MILESTONES.md`.
+- Re-read relevant repository sources when the audit moves into a new technical area. Do not rely on chat summaries when current repository evidence is available.
+- Keep this audit record separate from `docs/PROGRESS_MILESTONES.md`. The milestone file remains the historical record of development milestones; this file tracks audit phases, findings, decisions, and the next audit action.
+- Do not modify application source code, tests, build configuration, dependencies, workflows, or product specifications during the audit.
+- Do not implement recommendations during the audit.
+- Do not perform unrelated cleanup, formatting, restructuring, or refactoring.
+- Do not commit, push, pull, create branches, or change repository settings as part of the investigation. A repository documentation update specifically requested by the user is separate from those audit restrictions.
+- Protect account data, credentials, signing material, and private information. Do not reproduce secrets in this record.
+- Do not add further audit documents unless the user explicitly requests them. Record findings and progress in this file.
+- Do not assume a tool, coding skill, external repository, or optimization philosophy is suitable without checking its fit against the actual project.
+- Distinguish repository inspection from builds, tests, CI verification, and physical-device verification. Do not claim a check passed unless its result was observed.
+
+## 3. Audit queue
+
+Statuses used:
+
+- **Not started** - investigation has not begun.
+- **In progress** - evidence gathering and assessment are underway.
+- **Blocked** - progress requires unavailable access, evidence, or a user decision.
+- **Complete** - the defined scope has been investigated, findings recorded, and limitations disclosed.
+- **Deferred** - intentionally postponed with a reason.
+- **Not applicable** - checked and shown not to apply to this repository or audit scope.
+
+### Part 1 - Repository inventory
+
+**Status:** Complete
+
+**Purpose:** Establish an accurate map of the repository before drawing architectural or performance conclusions.
+
+**Initial inventory evidence (2026-11-26):**
+- Recursive Git tree on `main`: 175 entries, not truncated; 122 tracked file blobs, approximately 1.72 MB total.
+- Root structure: single Android app module (`app`), Gradle wrapper/configuration, version properties, two GitHub Actions workflows, and documentation/reference material under `docs/`.
+- App source: one Android manifest, one very large `MainActivity.kt` (146,608 bytes), plus separate API, data/catalogue, local Room storage, mapper, repository, domain analysis/model/validation, ViewModel, and login UI packages.
+- App tests: JVM unit tests across API, catalogue, mapper, repository, domain analysis/model/validation, and ViewModel; one Room instrumented test file under `androidTest`.
+- Root/app build configuration and version catalog are present. Gradle wrapper files were not present in the recursive tree inventory.
+- CI workflows: `.github/workflows/build.yml` and `.github/workflows/release.yml`.
+- Largest tracked files by size include `docs/PROGRESS_MILESTONES.md` (289,767 bytes), `MainActivity.kt` (146,608 bytes), five captured Hoyolab HTML/CSS reference files (78-116 KB each), `docs/SPECS.md` (116,288 bytes), and the audit/reference documentation.
+- These are inventory observations only. Large file size is not by itself proof of a defect; the UI source and reference captures require context and further inspection.
+
+
+**Initial structural observations (not yet classified as findings):**
+- `MainActivity.kt` is unusually large relative to the other source files and is a clear candidate for focused responsibility/structure review in Part 2 and Compose review in Part 4.
+- Documentation/reference capture files are among the largest tracked assets. Their purpose, duplication, and whether they are needed at runtime or solely for offline development must be checked before any recommendation to remove or relocate them.
+- The repository has a single app module. This is not inherently a problem; modularization should be considered only if concrete coupling or build/ownership benefits are demonstrated.
+
+**Additional inventory checks:**
+- README explicitly states that the Gradle Wrapper is not included and uses an installed Gradle distribution for builds. This confirms the tree observation; it is not automatically a defect.
+- Root `.gitignore` covers common Gradle/build outputs, local configuration, APK/AAB files, and keystore files.
+- `AndroidManifest.xml` declares INTERNET permission, disables backup, and defines the launcher activity. Manifest permissions and security configuration will be reviewed more deeply in Part 7.
+- README and the Battle Chronicle reference analysis identify the captured web materials as development references, not runtime dependencies. However, `docs/share-page.html` is publicly tracked and the capture contains a UID-like account identifier. A privacy exposure concern is recorded below. Do not repeat the identifier in audit notes.
+- Build configuration uses a single app module, Android SDK 34, min SDK 26, target SDK 34, Kotlin 2.0.0 / AGP 8.5.0, Compose BOM 2024.06.00, Room 2.6.1, and Gradle 8.14.8 in CI. This is inventory context; compatibility or upgrade recommendations belong in Part 6.
+
+**Finding AUD-001 - Public account-specific reference capture**
+- **Part:** 1 (inventory discovery; detailed privacy review in Part 7)
+- **Classification:** High-priority privacy risk (not a credential/security compromise claim)
+- **Evidence:** `docs/share-page.html` is publicly tracked; its content scan confirmed a UID-like identifier. `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md` also notes the capture contains account-specific profile information and explicitly recommends sanitization.
+- **Impact:** Publishing account identifiers in a development reference capture exposes personal game-account metadata. A UID is not an authentication secret, but it can enable account lookup or unwanted correlation.
+- **Confidence:** Verified presence; impact depends on user privacy preference and identifier sensitivity.
+- **Recommendation:** Remove or sanitize account-specific identifiers and review embedded URLs/content before retaining a public reference capture. Preserve a sanitized reference if it remains useful for implementation.
+- **Verification for later remediation:** Scan the sanitized tracked file and related captures for UID/account-specific values; inspect the diff to ensure layout/reference usefulness remains and no account-specific identifiers remain.
+- **Implementation status:** No remediation performed during this read-only audit.
+
+**Inventory limitations:** This first pass used GitHub's recursive tree, file metadata, and targeted configuration/document inspection. It did not inspect every source file, calculate test coverage, build the app, run tests, profile runtime performance, or validate on a physical device.
+
+**Investigation scope:**
+- Repository root and module structure.
+- Kotlin source packages and major classes.
+- Resources, assets, raw data, and documentation.
+- Tests and test organization.
+- Gradle files, version catalogs, wrapper availability, and build scripts.
+- GitHub Actions workflows and other automation.
+- Generated, duplicated, obsolete, or unusually large tracked files.
+- Existing project instructions and architectural documentation.
+
+**Expected output:** A concise repository map, major component inventory, evidence-backed structural observations, and a list of areas requiring deeper inspection.
+
+### Part 2 - Architecture and code complexity
+
+**Status:** Complete
+
+
+**Purpose:** Assess whether the current architecture is understandable, cohesive, appropriately layered, and proportionate to the application's actual needs.
+
+**Investigation scope:**
+- Presentation, domain, data, and integration boundaries.
+- Dependency direction and coupling.
+- Responsibilities of major classes and services.
+- Duplicate logic and repeated transformations.
+- Abstractions, wrappers, managers, and interfaces that may or may not provide value.
+- Oversized classes and files with unrelated responsibilities.
+- State ownership and data-flow clarity.
+- Unnecessary indirection, premature generalization, and overengineering.
+- Existing architecture that is working and should remain unchanged.
+
+**Expected output:** Architecture map, concrete complexity findings, justified simplification opportunities, and risks of proposed structural changes.
+
+#
+
+## Part 2 - Architecture and code complexity (in progress)
+
+### Scope correction
+- This audit is limited to application code and build-relevant configuration. Documentation, milestone history, HTML/CSS captures, and other non-app assets are excluded from code optimization assessment unless they directly affect build/runtime behavior or security/privacy.
+
+### Evidence inspected
+- Kotlin production source inventory and byte sizes from the recursive Git tree.
+- Full declaration/range inventory of `MainActivity.kt` (2,988 lines) and its key composable/function boundaries.
+- `AccountViewModel.kt`, `AccountIntelligenceEngine.kt`, `HoYoLabAccountRepository.kt`, and `AccountRepository.kt`.
+- Project README app architecture/build context was used only where it described the application/build setup.
+
+### Finding AUD-002 - UI responsibilities concentrated in MainActivity.kt
+- **Classification:** Maintainability / cohesion concern; confirmed structural complexity, not a runtime-performance defect.
+- **Evidence:** `MainActivity.kt` is 2,988 lines / 146,423 bytes. `CodexScreen` spans roughly 994 lines (163-1156) and contains application screen state and orchestration including refresh/export/login handling. The same file also contains a 536-line MaterialsPlannerSection (1172-1707), 155-line LineupSimulatorSection, 224-line CharacterShowcaseSection, 223-line CharacterShowcaseDetail, recommendation cards, chronicle rendering, metric components, and supporting formatting/rendering functions.
+- **Impact:** Makes navigation, screen-level state, unrelated UI sections, and presentation helpers harder to locate and review together. Increases risk that changes to one screen feature are entangled with other UI behavior. File size alone does not prove Compose recomposition or frame performance problems.
+- **Confidence:** High for concentration and file boundaries; performance impact unmeasured.
+- **Recommendation:** Candidate for later extraction into feature/section files (Home, account/JSON export, materials planner, lineup simulator, character showcase/detail, reusable chronicle/metric UI) while preserving existing behavior and state ownership. Do not split solely by line count; Part 4 will examine Compose/state concerns and propose a safe order.
+- **Implementation status:** None. Audit remains read-only.
+
+
+### Architecture observations (not yet defects)
+- The repository has recognizable API, data, domain, repository, and presentation/ViewModel boundaries.
+- `AccountViewModel` receives repository and snapshot-store abstractions and manages a StateFlow UI state; it delegates deterministic analysis to `AccountIntelligenceEngine` and uses coroutine scope.
+- `HoYoLabAccountRepository` adapts network export/mapping behind the domain repository contract. It injects retrieval and mapping functions, supporting tests without real network/credentials.
+- `AccountIntelligenceEngine` orchestrates multiple dedicated deterministic analyzers rather than owning their individual rules. This is a reasonable separation in principle; Part 3 will inspect logic overlap and Part 5 data flow before judging whether the analyzer/model count is excessive.
+- The UI is not fully separated into source files, despite domain/data boundaries. The material planner, lineup simulator, character showcase, and other large UI sections are colocated with the main screen.
+
+
+### Part 2 activity log
+- 2026-11-26: Reviewed source-file inventory, MainActivity declaration boundaries, screen state/wiring, ViewModel state/workflows, repository abstraction, deterministic analysis engine, overview composer, and representative build/stat analyzers. Confirmed AUD-002 UI concentration in MainActivity. Architecture boundaries appear intentional in sampled core flow; no duplication or layering defect confirmed yet. Completed Part 2. No app code or build files modified.
+
+
+
+## Part 3 - Kotlin and Android code quality
+
+**Status:** Complete
+
+**Purpose:** Review correctness, idiomatic Kotlin, lifecycle safety, and maintainability in the Android implementation.
+
+**Investigation scope:**
+- Nullability and type modeling.
+- Coroutine scope, cancellation, dispatchers, and exception handling.
+- Lifecycle-aware work and resource cleanup.
+- State and data ownership.
+- Parsing and validation boundaries.
+- Error representation and propagation.
+- Threading and blocking operations.
+- Collection and memory behavior.
+- Naming, readability, and consistency with existing conventions.
+- Relevant unit-test coverage for deterministic logic.
+
+**Expected output:** Specific code-quality findings with file and symbol references, severity, practical impact, and focused recommendations.
+
+### Part 4 - Jetpack Compose performance and UI architecture
+
+**Status:** Complete
+
+**Purpose:** Identify avoidable UI work and state-management patterns that could affect responsiveness, rendering, or maintainability.
+
+**Investigation scope:**
+- Recomposition triggers and state reads.
+- State hoisting and ownership.
+- Stability and unnecessary allocations.
+- Lazy list and grid keys, item construction, and rendering.
+- Navigation and screen lifecycle behavior.
+- Derived state and expensive calculations in composition.
+- Image loading and resource usage.
+- Animation and layout complexity.
+- Large composables and reusable UI boundaries.
+- Accessibility and adaptive layout concerns where relevant.
+
+**Expected output:** Evidence-backed Compose findings. Static inspection must be distinguished from measured runtime performance; do not label a suspected recomposition issue as measured without profiling evidence.
+
+### Part 5 - Data processing and local-first design
+
+**Status:** Not started
+
+**Purpose:** Evaluate the reliability and efficiency of account retrieval, parsing, persistence, and offline analysis.
+
+**Investigation scope:**
+- HoYoLAB integration boundaries and response handling.
+- Account retrieval and section-level failure isolation.
+- Raw-source field preservation and normalization.
+- JSON parsing and transformation cost.
+- Unified account data model and data provenance.
+- Room schema, snapshot storage, migrations, and queries.
+- Local caching and restoration.
+- Daily Note refresh boundaries.
+- Material planner data and calculation boundaries.
+- Offline behavior and avoidable network dependencies.
+- Credential handling, privacy, and sensitive-data exposure risks.
+
+**Expected output:** Data-flow map, data-integrity and privacy findings, local-first assessment, and clearly identified unverified assumptions.
+
+### Part 6 - Gradle, dependencies, build, and CI optimization
+
+**Status:** Not started
+
+**Purpose:** Find unnecessary build complexity, unused dependencies, avoidable build work, and fragile automation.
+
+**Investigation scope:**
+- Root and app Gradle configuration.
+- Plugin and dependency declarations.
+- Actual dependency usage and duplication.
+- Build variants and configuration.
+- Gradle task and configuration overhead where evidence is available.
+- Resource and APK-size contributors.
+- GitHub Actions job structure, caching, concurrency, and repeated work.
+- Test/build task selection.
+- Signing and artifact handling.
+- Compatibility and maintenance risks of proposed build changes.
+
+**Expected output:** Dependency inventory, build/CI findings, and a prioritized list of safe optimizations. Do not remove or update dependencies during the audit.
+
+### Part 7 - Testing, reliability, and security
+
+**Status:** Not started
+
+**Purpose:** Assess whether important behavior is adequately tested and whether the application handles failures and sensitive data safely.
+
+**Investigation scope:**
+- Existing unit and instrumentation tests.
+- Parsing, calculation, transformation, and repository tests.
+- Missing, null, malformed, stale, partial, and failure cases.
+- Coroutine cancellation and concurrent request behavior.
+- Persistence and migration coverage.
+- UI and navigation reliability.
+- Network failure and authentication handling.
+- Logging, credentials, permissions, storage, and exported data.
+- CI verification coverage and gaps.
+- Claims in documentation compared with available test evidence.
+
+**Expected output:** Coverage map, concrete reliability/security findings, risk classification, and verification gaps. Static review alone must not be described as a penetration test or complete security assessment.
+
+### Part 8 - Coding-agent and development workflow optimization
+
+**Status:** Not started
+
+**Purpose:** Determine how coding agents and development instructions can reduce unnecessary work without introducing more process or documentation overhead.
+
+**Investigation scope:**
+- Current `AGENTS.md` effectiveness and clarity.
+- Existing development and testing instructions.
+- Repeated agent mistakes or avoidable repository exploration, if supported by evidence.
+- Applicability of Ponytail-style simplification principles.
+- Official Android and Jetpack Compose guidance relevant to identified issues.
+- Whether existing tools, skills, or workflows already solve the observed problem.
+- Cost and maintenance burden of adding agent skills or automation.
+- Android-phone and Termux workflow constraints.
+
+**Expected output:** A fit assessment and only those workflow changes that address demonstrated friction. Do not install tools, add skills, or rewrite instructions during this audit.
+
+### Part 9 - Consolidated optimization plan
+
+**Status:** Not started
+
+**Purpose:** Reconcile all audit findings into a safe, ordered, evidence-based improvement plan.
+
+**Investigation scope:**
+- Remove duplicate findings and reconcile cross-phase dependencies.
+- Separate defects and risks from optional improvements and cosmetic refinements.
+- Rank by impact, likelihood, urgency, implementation cost, and regression risk.
+- Identify quick wins versus changes requiring design or architecture decisions.
+- Preserve working behavior and existing product decisions.
+- Define verification and regression checks for each proposed change.
+- Identify items that should not be changed.
+- Identify deferred items and the reason for deferral.
+
+**Expected output:** A prioritized remediation backlog, recommended implementation sequence, dependencies, verification criteria, and explicit items requiring user approval.
+
+## 4. Finding classification
+
+Every finding must use one of these categories:
+
+- **Critical defect:** Demonstrably breaks an essential workflow, produces materially incorrect behavior, compromises security or authorization, or creates serious data-integrity risk.
+- **High-priority defect or risk:** A significant, evidence-backed reliability, performance, security, or maintainability issue.
+- **Medium-priority issue:** A real problem with limited scope or a manageable workaround.
+- **Low-priority issue:** A minor but demonstrated inefficiency or maintainability concern.
+- **Efficiency opportunity:** A justified way to reduce work, complexity, resource use, or maintenance burden that is not itself a defect.
+- **Optional improvement:** A potentially useful enhancement that is not required to correct an established problem.
+- **Cosmetic refinement:** A presentation or style preference without material operational impact.
+- **Inconclusive:** A suspected issue that cannot be established with available evidence.
+- **No issue found in inspected scope:** The relevant area was checked and no actionable issue was identified within the stated inspection limits.
+
+Do not promote optional improvements, cosmetic preferences, or inconclusive suspicions into defects.
+
+## 5. Evidence requirements
+
+For each material finding, record:
+
+1. Finding ID, such as `AUD-001`.
+2. Audit part.
+3. Category and severity.
+4. Exact file path and relevant class, function, configuration key, or workflow step.
+5. What was observed.
+6. Why it matters to the actual Irminsul Codex requirements.
+7. Whether the conclusion is verified, inferred, suspected, or unverified.
+8. Recommended action, if any.
+9. Risks and regression concerns.
+10. How a later change should be verified.
+
+Use direct repository evidence. Cite exact paths and symbols; include line numbers only when they have actually been checked and are stable enough to be useful.
+
+Do not infer runtime performance from source appearance alone. Use profiling or measured build/test evidence when a claim requires it. If the required measurement cannot be obtained, record the limitation.
+
+## 6. Progress update protocol
+
+Update this file after each meaningful audit work session or completed investigation step.
+
+For every update:
+- Preserve the nine-part queue and all earlier valid findings.
+- Update only statuses supported by actual work.
+- Add newly inspected files and evidence to the relevant part.
+- Record findings with stable IDs.
+- Record decisions and reasons, including rejected approaches where they affect future work.
+- Record blockers and unresolved questions.
+- State the exact current stopping point.
+- State one clear next action.
+- Do not mark a part complete while material in-scope questions remain unassessed.
+- Do not rewrite historical findings merely to make the report shorter.
+- Do not create a new document for each part; this file is the audit's single progress record.
+
+When resuming after a pause:
+1. Read this file.
+2. Re-read current `AGENTS.md` and any governing source needed for the next task.
+3. Verify relevant repository state and previously recorded evidence.
+4. Reconcile changes since the last recorded update.
+5. Continue from the last verified stopping point.
+
+## 7. Audit activity log
+
+### 2026-11-26 - Part 1 initial inventory completed
+
+
+- Retrieved the recursive `main` Git tree (175 entries, non-truncated) and reviewed root/app/source/test/docs/workflow structure plus key project instructions and build configuration.
+- Inventory: 122 tracked files, ~1.72 MB total. `MainActivity.kt` is 146,608 bytes; the milestone record is 289,767 bytes; the five captured HTML/CSS reference files are 78-116 KB each.
+- Identified follow-up inspection candidates without prematurely classifying them as defects: MainActivity responsibilities, purpose/runtime relevance of web reference captures, and whether project setup actually relies on a missing Gradle wrapper.
+- **No application code, build configuration, dependencies, tests, or workflows were modified.**
+
+### 2026-11-26 - Part 1 repository inventory completed
+
+- Inspected the recursive repository tree, root/app/source/test/docs structure, project instructions, README structure, specifications headings, build configuration, version catalog, Gradle settings, Android manifest, CI/release workflows, and reference-analysis document.
+- Verified the Gradle Wrapper is intentionally absent and README requires an installed Gradle distribution.
+- Confirmed `MainActivity.kt` is 146,608 bytes and tracked reference captures are substantial. Size is a review candidate, not automatically a defect.
+- Verified the public `docs/share-page.html` contains a UID-like account identifier. Recorded AUD-001; did not copy the identifier into this audit file.
+- Part 1 is complete at inventory scope. Deeper code responsibilities, performance, dependencies, tests, and security remain for later parts.
+- No app code/config/tests/workflows were changed.
+
+
+### 2026-11-26 - Audit plan initialized
+
+- **Status:** Preparation only; technical audit not started.
+- **Repository:** `berao609/Irminsul-codex`.
+- **Branch:** `main`, identified as the repository default branch by `AGENTS.md`.
+- **Sources retrieved for preparation:** `AGENTS.md`, `README.md`, `docs/PROGRESS_MILESTONES.md) (latest content was retrieved but the large response was truncated in the preparation view), and the `docs/` directory listing.
+- **Confirmed repository guidance:** Read required project instructions before code changes; preserve local-first architecture; prefer incremental refactoring; update the development milestone file for meaningful development milestones; do not claim unobserved verification.
+- **Scope decision:** Keep this audit queue in this separate file. Do not turn it into a development milestone or mix audit progress into historical milestone entries.
+- **Changes to application code:** None as part of the audit. This entry records only audit preparation.
+- **Unresolved before technical audit:** Confirm with the user that `main` is the intended audit target before beginning Part 1.
+- **Next action:** Obtain branch confirmation, then start Part 1 - Repository inventory.
+
+## 8. Current state and next action
+
+
+- **Overall audit status:** Complete - awaiting user review.
+- **Current phase:** Audit complete - awaiting user review.
+- **Completed audit parts:** Parts 1, 2, 3, 4, 5, 6, 7, 8, and 9.
+- **In-progress audit parts:** None.
+- **Blocked items:** None.
+- **Application source changes made by this audit:** None.
+- **Current stopping point:** All nine audit parts completed. The consolidated plan is recorded below. No implementation has been authorized or performed.
+- **Next action:** User reviews the consolidated plan and decides whether to authorize a specific implementation batch.
+
+## Part 9 - Consolidated optimization plan (completed)
+
+### Scope and reconciliation
+- Consolidated app-code and build-relevant findings AUD-002 through AUD-010.
+- AUD-001 concerns a UID-like value in a publicly tracked HTML reference capture. It is outside the narrowed app-code/build optimization scope and is excluded from the remediation backlog. It must not be used to expand this audit into general documentation cleanup.
+- No duplicate findings were found among AUD-002 through AUD-010. AUD-003 is a specific export correctness issue; AUD-006 is a broader execution-context risk. AUD-007 is a release test-gate gap; it is distinct from the Debug workflow's existing selective test gate.
+- The priority labels below are remediation order, not claims of measured runtime impact. Static risks remain unmeasured where explicitly stated.
+- All recommendations remain unimplemented. The user must approve the chosen implementation scope before any app files are changed.
+
+### Prioritized remediation backlog
+
+| Order | Finding | Priority | Recommended action | Verification required |
+|---|---|---|---|---|
+| 1 | AUD-008 | High - credential protection | Replace ordinary SharedPreferences storage for the HoYoLAB session cookie with a Keystore-backed encrypted design compatible with minSdk 26. Keep non-sensitive preferences separate. Ensure explicit clear/sign-out removes persisted and in-memory credentials. | Verify raw token is not stored in plaintext; test save, restart, replacement, clear/sign-out, key/decryption failure, and confirm cookie destination remains restricted to HoYoLAB HTTPS endpoints. |
+| 2 | AUD-009 | High - data integrity | Add a real version-1-to-2 Room migration test using the exact legacy schema and representative records. Preserve Room schema exports in version control. | Test on-disk migration, byte-for-byte raw JSON reconstruction, metadata, ordering, multiple chunks, Unicode boundaries, and row integrity. Run in CI. |
+| 3 | AUD-003 | Medium - correctness; quick fix | Correct the document-save callback so a null output stream or any failed write cannot display a success message. Prefer a small testable helper around the write operation. | Test successful write, null stream, open failure, write failure, and success notification only after a completed write. |
+| 4 | AUD-006 | High - responsiveness risk; measure then fix | Move CPU-heavy export mapping, deterministic analysis, chunk preparation, and snapshot restoration mapping off the main thread using explicit injectable dispatchers. Keep Room operations on Room-managed dispatchers and preserve cancellation. | Capture baseline and post-change traces for cold import, cached restore, and full-roster analysis. Confirm main-thread responsiveness, cancellation, UI progress/error states, and deterministic output. |
+| 5 | AUD-007 | Medium - release reliability | Add a test gate to the Release workflow before publication. At minimum run unit tests against the tagged source. Decide whether Room instrumentation tests must also run for every release or whether the main-branch gate plus migration coverage is sufficient. | Demonstrate that a failing test blocks release publication; verify successful tagged release path in a controlled test workflow. |
+| 6 | AUD-005 | Medium - efficiency opportunity | Consider replacing eager character-card rendering with a lazy grid, but only after confirming parent/nested scroll constraints and preserving existing filter, sort, and selection behavior. | Compare composition count, scrolling smoothness, memory/frame timing with a large roster; regression-test filters, sorting, selection, and detail opening. |
+| 7 | AUD-002 | Medium - maintainability | Incrementally extract cohesive UI sections from MainActivity into feature files. Preserve state ownership and public behavior. Start with a self-contained section rather than a broad rewrite. | Build and run relevant UI flows after each extraction; compare behavior and keep diffs narrowly scoped. Avoid splitting solely by line count. |
+| 8 | AUD-004 | Low - lifecycle improvement | Use lifecycle-aware collection for the ViewModel StateFlow where appropriate, such as collectAsStateWithLifecycle. | Compile and verify state collection across foreground/background and activity recreation. |
+| 9 | AUD-010 | Low - workflow efficiency | Make AGENTS.md reading requirements conditional by task while keeping privacy, credential, test, cancellation, and Git safety rules unconditional. | Review revised instructions against representative UI, data, dependency, and release tasks; confirm no mandatory safety checks were weakened. |
+
+### Optional improvements, not required fixes
+- Add a Debug workflow concurrency group with cancellation of superseded runs only if older in-progress Debug artifacts do not need to be retained. Do not add paid runners.
+- Consider removing the direct lifecycle-runtime-ktx dependency only after confirming it is unused across all source sets and not needed by another declared dependency. Expected benefit is small.
+- Consider a Gradle Wrapper only if reproducible local setup across contributors becomes a requirement. Current CI pins Gradle explicitly and the user works primarily from Android/Termux; adding wrapper files is not necessary to fix a demonstrated defect.
+- Consider R8/minification only as a separate measured APK-size effort with keep-rule, signing, and release smoke-test coverage.
+- Collect Gradle task timing and APK-size baselines before making build-speed or size claims.
+
+### Recommended implementation batches and dependencies
+1. **Security and data integrity:** AUD-008 and AUD-009. Treat as separate focused changes, with credential lifecycle tests and migration fixtures/schema history.
+2. **Correctness and execution responsiveness:** AUD-003 and AUD-006. AUD-003 is a small isolated fix. For AUD-006, record baseline traces first, then change dispatching with injectable test dispatchers and cancellation coverage.
+3. **Release assurance:** AUD-007 after the relevant test tasks are reliable and the migration test is included in CI. Keep the Debug workflow's current selective instrumentation policy unless evidence supports changing it.
+4. **UI efficiency and maintainability:** AUD-005 and AUD-002. Assess nested scrolling and capture a baseline before replacing the grid; perform UI extraction incrementally, not as a single rewrite.
+5. **Low-risk workflow cleanup:** AUD-004 and AUD-010. These can be scheduled independently after the higher-risk changes.
+
+### Preserve; do not optimize without new evidence
+- Keep the single app module and current recognizable presentation/domain/data boundaries. No evidence justifies multi-module decomposition or a broad architecture rewrite.
+- Keep raw source JSON preservation, unknown-field retention, and the normalized account model. Their processing cost is an intentional trade-off for fidelity and offline analysis.
+- Keep the existing local-first snapshot restore and deterministic analysis path. Do not make cloud AI or a remote backend mandatory.
+- Keep the current initial API concurrency and sequential character-detail batching unless rate-limit and latency measurements justify a change.
+- Keep Room's chunked transactional storage and legacy fallback while strengthening migration verification.
+- Keep Debug persistent signing, separate Release signing, signature verification, temporary keystore cleanup, KVM detection, and emulator TCG fallback.
+- Do not remove Coil or extended Material icons based on name alone; the inspected UI uses them.
+- Do not upgrade AGP/Kotlin/Compose/Room as a blind version sweep. No specific compatibility failure was established.
+- Do not enable R8, add dependencies, add custom build logic, or introduce paid CI runners as part of routine cleanup.
+
+### Audit limitations and confidence
+- This was a static repository review. No app build, unit/instrumentation test suite, runtime profiler, large-account benchmark, real-device credential extraction, dynamic security scan, penetration test, production API test, or real version-1 database migration was executed as part of this audit.
+- AUD-006's main-thread execution paths are established by static inspection, but the degree of user-visible jank is unmeasured.
+- AUD-008 confirms plaintext-capable SharedPreferences usage, but no physical-device extraction test was performed.
+- AUD-009 confirms the absence of a visible migration test and committed schema history in the inspected repository tree; actual migration failure or data loss has not been demonstrated.
+- Optional performance/build improvements require before-and-after measurements. No speedup, memory reduction, or APK-size reduction is claimed.
+- The audit did not modify application source, tests, Gradle configuration, dependencies, workflows, AGENTS.md, or product specifications.
+
+### Part 9 activity log
+- 2026-11-26: Reconciled AUD-002 through AUD-010, excluded the out-of-scope documentation capture concern AUD-001, prioritized remediation, identified dependencies and verification criteria, and documented preservation/deferment decisions. Part 9 completed. Awaiting user review and explicit implementation authorization.
+
+
+## 9. Audit completion criteria
+
+The audit may be closed when:
+
+- All nine parts have been completed, marked not applicable with evidence, or explicitly deferred with user-visible reasons.
+- Material findings have evidence, classification, impact, and recommended verification.
+- Contradictions and dependencies between findings have been reconciled.
+- Confirmed defects are separated from optional improvements and inconclusive items.
+- A prioritized optimization plan and safe implementation order are recorded.
+- Remaining uncertainties and limitations are explicit.
+- The user has reviewed the consolidated plan and decided what, if anything, should be implemented.
+
+Closing this audit does not mean the application is perfect or that every optional improvement must be implemented. It means the defined review has been completed to the documented scope.
+
+
+## Part 3 - Kotlin and Android code quality (completed)
+
+### Evidence inspected
+- `AccountViewModel.kt`: snapshot restoration, retrieval/export workflow, deterministic analysis, StateFlow updates, cancellation and exception handling.
+- `HoYoLabClient.kt`: OkHttp setup, synchronous request helpers wrapped in IO context, response envelope/error handling, UID lookup, daily-note retrieval, export concurrency.
+- `HoYoLabResponseParser.kt` and `HoYoLabExportResponseValidator.kt`: HTTP/JSON envelope and required structure validation.
+- `HoYoLabAccountRepository.kt`: result handling and mapping boundary.
+- `RoomAccountSnapshotStore.kt`: transactional persistence, JSON chunking, legacy fallback.
+- `UpgradeCostCalculator.kt`: request validation, segment matching, cost accumulation with overflow checking, inventory validation.
+- `MainActivity.kt`: Compose-level refresh, login, export-file saving, preference state, and UI progress/error handling.
+
+
+### Finding AUD-003 - Export file save can report success when output stream is unavailable
+- **Classification:** Medium-priority reliability issue.
+- **Evidence:** In `MainActivity.kt`, the CreateDocument result handler checks URI and JSON, then uses `context.contentResolver.openOutputStream(uri)?.use { ... }`. The stream is nullable, but the following code reports `Saved JSON file` regardless of whether `openOutputStream` returned null.
+- **Impact:** A file-provider/storage failure can produce a false success message, leaving the user believing their JSON export was saved.
+- **Confidence:** Verified by static code inspection; actual provider behavior not reproduced.
+- **Recommendation:** Treat a null output stream as a save failure and only show success after a non-null stream has been opened and written without exception.
+- **Verification:** Test successful write, null stream, and thrown write/open errors through a small testable save helper or equivalent targeted verification.
+- **Implementation status:** No change made.
+
+
+### Kotlin/Android code-quality observations (no confirmed issue in sampled areas)
+- `AccountViewModel` consistently rethrows `CancellationException` rather than swallowing coroutine cancellation.
+- Network calls in `HoYoLabClient` use `withContext(Dispatchers.IO)` and close responses via `use`; parsing is validated before data mapping.
+- Snapshot persistence is transaction-wrapped and uses chunk rows with a compatibility fallback for legacy raw JSON storage.
+- `UpgradeCostCalculator` validates requests and cost segments and uses `Math.addExact` to detect overflow rather than silently wrapping.
+- These are positive patterns to preserve during optimization.
+- A potential credential-storage concern was observed: `MainActivity.kt` persists the HoYoLAB cookie in app preferences. Its security implications and storage alternatives are reserved for Part 7; no conclusion is made here.
+
+
+### Part 3 activity log
+- 2026-11-26: Reviewed ViewModel, network client/parser/validator, repository, local snapshot store, cost calculator, and relevant MainActivity account flows. Confirmed AUD-003. Part 3 complete. No app source/config/tests/workflows modified.
+
+
+## Part 4 - Jetpack Compose performance and UI architecture (completed)
+
+### Evidence inspected
+- `MainActivity.kt`: root screen state, tab rendering, UI-state collection, vertical scrolling, conditional tab sections, roster filtering/sorting, character grid rendering, character detail sections, and artifact/constellation sorting.
+- Focused review of `CodexScreen` (lines 163-1156), `CharacterShowcaseSection` (lines 1902-2125), and `CharacterShowcaseDetail` (lines 2164-2386).
+- Android official architecture guidance was checked for lifecycle-aware UI state collection and Compose/ViewModel patterns.
+
+### Finding AUD-004 - UI state is collected without lifecycle awareness
+- **Classification:** Low-priority efficiency opportunity / lifecycle concern.
+- **Evidence:** `MainActivity.kt` collects `accountViewModel.uiState` using `collectAsState()` at line 171. The root screen is activity-composed UI, but the collector is not lifecycle-aware.
+- **Impact:** Collection can continue while the UI is not in an active lifecycle state, doing avoidable UI observation work.
+- **Confidence:** Verified implementation pattern; actual measurable resource impact not established.
+- **Recommendation:** Consider `collectAsStateWithLifecycle()` from Lifecycle Compose. This is a targeted modernization, not evidence of a current user-visible defect.
+- **Verification:** Ensure state updates are still reflected on resume and account workflows remain correct. No runtime measurement was performed.
+- **Implementation status:** None.
+
+### Finding AUD-005 - Expanded character roster is eagerly rendered
+- **Classification:** Medium efficiency opportunity; performance impact unmeasured.
+- **Evidence:** `CharacterShowcaseSection` filters and sorts the roster, then groups it with `chunked(3)` and renders each row and card inside regular `Column` composables. It does not use a lazy grid/list. Roster expansion is gated, but once expanded all filtered character cards are composed together; the current roster is around 67 characters.
+- **Impact:** Creates and lays out all visible roster cards and artwork slots at once rather than composing only viewport items. This may increase initial work and memory when users expand a large roster.
+- **Confidence:** Verified rendering pattern; runtime jank/frame or memory impact is not measured.
+- **Recommendation:** Consider replacing the expanded roster with `LazyVerticalGrid` or another lazy container, but only after checking nested scrolling constraints and keeping the current grid selection/filter/sort behavior. Avoid an unnecessary change if profiling shows no meaningful benefit at current roster size.
+- **Verification:** Compare composition/layout and scroll performance on-device with roster expanded, confirm selection, filters, sort, and detail panel behave identically.
+- **Implementation status:** None.
+
+### Compose observations (not confirmed defects)
+- The screen uses a root vertical scroll and conditional content for Home, Visuals, and Account. Tab changes recompose the screen, but conditional content prevents every tab's main section from being rendered simultaneously.
+- The roster's filtering and sorting are simple operations over a modest list. They are recomputed during composition; no finding is raised for this alone because the list is small and there is no performance measurement.
+- Character detail collections are small (talents, constellations, artifacts); eager rendering and sorting in these areas are not prioritized without evidence.
+- No measured recomposition, frame-time, or memory issue was confirmed. Static source review cannot establish runtime performance.
+- Official Android guidance recommends lifecycle-aware UI state collection such as `collectAsStateWithLifecycle()`. This supports AUD-004 as an opportunity, not a defect claim.
+
+### Part 4 activity log
+- 2026-11-26: Reviewed Compose state collection, tab content conditions, root scrolling, roster filtering/sorting and eager grid construction, character detail rendering, and collection sorting. Recorded AUD-004 and AUD-005. Part 4 completed as a static review with runtime profiling limitations stated. No app source/config/tests/workflows modified.
+
+
+## Part 5 - Data processing and local-first design (completed)
+
+### Evidence inspected
+- `HoYoLabClient.kt`: seven initial account endpoints launched concurrently; character detail retrieved in sequential batches of eight with a 200 ms inter-batch delay; raw response preservation; JSON export assembly.
+- `AccountExportDataPreserver.kt`: recursive deep-copy of JSONObject/JSONArray values, preserving source fields and nulls while adding property names.
+- `AccountExportMapper.kt`: conversion from raw JSON into normalized domain models, structured data, coverage/freshness, and character integrity.
+- `RoomAccountSnapshotStore.kt` and `SnapshotJsonChunks.kt`: chunked raw JSON persistence, transaction boundary, retrieval and legacy fallback.
+- `AccountViewModel.kt`: local snapshot restore, persistence, analysis scheduling, and UI state flow.
+- `AccountIntelligenceEngine.kt`: deterministic analysis stages over normalized snapshots.
+
+### Finding AUD-006 - CPU-heavy mapping and analysis are not explicitly dispatched off the main thread
+- **Classification:** High-priority responsiveness risk; requires measurement.
+- **Evidence:** `HoYoLabAccountRepository.fetchAccountExport` calls `exportJson` then immediately calls `mapExport(json)` in the caller context. The default network exporter uses `withContext(Dispatchers.IO)`, but that context is restored when it returns. The repository mapper therefore runs in the original caller context. The ViewModel is normally invoked from Compose/main and calls `analyzeSnapshot` synchronously; `AccountIntelligenceEngine.analyze` runs multiple analyzers synchronously. `RoomAccountSnapshotStore.save` also performs raw JSON chunk splitting and entity-list construction before its first Room suspend operation; `getLatest` maps the restored JSON after the DAO suspend call returns.
+- **Impact:** Mapping a full export, running all deterministic analyzers, splitting a large raw JSON export into chunks, and mapping restored snapshots may occupy the main thread and cause UI stalls/ANRs for large account data.
+- **Confidence:** High for the execution-context path by static inspection; actual duration and user-visible jank not measured.
+- **Recommendation:** Move CPU-bound mapping, chunk preparation, and deterministic analysis to an injected/default `Dispatchers.Default` (or an appropriate IO dispatcher for serialization/storage preparation). Keep database operations on Room's managed dispatchers. Make dispatcher ownership explicit and injectable for tests; avoid indiscriminately wrapping all suspend operations.
+- **Verification:** Profile cold import, cached restore, and analysis with a full roster; inspect main-thread traces and frame timing. Confirm cancellation and UI progress/error behavior remain correct.
+- **Implementation status:** None.
+
+### Data-flow observations (no confirmed defect)
+- The network exporter performs seven independent initial requests concurrently, then serially batches character details in groups of eight with a short delay. This is a reasonable balance between parallelism and endpoint/request limits; do not increase concurrency without rate-limit evidence.
+- Raw source data is deliberately preserved and stored alongside normalized domain models. This supports the local-first archive and future analysis, but creates expected memory/CPU overhead from JSON deep-copying, serialization, parsing, and normalized mapping. Preserve raw export fidelity unless product requirements explicitly change.
+- Room persistence stores large raw JSON in 32 KiB chunks, avoids oversized SQLite text values, writes snapshot metadata/chunks transactionally, and supports legacy unchunked rows.
+- Snapshot restoration reads local Room data and runs deterministic analysis without contacting HoYoLAB. This is a key local-first behavior to preserve.
+- `getHistory` currently loads and maps every history record into full `AccountExport` objects. No call-site evidence or large history size was established in this review; investigate usage before changing the API or loading strategy.
+- The JSON data preserver recursively copies source objects. This is intentional lossless preservation, not automatically redundant copying. Any optimization must retain unknown fields, nulls, and nested values.
+- No remote AI dependency is required for the deterministic analysis path inspected.
+
+### Part 5 activity log
+- 2026-11-26: Reviewed network fan-out/detail batching, raw JSON preservation, mapper transformations, chunked Room persistence, snapshot restoration, and deterministic analysis execution context. Recorded AUD-006. Part 5 completed as static review; no app source/config/tests/workflows modified.
+
+
+## Part 6 - Gradle, dependencies, build, and CI optimization (completed)
+
+### Evidence inspected
+- Root `build.gradle.kts`, `settings.gradle.kts`, and `gradle.properties`.
+- `gradle/libs.versions.toml`, `app/build.gradle.kts`, and `version.properties`.
+- `.github/workflows/build.yml` and `.github/workflows/release.yml`.
+- Android manifest and ProGuard rules.
+- Main source imports/usages for Coil and Material icons to check whether the corresponding visible dependencies are actually used.
+- Repository tree for Gradle wrapper files and Room schema snapshots.
+
+### Finding AUD-007 - Release workflow builds and publishes without running tests
+- **Classification:** Medium-priority release reliability gap.
+- **Evidence:** `.github/workflows/release.yml` validates the tag/version, configures signing, runs `gradle assembleRelease --no-daemon`, verifies the APK signature, calculates a checksum, and publishes the APK. It does not run unit tests or Room instrumentation tests. The Debug build workflow runs unit tests and conditionally runs Room instrumentation tests.
+- **Impact:** A release tag can publish an APK even if the tagged source has failing tests. A successful Release compilation and signature check do not establish behavioral correctness.
+- **Confidence:** Verified directly from the complete release workflow.
+- **Recommendation:** Add a test gate to the release workflow before publishing. At minimum run `testDebugUnitTest` (or an equivalent unit-test task against the tagged source). Decide whether Room instrumentation tests should also run on every release or whether the existing main-branch CI gate is sufficient; the release workflow should not silently imply test coverage it does not perform.
+- **Verification:** Create a test tag on a controlled branch or workflow test revision and confirm test failure prevents release publication.
+- **Implementation status:** None.
+
+### Build and CI observations (no confirmed defect)
+- The project has one app module, a centralized version catalog, Kotlin DSL, and KSP for Room. This is already a relatively simple build structure; no multi-module or build-logic restructuring is justified by this audit.
+- CI uses JDK 17 and Gradle 8.14.8. The Android Gradle Plugin is 8.5.0, Kotlin is 2.0.0, Compose compiler plugin is 2.0.0, and Room is 2.6.1. These are pinned versions, but this static review did not establish a specific compatibility failure. Upgrade as a coordinated, tested compatibility change rather than a blind version sweep.
+- The build workflow uses `gradle/actions/setup-gradle@v6`, which provides Gradle setup/caching support. It runs unit tests on every push and runs Room instrumentation tests when relevant persistence/schema/build files change or on manual dispatch. The path filter includes Room storage, mapper, snapshot model/contracts, Gradle configuration, and the workflow itself.
+- The workflow deliberately checks for KVM and retains an emulator TCG fallback. This is robust for GitHub-hosted runner variability. Do not remove this fallback or introduce paid runners as an assumed optimization.
+- Debug signing uses a dedicated persistent certificate supplied through Actions secrets; Release signing requires a separately configured keystore. Temporary keystore files are removed with an `always()` cleanup step. Release checkout disables persisted Git credentials.
+- Build workflow checkout uses `fetch-depth: 0`, supporting reliable comparison against the push event's `before` SHA for selective instrumentation testing. Reducing history depth is not recommended without proving that the diff base is always available.
+- The repository does not contain Gradle wrapper scripts/properties. CI installs the pinned Gradle distribution explicitly, while local development relies on an installed Gradle distribution. This is a reproducibility/onboarding trade-off, not a build defect in the current setup. Consider a wrapper only if consistent local setup across contributors becomes a requirement.
+- Coil and extended Material icons are used by the UI; they are not candidates for removal based on dependency name alone.
+- `lifecycle-runtime-ktx` appears in the direct dependency catalog but its APIs were not identified in the inspected main-source imports. Confirm its use across all source sets and transitive requirements before considering removal; its potential impact is likely small.
+- Release minification is disabled. Enabling R8 could reduce APK size, but it may introduce reflection/serialization/Room/Compose issues and should be a separate measured release-size project with mapping and smoke-test verification.
+- No build scan, Gradle task timing, dependency insight report, APK size baseline, or clean-room build benchmark was available. No claim of actual build slowness or dependency bloat is made.
+
+### Part 6 activity log
+- 2026-11-26: Reviewed Gradle scripts, version catalog, app dependencies, build/release workflows, signing configuration, manifest, ProGuard rules, wrapper presence, and visible dependency usages. Recorded AUD-007. Part 6 completed as static review; no app source/config/tests/workflows modified.
+
+
+## Part 7 - Testing, reliability, and security (completed)
+
+### Evidence inspected
+- Unit-test inventory and focused tests for API response parsing/validation, export assembly/preservation, mapping, repository behavior, chunk splitting, analysis, ViewModel workflows, and domain validation.
+- `RoomAccountSnapshotStoreTest.kt`, `SnapshotJsonChunksTest.kt`, and `IrminsulDatabase.kt`, including the version 1-to-2 migration.
+- `MainActivity.kt`: credential persistence, refresh/export flows, document-provider save callback, and user-facing cookie handling.
+- `HoYoLabLoginDialog.kt`: WebView configuration, cookie extraction, cookie cleanup, and navigation behavior.
+- `HoYoLabClient.kt`: HTTPS endpoints, Cookie header use, transport error handling, cancellation, and timeouts.
+- `AndroidManifest.xml`: permissions, exported activity, and backup policy.
+- Build workflow test gates and Room schema snapshot handling.
+
+### Finding AUD-008 - HoYoLAB session cookie is stored in ordinary SharedPreferences
+- **Classification:** High-priority credential-protection concern.
+- **Evidence:** `MainActivity.kt` reads and writes the full `ltoken_v2`/`ltuid_v2` cookie under the `cookie` key in `getSharedPreferences("irminsul_prefs", Context.MODE_PRIVATE)`. The cookie is persisted after manual Save & Sync and after WebView login. The WebView extraction intentionally reduces the captured cookie to these two values, and the manifest disables Android application backup.
+- **Impact:** `MODE_PRIVATE` provides app-sandbox access control, but it does not encrypt the preference value at rest. A valid HoYoLAB session cookie is a bearer credential; extraction from a compromised, rooted, or otherwise exposed app-private data store could expose the account session.
+- **Confidence:** Verified storage path by static inspection. No device compromise or filesystem extraction test was performed.
+- **Recommendation:** Store session credentials using Android Keystore-backed encryption, or a currently supported encrypted-storage design appropriate to the app's minSdk. Keep the UID and non-sensitive preferences in ordinary preferences. Add an explicit credential-clear/sign-out path and ensure clearing removes the persisted cookie and in-memory value. Avoid logging the cookie or including it in crash/diagnostic reports.
+- **Verification:** Inspect persisted storage to confirm the raw token is absent; test save, app restart, credential replacement, sign-out/clear, and failed key/decryption behavior. Confirm no cookie is sent to any destination other than the intended HoYoLAB HTTPS endpoints.
+- **Implementation status:** None.
+
+### Finding AUD-009 - Room version 1-to-2 data migration has no visible migration test or committed schema history
+- **Classification:** High-priority data-integrity verification gap.
+- **Evidence:** `IrminsulDatabase.MIGRATION_1_2` creates the JSON chunk table, reads existing snapshot IDs and raw JSON lengths, copies each legacy JSON value into ordered chunks using SQL `substr()`, and clears the old rawJson field. The only instrumented Room test file covers in-memory snapshot save/history and account separation; it does not build a version-1 database and execute the migration. The repository tree contains only `app/schemas/.gitkeep`, not a committed Room schema JSON. CI checks that KSP generates schema version 2 and uploads that generated file as an artifact, but this does not preserve a versioned schema history in the repository.
+- **Impact:** A defect in the SQL migration or schema evolution could corrupt or lose existing account snapshots during an upgrade without being caught by the current visible tests. Missing committed schema history also weakens Room's migration review and reproducibility.
+- **Confidence:** Verified migration implementation, test inventory, repository tree, and CI workflow. Migration execution against a real version-1 database was not performed.
+- **Recommendation:** Add a migration test that creates/populates the exact version-1 schema with representative small and multi-chunk raw JSON, opens it through Room with `MIGRATION_1_2`, and verifies exact reconstructed JSON, metadata, ordering, and row integrity. Preserve exported Room schema snapshots in version control so future migrations can be reviewed and tested against known schemas. Keep the existing CI generation check, but make schema history a maintained source artifact rather than relying only on an ephemeral build output.
+- **Verification:** Run the migration test on CI and assert byte-for-byte raw JSON equality before and after migration, including a payload larger than multiple chunk boundaries and Unicode boundary cases.
+- **Implementation status:** None.
+
+### Test and reliability observations (no additional confirmed defect)
+- The unit suite is broad across pure parsing, data preservation, mapping, account analysis, recommendation rules, validation, calculations, repository behavior, and ViewModel state transitions. This is a strong foundation; retain deterministic unit tests as the default for domain behavior.
+- API response parsing has explicit tests for success, API errors, HTTP errors, empty/malformed bodies, and bounded server messages. Repository tests cover success, mapping failure paths, malformed JSON, and coroutine cancellation.
+- Snapshot chunk splitting has tests for multi-chunk round trips, UTF-16 surrogate-pair boundaries, and empty input. The Room instrumented tests cover immutable history, raw JSON preservation, and separation of same-UID records by server.
+- The Room migration is more consequential than ordinary CRUD and needs its own on-disk migration test. Current in-memory tests do not exercise the 1-to-2 migration.
+- The document save callback still contains the nullable-output-stream success-reporting issue already recorded as AUD-003. No duplicate finding was created.
+- The login WebView clears cookies/cache/history/form data when captured or dismissed, extracts only `ltoken_v2` and `ltuid_v2`, and does not expose a JavaScript bridge in the inspected code. JavaScript and third-party cookies are enabled for the HoYoLAB login flow. Consider restricting navigation to the expected HoYoLAB domains and handling unexpected external navigation explicitly; no exploit was demonstrated.
+- The app requests only the INTERNET permission in the manifest, declares the launcher activity exported as required, and sets `allowBackup="false"`. The inspected API endpoints use HTTPS and the client has finite connect/read timeouts. No cleartext-traffic opt-in or broad storage permission was found in the manifest.
+- The cookie is passed to the HoYoLAB client as an HTTP Cookie header. The inspected UI states it will not be sent to an AI provider, and no AI provider integration or cookie forwarding path was present in the reviewed code. This is a code-review observation, not a runtime network-capture result.
+- The test suite does not visibly cover the Android document-provider save callback, WebView login/cookie lifecycle, or actual OkHttp transport against a controlled server. Add focused tests when these platform boundaries change; do not force brittle UI tests for every pure domain behavior.
+- No dynamic security scan, penetration test, real-device storage inspection, or production API test was performed.
+
+### Part 7 activity log
+- 2026-11-26: Reviewed test inventory and representative parser/repository/ViewModel/Room tests, Room migration SQL and schema history, credential persistence, WebView cookie handling, network transport, manifest permissions, and CI test/schema gates. Recorded AUD-008 and AUD-009. Part 7 completed as static review; no app source/config/tests/workflows modified.
+
+
+## Part 8 - Coding-agent and development workflow optimization (completed)
+
+### Evidence inspected
+- Root `AGENTS.md` instructions for repository reading, architecture, privacy, testing, release, milestone, and Git safety.
+- Debug and Release GitHub Actions workflows.
+- `.gitignore`, Gradle configuration, and repository tree for automation/support scripts.
+- Existing audit findings from Parts 1-7 for cross-part workflow implications.
+
+### Finding AUD-010 - Agent instructions can cause unnecessary broad context loading and documentation churn
+- **Classification:** Low-priority workflow efficiency opportunity.
+- **Evidence:** Root `AGENTS.md` lists README, `docs/SPECS.md`, and `docs/PROGRESS_MILESTONES.md` as minimum reading before changing code, and separately requires milestone updates for each meaningful development milestone. It also requires `RELEASE_PROCESS.md` and `version.properties` for version/signing/release changes. The user has explicitly narrowed this optimization effort to app implementation/build behavior and asked that unrelated repository documentation not become audit targets.
+- **Impact:** If agents interpret every listed document as mandatory for every narrow app change, they may load unrelated context and produce unnecessary documentation edits. This increases task time and makes focused app work harder to review.
+- **Confidence:** Instruction text verified. Actual agent token/time overhead was not benchmarked.
+- **Recommendation:** In a later authorized AGENTS.md revision, make reading conditional by task: always inspect the directly affected source/tests/build files; read product specs for behavior/architecture changes; read version/release instructions only for version/signing/release changes; consult milestone history only when continuing or recording a development milestone. Keep the privacy, credential, test, cancellation, and Git safety rules unconditional. Do not modify AGENTS.md during this audit.
+- **Implementation status:** None.
+
+### Workflow observations (no confirmed defect)
+- Debug CI runs unit tests on every push and conditionally runs Room instrumentation tests for persistence, mapper, schema, and build-related changes, plus manual runs. This is a reasonable balance for free GitHub-hosted runners; retain the selective test gate.
+- The workflow uses `fetch-depth: 0` because it compares the push's before-SHA with the current SHA to determine whether Room tests are required. Do not reduce checkout depth unless the change-detection mechanism is replaced and tested.
+- Persistent Debug signing, unique run-number-based Debug versioning, signature verification, and artifact upload are automated. Release signing is separate, checkout credentials are not persisted, and temporary signing material is removed.
+- The Release workflow's missing test gate is already recorded as AUD-007 in Part 6; no duplicate finding was created.
+- The Debug workflow has no concurrency group. Rapid pushes can queue redundant builds. An optional branch-scoped concurrency group with `cancel-in-progress: true` could reduce wasted runner minutes, but only if cancelling older in-progress Debug builds is acceptable. Preserve the latest successful artifact requirement and do not add paid runners.
+- No repository-specific developer scripts or custom build-logic modules were identified in the inspected workflow/configuration file set. The one-module Gradle setup and version catalog are already straightforward.
+- `.gitignore` excludes generated Gradle/build outputs, local SDK configuration, APKs, keystores, and profiling dumps. No obvious generated-artifact tracking issue was found in the inspected rules.
+- No workflow execution-time baseline, runner queue analysis, or agent-effort benchmark was available. The above workflow opportunities are static assessments, not measured speedups.
+
+### Part 8 activity log
+- 2026-11-26: Reviewed agent instructions, Debug/Release workflows, build support files, ignore rules, and existing audit findings. Recorded AUD-010 and optional CI concurrency improvement. Part 8 completed as static review; no app source/config/tests/workflows or AGENTS.md modified.
+
+
+---
+
+## 10. Remediation implementation tracker
+
+**Purpose:** Continue this audit record through implementation and verification of every approved batch. The findings and investigation history above remain intact. This tracker records the later implementation phase and supersedes the earlier audit-complete / awaiting-review status.
+
+**Tracking rules:**
+- A batch is not cleared until its relevant CI checks and required physical-device checks pass.
+- Record implementation, commits, CI, APK evidence, and device verification separately.
+- Do not claim measured performance improvement without comparable profiling evidence.
+- Keep follow-up enhancements visible without reopening an otherwise cleared batch.
+
+### Batch overview
+
+| Batch | Audit finding(s) | Status | Notes |
+|---|---|---|---|
+| 1 | AUD-008 credential protection; AUD-009 Room migration integrity | Cleared | CI #521 and #522 passed. User completed credential/session and sign-out device checks. |
+| 2 | AUD-003 JSON export false-success fix | Cleared | Final CI #530 passed. User confirmed export flow is clear. Cancellation during an active save remains a future UX enhancement. |
+| 3 | AUD-006 CPU-heavy processing off main thread; AUD-011 Chronicle rendering follow-up | Cleared | CI #542 passed for processing and #555 passed for the Chronicle corrections. User confirmed responsive rendering, correct Account Overview statistics, working expandables, and no exposed technical IDs/URLs. |
+| 4 | AUD-007 Release test gate | CI passed; tagged-release path untested | CI #556 passed. The successful tagged-release publication path remains untested; no release was published. |
+| 5 | AUD-005 lazy roster grid | Cleared | CI #557 passed and user completed physical-device checks: grid scrolling, parent-page scrolling, filters, sorting, selection/detail updates, and responsiveness all worked. |
+| 6 | AUD-002 incremental UI extraction | CI #852 passed; final physical-device verification pending | Steps 1-21 are cleared. Step 22 is implemented; CI #852 passed and Debug APK artifact is available. |
+| 7 | AUD-004 lifecycle-aware StateFlow collection | Implemented; CI #782 passed; device verification not recorded | Already present in current CodexScreen and lifecycle-runtime-compose dependency. No duplicate implementation needed. |
+| 8 | AUD-010 agent workflow efficiency | Implemented in current commit; CI pending | AGENTS.md now retrieves supporting context conditionally by task while retaining safety rules unconditionally. |
+
+### Batch 1 - Credential protection and Room migration integrity
+
+**Findings:** AUD-008 and AUD-009  
+**Status:** Cleared
+
+**Implementation:**
+- Added Android Keystore-backed AES-GCM encryption for the HoYoLAB cookie.
+- Kept non-sensitive preferences separate from the encrypted credential ciphertext.
+- Added legacy plaintext migration and explicit credential clearing behavior.
+- Added Room version-1-to-version-2 migration instrumentation coverage and committed schema snapshots.
+
+**Principal files:**
+- `app/src/main/java/com/irminsul/codex/integration/security/HoYoLabCredentialStore.kt`
+- `app/src/androidTest/java/com/irminsul/codex/data/local/IrminsulDatabaseMigrationTest.kt`
+- `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/1.json`
+- `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/2.json`
+- `app/build.gradle.kts`
+
+**Commits:** `a060320a`, `dcaa8066`, `2dc605dc`, `e0d57b1a`, `f1b204b3`, `f44f5ef8`  
+**CI:** #521 passed, including all eight Android instrumentation tests. #522 passed, including build and schema verification.  
+**Physical-device verification:** User confirmed the session survived installation and app restarts; sign-out returned to login while the saved character roster remained available; fresh login succeeded and remained connected after another restart.  
+**Verification boundary:** The UI checks did not directly inspect encrypted bytes on-device. Encryption and migration behavior are covered by automated tests.
+
+### Batch 2 - JSON export save-result integrity
+
+**Finding:** AUD-003  
+**Status:** Cleared
+
+**Implementation:**
+- Added a testable JSON document writer.
+- Treats a null output stream, open failure, write failure, or close failure as a failed save.
+- Reports success only after the output stream has been written and closed successfully.
+- Handles document-picker cancellation without displaying a false success message.
+
+**Principal files:**
+- `app/src/main/java/com/irminsul/codex/data/export/JsonDocumentWriter.kt`
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/test/java/com/irminsul/codex/data/export/JsonDocumentWriterTest.kt`
+
+**Commits:** `a509acede`, `c62e9f73`, `d4c03692`, `f2f83954`, `ec38bc78`  
+**CI:** #526 passed, #527 passed, #528 failed, #529 passed, and final integrated run #530 passed.  
+**Physical-device verification:** User confirmed the export flow is clear.  
+**Follow-up requirement:** Once an export/save operation begins, the UI currently has no cancel control. Add a safe cancellation action in a future relevant batch. A cancelled or partially written file must never be reported as successfully saved. This follow-up does not reopen the completed false-success fix.
+
+### Batch 3 - CPU-heavy processing off the main thread
+
+**Finding:** AUD-006  
+**Status:** Implementation committed; CI verification passed; physical-device verification pending.
+
+**Implementation:**
+- `HoYoLabAccountRepository` now performs export JSON-to-domain mapping on an injected CPU dispatcher, defaulting to `Dispatchers.Default`.
+- `AccountViewModel` now runs deterministic account analysis on an injected CPU dispatcher. Its factory forwards the dispatcher and analyzer dependencies.
+- `RoomAccountSnapshotStore` now performs JSON chunk splitting, chunk joining, and restored snapshot mapping on an injected CPU dispatcher.
+- Room DAO queries and transactions remain suspend Room operations on Room-managed executors.
+- Coroutine cancellation is rethrown rather than converted into ordinary mapping or analysis failures.
+- No dependency, Room schema, JSON format, account model, or analysis rule was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/repository/HoYoLabAccountRepository.kt`
+- `app/src/main/java/com/irminsul/codex/data/local/repository/RoomAccountSnapshotStore.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/viewmodel/AccountViewModel.kt`
+- `app/src/test/java/com/irminsul/codex/data/repository/HoYoLabAccountRepositoryTest.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/viewmodel/AccountViewModelTest.kt`
+- `app/src/androidTest/java/com/irminsul/codex/data/local/RoomAccountSnapshotStoreTest.kt`
+
+**Commits:** `6f752366`, `9f7ae9a7`, `c8618646`, `d061d1a3`, `27be3508`, `a0488215`, `b1760fba`, `448d2823`, `3a88ba07`, `393e117c`, `d8719317`, `9bc551fe`.
+
+**Automated verification:**
+- CI #541 passed unit tests, Debug APK build, Room schema verification, and APK signature verification. Room instrumentation tests were skipped on that run because its changed-file set did not include the instrumentation test.
+- CI #542 passed on commit `9bc551fe1b59ff08c244fbb398d684a7973c01c8`. Unit tests passed (267 tests); Room instrumentation tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload all passed.
+- Earlier intermediate runs #532 through #540 failed while tests were being adjusted for asynchronous dispatch and thread verification. Those runs are superseded by the later corrected run #541 and final run #542. Do not treat an intermediate failure as a final batch result.
+
+**Performance evidence limitation:** The original audit established the main-thread execution paths by static inspection, but no baseline System Trace or comparable before-change timing was captured before implementation. No quantified speedup or frame-time improvement is claimed. Physical-device responsiveness checks and any available post-change profiling remain pending.
+
+**Next actions:**
+1. Install the CI #542 Debug APK on the physical device.
+2. Test a fresh account retrieval and confirm the UI remains responsive while the account export is mapped and saved.
+3. Restart the app and confirm cached snapshot restoration and deterministic analysis complete without a new account download.
+4. Confirm full-roster analysis remains responsive and produces the same account findings and recommendations.
+5. Clear Batch 3 only after these device checks pass. Then begin Batch 4, AUD-007.
+
+### Continuing update log
+
+- 2026-11-26: Recorded Batch 1 and Batch 2 implementation and verification history; started the Batch 3 remediation record. Batch 3 source changes are committed. CI #542 passed all unit, Room instrumentation, build, schema, signature, and artifact checks. Physical-device verification remains pending.
+
+
+### Batch 3 follow-up - AUD-011 bounded Chronicle rendering
+
+**Finding:** AUD-011 - Unbounded recursive Chronicle rendering  
+**Status:** Implementation prepared; CI and physical-device verification pending.
+
+**Observed during physical-device testing of Debug build #542:**
+- Account retrieval completed and the account information was reported correct.
+- Expanding Account Chronicles caused visible frame-rate drops, most noticeably in World Exploration & Collectibles.
+- The expanded section exposed source implementation details such as image URLs, icon paths, and internal entry identifiers.
+- Static source inspection confirmed that `ChronicleStructuredNode` recursively traversed every nested object and array and composed all entries immediately. This is a code-level explanation consistent with the report; no runtime trace or measured frame-time data is available.
+
+**Focused remediation:**
+- Keep the original structured payload intact. No mapper, export, snapshot, or persistence transformation is required.
+- Render immediate object fields only. Nested objects and arrays remain collapsed until the user opens them.
+- Render expanded arrays through a bounded-height `LazyColumn` with stable item keys rather than eagerly composing every entry.
+- Hide technical field names and URL/artwork-filename values from the presentation layer.
+- Keep the existing Character Showcase as the primary detailed character presentation. Chronicle remains a compact account-data overview.
+- Preserve missing, unavailable, failed, and stale section handling.
+
+**Files added/changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationRules.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationRulesTest.kt`
+
+**Verification plan:**
+1. Run the repository Debug CI workflow, including JVM tests and APK build/signature/artifact checks.
+2. Install the new APK and compare Chronicle expand/collapse responsiveness, especially World Exploration & Collectibles.
+3. Confirm URLs, artwork paths, and internal IDs are no longer presented as account details.
+4. Confirm profile values, exploration values, and independently expanded groups remain readable.
+5. Confirm current/previous Spiral Abyss and Imaginarium Theater sections still expand and preserve their status messaging.
+6. Confirm JSON export and restored account data are unchanged.
+
+**Performance evidence boundary:** Lazy composition and deferred nested traversal are structural optimizations. Do not claim a measured FPS improvement until the user confirms the device retest or comparable profiling evidence is available.
+
+
+
+## AUD-011 Follow-up - Failed generic Chronicle renderer replacement
+
+**Device result:** The user tested the build containing the bounded recursive renderer and reported that scrolling/expansion lag became worse and technical reference IDs and URLs remained visible. The attempted mitigation is therefore **failed**, not accepted.
+
+**Cause confirmed by source inspection:**
+- A recursive generic renderer still exposed raw payload values through incomplete denylist filtering.
+- It created nested Compose content for large object/array trees.
+- A nested `LazyColumn` was placed inside the screen's vertically scrolling content, increasing layout/scroll complexity.
+
+**Corrective implementation direction:** Remove the generic raw-payload renderer from Visuals. Replace it with section-specific presentation mapping that uses explicit allowlists of supported user-facing fields. Render exploration regions as a bounded horizontal card strip. Keep unsupported and unknown source fields out of the UI. Preserve raw structured data unchanged for local analysis and JSON export.
+
+**Verification:** The previous renderer is rejected based on physical-device feedback. The replacement requires CI and a fresh device test. No FPS improvement is claimed until the user retests the replacement build.
+
+
+## AUD-011 Follow-up - CI #550 compilation failure and correction
+
+**CI evidence:** Workflow run [#550](https://github.com/berao609/Irminsul-codex/actions/runs/45860847660) failed at `app:compileDebugKotlin` before unit tests, APK packaging, signature verification, or artifact upload. The compiler reported `MainActivity.kt:2837:1: This annotation is not repeatable.`
+
+**Root cause:** `ChronicleOverviewSection` had two consecutive `@Composable` annotations. This was introduced in the section-specific renderer change. It is a direct source compilation defect, not a Gradle, dependency, signing, or test failure.
+
+**Correction:** Remove the duplicate annotation and retain the single required `@Composable` annotation. No runtime behavior or data mapping is changed by this correction.
+
+**Verification boundary:** The correction must pass a fresh CI run before an APK can be offered. The allowlisted renderer remains unverified on the physical device; the earlier bounded recursive renderer remains rejected based on the user's device feedback.
+
+
+## Batch 3 closure - AUD-006 and AUD-011
+
+**Status:** Cleared by CI and physical-device verification.
+
+- CI #542 passed the dispatcher implementation, unit tests, Room instrumentation tests, Debug APK build, schema verification, and signature verification.
+- The initial bounded recursive Chronicle renderer was rejected after device testing due to worse lag and continued technical-field exposure.
+- The section-specific allowlisted renderer and subsequent Account Overview split-source correction passed CI #555.
+- The user confirmed the latest build is smooth, Account Overview statistics are present, expandable sections work, and technical IDs/URLs are no longer exposed.
+- No quantified FPS improvement is claimed; the device feedback confirms acceptable responsiveness, not a measured frame-time delta.
+
+## Batch 4 - Release test gate (AUD-007)
+
+**Status:** Implementation committed; CI #556 passed; tagged-release publication path untested.
+
+**Implementation:**
+- Added `gradle testDebugUnitTest --no-daemon` to `.github/workflows/release.yml`.
+- The test gate runs against the tagged source after tag/version validation and Gradle setup, but before Release keystore decoding, Release APK compilation/signing, signature verification, and GitHub Release publication.
+- A non-zero test result fails the job, so subsequent signing/build/publication steps are skipped.
+- Room instrumentation tests are intentionally not repeated on every official release. The existing Debug workflow continues to run them for relevant persistence/schema changes and manual full-test runs.
+- Updated `RELEASE_PROCESS.md` to describe the test gate and its coverage boundary.
+
+**Files changed:**
+- `.github/workflows/release.yml`
+- `RELEASE_PROCESS.md`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification boundary:**
+- The release workflow's step ordering provides the failure gate: a failed unit-test command terminates the job before signing or publishing.
+- The successful tagged-release publication path has not been executed; no release tag was created and no official release was published.
+- CI #556 passed, including the Release workflow configuration validation on the main branch. The successful tagged-release publication path has not been executed; no release tag was created and no official release was published.
+
+
+## Batch 5 - Lazy character roster grid (AUD-005)
+
+**Status:** Cleared after CI #557 and physical-device verification.
+
+**Implementation:**
+- Replaced eager `chunked(3)` row/card composition with a three-column `LazyVerticalGrid`.
+- Added stable item keys using each character's existing ID.
+- Bounded the nested grid viewport to at most four estimated card rows so it receives finite height inside the existing vertically scrollable Visuals page. Larger rosters scroll within the grid instead of composing every card.
+- Memoized the element and weapon filter options by roster, and memoized filtered/sorted results by their input state. Filtering and sorting rules and their existing controls are unchanged.
+- Preserved selected-character highlighting and the selected character detail panel.
+- Added no dependencies and changed no account data, persistence, or analysis behavior.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Automated verification:**
+- CI #557 passed unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped because this change did not trigger them.
+- Commit: `17b64ce96be75a23eaa7556b08e5f2116e343615`.
+
+**Physical-device verification:** User installed Debug build #557 and confirmed:
+- Character Roster opens; scrolling inside the grid reaches the final character.
+- Scrolling outside the grid still moves the surrounding Visuals page.
+- Search, element/weapon/rarity/level filters, Clear filters, and all sorting choices/directions behaved normally.
+- Selecting every tested character updates the selected state and detail panel correctly.
+- Collapsing/reopening the roster and scrolling remained responsive.
+
+**Result:** Batch 5 is cleared. No quantified performance improvement is claimed because no comparable runtime profiling was captured.
+
+**Follow-up UI requirements recorded for a separate focused change (not part of the cleared performance batch):**
+- Remove the Rarity filter entirely.
+- Remove all sorting controls and sorting options.
+- Preserve chronological character release order, oldest first, as the default roster order.
+- Give 5-star cards a permanent gold background and 4-star cards a permanent purple background.
+- Keep the rarity background when selected and add a subtle additional selection highlight.
+
+
+## Batch 6 - Incremental UI responsibility extraction (AUD-002)
+
+**Status:** In progress. Focused presentation extractions are committed; CI and device verification remain pending for the active step.
+
+**Step 1 - Account Chronicle presentation extraction:**
+- Moved the Account Overview, World Exploration & Collectibles, and record summary composables into `presentation/ChronicleSections.kt`.
+- Kept the presentation mapper and record-mode types in the existing presentation package.
+- Preserved the existing call sites and rendered content. This is a file/responsibility extraction only; no state ownership, data mapping, or UI behavior was intentionally changed.
+- Kept the section card and availability-message helpers private to the extracted file.
+- Left unrelated Daily Note and metric components in MainActivity for a later focused decision.
+
+**Verification required:**
+- Run the Debug CI workflow and inspect compilation/unit-test results.
+- On device, verify Account Overview, World Exploration & Collectibles, current/previous Spiral Abyss, and Imaginarium Theater render and expand as before.
+- Confirm no navigation, account retrieval, or Visuals page behavior regresses.
+
+**Scope rule:** Continue one cohesive extraction at a time. Do not combine this work with the separately recorded character-roster filter/order/card-style follow-ups.
+
+
+### Batch 6 - Step 2: Lineup Simulator presentation extraction
+
+**Finding:** AUD-002 - Split oversized UI responsibilities incrementally.
+
+**Status:** Source extraction committed; physical-device verification confirmed by user; CI verification remains pending.
+
+**Implementation:**
+- Moved the Lineup Simulator composable from `MainActivity.kt` into `presentation/LineupSimulatorSection.kt`.
+- Kept selection state, active-roster filtering, stale/partial status derivation, and toggle callbacks in `CodexScreen`.
+- Kept the existing `LineupSelectionRules` domain logic unchanged.
+- Moved the lineup-specific artwork and element-fallback helpers with the extracted presentation.
+- Preserved the four-slot layout, selection order, full-team behavior, roster warnings, and descriptive-only element summary.
+- No account data, persistence, navigation, or analysis behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/LineupSimulatorSection.kt`
+
+**Commits:**
+- `e2e21c3703f733448e7918ea7be7ad2de3b52636` - extracted presentation component.
+- `21b68f750a54fce3f5115146225cfca1638bda7b` - updated MainActivity call site.
+
+**Verification record (2026-11-27):**
+- User confirmed the device checklist is clear. Physical-device verification is therefore recorded as passed.
+- Debug CI unit tests, compilation, APK build, schema verification, and signature verification are still unconfirmed in the available evidence. Do not mark CI as passed.
+
+**Boundary:** This is a responsibility extraction only. No performance improvement is claimed. Continue with one cohesive extraction after this step is verified.
+
+
+### Batch 6 - Step 3: Character Showcase presentation extraction
+
+**Finding:** AUD-002 - Split oversized UI responsibilities incrementally.
+
+**Status:** Cleared after CI #581 and physical-device verification.
+
+**Implementation:**
+- Moved the Character Showcase roster, filters, selected-character detail profile, talent and constellation details, weapon and artifact inspection, and their presentation helpers into `presentation/CharacterShowcaseSection.kt`.
+- Kept the selected character ID and selection callback in `CodexScreen`; the screen still owns which character is selected.
+- Kept roster search/filter/expand state local to the Character Showcase presentation, where it was already owned.
+- Preserved the current release ordering, rarity card backgrounds, selection highlight, filters, lazy grid, character details, weapon passive lookup, and artifact/talent/constellation interactions.
+- No account model, persistence, navigation, analysis, or product behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterShowcaseSection.kt`
+
+**Commits:**
+- `96628ec862051308703c0a90e783bf77bbcac8c6` - extracted Character Showcase presentation.
+- `f3ca764cfb0c22291cd92baeceb753679369e5cc` - integrated extracted component into MainActivity.
+- `177c74737e4097d1187499784ff5fd253f15d551` - added coroutine imports required by weapon passive loading.
+- `6aa462c0743264f2a48311d20ed6b17c181ea59c` - moved the recommendation avatar fallback back beside its remaining caller.
+- `6ab25a876e7aed9e7db4f92e1cad7743ab5a0fc9` - completed the MainActivity helper integration.
+
+**Static source verification:**
+- MainActivity imports and calls the extracted public composable.
+- The old private CharacterShowcaseSection implementation is no longer in MainActivity.
+- Selection ownership remains in CodexScreen.
+- Roster filters/grid and character build-detail components are present in the extracted file.
+
+**CI correction record:** Initial Debug CI attempts exposed two extraction-boundary issues: the weapon-passive coroutine imports were missing from the new file, and `CharacterAvatarFallback` remained needed by the recommendation card in MainActivity. Both were corrected in the commits above. Later Debug CI reruns are in progress; no successful run is claimed yet.
+
+**Verification required:**
+1. Confirm a Debug CI run after the corrective commits passes compilation, unit tests, APK build, Room schema verification, and APK signature verification.
+2. Open Visuals and expand Character Roster.
+3. Verify newest-first release order, portrait cards, permanent rarity backgrounds, and selected-card highlight.
+4. Test search, element and weapon filters, level range, and Clear filters.
+5. Select multiple characters and confirm the detail panel follows the selected character.
+6. Inspect talents, constellations, weapon passive, weapon stats, artifacts, and artifact substats.
+7. Collapse/reopen the roster and confirm the selected character remains selected.
+
+**Result:** Step 3 is cleared. Structural extraction only; no performance improvement is claimed.
+
+
+### Batch 6 - Step 4: Materials Planner presentation extraction
+
+**Finding:** AUD-002 - Split oversized UI responsibilities incrementally.
+
+**Status:** Extraction committed; CI and device verification pending.
+
+**Implementation:**
+- Moved Materials Planner presentation, plan row models, preference-backed state, and manual material JSON serialization helpers into `presentation/MaterialsPlannerSection.kt`.
+- Kept the existing call site in MainActivity and routed it to the extracted public composable.
+- Preserved SharedPreferences keys and serialization structure to avoid altering saved plans.
+- Kept `ManualMaterialPlanCalculator` and `ManualPlanCalculationStatus` in the domain layer.
+- No plan calculation, persistence format, or user-facing behavior was intentionally changed.
+
+**Commits:**
+- `1336b1de15c3920fcd3fd34409743efec8135cd0` - extracted Materials Planner presentation.
+- `9f19650b11a6180696b988c5baaa01c9d7cccf26` - integrated extracted presentation into MainActivity.
+
+**Static verification:** The extracted file exists and contains the public MaterialsPlannerSection composable and local serialization helpers. MainActivity retains the call site but no longer contains the planner's row model, composable, or serialization helpers. MainActivity is now approximately 1,472 lines.
+
+**Verification required:**
+1. CI #584 and #585 must pass compilation, unit tests, APK build, schema verification, and signature verification.
+2. Open Materials Planner and verify target selection for characters, equipped weapons, and custom targets.
+3. Verify character talent current/target fields.
+4. Verify planned weapon selection/custom weapon name and current/target level fields.
+5. Add, edit, and remove manual material rows; verify remaining quantity and invalid/missing input states.
+6. Collapse and reopen the planner; verify data persists for multiple targets.
+7. Confirm existing saved plans remain intact.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed.
+
+
+## Navigation adjustment during Batch 6 (user-directed scope)
+
+**Date:** 2026-11-27
+
+**Change:** Added the Tools destination to the bottom navigation and moved Materials Planner out of Visuals into Tools. The bottom-navigation order is Home, Visuals, centered AI action, Tools, Account. Removed the duplicate top-header Account shortcut; Account remains in bottom navigation.
+
+**Boundary:** This was a user-directed navigation/product adjustment alongside the ongoing responsibility-extraction batch, not an audit finding and not a performance optimization. Calculator calculation logic, planner preference keys, and account data were not intentionally changed.
+
+**Verification:** CI and physical-device verification pending. See Milestone 081.
+
+**Next audit action:** Continue Batch 6 one cohesive presentation extraction at a time after this change is verified. Do not start UI overhaul or change calculator internals.
+
+
+### Batch 6 - Step 5: Shared dashboard metric presentation extraction
+
+**Status:** Cleared after CI #727 and user-confirmed physical-device verification.
+
+**Verification:** User confirmed CI #727 succeeded and the app was tested on a physical device. The user-confirmed device checklist passed. Exact workflow run ID and artifact metadata were not independently retrieved. No performance improvement is claimed.
+
+**Implementation:**
+- Moved AssessmentBar, MetricTile, and DailyNoteMetricRow plus formatDuration into presentation/DashboardMetrics.kt.
+- Updated MainActivity imports while preserving existing call sites and behavior.
+- No state ownership, account mapping, calculations, persistence, navigation, or calculator behavior was changed.
+
+**Files changed:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/DashboardMetrics.kt
+
+**Static verification:**
+- All four helper definitions were removed from MainActivity and recreated in the presentation package.
+- Existing call sites remain in place and resolve through explicit imports.
+- Structural extraction only; no performance improvement is claimed.
+
+**Verification record:** User confirmed CI #727 succeeded and the app was tested on a physical device. The user-confirmed device checklist passed. Exact checklist details and workflow artifact metadata were not independently retrieved.
+
+**Boundary:** Structural extraction only. Keep calculator logic and the deferred UI redesign out of this step.
+
+
+### Batch 6 - Step 6: Bottom navigation presentation extraction
+
+**Status:** Cleared after CI #738 and user-confirmed physical-device navigation verification.
+
+**Implementation:**
+- Moved the bottom navigation bar and raised central AI action into `CodexBottomNavigationBar.kt`.
+- Moved the `CodexTab` enum alongside the navigation presentation component.
+- Kept tab selection and Account credential-panel state ownership in `CodexScreen`; the extracted component reports tab selection and AI-button clicks through callbacks.
+- Preserved the destination order and selected-state behavior: Home, Visuals, centered AI action, Tools, Account.
+- No navigation destinations, routing rules, account data, or AI provider behavior were changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexBottomNavigationBar.kt`
+
+**Static verification:**
+- MainActivity delegates bottom-bar rendering to the extracted composable.
+- Tab state remains owned by CodexScreen.
+- Account selection still opens the credential panel.
+- Structural extraction only; no performance improvement is claimed.
+
+**Verification record:** User confirmed CI #738 succeeded and device navigation testing passed, including destination order, selected-tab indication, central AI action, and Account access. No performance improvement is claimed.
+
+**Boundary:** Do not alter tab behavior or begin the deferred UI redesign during this extraction.
+
+
+### Batch 6 - Step 7: Visual Dashboard presentation extraction
+
+**Status:** Cleared after corrected placement CI #752 and user-confirmed physical-device verification.
+
+**Implementation:**
+- Moved the Visual Dashboard presentation into `presentation/VisualDashboardSection.kt`.
+- MainActivity now delegates rendering through `VisualDashboardSection(accountExportState.intelligenceOverview)`.
+- Preserved the no-analysis state, assessment bars, and recommendation/gap metrics. The later user-directed correction removed the account-data coverage card and restricted the dashboard to Home.
+- Reused the existing `AssessmentBar` and `MetricTile` helpers from `DashboardMetrics.kt`.
+- Kept account analysis, state ownership, data mapping, navigation, and calculator behavior unchanged.
+- Corrected the missing Compose `dp` import after CI #744 exposed the compile error.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualDashboardSection.kt`
+
+**Commits:**
+- Extraction and integration: `9f730e5c510b73bfe5600107c91b9a1d7724268b`, `9840297f1afab04fb8962da2055ba7639f4fdf78`
+- Follow-up source corrections: `82c764635e4166005e4f42754964c30bc835acb9`, `43f0b5de84d7c52b126439cf8b8cf164650aca48`, `2e2d505956a1c9e21ea4e4ecf3508b785ec891cc`, `6bdceb471321b727bee9f22b0aeb97167e2c6273`
+- CI correction: `756f2fa6d7a23ae8e8c26a23b541bff8d7dbe937`
+
+**Automated verification:**
+- CI #744 failed at Kotlin compilation because the extracted file lacked the `androidx.compose.ui.unit.dp` import.
+- Added the missing import; no behavior change.
+- CI #745 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped because this presentation-only change did not require them.
+- Workflow: https://github.com/berao609/Irminsul-codex/actions/runs/45948947383
+- Debug APK: `irminsul-codex-debug-v1.0.0-dev.745-vc747` (artifact ID `15175399449`, archive SHA-256 `442e74e737e89fcdce84800ae0b349e6aa77897ccb712f9f6fc272276295b266`).
+- Room schema artifact: `irminsul-room-schema-v2-run-745` (artifact ID `15175592695`).
+
+**Physical-device verification:** The original #745 dashboard extraction was superseded by the user-directed Home-only placement and coverage-card removal. CI #752 passed for the corrected source, and the user confirmed the corrected build was tested successfully on a physical device.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed. Do not begin another extraction until the user confirms the device checklist.
+
+
+### User-directed dashboard placement correction (2026-11-27)
+
+**Change:** After the initial Step 7 device observation showed the dashboard on every destination, the call site was restricted to CodexTab.HOME. The Account data coverage card was removed from VisualDashboardSection. The Home assessment bars and recommendation/gap metrics remain; Visuals analysis, Tools calculator, Account functions, and underlying analysis data were not intentionally changed.
+
+**Files:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/VisualDashboardSection.kt
+- README.md
+
+**Commits:** 7e0f86b36126654f5bd2b35a1b8122928a8424e0, a9fc65af97ea30c15a8a4b80f5a89c633a11bbf0, 901100de487339238d8ec8957919ea9cfecc7e13.
+
+**Verification:** CI #752 passed for the corrected source; user confirmed successful physical-device testing. Batch 6 Step 7 is cleared.
+
+
+### Batch 6 - Step 8: Home Daily Note presentation extraction
+
+**Status:** Cleared after CI #756 and user-confirmed physical-device verification.
+
+**Implementation:**
+- Extracted the Home Daily Note empty state and populated Resin, expedition, Realm Currency, commission, weekly discount, and refresh presentation into `presentation/HomeDailyNoteSection.kt`.
+- Kept Daily Note retrieval, loading state, credential checks, refresh callback, and export-in-progress state owned by `CodexScreen`.
+- Preserved the existing nullable-value display behavior, Resin progress/recovery rules, refresh enablement, and visual content.
+- Kept the initial loading indicator in MainActivity at its existing position to preserve Home layout order.
+- No API, parsing, account state, persistence, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeDailyNoteSection.kt`
+
+**Commits:**
+- `816288d4847ace9ec2c74eeba1b46ba1c5492370` - add extracted Home Daily Note section.
+- `f12e48f2eb10738d47397d3c7f396fd1f611a81a` - replace inline Daily Note UI with component call.
+- `33c360f31862361630c9b0fb306df85f8598b89a` - trim unused imports in extracted component.
+- `5a8884338f7f8cd86763fa41552352833c3288c4` - add component import to MainActivity.
+
+**Static verification:** MainActivity delegates empty and populated Daily Note presentation to the new component. The extracted component retains all four DailyNoteMetricRow calls and the original refresh/loading/empty-state conditions.
+
+**Automated verification:**
+- CI #755 failed during Kotlin compilation because MainActivity did not yet import HomeDailyNoteSection. The missing import was added in commit `5a8884338f7f8cd86763fa41552352833c3288c4`.
+- CI #756 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions.
+- Workflow: https://github.com/berao609/Irminsul-codex/actions/runs/45951308270
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.756-vc758` (artifact ID `15176821455`; archive SHA-256 `b3db8ba816b58d7b4cc540c29f2f4e120b83a5b678d02a40c2be062ac2ccd12e`).
+- Room schema artifact: `irminsul-room-schema-v2-run-756` (artifact ID `15177590028`; archive SHA-256 `29ce4a60b14fb46e8b8ce683adde365adf5730634be678a9142e70bf9bac677b`).
+
+**Physical-device verification:** User confirmed that Debug APK #756 was tested successfully on the physical device. Individual checklist items were not separately enumerated.
+
+**Device checklist:**
+1. Home loading indicator appears while Daily Note is loading with no cached note.
+2. Empty Daily Note state and Sync Daily Note action appear only when credentials are available and loading is complete.
+3. Populated Resin value, maximum, progress, and recovery status are unchanged, including unavailable and full-resin states.
+4. Expedition, Realm Currency, commission reward, and weekly Resin discount values/statuses remain correct, including null values.
+5. Refresh Notes button and disabled/loading behavior remain correct.
+6. Visuals, Tools, and Account navigation and existing features remain unaffected.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed. Step 8 is cleared.
+
+
+### Batch 6 - Step 9: Account Data Export presentation extraction
+
+**Status:** Cleared after CI #767 and user-confirmed physical-device verification.
+
+**Implementation:**
+- Extracted the Account Data Export card into `presentation/AccountDataExportSection.kt`.
+- MainActivity passes the existing progress text, export status, exporting/restoring flags, and export callback into the section.
+- Kept account export orchestration, UID/cookie validation, ViewModel calls, document-picker handling, JSON writing, and result state in `CodexScreen`.
+- Preserved the Account-tab and nonblank-credential visibility condition, progress/status messages, button label, and disabled state.
+- No export format, retrieval, persistence, credential, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountDataExportSection.kt`
+
+**Static verification:** MainActivity delegates only the Account Data Export card presentation. All callbacks and state inputs remain owned by CodexScreen.
+
+**Automated verification:** CI #767 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions.
+
+**Physical-device verification:** User confirmed successful testing. Individual checklist items were not separately enumerated.
+
+**Boundary:** Structural extraction only. JSON export behavior and calculator logic remain unchanged. Step 9 is cleared.
+
+
+### User-directed UI refinement - First-run sign-in (2026-11-27)
+
+**Status:** Implemented; CI and device verification pending.
+
+**Change:** Replaced the initial Home credential-entry card with a centered, width-constrained first-run sign-in card. The first-run card contains only app identity, brief guidance, and the HoYoLAB sign-in action, with loading/error feedback as needed. UID and cookie fields and Save & Sync remain available in Account for manual recovery.
+
+**Files:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/InitialSignInSection.kt
+- README.md
+
+**Boundary:** Preserve WebView authentication, secure cookie storage, automatic UID detection, Daily Note synchronization, and Account manual fallback. No calculator or export changes.
+
+
+### Batch 6 - Step 10: Account settings and credentials presentation extraction
+
+**Status:** Implemented; CI and physical-device verification pending.
+
+**Implementation:**
+- Extracted the Account credential-entry card into `presentation/AccountSettingsSection.kt` as `AccountCredentialsSection`.
+- Extracted the Account appearance and app/session-management cards into the same file as `AccountSettingsSection`.
+- Moved `ThemeMode` into the presentation package; preference values and System/Light/Dark behavior are unchanged.
+- Kept UID, cookie, credential visibility, loading/export state, secure credential storage, sign-in, sign-out, and refresh orchestration in `CodexScreen`.
+- Preserved existing labels, visibility conditions, callbacks, and disabled states.
+- No credential format/storage, account retrieval, export, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountSettingsSection.kt`
+
+**Verification required:**
+1. Confirm Debug CI passes compilation, unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. On device, open Account and verify appearance selection persists for System, Light, and Dark.
+3. Verify Sign in with HoYoLAB, UID/cookie editing, credential-unlock error and clear action, and Save & Sync.
+4. Verify sign-out clears credentials while preserving saved account snapshots.
+5. Verify Manage/Hide HoYoLAB account controls and Account Data Export still work.
+6. Confirm Home, Visuals, Tools, Materials Calculator, Lineup Simulator, and navigation remain unaffected.
+
+**Boundary:** Structural extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 11: AI assistant sheet presentation extraction
+
+**Status:** Implemented; CI and physical-device verification pending.
+
+**Implementation:**
+- Extracted the existing AI placeholder ModalBottomSheet into `presentation/AiAssistantSheet.kt`.
+- MainActivity now delegates to `AiAssistantSheet`, passing the existing remembered SheetState and dismissal callback.
+- Kept `showAiSheet`, bottom-navigation launch behavior, and sheet-state ownership in `CodexScreen`.
+- Preserved the title, placeholder explanation, disabled input, cookie privacy statement, dimensions, colors, spacing, and dismissal behavior.
+- No AI provider, message handling, account context transfer, or chat functionality was added.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AiAssistantSheet.kt`
+
+**Verification required:**
+1. Confirm Debug CI passes compilation, unit tests, Debug APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Open the centered AI action and verify the sheet opens with unchanged placeholder content.
+3. Verify Close and swipe dismissal both work.
+4. Verify keyboard/navigation-bar insets and sheet scrolling/layout remain correct.
+5. Confirm all four destinations and their existing features remain unaffected.
+
+**Boundary:** Structural extraction only. AI remains inactive; no provider or chat behavior is claimed.
+
+
+### Batch 6 - Step 12: Home account overview presentation extraction
+
+**Status:** Implemented; CI #800 passed. Physical-device verification pending.
+
+**Implementation:**
+- Extracted the Home Adventurer account card and Account snapshot card into `presentation/HomeAccountOverviewSection.kt`.
+- MainActivity now derives the roster count and passes the existing UID, detected server, snapshot timestamp, and Analysis navigation callback to the component.
+- Kept account snapshot state, roster interpretation, server detection, and tab navigation ownership in CodexScreen.
+- Preserved the existing no-account text, unavailable-roster text, snapshot timestamp, card styling, and Analysis destination.
+- No account retrieval, persistence, analysis, navigation structure, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeAccountOverviewSection.kt`
+
+**Automated verification:** CI #799 failed at Kotlin compilation because `Instant?` was passed to the component's `String?` timestamp parameter. The call site was corrected with `toString()` in commit `9d4c66ca656d8d0b764597e4be73f90b557f59db`. CI #800 passed.
+
+**Physical-device verification pending:**
+1. Verify the Adventurer account card with and without configured credentials.
+3. Verify the Account snapshot card appears only when a snapshot exists and displays the correct roster count/unavailable state and timestamp.
+4. Verify Analysis opens Visuals.
+5. Confirm Daily Note, Visual Dashboard, all other destinations, Materials Calculator, and Lineup Simulator remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 13: Tools destination presentation extraction
+
+**Status:** Cleared after CI #805 and user-confirmed physical-device verification.
+
+**Implementation:**
+- Added `presentation/ToolsSection.kt` to own the Tools destination header, Materials Calculator card, and Lineup Simulator card/container.
+- MainActivity now derives the account roster and active lineup IDs, and passes existing preferences, expansion state, roster freshness/completeness flags, and callbacks into the component.
+- Kept expansion state, selected lineup IDs, roster interpretation, and selection-rule orchestration in CodexScreen.
+- Reused the existing `MaterialsPlannerSection` and `LineupSimulatorSection`; their internal behavior and calculation logic were not changed.
+- Preserved card labels, descriptions, expand/collapse affordances, selected-character count, and the existing four-character selection behavior.
+- No calculator data, account retrieval, persistence, navigation, or lineup analysis behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ToolsSection.kt`
+
+**Automated verification:** CI #801 failed during Kotlin compilation because `RoundedCornerShape` was not imported in `ToolsSection.kt`. Added the missing import in commit `081faa98399ae2d0f3918bf4f236bacd08e16f34`. CI #805 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.805-vc807` (artifact ID `15181947395`).
+
+**Physical-device verification required:**
+1. Confirm Debug CI passes compilation, unit tests, Debug APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Open Tools and expand/collapse Materials Calculator.
+3. Verify character and weapon material planner inputs and generated preview remain unchanged.
+4. Expand/collapse Lineup Simulator; verify the selected count, four-slot limit, add/remove behavior, and element summary.
+5. Verify stale/partial roster warnings remain visible when applicable.
+6. Confirm Home, Visuals, Account, navigation, and AI placeholder sheet remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance or new calculator/lineup capability is claimed.
+
+
+### Batch 6 - Step 14: Visuals destination presentation extraction
+
+**Status:** Cleared after CI #810 and user-confirmed physical-device verification.
+
+**Implementation:**
+- Added `presentation/VisualsSection.kt` to own the Visuals destination composition: Account Chronicle sections, Character Showcase and its empty state, and Account Analysis.
+- MainActivity now passes the existing snapshot, intelligence report, loading/error flags, credential availability, selected character, recommendation expansion state, and callbacks.
+- Kept snapshot ownership, selected-character state, recommendation state, credential checks, analysis invocation, and navigation ownership in `CodexScreen`.
+- Preserved Chronicle section order, Character Showcase roster handling (including stale roster display), the empty-state copy, and the Account Analysis credential gate and available-character behavior.
+- No account mapping, retrieval, persistence, analysis rules, navigation, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
+
+**Commits:**
+- `c573d32169aa2d117c25d04faf8e1345989efcfd` - add Visuals destination presentation.
+- `92319ddc68a925f0d63c71fe9062c94853215ed9` - delegate Visuals composition from MainActivity.
+
+**Verification required:**
+1. Confirm Debug CI compilation, unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Verify Account Chronicle overview, exploration, current/previous Spiral Abyss, and Imaginarium Theater sections.
+3. Verify Character Showcase roster, selection, and empty state.
+4. Verify Account Analysis refresh action, progress/error states, recommendation display, and credential gating.
+5. Confirm Home dashboard and Daily Note, Tools calculators and Lineup Simulator, Account settings/export, navigation, and AI placeholder remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 15: Shared screen feedback presentation extraction
+
+**Status:** Cleared after CI #811/#812 and user-confirmed physical-device verification.
+
+**Implementation:**
+- Added `presentation/ScreenFeedbackSections.kt` with `ScreenErrorBanner` and `HomeInitialLoadingIndicator`.
+- MainActivity now delegates the shared error card and Home's initial loading indicator to these presentation components.
+- Preserved the existing error-message precedence (general screen error before account-export error), banner colors, shape, text styling, and padding.
+- Preserved the loading condition exactly: Home destination, loading active, and no Daily Note available. The centered indicator and vertical spacing remain unchanged.
+- No error-state ownership, loading state, retrieval, account data, navigation, or calculator behavior changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ScreenFeedbackSections.kt`
+
+**Commits:**
+- `45123d072e4676c3c6fb32e2d0307d3acb06cb53` - add shared feedback presentation.
+- `39e0901c3ddda2cf69c1aefd68899e2fd5e53943` - delegate feedback rendering from MainActivity.
+
+**Automated verification:** CI #811 (run `45966052224`) and CI #812 (run `45966055782`) passed. Unit tests, Debug APK assembly, Room schema verification, signature verification, and artifact upload passed; Room instrumentation tests were skipped by workflow conditions. Integration APK artifact: `irminsul-codex-debug-v1.0.0-dev.812-vc814` (artifact ID `15182921675`).
+
+**Physical-device verification:** User confirmed all checks clear, including Home loading feedback, error display/precedence, banner styling/placement, and all destinations.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 16: Home destination composition extraction
+
+**Status:** Cleared after CI #815/#816 and user-confirmed physical-device verification.
+
+**Implementation:**
+- Added `presentation/HomeSection.kt` to compose the existing Home account overview, Daily Note, and Visual Dashboard sections in their original order.
+- MainActivity continues to derive the roster count, server name, snapshot timestamp, credential availability, and callbacks, then passes those values to HomeSection.
+- Kept UID/cookie, Daily Note, loading/error, snapshot, and intelligence state plus refresh and navigation orchestration in CodexScreen.
+- Reused the existing three presentation components without changing their internal UI or behavior.
+- Preserved the Home destination condition, initial loading indicator placement, account snapshot visibility, Daily Note sync/refresh behavior, and Visual Dashboard presence.
+- No account retrieval, mapping, persistence, analysis, navigation structure, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeSection.kt`
+
+**Commits:**
+- `760a08d6e08ef05fbbc4f1ff9e2e041245be272d` - extract Home destination composition.
+- `cf308f82ec5b571e8154e2f7a17baefce1e66eac` - delegate Home composition from MainActivity.
+
+**Automated verification:** CI #815 (run `45966978956`) and CI #816 (run `45966984614`) passed. Unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload passed; Room instrumentation tests were skipped by workflow conditions. Integration APK artifact: `irminsul-codex-debug-v1.0.0-dev.816-vc818` (artifact ID `15182808332`).
+
+**Physical-device verification:** User confirmed all checks clear, including account overview, Daily Note states/refresh, Visual Dashboard visibility, and the other destinations/tools.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 17: Account destination composition extraction
+
+**Status:** Cleared after CI #819/#823 and user-confirmed physical-device verification.
+
+**Implementation:** The Account destination composition is delegated to `presentation/AccountSection.kt`. MainActivity retains credential/theme/export state and callbacks. The integration initially retained a duplicate legacy `AccountSettingsSection` call, causing CI #820/#822 to fail compilation with an unresolved reference after the extraction. Removed that stale block in the focused fix commit `13950fa0f122d233e6f43b238de5a3e0ecd530aa`.
+
+**Commits:**
+- `711efc64ced18833a16a079a66e89fbe28274a23` - extract Account destination composition.
+- `9d140637c24244cf17aee59b0a07fb23842264ba` - delegate Account composition from MainActivity.
+- `13950fa0f122d233e6f43b238de5a3e0ecd530aa` - remove duplicate legacy settings rendering.
+
+**Automated verification:** Component CI #819 passed. Initial integration CI #820 and documentation CI #821/#822 failed on the stale `AccountSettingsSection` reference. Corrected integration CI #823 (run `45968107535`) passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions. Debug APK: `irminsul-codex-debug-v1.0.0-dev.823-vc825` (artifact ID `15184221465`).
+
+**Physical-device verification:** User confirmed successful testing and all clear.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+**Implementation:**
+- Added `presentation/AccountSection.kt` to compose the existing account credentials panel, JSON export panel, and Account & settings section.
+- MainActivity continues to own UID/cookie values, credential visibility, theme state, export progress/status, and all callbacks.
+- Passed the existing visibility conditions explicitly so credential gating and export gating remain unchanged.
+- Reused `AccountCredentialsSection`, `AccountDataExportSection`, and `AccountSettingsSection` without changing their internal UI or behavior.
+- Preserved the original content order: credentials, export, then Account & settings.
+- Kept login, credential persistence/clearing, export orchestration, theme persistence, and navigation in CodexScreen.
+- No credential storage, account retrieval, export mapping, persistence, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountSection.kt`
+
+**Commits:**
+- `711efc64ced18833a16a079a66e89fbe28274a23` - extract Account destination composition.
+- `9d140637c24244cf17aee59b0a07fb23842264ba` - delegate Account composition from MainActivity.
+
+**Verification required:**
+1. Confirm Debug CI compilation, unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Verify Account credentials visibility, sign-in, save/sync, and clear-credentials behavior.
+3. Verify JSON export progress, status, and Save JSON action.
+4. Verify Appearance theme selection and persistence.
+5. Verify Manage HoYoLAB account and Hide account credentials controls.
+6. Confirm Home, Visuals, Tools, navigation, AI placeholder, Materials Calculator, and Lineup Simulator remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+
+### Batch 6 - Step 18: Screen header presentation extraction
+
+**Status:** Physical-device verification passed by user; CI verification remains unconfirmed in the currently available evidence.
+
+**Implementation:**
+- Added `presentation/CodexScreenHeader.kt` to render the existing app title and optional UID/server identity line.
+- MainActivity continues to own the UID and derives the server label before passing it to the component.
+- Preserved title text, typography, colors, alignment, spacing, and the conditional UID/server line.
+- No navigation, account state, credential, retrieval, or persistence behavior changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreenHeader.kt`
+
+**Commits:**
+- `752f6be52ea92866384937a90ee8cdf9bd34510d` - add screen header presentation.
+- `dde97640026e75ed78f3bedf566a85882660bc4f` - delegate header rendering from MainActivity.
+
+**Verification required:**
+1. Confirm Debug CI unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Confirm title and UID/server line appearance with and without a configured UID.
+3. Confirm Home, Visuals, Tools, Account, navigation, and AI entry remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+### Batch 6 - Step 19: Theme color-scheme presentation extraction
+
+**Status:** User confirmed successful CI/build and physical-device testing. Exact workflow run and artifact identifiers were not supplied in the confirmation.
+
+**Implementation:**
+- Moved the existing light and dark Material 3 color-scheme definitions from `MainActivity.kt` into `presentation/CodexThemeColors.kt`.
+- MainActivity imports and applies the same `CodexDarkColors` and `CodexLightColors` values.
+- Preserved every color value and the existing System/Light/Dark selection logic.
+- Theme preference ownership, persistence, system-bar icon handling, and MaterialTheme application remain in MainActivity.
+- No UI behavior, account state, navigation, retrieval, persistence, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexThemeColors.kt`
+
+**Boundary:** Presentation definition extraction only. No visual or performance improvement is claimed. CI and device verification are pending.
+
+
+### Batch 6 - Step 20: System-bar appearance presentation extraction
+
+**Status:** User confirmed successful CI/build and physical-device testing; exact workflow run and artifact identifiers were not supplied.
+
+**Implementation:**
+- Moved the existing status-bar and navigation-bar icon appearance SideEffect into `presentation/CodexSystemBars.kt`.
+- MainActivity still derives `useDarkTheme`, obtains the current Compose view, and supplies the Activity window.
+- Preserved the exact `WindowInsetsControllerCompat` assignments and SideEffect lifecycle.
+- Theme selection, preference persistence, edge-to-edge window setup, and MaterialTheme ownership remain in MainActivity.
+- No colors, layout, navigation, account state, retrieval, persistence, or calculator behavior changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexSystemBars.kt`
+
+**Boundary:** Presentation side-effect extraction only. No visual or performance improvement is claimed. CI and device verification are pending.
+
+
+### Batch 6 - Step 21: App theme composition extraction
+
+**Status:** CI #845 succeeded; user confirmed physical-device testing passed. Exact workflow run ID and artifact ID were not supplied.
+
+**Implementation:**
+- Added `presentation/CodexAppTheme.kt` to compose the existing system-bar appearance effect, Material 3 color scheme, and root Surface.
+- MainActivity retains theme preference state, System/Light/Dark resolution, preference persistence, Activity window/view acquisition, and CodexScreen state.
+- Preserved the existing color-scheme selection, Surface background, fill-size modifier, and system-bar effect.
+- Removed only the now-unneeded direct imports for the extracted theme colors and system-bar component.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexAppTheme.kt`
+
+**Verification required:**
+1. Confirm Debug CI compilation, unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Verify System, Light, and Dark modes, including status/navigation bar icon contrast.
+3. Verify theme preference persistence after restart.
+4. Confirm all destinations, sign-in, account controls, and AI entry remain functional.
+
+**Boundary:** Composition extraction only. Theme selection, preference persistence, and screen state remain caller-owned. No visual or performance improvement is claimed.
+
+
+### Batch 6 - Step 22: Root screen composable extraction
+
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Moved the existing `CodexScreen` composable without changing its state, event handlers, refresh/export/login flows, tab selection, or destination composition into `presentation/CodexScreen.kt`.
+- MainActivity now owns Activity setup, ViewModel construction, edge-to-edge window setup, theme preference state/resolution/persistence, and calls the extracted root screen.
+- The extracted composable remains the owner of its existing screen-local Compose state and orchestration. No state was moved into a new ViewModel or service.
+- Kept the composable body and its existing parameter contract intact; changed only visibility from private to internal for the Activity call site.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreen.kt`
+
+**Verification required:**
+1. Confirm Debug CI unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Verify first-run sign-in and existing credential restoration.
+3. Verify sync, Daily Note refresh, JSON export, credential clearing, and theme persistence.
+4. Verify Home, Visuals, Tools, Account, and AI entry remain functional.
+
+**Boundary:** File/responsibility relocation only. Screen state ownership and behavior are unchanged. No performance improvement is claimed.
+
+
+## Batch 6 verification reconciliation - 2026-11-27
+
+- Steps 1-21 are recorded as cleared in the active development history.
+- Step 22 root screen extraction is present at the verified `main` head before this update.
+- CI #852 passed for commit `eaa555d466d8e6c64e0ee6e58c84fd5091aea5f8`: unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload passed. Room instrumentation tests were skipped by workflow conditions.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.852-vc854` (artifact ID `15185432479`; SHA-256 `4fca07cacec30e25c5d8a7d1aeaf6579d5ba70a1a30b895ec05ca4fb1a6d8d32`).
+- Physical-device verification for Step 22 remains pending. Batch 6 must not be marked cleared until the user completes the consolidated device check.
+
+## Batch 7 - Lifecycle-aware UI state collection (AUD-004)
+
+**Status:** Implemented and committed; CI #782 passed; physical-device verification is not recorded.
+
+- The existing `AccountViewModel.uiState` collection now uses `collectAsStateWithLifecycle()` in `app/src/main/java/com/irminsul/codex/presentation/CodexScreen.kt`.
+- The app declares `androidx.lifecycle:lifecycle-runtime-compose` through the version catalog and app dependency.
+- Commit: `0109f00803b9c17017efdae2145995c41258a93b`.
+- CI #782 passed unit tests, Debug APK assembly, Room schema verification, signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions.
+- Workflow: https://github.com/berao609/Irminsul-codex/actions/runs/45956004485
+- Debug APK: `irminsul-codex-debug-v1.0.0-dev.782-vc784` (artifact ID `15178389176`; SHA-256 `af2d67255723ee8daccca38d83f8af2c16084b83f46902179cc4e1b6056a943b`).
+- This work was already present in the current branch. The previous tracker row saying "Not started" was stale; no duplicate code change was made during Batch 8.
+- Lifecycle behavior has not been independently device-verified in the available record. Do not claim that it has.
+
+## Batch 8 - Agent context retrieval efficiency (AUD-010)
+
+**Status:** Implemented in this commit; CI pending.
+
+**Change:**
+- Replaced the blanket minimum-reading list in root `AGENTS.md` with task-specific context retrieval rules.
+- Keeps `AGENTS.md`, relevant source/tests, branch/commit checks, privacy, credential handling, cancellation, testing, and Git safety requirements mandatory.
+- Makes README, SPECS, milestone history, release instructions, Gradle files, and workflows conditional on the task they govern.
+- Explicitly prevents both under-reading relevant material and loading unrelated repository context.
+- No application source, test, dependency, build, or workflow behavior changed.
+
+**Files changed:**
+- `AGENTS.md`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification:**
+- Static review of the revised instruction routing is complete.
+- CI and repository read-back verification are pending.
+- No app behavior or performance improvement is claimed.
+
+**Next action:** Verify the resulting CI run and read back the committed AGENTS.md/audit/milestone changes. Then continue with the next approved product-development batch; keep Batch 6 Step 22 device verification and Batch 7 device verification explicitly outstanding.

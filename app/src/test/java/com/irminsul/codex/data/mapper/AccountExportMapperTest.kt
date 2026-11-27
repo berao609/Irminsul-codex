@@ -48,6 +48,18 @@ class AccountExportMapperTest {
         assertTrue(source.has("characters"))
     }
 
+    @Test fun mapsCharacterAscensionRankFromBaseOrDetailPayload() {
+        val source = export().put("characters", org.json.JSONArray()
+            .put(JSONObject()
+                .put("base", JSONObject().put("id", 10000002).put("level", 80).put("promote_level", 6)))
+            .put(JSONObject()
+                .put("base", JSONObject().put("id", 10000003).put("level", 70))
+                .put("promote_level", 5)))
+        val characters = (AccountExportMapper.map(source).characters as DataValue.Available).value
+        assertEquals(6, characters[0].ascensionLevel)
+        assertEquals(5, characters[1].ascensionLevel)
+    }
+
     @Test fun mapsProfileAbyssAndTheaterAsJsonIndependentStructuredData() {
         val source = export()
             .put("profile_and_exploration", JSONObject()
@@ -88,6 +100,34 @@ class AccountExportMapperTest {
         assertTrue(model.profileAndExploration is DataValue.Failed)
         assertEquals(DataValue.Unavailable, model.spiralAbyssCurrent)
         assertEquals(DataValue.Missing, model.spiralAbyssPrevious)
+    }
+
+    @Test fun mapsStygianOnslaughtFromNestedBattleChronicleIndexStats() {
+        val source = export().put("profile_and_exploration", JSONObject()
+            .put("stats", JSONObject()
+                .put("hard_challenge", JSONObject().put("name", "Challenge Alpha"))
+                .put("difficulty", 6)))
+        val snapshot = AccountExportMapper.map(source)
+        val stygian = snapshot.stygianOnslaught as DataValue.Available
+        assertEquals("Challenge Alpha", stygian.value.bestRecordName)
+        assertEquals("6", stygian.value.difficulty)
+        assertTrue(source.has("profile_and_exploration"))
+    }
+
+    @Test fun missingStygianFieldsRemainMissingAndFailedIndexRemainsFailed() {
+        val missing = export().put("profile_and_exploration", JSONObject()
+            .put("stats", JSONObject().put("hard_challenge", JSONObject())))
+        assertEquals(DataValue.Missing, AccountExportMapper.map(missing).stygianOnslaught)
+
+        val failed = export().put("export_status", JSONObject()
+            .put("overall_status", "partial")
+            .put("sections", JSONObject()
+                .put("profile_and_exploration", JSONObject()
+                    .put("status", "failed")
+                    .put("message", "index request failed"))))
+        val stygian = AccountExportMapper.map(failed).stygianOnslaught
+        assertTrue(stygian is DataValue.Failed)
+        assertEquals("index request failed", (stygian as DataValue.Failed).reason)
     }
 
     @Test fun mapsAccountCardRosterAndRawCharacterDetailBatches() {
@@ -146,6 +186,18 @@ class AccountExportMapperTest {
             AccountExportMapper.map(invalid)
             fail("Expected invalid identity to be rejected")
         } catch (_: IllegalArgumentException) { }
+    }
+
+    @Test fun mapsCharacterAscensionLevelAndPreservesZeroAndMissing() {
+        val ascensionZero = export().put("characters", org.json.JSONArray().put(JSONObject()
+            .put("base", JSONObject().put("id", 10000003).put("level", 20).put("promote_level", 0))))
+        val zeroCharacter = (AccountExportMapper.map(ascensionZero).characters as DataValue.Available).value.single()
+        assertEquals(0, zeroCharacter.ascensionLevel)
+
+        val unavailable = export().put("characters", org.json.JSONArray().put(JSONObject()
+            .put("base", JSONObject().put("id", 10000004).put("level", 20))))
+        val unavailableCharacter = (AccountExportMapper.map(unavailable).characters as DataValue.Available).value.single()
+        assertNull(unavailableCharacter.ascensionLevel)
     }
 
     @Test fun mapsOptionalCharacterPortraitIconWithoutRequiringIt() {
