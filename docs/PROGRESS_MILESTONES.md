@@ -4547,7 +4547,7 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `app/src/main/java/com/irminsul/codex/MainActivity.kt`
 - `README.md`
 
-**Verification status:** Source changes committed. CI and physical-device verification pending.
+**Verification status:** User confirmed physical-device testing passed. CI verification remains unconfirmed in the currently available evidence.
 
 **Device checklist:**
 1. Confirm navigation order is Home, Visuals, AI, Tools, Account.
