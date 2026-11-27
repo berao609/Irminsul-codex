@@ -44,10 +44,11 @@ data class AccountProfile(
     val avatarUrl: String?
 )
 
-private data class FetchedExportResponse(
-    val response: JSONObject,
-    val source: String,
-    val retrievedAt: String
+private data class InitialAccountFetches(
+    val accountCard: FetchedExportResponse?,
+    val dailyNote: FetchedExportResponse,
+    val characterRoster: FetchedExportResponse,
+    val battleChronicle: BattleChronicleResponses
 )
 
 object HoYoLabClient {
@@ -327,11 +328,6 @@ object HoYoLabClient {
                         }
                     } else null
                 }
-                val indexDeferred = async {
-                    requestSafely("HoYoLAB index") {
-                        fetchRawGet("$API_BASE/index?server=$server&role_id=$cleanUid", cookie)
-                    }
-                }
                 val dailyDeferred = async {
                     requestSafely("HoYoLAB dailyNote") {
                         fetchRawGet("$API_BASE/dailyNote?server=$server&role_id=$cleanUid", cookie)
@@ -343,40 +339,24 @@ object HoYoLabClient {
                         fetchRawPost("$API_BASE/character/list", payload, cookie)
                     }
                 }
-                val abyssCurDeferred = async {
-                    requestSafely("HoYoLAB spiralAbyss schedule 1") {
-                        fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=1", cookie)
-                    }
-                }
-                val abyssPrevDeferred = async {
-                    requestSafely("HoYoLAB spiralAbyss schedule 2") {
-                        fetchRawGet("$API_BASE/spiralAbyss?server=$server&role_id=$cleanUid&schedule_type=2", cookie)
-                    }
-                }
-                val theaterDeferred = async {
-                    requestSafely("HoYoLAB role_combat") {
-                        fetchRawGet("$API_BASE/role_combat?server=$server&role_id=$cleanUid&need_detail=true", cookie)
-                    }
+                val chronicleDeferred = async {
+                    BattleChronicleCollector(API_BASE) { source, url ->
+                        requestSafely(source) { fetchRawGet(url, cookie) }
+                    }.collect(cleanUid, server)
                 }
 
-                listOf(
-                    cardDeferred.await(),
-                    indexDeferred.await(),
-                    dailyDeferred.await(),
-                    listDeferred.await(),
-                    abyssCurDeferred.await(),
-                    abyssPrevDeferred.await(),
-                    theaterDeferred.await()
+                InitialAccountFetches(
+                    accountCard = cardDeferred.await(),
+                    dailyNote = dailyDeferred.await(),
+                    characterRoster = listDeferred.await(),
+                    battleChronicle = chronicleDeferred.await()
                 )
             }
 
-            val cardFetched = fetched[0]
-            val indexFetched = fetched[1]!!
-            val dailyFetched = fetched[2]!!
-            val rosterFetched = fetched[3]!!
-            val abyssCurrentFetched = fetched[4]!!
-            val abyssPreviousFetched = fetched[5]!!
-            val theaterFetched = fetched[6]!!
+            val cardFetched = fetched.accountCard
+            val dailyFetched = fetched.dailyNote
+            val rosterFetched = fetched.characterRoster
+            val chronicleResponses = fetched.battleChronicle
 
             val sectionResults = linkedMapOf<String, ExportSectionResult>()
 
@@ -515,12 +495,6 @@ object HoYoLabClient {
                 )
             }
 
-            val profileResult = sectionFromResponse(
-                indexFetched,
-                "Profile and exploration",
-                propertyMap = propertyMap
-            )
-            sectionResults["profile_and_exploration"] = profileResult
             sectionResults["daily_note"] = sectionFromResponse(
                 dailyFetched,
                 "Daily Note",
@@ -548,21 +522,7 @@ object HoYoLabClient {
                 )
             }
 
-            sectionResults["spiral_abyss_current"] = sectionFromResponse(
-                abyssCurrentFetched,
-                "Current Spiral Abyss",
-                propertyMap = propertyMap
-            )
-            sectionResults["spiral_abyss_previous"] = sectionFromResponse(
-                abyssPreviousFetched,
-                "Previous Spiral Abyss",
-                propertyMap = propertyMap
-            )
-            sectionResults["imaginarium_theater"] = sectionFromResponse(
-                theaterFetched,
-                "Imaginarium Theater",
-                propertyMap = propertyMap
-            )
+            sectionResults.putAll(chronicleResponses.toExportSections(propertyMap))
 
             val exportTimestamp = nowUtc()
             val root = AccountExportAssembler.assemble(

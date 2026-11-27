@@ -39,6 +39,8 @@ Prevent missing, null, or malformed Daily Note values from being silently interp
 
 - `app/src/main/java/com/irminsul/codex/api/DailyNoteParser.kt` (new)
 - `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
+- `app/src/main/java/com/irminsul/codex/api/BattleChronicleCollector.kt`
+- `app/src/test/java/com/irminsul/codex/api/BattleChronicleCollectorTest.kt`
 - `app/src/main/java/com/irminsul/codex/MainActivity.kt`
 - `gradle/libs.versions.toml`
 - `app/build.gradle.kts`
@@ -5490,6 +5492,9 @@ Extend the existing Visuals Battle Chronicle experience with source-backed Stygi
 - Added a dedicated Stygian Onslaught section to Visuals.
 - Kept the original raw export payload unchanged; no Room schema migration or new dependency was required.
 - Added mapper tests for valid values, missing fields, and failed index retrieval.
+- Extracted Battle Chronicle retrieval into `BattleChronicleCollector`, which independently coordinates the index, current/previous Spiral Abyss, and Imaginarium Theater requests while the account retrieval workflow continues to coordinate identity, Daily Note, and character requests.
+- Kept the four Chronicle requests concurrent and mapped each response into its own export section with independent source/timestamp/status.
+- Added collector tests for endpoint routing, independent section mapping, sibling success when one endpoint fails, and cancellation propagation.
 
 ### Files changed
 - `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
