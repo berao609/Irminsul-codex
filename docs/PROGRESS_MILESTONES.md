@@ -4830,3 +4830,31 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 5. Confirm Home, Visuals, Tools, Materials Calculator, and Lineup Simulator remain unchanged.
 
 **Boundary:** Structural extraction only; no performance improvement is claimed.
+
+
+## Milestone 091 - AI Assistant Sheet Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 by extracting the existing AI placeholder bottom sheet from MainActivity.
+
+**Implemented:**
+- Added `presentation/AiAssistantSheet.kt`.
+- MainActivity delegates the sheet UI and passes its existing remembered SheetState and dismissal callback.
+- Kept sheet visibility, state ownership, and bottom-navigation launch handling in CodexScreen.
+- Preserved all existing placeholder copy, disabled input, cookie privacy statement, styling, insets, and dismissal behavior.
+- Did not add AI provider integration or active chat behavior.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AiAssistantSheet.kt`
+
+**Verification status:** Source extraction committed; Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Open the centered AI action and verify the sheet content and layout.
+2. Verify Close and swipe dismissal.
+3. Verify keyboard/navigation-bar insets.
+4. Confirm Home, Visuals, Tools, Account, Materials Calculator, and Lineup Simulator remain functional.
+
+**Boundary:** Structural extraction only; AI remains inactive.
