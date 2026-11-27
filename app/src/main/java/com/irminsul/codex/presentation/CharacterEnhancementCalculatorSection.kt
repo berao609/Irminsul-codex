@@ -74,12 +74,13 @@ internal fun CharacterEnhancementCalculatorSection(
     val currentExp = currentExperience.toLongOrNull() ?: 0L
     val rank = character.ascensionLevel ?: current?.let { level ->
         when {
-            level < 20 -> 0
-            level < 40 -> 1
-            level < 50 -> 2
-            level < 60 -> 3
-            level < 70 -> 4
-            else -> 5
+            level <= 20 -> 0
+            level <= 40 -> 1
+            level <= 50 -> 2
+            level <= 60 -> 3
+            level <= 70 -> 4
+            level <= 80 -> 5
+            else -> 6
         }
     }
     val levelPlan = if (
