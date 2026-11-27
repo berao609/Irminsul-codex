@@ -1064,3 +1064,29 @@ Closing this audit does not mean the application is perfect or that every option
 **Verification:** CI and physical-device verification pending. See Milestone 081.
 
 **Next audit action:** Continue Batch 6 one cohesive presentation extraction at a time after this change is verified. Do not start UI overhaul or change calculator internals.
+
+
+### Batch 6 - Step 5: Shared dashboard metric presentation extraction
+
+**Status:** Source extraction committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Moved AssessmentBar, MetricTile, and DailyNoteMetricRow plus formatDuration into presentation/DashboardMetrics.kt.
+- Updated MainActivity imports while preserving existing call sites and behavior.
+- No state ownership, account mapping, calculations, persistence, navigation, or calculator behavior was changed.
+
+**Files changed:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/presentation/DashboardMetrics.kt
+
+**Static verification:**
+- All four helper definitions were removed from MainActivity and recreated in the presentation package.
+- Existing call sites remain in place and resolve through explicit imports.
+- Structural extraction only; no performance improvement is claimed.
+
+**Verification required:**
+1. Confirm Debug CI unit tests, Kotlin compilation, APK build, Room schema check, signature verification, and artifact upload.
+2. Inspect Home and Visuals metric cards, progress bars, Daily Note rows, and Resin recovery text on device.
+3. Confirm missing/zero values and duration labels render as before.
+
+**Boundary:** Continue one cohesive extraction at a time. Keep calculator logic and the deferred UI redesign out of this step.
