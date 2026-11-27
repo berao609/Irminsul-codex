@@ -5266,3 +5266,48 @@ Establish the shared theme foundation for the agreed high-fidelity Battle Chroni
 
 ### Boundary
 Theme and shared-token foundation only. No individual screen redesign is included in Batch 1.
+
+
+## Milestone 105 - UI Revamp Batch 2: Home Destination
+
+**Date recorded:** 2026-11-27  
+**Development phase:** UI Revamp - Batch 2  
+**Status:** Implemented on `ui-revamp/batch-2-home`; CI and physical-device verification pending.
+
+### Objective
+Reconstruct Home as a coherent, touch-first account landing page using the shared design foundation, while preserving existing account, Daily Note, and intelligence data behavior.
+
+### Implementation
+- Rebuilt Home composition with deliberate section spacing based on shared design tokens.
+- Reworked the account identity region into a prominent Archival Gold profile surface, avoiding a duplicate UID already shown in the app header.
+- Reorganized snapshot information into a compact hierarchy with retrieved character count, retrieval timestamp, and the existing Visuals analysis destination.
+- Rebuilt Real-Time Notes for narrow Android screens: prominent Resin and recovery state, a readable progress bar when source values are available, and a two-column layout for expeditions, Realm Currency, commissions, and weekly discounts.
+- Kept missing values visibly unavailable; no null values are converted to zero or false.
+- Consolidated the Home intelligence summary into one surface with assessment bars and compact recommendation/gap totals.
+- Preserved the existing refresh callback, loading/export enablement, analysis navigation, and account-intelligence source model.
+- Kept Real-Time Notes on Home. No exploration or game-mode data was invented or duplicated from Visuals; Home currently receives no source-backed exploration/game-mode preview models.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/presentation/HomeSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeAccountOverviewSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeDailyNoteSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualDashboardSection.kt`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+- Implementation source committed on the Batch 2 branch.
+- Automated tests and Debug APK build: pending merge-triggered GitHub Actions.
+- APK artifact: pending.
+- Physical-device verification: pending user testing.
+
+### Device checklist
+1. Check Home in Light, Dark, and System modes.
+2. Verify profile and snapshot layout with and without an account snapshot.
+3. Verify Daily Note with valid, zero, and unavailable values.
+4. Check narrow-screen wrapping, Resin progress, recovery text, and all four metric values.
+5. Verify Refresh remains disabled during loading/export and triggers the existing refresh flow.
+6. Verify View analysis opens Visuals and the Home intelligence summary remains consistent.
+7. Confirm other destinations, bottom navigation, and AI sheet remain functional.
+
+### Boundary
+Home presentation only. No account retrieval, persistence, data model, analysis, navigation architecture, dependency, or SDK changes.
