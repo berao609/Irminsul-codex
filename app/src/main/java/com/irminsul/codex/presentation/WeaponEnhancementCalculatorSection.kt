@@ -52,7 +52,7 @@ internal fun WeaponEnhancementCalculatorSection(
         else -> null
     }
     val maximumUnlockedLevel = weapon.ascensionLevel?.let { rank ->
-        weaponAscensionLevelCaps.getOrNull(rank.coerceIn(0, 6))
+        weaponAscensionLevelCaps.getOrNull(rank)
     }
     var currentExperience by remember(weapon.id) {
         mutableStateOf(preferences.getString("weapon_plan_current_exp_${weapon.id}", "0") ?: "0")
