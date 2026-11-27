@@ -39,12 +39,13 @@ object ChroniclePresentationMapper {
     )
 
     private val primaryOverviewLabels = setOf("Active Days", "Achievements", "Characters")
+    private val identityOverviewLabels = setOf("Player", "Adventure Rank")
 
     fun primaryOverviewMetrics(metrics: List<ChronicleMetric>): List<ChronicleMetric> =
         metrics.filter { it.label in primaryOverviewLabels }
 
     fun secondaryOverviewMetrics(metrics: List<ChronicleMetric>): List<ChronicleMetric> =
-        metrics.filterNot { it.label in primaryOverviewLabels }
+        metrics.filterNot { it.label in primaryOverviewLabels || it.label in identityOverviewLabels }
 
     fun accountOverview(
         accountCard: DataValue<StructuredData>,

@@ -5419,3 +5419,47 @@ Visual presentation and composition only. No account retrieval, persistence, ana
 - The current `AccountSnapshot` has no Stygian Onslaught section. The reference includes it, but this batch does not fabricate or add a data source for it.
 - Added the missing `dp` import to `VisualsSection.kt`, which caused CI run #877 to fail during Kotlin compilation.
 - GitHub Actions run #878 succeeded for merge commit `e74f2c1ff7360444415ef097dd4b3f50264e6888`; Debug APK artifact ID `15198589056` (`irminsul-codex-debug-v1.0.0-dev.878-vc880`). Physical-device verification remains pending.
+
+## Milestone 108 - UI Revamp Batch 3.1: Reference Fidelity Completion
+
+**Date recorded:** 2026-11-27  
+**Development phase:** UI Revamp - Batch 3.1  
+**Status:** Implemented and merged; automated verification pending CI correction.
+
+### Objective
+Close the verified Batch 3 presentation gaps using the consolidated Battle Chronicle references without changing account retrieval, persistence, analysis, or navigation architecture.
+
+### Implementation
+- Rebuilt Account Overview's statistics hierarchy: Active Days, Achievements, and Characters are the primary row; remaining supported progression/collectible statistics are behind an explicit expand/collapse control.
+- Reworked World Exploration into compact horizontal region cards with the exact `Main Areas Only` label, source-backed region emblem URLs when present, and a `View more regions` action that switches to a vertically stacked detail presentation. Missing emblems remain omitted rather than replaced with invented assets.
+- Increased the selected-character portrait prominence and placed identity/progression details in a distinct contextual hero surface. The current account model provides a portrait URL, not verified full-body splash artwork; no URL is synthesized and no new asset source is introduced.
+- Preserved the existing character selection, equipment, attributes, talents, constellations, game-mode records, and Account Analysis behavior.
+- Stygian Onslaught remains excluded because `AccountSnapshot` has no corresponding source-backed section or validated payload mapping.
+- No new dependencies, endpoints, persisted fields, calculation behavior, or navigation destinations were introduced.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationMapper.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterShowcaseSection.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationMapperTest.kt`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+- Implementation merged in PR #5, main commit `786bea41a058754f3a42b6cf17b0077edd8180f4`.
+- GitHub Actions run #880 failed: 384 tests passed and one new overview grouping test failed because the secondary-statistics helper retained identity metrics. The failure is being corrected in PR #6.
+- Debug APK artifact: not produced by run #880 because the test step failed.
+- Physical-device verification: pending.
+
+### Device checklist
+1. Check Visuals in Light, Dark, and System modes.
+2. Confirm Account Overview shows identity, the three primary statistics, and collapsed additional statistics; expand/collapse the secondary group.
+3. Confirm missing primary metrics do not become zero or get replaced with unrelated metrics.
+4. Confirm World Exploration horizontal cards show `Main Areas Only`, source-backed emblem where present, percentage, and progress bar.
+5. Tap `View more regions`; confirm all available regions appear as a vertical list; collapse back to the horizontal carousel.
+6. Confirm selected-character portrait/identity hero is larger and readable on narrow screens.
+7. Confirm character selection, weapon/artifact expansion, attributes, talents, and constellations remain functional.
+8. Confirm Spiral Abyss and Imaginarium Theater current/previous records and unavailable states remain intact.
+9. Confirm Account Analysis, bottom navigation, AI sheet, Tools, and Account remain functional.
+
+### Boundary
+Presentation-only reference fidelity work. No account retrieval, raw source schema, persistence, analysis calculations, navigation architecture, dependencies, or SDK changes.
