@@ -5561,30 +5561,31 @@ This is the continuation of the existing UI revamp. It does not create a separat
 - KSP 2.0.0-1.0.21; Room 2.6.1; Lifecycle 2.8.2; Activity Compose 1.9.0.
 - Lucide Android 2.2.1.
 
-### Compatibility-led stable upgrade candidate
-The following is the initial candidate matrix, not a claim that the project has already migrated or that the complete build has been verified:
+### Implemented stable upgrade baseline
+The following versions are now implemented on PR #13. Full CI, artifact, and physical-device verification remain pending.
 
-| Component | Candidate | Compatibility basis |
+| Component | Implemented version | Compatibility basis |
 |---|---:|---|
-| Android Gradle Plugin | 9.3.1 | Within Kotlin 2.4.21's documented fully supported AGP range |
-| Gradle | 9.5.0 | AGP 9.3 requires Gradle 9.5.0; also within Kotlin 2.4.21's supported range |
-| Kotlin / Compose compiler plugin | 2.4.21 | Latest stable Kotlin release at review time |
+| Android Gradle Plugin | 9.3.1 | Minimum documented AGP for API 37.1; within Kotlin 2.4.21's fully supported range |
+| Gradle | 9.7.0 | Latest Gradle within Kotlin 2.4.21's documented fully supported range |
+| Kotlin / Compose compiler plugin | 2.4.21 | Stable release; supports AGP through 9.3.1 and Gradle through 9.7.0 |
 | KSP | 2.3.12 | Supports KGP 2.3.20-2.4.x, AGP 8.13+, Gradle 8.13+, and JDK 17+ |
-| Compose BOM | 2026.11.01 | Current stable Compose BOM; requires compile SDK 37.1 and Kotlin 2.2+ |
-| compileSdk | API 37, minor API level 1 | Use the AGP `compileSdk { version = release(37) { minorApiLevel = 1 } }` DSL |
-| targetSdk | API 36 | Meets the current Google Play submission requirement |
-| Room | 2.8.5 | Current stable Room release; verify schema/migration compatibility |
-| Lifecycle | 2.11.1 | Current stable Lifecycle release |
-| Activity Compose | 1.13.0 | Current stable Activity release |
-| Core KTX | 1.19.1 | Current stable Core release |
+| Compose BOM | 2026.11.01 | Stable Compose 1.13 line; requires compileSdk 37.1 and Kotlin 2.2+ |
+| compileSdk | API 37, minor API level 1 | AGP `compileSdk { version = release(37) { minorApiLevel = 1 } }` DSL |
+| targetSdk | API 36 | Retained until Android 17 target-behavior changes are audited |
+| minSdk | API 26 | Preserved |
+| Room | 2.8.5 | Stable Room release |
+| Lifecycle | 2.11.1 | Stable Lifecycle release |
+| Activity Compose | 1.13.0 | Stable Activity release |
+| Core KTX | 1.19.1 | Stable Core release |
 
 Official compatibility references reviewed:
-- [AGP release compatibility and Gradle requirements](https://developer.android.com/build/releases/about-agp)
+- [AGP API-level support and Gradle requirements](https://developer.android.com/build/releases/about-agp)
 - [Kotlin Gradle plugin compatibility table](https://kotlinlang.org/docs/gradle-configure-project.html)
 - [AGP built-in Kotlin migration](https://developer.android.com/build/migrate-to-built-in-kotlin)
 - [KSP requirements](https://kotlinlang.org/docs/ksp-overview.html)
-- [Compose November 2026 release](https://developer.android.com/blog/posts/jetpack-compose-november-2026-release)
-- [CompileSdk minor API level DSL](https://developer.android.com/reference/tools/gradle-api/9.5/com/android/build/api/dsl/CompileSdkSpec)
+- [Compose November 2026 stable release](https://developer.android.com/blog/posts/jetpack-compose-november-2026-release)
+- [Android 17 API 37.1 minimum AGP](https://developer.android.com/studio/releases)
 - [Google Play target API requirement](https://support.google.com/googleplay/android-developer/answer/11926878)
 
 ### Migration requirements
@@ -5690,7 +5691,7 @@ Official compatibility references reviewed:
 
 ## Immediate next action
 
-Continue Batch 5 by compiling and validating the new Visuals navigation and Lucide resource pilot. Fix any dependency/resource or Compose issues before visual refinement. Then inspect the overview and each destination on-device in Light and Dark themes. Do not begin detailed Chronicle endpoint expansion until the new navigation structure is verified.
+Verify PR #13 CI run #920 against compileSdk 37.1, the November stable Compose/AndroidX baseline, and the Android 17 emulator. Resolve any SDK installation, dependency, compilation, or migration-test failure before treating the modernization as verified. Once an APK artifact is produced, inspect the Batch 5 Visuals overview and nested destinations on the user's Android device in Light and Dark themes. Do not merge PR #13 without explicit approval.
 
 
 ---
@@ -5751,3 +5752,53 @@ Replace the long, fully expanded Visuals composition with a compact overview and
 ### Next action
 
 Run the Debug build and unit tests for this branch. Resolve any Lucide dependency/resource or Compose compilation issues, then inspect the overview and nested destinations on-device before treating Batch 5 as complete.
+
+
+
+---
+
+## Milestone 111 - UI Revamp Batch 5: Android 17 API 37.1 Modernization
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 5 integrated platform modernization  
+**Status:** Implemented on PR #13; CI run #920 in progress; APK and physical-device verification pending.
+
+### Objective
+
+Move the existing Batch 5 modernization from the API 36.1 dependency baseline to the current stable Android 17 API 37.1 / Compose baseline without changing targetSdk behavior or creating a separate task.
+
+### Implemented on `ui-revamp/batch-5-platform-modernization`
+
+- Kept the mutually supported AGP 9.3.1, Gradle 9.7.0, Kotlin 2.4.21, and KSP 2.3.12 toolchain.
+- Raised compileSdk to API 37.1 using `release(37) { minorApiLevel = 1 }`.
+- Kept targetSdk 36 and minSdk 26. Android 17 target-behavior opt-in is deferred until its behavior changes are audited.
+- Upgraded Compose BOM to stable 2026.11.01 and AndroidX Core KTX to 1.19.1 / Lifecycle to 2.11.1. Activity Compose 1.13.0 and Room 2.8.5 remain aligned.
+- Updated CI to install API 37 and Build Tools 37.0.0 and use the stable Android 17 API 37 emulator image.
+- Replaced `MigrationTestHelper` with a manually created version-1 SQLite fixture opened by the production Room database. The test still executes `MIGRATION_1_2`, exercises Room's schema validation, and verifies that migrated JSON chunks and metadata are preserved.
+- Removed the unused `room-testing` dependency to avoid the observed `FieldBundle$$serializer` / kotlinx-serialization runtime linkage failure.
+
+### Files changed
+
+- `.github/workflows/build.yml`
+- `app/build.gradle.kts`
+- `app/src/androidTest/java/com/irminsul/codex/data/local/IrminsulDatabaseMigrationTest.kt`
+- `gradle/libs.versions.toml`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- `060f21d0880403746e47b41e7c464b08be766799` - replace the Room migration helper test path.
+- `e545200becb6cf539a25ee264e3b809fc2ecf995` - remove the unused Room testing dependency.
+- `a8e93f859e48d9b17032615e5766966c1b2ab226` - update CI SDK and emulator configuration to API 37.
+- `917161ebbb3418bc5d2b769b5314f79f9e943e24` - compile against API 37.1.
+- `2fcf368dad76c2c880cd7963395ae32a4b1036d4` - upgrade stable Compose and AndroidX dependencies.
+
+### Verification
+
+- Run #915 failed at the Room migration instrumentation test with `AbstractMethodError` from `androidx.room.migration.bundle.FieldBundle$$serializer`. Unit tests passed; APK assembly and upload were skipped.
+- Run #920 is in progress on the latest branch head. It has not yet reached Android SDK installation at the time this record was written.
+- No successful API 37.1 build, instrumentation test run, APK artifact, or physical-device verification is claimed.
+
+### Next action
+
+Check run #920. If it succeeds, verify the uploaded APK and proceed to the Batch 5 device checklist. If it fails, inspect the first failing CI step and correct that issue within PR #13. Do not merge without the user's explicit approval.
