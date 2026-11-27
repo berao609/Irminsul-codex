@@ -246,15 +246,11 @@ internal fun CodexScreen(
     val isInitialSignIn = selectedTab == CodexTab.HOME && (uid.isBlank() || cookie.isBlank())
 
     fun navigateVisuals(destination: VisualsDestination) {
-        if (visualsBackStack.lastOrNull() != destination) {
-            visualsBackStack = visualsBackStack + destination
-        }
+        visualsBackStack = VisualsNavigationStack.navigate(visualsBackStack, destination)
     }
 
     fun backFromVisuals() {
-        if (visualsBackStack.size > 1) {
-            visualsBackStack = visualsBackStack.dropLast(1)
-        }
+        visualsBackStack = VisualsNavigationStack.back(visualsBackStack)
     }
 
     BackHandler(
