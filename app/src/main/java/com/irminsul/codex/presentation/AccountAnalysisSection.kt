@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import com.irminsul.codex.domain.model.AccountIntelligenceOverview
 import com.irminsul.codex.domain.model.CharacterSnapshot
