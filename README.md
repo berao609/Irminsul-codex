@@ -341,7 +341,6 @@ The current export structure includes:
 | spiral_abyss_current    | Current Spiral Abyss information.    |
 | spiral_abyss_previous   | Previous Spiral Abyss information.   |
 | imaginarium_theater     | Imaginarium Theater information.     |
-| stygian_onslaught       | Typed Stygian Onslaught summary derived from the retained `profile_and_exploration.stats` payload; not a separate API response. |
 
 Character detail requests are processed in batches of up to eight character IDs.
 
