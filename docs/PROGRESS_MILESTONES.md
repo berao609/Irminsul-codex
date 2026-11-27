@@ -440,8 +440,6 @@ Make the existing selected-section account export more reliable and auditable wi
 - `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
 - `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
 - `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
-- `app/src/main/java/com/irminsul/codex/api/BattleChronicleCollector.kt`
-- `app/src/test/java/com/irminsul/codex/api/BattleChronicleCollectorTest.kt`
 - `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
 
 ### Verification
@@ -5258,7 +5256,7 @@ Establish the shared theme foundation for the agreed high-fidelity Battle Chroni
 - Source implementation: committed on the Batch 1 branch.
 - Debug build and automated tests: pending GitHub Actions.
 - APK artifact: pending.
-- Physical-device verification: partially tested by user; tested portions clear; remaining Batch 3.1 checklist items remain open and unverified.
+- Physical-device verification: pending user testing.
 
 ### Device checklist
 1. Verify System, Light, and Dark appearance modes.
@@ -5454,7 +5452,7 @@ Close the verified Batch 3 presentation gaps using the consolidated Battle Chron
 - GitHub Actions run [#881](https://github.com/berao609/Irminsul-codex/actions/runs/46010779366) succeeded. Unit tests, Debug APK build, Room schema snapshot verification/upload, APK signature verification, and both artifact uploads succeeded. Room instrumentation tests were correctly skipped because no persistence or database code changed.
 - Debug APK: `irminsul-codex-debug-v1.0.0-dev.881-vc883`, artifact ID `15203742837`, archive SHA-256 `1cfa60f13a89b453e75cc39948d7e4a620f5c22662ca707d5cf7dd43cc0ed793`.
 - Room schema artifact ID: `15203702406`.
-- Physical-device verification: pending user testing.
+- Physical-device verification: partially tested by user; tested portions clear; remaining Batch 3.1 checklist items remain open and unverified.
 
 ### Device checklist
 1. Check Visuals in Light, Dark, and System modes.
@@ -5500,6 +5498,9 @@ Extend the existing Visuals Battle Chronicle experience with source-backed Stygi
 ### Files changed
 - `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
 - `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
+- `app/src/main/java/com/irminsul/codex/api/BattleChronicleCollector.kt`
+- `app/src/test/java/com/irminsul/codex/api/BattleChronicleCollectorTest.kt`
 - `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
 - `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
 - `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
