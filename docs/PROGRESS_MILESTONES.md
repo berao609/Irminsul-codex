@@ -5544,6 +5544,68 @@ This is the continuation of the existing UI revamp. It does not create a separat
 - Current source still renders Visuals as one long vertical composition (`VisualsSection.kt`). Shared `ChronicleSection()` starts expanded (`remember(title) { mutableStateOf(true) }`). This matches the observed device behavior but is not the intended final navigation model.
 - No standalone UI revamp implementation-plan file was found in the repository. This active continuation plan is recorded here beside the milestone history to avoid creating a duplicate plan document.
 
+## Batch 5 prerequisite - Android platform modernization
+
+**Status:** Integrated prerequisite within the existing UI Revamp. This is not a separate product task or a new UI batch.
+
+### Why this is required
+- Batch 5 is merged on `main` at `237eb2393230c694c0e6eecc4611f005d9c58f15`.
+- GitHub Actions [Build Debug APK run #895](https://github.com/berao609/Irminsul-codex/actions/runs/46080591345) failed at `:app:checkDebugAarMetadata` before tests or APK assembly.
+- Lucide Android 2.2.1 resolves Compose 1.9.3, which requires a newer compile SDK and AGP than the existing AGP 8.5.0 / compileSdk 34 baseline.
+- This exposed a broader toolchain gap. Resolve it before Batch 5 device verification and before continuing the next UI implementation batches.
+
+### Verified current baseline
+- AGP 8.5.0; CI Gradle 8.14.8; JDK 17.
+- Kotlin 2.0.0; Compose BOM 2024.06.00.
+- compileSdk 34; targetSdk 34; minSdk 26.
+- KSP 2.0.0-1.0.21; Room 2.6.1; Lifecycle 2.8.2; Activity Compose 1.9.0.
+- Lucide Android 2.2.1.
+
+### Compatibility-led stable upgrade candidate
+The following is the initial candidate matrix, not a claim that the project has already migrated or that the complete build has been verified:
+
+| Component | Candidate | Compatibility basis |
+|---|---:|---|
+| Android Gradle Plugin | 9.3.1 | Within Kotlin 2.4.21's documented fully supported AGP range |
+| Gradle | 9.5.0 | AGP 9.3 requires Gradle 9.5.0; also within Kotlin 2.4.21's supported range |
+| Kotlin / Compose compiler plugin | 2.4.21 | Latest stable Kotlin release at review time |
+| KSP | 2.3.12 | Supports KGP 2.3.20-2.4.x, AGP 8.13+, Gradle 8.13+, and JDK 17+ |
+| Compose BOM | 2026.11.01 | Current stable Compose BOM; requires compile SDK 37.1 and Kotlin 2.2+ |
+| compileSdk | API 37, minor API level 1 | Use the AGP `compileSdk { version = release(37) { minorApiLevel = 1 } }` DSL |
+| targetSdk | API 36 | Meets the current Google Play submission requirement |
+| Room | 2.8.5 | Current stable Room release; verify schema/migration compatibility |
+| Lifecycle | 2.11.1 | Current stable Lifecycle release |
+| Activity Compose | 1.13.0 | Current stable Activity release |
+| Core KTX | 1.19.1 | Current stable Core release |
+
+Official compatibility references reviewed:
+- [AGP release compatibility and Gradle requirements](https://developer.android.com/build/releases/about-agp)
+- [Kotlin Gradle plugin compatibility table](https://kotlinlang.org/docs/gradle-configure-project.html)
+- [AGP built-in Kotlin migration](https://developer.android.com/build/migrate-to-built-in-kotlin)
+- [KSP requirements](https://kotlinlang.org/docs/ksp-overview.html)
+- [Compose November 2026 release](https://developer.android.com/blog/posts/jetpack-compose-november-2026-release)
+- [CompileSdk minor API level DSL](https://developer.android.com/reference/tools/gradle-api/9.5/com/android/build/api/dsl/CompileSdkSpec)
+- [Google Play target API requirement](https://support.google.com/googleplay/android-developer/answer/11926878)
+
+### Migration requirements
+1. Recheck the compatibility matrix against official release notes immediately before implementation. Prefer the latest stable versions that are mutually supported; do not use alpha, beta, RC, or dynamic dependency versions.
+2. Migrate AGP 9 built-in Kotlin correctly. Remove the redundant `org.jetbrains.kotlin.android` plugin where required; retain and align the Kotlin Compose compiler plugin. Inspect AGP 9 DSL and build behavior changes rather than suppressing migration warnings blindly.
+3. Upgrade KSP independently to a version supported by the selected KGP/AGP/Gradle combination. Keep Room's compiler and runtime versions aligned.
+4. Review every existing library individually. Do not force unrelated major migrations (for example Coil 2 to Coil 3) merely to claim that every dependency is newest. Preserve behavior and update only where compatibility, security, maintenance, or platform support justifies it.
+5. Raise compileSdk to the exact Compose-required API/minor level. Raise targetSdk to 36 and explicitly audit target-SDK behavior changes, permissions, edge-to-edge/system bars, background execution, notifications, and storage behavior. Keep minSdk 26 unless a demonstrated dependency requirement forces a separately reviewed decision.
+6. Update CI Gradle setup and Android emulator API coherently. Preserve persistent Debug signing, version-code calculation, Room schema verification, signature verification, artifact naming, and temporary-keystore cleanup.
+7. Add/adjust dependency-resolution and build checks so future incompatible AAR metadata, plugin, Kotlin, or SDK combinations fail before a UI batch is treated as ready.
+8. Preserve the existing single-module native Kotlin/Compose architecture, local-first design, account data integrity, export compatibility, and all Batch 5 UI behavior.
+
+### Acceptance criteria
+- AGP, Gradle, Kotlin, Compose, KSP, SDK, and AndroidX versions are mutually supported by official compatibility documentation.
+- No alpha/beta/RC or dynamic versions are used in the production build.
+- Gradle configuration and AGP migration complete without unresolved deprecations or compatibility workarounds that hide future breakage.
+- Unit tests, Room instrumentation/migration tests, lint/build checks, Debug APK assembly, Room schema verification, signing verification, and artifact upload succeed.
+- Batch 5's Lucide resources resolve and render correctly in Light, Dark, and System themes.
+- Physical-device checks are recorded separately from CI. Do not mark Batch 5 complete until the user verifies the APK on-device.
+- The next UI Revamp batch proceeds on the verified modernized foundation without creating a separate modernization task.
+
 ## Locked direction and constraints
 
 1. Reconstruct the top-level Battle Chronicles overview as a compact landing page, not a long page of fully expanded feature content.
@@ -5555,11 +5617,11 @@ This is the continuation of the existing UI revamp. It does not create a separat
 7. Stygian's currently validated source supports the best-record name and difficulty only. Do not imply that historical cycles, teams, or detailed challenge statistics are available until their source is validated.
 8. Do not add a runtime Battle Chronicles dependency, WebView, scraping, remote CSS, or a mandatory backend. Keep implementation native Compose and local-first.
 9. **System icon preference:** use Lucide icons for application/system UI icons. Centralize them through the shared app icon wrapper/registry (create or extend one only if the code audit shows it is needed). Preserve Genshin character, weapon, element, rarity, region, and mode artwork as game assets; do not replace those with Lucide.
-10. Lucide dependency is a candidate, not yet approved for wholesale migration: pilot `com.composables:icons-lucide-android:2.2.1` against the current Kotlin 2.0.0, AGP 8.5.0, and Compose BOM 2024.06.00 stack. Verify resolution, drawable resource names, APK build, and rendered appearance before migrating. Audit all Material icon usages first; remove the Material Icons Extended dependency only if no remaining usages require it.
+10. Lucide Android 2.2.1 and its centralized registry are already implemented in Batch 5. Build #895 proves the old build foundation is incompatible with its Compose dependency. Keep the Lucide implementation; complete the integrated platform-modernization prerequisite and verify the generated resource names, APK build, and rendered appearance. Audit Material icon usage before removing any remaining dependency.
 
 ## Batch 5 - Visuals Navigation and Overview Hierarchy
 
-**Status:** In progress. Initial overview, nested navigation, and Lucide migration are implemented on `ui-revamp/batch-5-navigation-overview`; build and device verification remain pending.
+**Status:** Implemented and merged on `main` in `237eb2393230c694c0e6eecc4611f005d9c58f15`. Build #895 failed before tests/APK assembly due to the Lucide/Compose/AGP/compileSdk incompatibility. Complete the integrated platform-modernization prerequisite above, then perform CI and device verification.
 
 ### 5.1 Rebuild the Visuals landing page
 - Reproduce the top-most Battle Chronicles overview hierarchy from the updated reference.
