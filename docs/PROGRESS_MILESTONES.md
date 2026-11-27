@@ -5691,7 +5691,7 @@ Official compatibility references reviewed:
 
 ## Immediate next action
 
-Verify PR #13 CI run #920 against compileSdk 37.1, the November stable Compose/AndroidX baseline, and the Android 17 emulator. Resolve any SDK installation, dependency, compilation, or migration-test failure before treating the modernization as verified. Once an APK artifact is produced, inspect the Batch 5 Visuals overview and nested destinations on the user's Android device in Light and Dark themes. Do not merge PR #13 without explicit approval.
+Verify the next PR #13 CI run against compileSdk 37.1, the November stable Compose/AndroidX baseline, and the Android 17 API 37.2 emulator. Resolve any SDK installation, dependency, compilation, or migration-test failure before treating the modernization as verified. Once an APK artifact is produced, inspect the Batch 5 Visuals overview and nested destinations on the user's Android device in Light and Dark themes. Do not merge PR #13 without explicit approval.
 
 
 ---
@@ -5792,6 +5792,8 @@ Move the existing Batch 5 modernization from the API 36.1 dependency baseline to
 - `a8e93f859e48d9b17032615e5766966c1b2ab226` - update CI SDK and emulator configuration to API 37.
 - `917161ebbb3418bc5d2b769b5314f79f9e943e24` - compile against API 37.1.
 - `2fcf368dad76c2c880cd7963395ae32a4b1036d4` - upgrade stable Compose and AndroidX dependencies.
+- `785474a5dd13f3b865c5697b39d5efd7c01d7173` - correct stable API 37.1 platform and API 37.2 emulator image package IDs.
+- `7ef063d33dd48b398bcfba169c239a79089e8a3d` - trigger CI on UI Revamp branch pushes as well as PR updates.
 
 ### Verification
 
@@ -5801,4 +5803,4 @@ Move the existing Batch 5 modernization from the API 36.1 dependency baseline to
 
 ### Next action
 
-Check the next CI run for branch head `785474a5dd13f3b865c5697b39d5efd7c01d7173`. Confirm stable API 37.1 installation, API 37.2 emulator boot, Room migration tests, APK assembly, schema verification, signing, and artifact upload. Correct any remaining failure within PR #13. Do not merge without the user's explicit approval.
+Check the next CI run for branch head `7ef063d33dd48b398bcfba169c239a79089e8a3d`. Confirm stable API 37.1 installation, API 37.2 emulator boot, Room migration tests, APK assembly, schema verification, signing, and artifact upload. Correct any remaining failure within PR #13. Do not merge without the user's explicit approval.
