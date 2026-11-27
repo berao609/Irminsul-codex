@@ -117,24 +117,27 @@ fun ChronicleOverviewSection(accountCard: DataValue<StructuredData>, profileAndE
 }
 
 @Composable
-fun ChronicleExplorationSection(value: DataValue<StructuredData>) {
+fun ChronicleExplorationSection(
+    value: DataValue<StructuredData>,
+    compact: Boolean = true,
+    onViewMore: (() -> Unit)? = null
+) {
     val regions = ChroniclePresentationMapper.explorationRegions(value)
-    var showAllRegions by remember(value) { mutableStateOf(false) }
     ChronicleSection("World Exploration", "Regional completion") {
         if (regions.isEmpty()) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        } else {
-            if (showAllRegions) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    regions.forEach { region -> RegionDetailCard(region) }
-                }
-            } else {
-                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    regions.forEach { region -> RegionOverviewCard(region) }
+        } else if (compact) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                regions.forEach { region -> RegionOverviewCard(region) }
+            }
+            onViewMore?.let {
+                TextButton(onClick = it, modifier = Modifier.fillMaxWidth()) {
+                    Text("View more regions")
                 }
             }
-            TextButton(onClick = { showAllRegions = !showAllRegions }, modifier = Modifier.fillMaxWidth()) {
-                Text(if (showAllRegions) "Show fewer regions" else "View more regions")
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                regions.forEach { region -> RegionDetailCard(region) }
             }
         }
     }
