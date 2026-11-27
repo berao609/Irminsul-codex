@@ -721,7 +721,9 @@ private fun CodexScreen(
             }
         }
 
-        VisualDashboardSection(accountExportState.intelligenceOverview)
+        if (selectedTab == CodexTab.HOME) {
+            VisualDashboardSection(accountExportState.intelligenceOverview)
+        }
 
 
         if (selectedTab == CodexTab.VISUALS) {
