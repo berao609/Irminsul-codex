@@ -1564,3 +1564,26 @@ Closing this audit does not mean the application is perfect or that every option
 4. Confirm all destinations, sign-in, account controls, and AI entry remain functional.
 
 **Boundary:** Composition extraction only. Theme selection, preference persistence, and screen state remain caller-owned. No visual or performance improvement is claimed.
+
+
+### Batch 6 - Step 22: Root screen composable extraction
+
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Moved the existing `CodexScreen` composable without changing its state, event handlers, refresh/export/login flows, tab selection, or destination composition into `presentation/CodexScreen.kt`.
+- MainActivity now owns Activity setup, ViewModel construction, edge-to-edge window setup, theme preference state/resolution/persistence, and calls the extracted root screen.
+- The extracted composable remains the owner of its existing screen-local Compose state and orchestration. No state was moved into a new ViewModel or service.
+- Kept the composable body and its existing parameter contract intact; changed only visibility from private to internal for the Activity call site.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreen.kt`
+
+**Verification required:**
+1. Confirm Debug CI unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Verify first-run sign-in and existing credential restoration.
+3. Verify sync, Daily Note refresh, JSON export, credential clearing, and theme persistence.
+4. Verify Home, Visuals, Tools, Account, and AI entry remain functional.
+
+**Boundary:** File/responsibility relocation only. Screen state ownership and behavior are unchanged. No performance improvement is claimed.
