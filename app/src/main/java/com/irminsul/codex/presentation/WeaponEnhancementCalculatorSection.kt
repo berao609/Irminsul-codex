@@ -64,7 +64,9 @@ internal fun WeaponEnhancementCalculatorSection(
     val current = currentLevel.toIntOrNull()
     val target = targetLevel.toIntOrNull()
     val targetMaximumUnlockedLevel = target?.let { requested ->
-        weaponAscensionLevelCaps.firstOrNull { requested <= it }
+        weaponAscensionLevelCaps.firstOrNull { requested <= it }?.let { targetCap ->
+            maximumUnlockedLevel?.let { maxOf(it, targetCap) } ?: targetCap
+        }
     }
     val currentExp = currentExperience.toLongOrNull()
     val candidate = when (weapon.rarity) {
