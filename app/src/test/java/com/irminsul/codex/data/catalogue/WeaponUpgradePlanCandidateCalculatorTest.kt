@@ -68,7 +68,7 @@ class WeaponUpgradePlanCandidateCalculatorTest {
         val result = WeaponUpgradePlanCandidateCalculator.calculate(request(), fiveStarCurve, stages())
         assertEquals(WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA, result.status)
         assertEquals(6, result.usedAscensionCandidateIds.size)
-        assertEquals(7, result.requirements.size)
+        assertEquals(9, result.requirements.size)
         val mora = result.requirements.single { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }
         assertEquals(906_520L + 10L, mora.quantity)
         assertEquals(903L, result.requirements.single {
@@ -123,7 +123,7 @@ class WeaponUpgradePlanCandidateCalculatorTest {
             fiveStarCurve
         ).moraRequired
         assertEquals(
-            expectedExperienceMora + 100L,
+            expectedExperienceMora,
             result.requirements.single { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }.quantity
         )
     }
