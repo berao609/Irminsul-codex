@@ -81,19 +81,15 @@ object WeaponAscensionCandidateCalculator {
             )
         }
 
-        val targetRank = levelCaps.indexOfFirst { request.targetLevel <= it }
+        val derivedTargetRank = levelCaps.indexOfFirst { request.targetLevel <= it }
             .takeIf { it >= 0 }
             ?: return result(
                 WeaponAscensionCandidateCalculationStatus.INVALID_REQUEST,
                 issue = "Target level is outside the supported weapon progression."
             )
-
-        if (targetRank < request.currentAscensionRank) {
-            return result(
-                WeaponAscensionCandidateCalculationStatus.INVALID_REQUEST,
-                issue = "Target level is below the weapon's current ascension phase."
-            )
-        }
+        // A weapon may already be ascended while still sitting at the previous
+        // phase's level (for example, 20/40 immediately after its first ascension).
+        val targetRank = maxOf(request.currentAscensionRank, derivedTargetRank)
         if (targetRank == request.currentAscensionRank) {
             return result(WeaponAscensionCandidateCalculationStatus.NO_ASCENSION_REQUIRED)
         }
