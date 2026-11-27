@@ -120,9 +120,17 @@ class WeaponExperienceCalculatorTest {
         assertEquals(WeaponExperienceCalculationIssue.INVALID_LEVEL_RANGE, calculated.issue)
     }
 
-    @Test fun rejectsTargetAboveUnlockedAscensionCap() {
+    @Test fun allowsTargetBeyondCurrentCapBecauseAscensionIsPartOfTheUpgradePlan() {
         val calculated = result(request(current = 20, target = 40, cap = 20))
-        assertEquals(WeaponExperienceCalculationIssue.TARGET_EXCEEDS_ASCENSION_CAP, calculated.issue)
+        assertEquals(WeaponExperienceCalculationStatus.CANDIDATE_DATA, calculated.status)
+        assertEquals(415_125L, calculated.requiredExperience)
+        assertEquals(415_200L, calculated.grantedExperience)
+        assertEquals(41_520L, calculated.moraRequired)
+    }
+
+    @Test fun currentLevelMustStillFitTheCurrentAscensionCap() {
+        val calculated = result(request(current = 21, target = 40, cap = 20))
+        assertEquals(WeaponExperienceCalculationIssue.INVALID_LEVEL_RANGE, calculated.issue)
         assertTrue(calculated.materials.isEmpty())
     }
 
