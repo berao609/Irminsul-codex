@@ -223,7 +223,11 @@ class WeaponUpgradePlanCandidateCalculatorTest {
                 ), curve
             )
             assertEquals(WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA, result.status)
-            assertEquals(expectedExp.moraRequired + 100L,
+            val expectedAscensionMora = stages().sumOf { stage ->
+                stage.costs.filter { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }
+                    .sumOf { it.quantity }
+            }
+            assertEquals(expectedExp.moraRequired + expectedAscensionMora,
                 result.requirements.single { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }.quantity)
             expectedExp.materials.filterNot {
                 it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID
