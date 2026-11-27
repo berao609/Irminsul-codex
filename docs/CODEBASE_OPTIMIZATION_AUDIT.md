@@ -1186,7 +1186,16 @@ Closing this audit does not mean the application is perfect or that every option
 - `33c360f31862361630c9b0fb306df85f8598b89a` - trim unused imports in extracted component.
 - `5a8884338f7f8cd86763fa41552352833c3288c4` - add component import to MainActivity.
 
-**Static verification:** MainActivity delegates empty and populated Daily Note presentation to the new component. The extracted component retains all four DailyNoteMetricRow calls and the original refresh/loading/empty-state conditions. Automated CI and physical-device verification remain pending.
+**Static verification:** MainActivity delegates empty and populated Daily Note presentation to the new component. The extracted component retains all four DailyNoteMetricRow calls and the original refresh/loading/empty-state conditions.
+
+**Automated verification:**
+- CI #755 failed during Kotlin compilation because MainActivity did not yet import HomeDailyNoteSection. The missing import was added in commit `5a8884338f7f8cd86763fa41552352833c3288c4`.
+- CI #756 passed unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload. Room instrumentation tests were skipped by workflow conditions.
+- Workflow: https://github.com/berao609/Irminsul-codex/actions/runs/45951308270
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.756-vc758` (artifact ID `15176821455`; archive SHA-256 `b3db8ba816b58d7b4cc540c29f2f4e120b83a5b678d02a40c2be062ac2ccd12e`).
+- Room schema artifact: `irminsul-room-schema-v2-run-756` (artifact ID `15177590028`; archive SHA-256 `29ce4a60b14fb46e8b8ce683adde365adf5730634be678a9142e70bf9bac677b`).
+
+**Physical-device verification:** Pending user installation and completion of the checklist below.
 
 **Device checklist:**
 1. Home loading indicator appears while Daily Note is loading with no cached note.
