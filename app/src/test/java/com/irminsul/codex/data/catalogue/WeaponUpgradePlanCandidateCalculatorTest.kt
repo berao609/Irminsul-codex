@@ -70,7 +70,7 @@ class WeaponUpgradePlanCandidateCalculatorTest {
         assertEquals(6, result.usedAscensionCandidateIds.size)
         assertEquals(7, result.requirements.size)
         val mora = result.requirements.single { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }
-        assertEquals(906_520L + 100L, mora.quantity)
+        assertEquals(906_520L + 10L, mora.quantity)
         assertEquals(903L, result.requirements.single {
             it.itemId == WeaponExperienceCalculator.MYSTIC_ENHANCEMENT_ORE_ITEM_ID
         }.quantity)
