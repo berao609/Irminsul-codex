@@ -43,7 +43,7 @@ jobs:
           set +o pipefail
           yes | "$sdkmanager_path" --licenses
           set -o pipefail
-          "$sdkmanager_path" --install "platforms;android-37" "build-tools;37.0.0" "platform-tools"
+          "$sdkmanager_path" --install "platforms;android-37.1" "build-tools;37.0.0" "platform-tools"
 
       - name: Configure persistent Debug signing
         shell: bash
@@ -213,13 +213,13 @@ jobs:
         env:
           ANDROID_I_WANT_MY_TCG: ${{ steps.kvm.outputs.available != 'true' && 'yes' || '' }}
         with:
-          # Compile against Android 17 API 37.1 and test on the matching
-          # stable Android 17 emulator system image.
-          api-level: 37
-          system-image-api-level: 37
+          # Compile against stable API 37.1 and test against the newer stable
+          # Android 17 API 37.2 QPR2 16 KB page-size emulator image.
+          api-level: "37.1"
+          system-image-api-level: "37.2"
           channel: stable
           arch: x86_64
-          target: google_apis
+          target: google_apis_ps16k
           profile: pixel_2
           ram-size: 4096M
           disable-linux-hw-accel: ${{ steps.kvm.outputs.available != 'true' }}
