@@ -185,4 +185,65 @@ class WeaponUpgradePlanCandidateCalculatorTest {
         assertEquals(WeaponUpgradePlanCandidateStatus.INVALID, result.status)
         assertTrue(result.requirements.isEmpty())
     }
+
+    @Test fun everyAscensionBoundaryWorksForFourStarAndFiveStarWeapons() {
+        val targets = listOf(20, 40, 50, 60, 70, 80, 90)
+        listOf(
+            WeaponExperienceRarity.FOUR_STAR to fourStarCurve,
+            WeaponExperienceRarity.FIVE_STAR to fiveStarCurve
+        ).forEach { (rarity, curve) ->
+            targets.forEachIndexed { index, target ->
+                val result = WeaponUpgradePlanCandidateCalculator.calculate(
+                    request(rarity = rarity, target = target), curve, stages()
+                )
+                assertEquals("rarity=${rarity.starCount}, target=$target",
+                    WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA, result.status)
+                assertEquals("rarity=${rarity.starCount}, target=$target",
+                    index, result.usedAscensionCandidateIds.size)
+                assertTrue(result.requirements.any {
+                    it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID
+                })
+            }
+        }
+    }
+
+    @Test fun partialCurrentWeaponExpIsPreservedInTheCombinedPlan() {
+        listOf(
+            WeaponExperienceRarity.FOUR_STAR to fourStarCurve,
+            WeaponExperienceRarity.FIVE_STAR to fiveStarCurve
+        ).forEach { (rarity, curve) ->
+            val result = WeaponUpgradePlanCandidateCalculator.calculate(
+                request(rarity = rarity, current = 5, currentExp = 100L, target = 90),
+                curve, stages()
+            )
+            val expectedExp = WeaponExperienceCalculator.calculate(
+                com.irminsul.codex.domain.analysis.WeaponExperienceCalculationRequest(
+                    rarity = rarity, currentLevel = 5, currentExperienceWithinLevel = 100L,
+                    targetLevel = 90, maximumUnlockedLevel = 20, targetMaximumUnlockedLevel = 90
+                ), curve
+            )
+            assertEquals(WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA, result.status)
+            assertEquals(expectedExp.moraRequired + 100L,
+                result.requirements.single { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }.quantity)
+            expectedExp.materials.filterNot {
+                it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID
+            }.forEach { expected ->
+                assertEquals(expected.quantity, result.requirements.single {
+                    it.itemId == expected.itemId
+                }.quantity)
+            }
+        }
+    }
+
+    @Test fun repeatedAscensionMaterialIdsAreAggregatedAcrossStages() {
+        val repeated = listOf(
+            candidate(20, 40, itemId = "114001", itemName = "Tile", quantity = 3L),
+            candidate(40, 50, itemId = "114001", itemName = "Tile", quantity = 4L)
+        )
+        val result = WeaponUpgradePlanCandidateCalculator.calculate(
+            request(target = 50), fiveStarCurve, repeated
+        )
+        assertEquals(WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA, result.status)
+        assertEquals(7L, result.requirements.single { it.itemId == "114001" }.quantity)
+    }
 }
