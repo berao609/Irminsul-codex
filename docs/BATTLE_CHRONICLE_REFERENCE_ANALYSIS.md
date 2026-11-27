@@ -417,3 +417,143 @@ The user explicitly decided to exclude the following HoYoLAB calculator modules 
 - **Serenitea Pot furnishing calculation** (including replica importing).
 
 Do not implement or plan these as part of the Irminsul enhancement calculator unless the user later changes this scope decision. Character and weapon enhancement calculations remain in scope.
+
+## 9. Consolidated analysis of the five repository reference captures
+
+**Analysis date:** 2026-11-27  
+**Purpose:** Consolidate the CSS, account overview captures, character detail capture, and enhancement-calculator landing capture into one retrieval point for the native UI revamp. This section supplements Sections 2–8; it does not replace their screenshot observations, interaction records, or product decisions.
+
+### 9.1 Source inventory and evidence boundaries
+
+| File | Retrieved blob SHA | Size | What it represents |
+|---|---|---:|---|
+| `docs/m_55ae43ba.css` | `c7cf50e27b1007d9e78697731155ed67659535f9` | 113,028 characters | Minified shared HoYoLAB mobile stylesheet; 1,145 parsed CSS rules |
+| `docs/share-page.html` | `40c5fee0766a722eb22efc6ce7213310797ee29e` | 116,408 characters | Full captured Battle Chronicle share-page subtree and page shell |
+| `docs/index-page-info.html` | `c4ed98716c085081e22b842eeaee9a1048ea610d` | 106,467 characters | The main account-information content subtree without the complete outer share-page wrapper |
+| `docs/enhancement-calculator-body.html` | `30e2221e2d5e94ee7c5a2f31578ce465ce006a6c` | 83,422 characters | Enhancement Progression Calculator landing page, profile header, entry modules, and modal/loading shells |
+| `docs/body-detail.html` | `18ba0399a4ef55a1b6e38b627c0e600ff4672a1c` | 78,824 characters | Rendered Character Details page body, including selector, stats, weapon, artifacts, talents, and constellations |
+
+All four HTML files are rendered DOM snapshots, not original application source code. The CSS is a shared bundle, not a stylesheet dedicated only to these captured elements. Class names, markup, and CSS rules are evidence of rendered structure and styling; they do not independently prove original component architecture, data contracts, or unobserved interaction behavior.
+
+The HTML captures contain account-specific profile and game data, including identifying account fields. Do not reproduce those values in UI examples, fixtures, documentation, screenshots, or logs. Review and sanitize the raw captures before any public distribution; the existing public-repository exposure should be treated as a data-hygiene issue.
+
+### 9.2 Stylesheet: visual language and reusable patterns
+
+The stylesheet contains 1,145 parsed rules and is heavily minified. It combines component-scoped rules, generated utility classes, shared controls, dialogs, popovers, navigation, and error/loading components. A selector in this shared file is not proof that the corresponding component appears in a particular captured screen.
+
+**Confirmed visual characteristics**
+
+- **Base canvas:** `.m-root-layout` uses a full-viewport minimum height and `#2a2a2a` background.
+- **Primary identity accent:** `#d3bc8e` is a recurring warm gold. Related lighter gold values include `#ddca9f`. This aligns with Irminsul's approved Archival Gold direction; map to shared theme tokens rather than scattering raw values.
+- **Dark surfaces:** Examples include `#2a2a2a`, `#333`, and `#0d0e12`. Some surfaces use translucent white borders or overlays rather than heavy opaque outlines.
+- **Warm light surfaces:** Dialog variants use parchment-like `#f6f3ed`, warm border tones such as `#dac9ad` / `#e2d4b7`, and muted brown text such as `#675856` / `#9c7f69`.
+- **Cool secondary surface:** A tooltip/popover surface uses `rgba(44, 50, 61, 1)`, 16 gpx corner radius, 12 gpx padding, and a 5 gpx backdrop blur. Its arrow is hidden.
+- **Typography:** Language-specific font stacks are defined. English uses Tahoma/Helvetica/Arial/sans-serif; other locales use different stacks. Dialog content includes Microsoft YaHei rules, while selected page text uses HYWenHei. Do not assume one font family applies to the whole application.
+- **Scale system:** Many dimensions are expressed as `calc(N * var(--gpx))`; some font sizes use viewport-width units. These are reference-specific responsive units, not Android dp or sp.
+- **Common geometry:** Repeated values include 24 gpx icons, 4/8/10/12/16/20 gpx spacing increments, 7 gpx dialog radii, 16 gpx popover radii, and 285 gpx dialog widths. These describe individual web rules, not universal design tokens.
+- **Avatar overlays:** The avatar container clips its image; a constellation badge sits at the top-right with a translucent black background, white semibold 12 gpx text, and compact padding. This is a strong pattern for dense roster/avatar presentation.
+- **Dialog construction:** Some dialogs use inset borders, decorative corner/background images, a close affordance positioned outside the panel, and a scrollable description region. Skill dialogs use a dark surface; rune/buff/announcement variants use warm light surfaces. This confirms contextual dialog styling, not a single universal dialog theme.
+- **Empty/error states:** Shared CSS includes centered empty-state and error layouts, muted text, and bounded content widths. These are useful state-design references but their exact visual states are not all present in the HTML captures.
+
+**Native translation:** Preserve contextual contrast, gold hierarchy, compact game-data typography, avatar overlays, and purposeful decorative framing where it serves the screen. Rebuild using Compose theme roles, native surfaces, image clipping, badges, and sheets/dialogs. Do not port CSS selectors, gpx calculations, web fonts, CSS blur, or decorative image-border mechanics as literal implementation requirements. Verify actual Compose dp/sp geometry on-device.
+
+### 9.3 Battle Chronicle overview: share-page and index-page-info
+
+The two captures represent overlapping content at different DOM boundaries:
+
+- `share-page.html` includes the outer `.share-page` / `.m-index-layout` composition and top-level visual/page-shell elements, including the large `.game-kv` hero region.
+- `index-page-info.html` begins at `.m-index-page-info` and isolates the account-information body. It is useful for examining the information hierarchy without the full page wrapper.
+- Both contain substantially the same populated account-information sections and repeated component patterns. Treat them as complementary captures, not two separate product designs.
+- The main account content includes Character, World Exploration, Event Calendar, Tools, Challenge, Spiral Abyss, TCG, and Serenitea-related anchors. Existing product-scope exclusions in Section 1 remain binding; the presence of a section in the source does not authorize its implementation.
+
+**Observed content hierarchy and presentation**
+
+1. **Account identity and compact summary:** A profile/identity region precedes grouped account metrics. The visible summary distinguishes headline account facts from secondary metrics. Existing screenshot research confirms the summary can be presented in compact and expanded forms.
+2. **My Characters:** A compact horizontal character selector is distinct from the denser All Characters destination. The overview presents a selected character with condensed equipment context rather than the complete detail page.
+3. **World Exploration:** Region cards use region-specific artwork/emblems, region names, a progression qualifier such as Main Areas Only, percentage values, and progress bars. The overview is a compact horizontal carousel; the dedicated detail page is a larger vertically stacked presentation. The HTML contains region-specific content and styling; do not convert captured percentages into defaults.
+4. **Challenge modes:** Spiral Abyss, Imaginarium Theater, and Stygian Onslaught each have their own period/record context and mode-specific summary data. Shared section framing is reasonable; forcing identical metric layouts across different data models is not.
+5. **Section headers:** Repeated `.block-title` patterns pair a small icon and title, sometimes with a trailing View More action. This supports one reusable native section-header behavior with an optional trailing action.
+6. **Collectibles/progression:** Exploration and collectible counts are grouped by meaningful categories. Preserve the distinction between counts, percentages, mode records, and character progression instead of turning all values into interchangeable metric tiles.
+7. **Excluded reference content:** Event Calendar, Common Tools, TCG, and Serenitea Pot remain outside the agreed Visuals reconstruction scope. Real-Time Notes remain Home-only under the Irminsul product decision.
+
+**Native translation:** Keep the compact account summary expandable; use a horizontally browsable character strip and region overview; retain distinct region identity; use a dedicated region-detail composition; group collectibles semantically; and use consistent section headers. Avoid a generic wall of cards, duplicating Home-only Real-Time Notes, or adding reference-only modules.
+
+### 9.4 Character Details page: composition and data hierarchy
+
+The rendered body uses `.role-detail-layout` and contains these major regions:
+
+- Header/title region for Character Details.
+- Character-specific background/presentation region (`.bgs`, `.role-detail-container`, `.base-info-section`).
+- Horizontal character selector (`.list-swiper`).
+- Character identity and base information (`.info-panel`, `.top-info`, `.base-info`).
+- Constellation presentation (`.constellations`, `.constellation-icon`).
+- Character attributes (`.prop-info-section`, `.prop-stats`, `.base-stat`, `.add-stat`, `.final-stat`).
+- Weapon information (`.weapon-info-section`).
+- Five artifact/relic entries (`.relic-info-section`, `.relic-list`, `.relic-item`, `.relic-top`, `.relic-icon`).
+- Talent presentation (`.skill-item`, `.skill-icon`).
+
+**Data hierarchy visible in the capture**
+
+- Character identity is established before the dense statistics.
+- Character stats distinguish base contribution, additional contribution, and final total. This is a useful semantic distinction: do not flatten base and additive values into one unexplained number.
+- The sample includes both percentage and flat stats. Labels and values must remain paired and units must remain visible.
+- Weapon information separates weapon identity/level, Base ATK, and its secondary stat.
+- Each artifact is represented as an individual slot/item with its own main affix and minor/substat values. Artifact slot identity and item identity must not be lost when rendering a compact list.
+- Talent and constellation icons are separate groups; they should not be mistaken for ordinary navigation tabs.
+
+**Interaction evidence and product difference**
+
+The previously tested behavior is recorded in Section 6.5: selecting another character portrait updates the displayed character in place. Weapon, artifact, constellation, and talent entries in the reference navigate externally to HoYoLAB Wiki. Irminsul intentionally differs: its approved character showcase uses local progressive disclosure for weapon/artifact inspection. Do not copy the external-link behavior as the primary detail interaction.
+
+**Native translation:** Keep character artwork and identity prominent; retain the compact horizontal selector; present stats in a structured panel with base/additive/final semantics; group weapon and five artifact slots distinctly; and reveal secondary equipment information locally when requested. Preserve existing Irminsul behavior and data availability semantics. Do not fabricate missing stats or equipment.
+
+### 9.5 Enhancement Progression Calculator: what this capture proves
+
+The captured file is the calculator's **landing page**, not a full capture of the character/weapon custom-calculation form or result page. Its visible modules are:
+
+- **Quick Character Leveling:** A helper description says it identifies characters that can be leveled based on inventory materials. It offers a character-based route and a recommended-inventory-material route.
+- **Level up based on the gameplay:** An entry for Spiral Abyss / Imaginarium Theater.
+- **Custom Calculation:** Separate entry points for Character, Weapon, Serenitea Pot, and Artifact. The page labels the selection capacity: 1–8 characters, optional weapons alongside the character route, 1–8 weapons, 1–5 artifacts, and furnishing/replica selection for Serenitea Pot.
+- **Profile header:** The landing screen includes a signed-in profile identity region. Do not reuse captured account values.
+- **Modal/loading infrastructure:** The snapshot includes popup/modal roots and loading markup, but not the actual contents or transitions of all those dialogs.
+
+**Evidence limits:** No standard form controls were present in the captured DOM snapshot. The landing capture does not establish the detailed character selector UI, target-level controls, material-row design, calculation formula, result grouping, or exact button sequence. The workflow-level observations and decisions already documented in Sections 8.3–8.8 remain the evidence for later stages. Do not infer the unobserved screens from this landing capture.
+
+**Irminsul translation and locked scope**
+
+- Keep character and weapon enhancement calculations as the supported calculator domains.
+- Exclude Artifact and Serenitea Pot custom calculations unless the user explicitly changes scope.
+- Use the landing page's task separation as a workflow reference, not a requirement to clone all its modules.
+- Preserve deterministic local calculations and the existing decision against automatic in-game inventory synchronization.
+- Keep target level selection and character talent targets explicit; aggregate all selected requirements into a comprehensible material result.
+- Distinguish total required, owned/available, remaining, and excess quantities where the applicable workflow supports those values.
+- Keep character ascension, character EXP, talent, and weapon enhancement requirements logically distinct even when the result combines them into one material summary.
+- Item-specific Wiki links are explanatory only; the calculator must continue working without network access to a Wiki.
+
+### 9.6 Cross-reference synthesis for the native UI revamp
+
+| Native destination/component | Strongest reference | Design intent to preserve | Important boundary |
+|---|---|---|---|
+| Home/account identity and summary | Battle Chronicle overview captures | Clear identity, compact headline metrics, secondary expandable facts | Home owns Real-Time Notes; never duplicate them in Visuals |
+| Visuals account overview | `share-page.html` + `index-page-info.html` | Dense but grouped progression summary and clear section hierarchy | Only approved Visuals modules |
+| Character roster/showcase | Overview captures + `body-detail.html` | Character-first artwork, horizontal selector, meaningful selected state | Keep current Irminsul roster decisions and local detail interactions |
+| Character stats | `body-detail.html` | Base/additional/final value hierarchy and readable stat groups | Do not fabricate unavailable values |
+| Weapon/artifact details | `body-detail.html` | Separate weapon identity and five artifact slots, item-specific stats | Irminsul local progressive disclosure intentionally differs from Wiki links |
+| World Exploration | Overview captures + CSS | Region identity, contextual card treatment, progress percentage/bar, overview/detail scale change | Use current account data; no captured-account defaults |
+| Game-mode records | Overview captures and existing screenshot notes | Mode-specific records, periods, best result, and meaningful metrics | Do not normalize distinct modes into one false schema |
+| Materials Calculator | `enhancement-calculator-body.html` + Section 8 workflow observations | Separate task entry points and clear character/weapon calculation intent | Landing capture is not evidence of detailed form/result layout; exclude Artifact/Pot |
+| Theme and shared components | `m_55ae43ba.css` | Archival gold, charcoal and warm parchment contrast, compact geometry, overlays | CSS/gpx values are not Compose tokens or dp measurements |
+
+### 9.7 Retrieval guidance for future implementation batches
+
+Use this analysis as the first reference lookup. Retrieve the raw captures again only when a concrete unresolved question requires source-level inspection.
+
+- Account summary, overview, and section hierarchy: Sections 3, 4.1, 4.3–4.5, 6.6, and 9.3.
+- Character selector, stats, weapon, artifacts, talents, and constellations: Sections 6.5, 9.4, and the raw `docs/body-detail.html` only for unresolved markup detail.
+- CSS colors, typography, dimensions, avatar overlays, and dialog variants: Sections 6.4 and 9.2; inspect the raw CSS only for a specific selector/rule.
+- Calculator scope and landing-page modules: Sections 8.1–8.8 and 9.5.
+- Product boundaries and exclusions: Sections 1, 8.5, 8.7, 8.8, and the current UI Design Instructions.
+
+**Implementation rule:** This document is design research, not permission to change product scope. The current `docs/Irminsul Codex UI Design Instructions.md`, approved UI revamp decisions, native architecture, and validated account data remain authoritative. Reconcile conflicts in favor of explicit Irminsul decisions, not the reference website.
+
+**Remaining evidence gaps:** Exact computed dimensions for the account overview and individual cards; full responsive breakpoint behavior; and detailed calculator form/result DOM captures. These are not prerequisites for continuing the current revamp unless a specific implementation decision depends on them. Do not conduct exhaustive control testing or invent missing measurements.
