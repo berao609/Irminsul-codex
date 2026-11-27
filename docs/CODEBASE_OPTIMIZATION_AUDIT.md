@@ -1326,7 +1326,7 @@ Closing this audit does not mean the application is perfect or that every option
 
 ### Batch 6 - Step 13: Tools destination presentation extraction
 
-**Status:** Implemented; CI #805 passed. Physical-device verification pending.
+**Status:** Cleared after CI #805 and user-confirmed physical-device verification.
 
 **Implementation:**
 - Added `presentation/ToolsSection.kt` to own the Tools destination header, Materials Calculator card, and Lineup Simulator card/container.
@@ -1351,3 +1351,32 @@ Closing this audit does not mean the application is perfect or that every option
 6. Confirm Home, Visuals, Account, navigation, and AI placeholder sheet remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance or new calculator/lineup capability is claimed.
+
+
+### Batch 6 - Step 14: Visuals destination presentation extraction
+
+**Status:** Implemented and committed; CI and physical-device verification pending.
+
+**Implementation:**
+- Added `presentation/VisualsSection.kt` to own the Visuals destination composition: Account Chronicle sections, Character Showcase and its empty state, and Account Analysis.
+- MainActivity now passes the existing snapshot, intelligence report, loading/error flags, credential availability, selected character, recommendation expansion state, and callbacks.
+- Kept snapshot ownership, selected-character state, recommendation state, credential checks, analysis invocation, and navigation ownership in `CodexScreen`.
+- Preserved Chronicle section order, Character Showcase roster handling (including stale roster display), the empty-state copy, and the Account Analysis credential gate and available-character behavior.
+- No account mapping, retrieval, persistence, analysis rules, navigation, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
+
+**Commits:**
+- `c573d32169aa2d117c25d04faf8e1345989efcfd` - add Visuals destination presentation.
+- `92319ddc68a925f0d63c71fe9062c94853215ed9` - delegate Visuals composition from MainActivity.
+
+**Verification required:**
+1. Confirm Debug CI compilation, unit tests, APK assembly, Room schema verification, signature verification, and artifact upload.
+2. Verify Account Chronicle overview, exploration, current/previous Spiral Abyss, and Imaginarium Theater sections.
+3. Verify Character Showcase roster, selection, and empty state.
+4. Verify Account Analysis refresh action, progress/error states, recommendation display, and credential gating.
+5. Confirm Home dashboard and Daily Note, Tools calculators and Lineup Simulator, Account settings/export, navigation, and AI placeholder remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
