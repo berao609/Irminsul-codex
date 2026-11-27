@@ -63,6 +63,9 @@ internal fun WeaponEnhancementCalculatorSection(
 
     val current = currentLevel.toIntOrNull()
     val target = targetLevel.toIntOrNull()
+    val targetMaximumUnlockedLevel = target?.let { requested ->
+        weaponAscensionLevelCaps.firstOrNull { requested <= it }
+    }
     val currentExp = currentExperience.toLongOrNull()
     val candidate = when (weapon.rarity) {
         4 -> GenshinWeaponExperienceCurveCandidate.fourStar
@@ -71,7 +74,8 @@ internal fun WeaponEnhancementCalculatorSection(
     }
     val calculation = if (
         rarity != null && maximumUnlockedLevel != null &&
-        current != null && target != null && currentExp != null && candidate != null
+        current != null && target != null && targetMaximumUnlockedLevel != null &&
+        currentExp != null && candidate != null
     ) {
         WeaponExperienceCalculator.calculate(
             WeaponExperienceCalculationRequest(
@@ -79,7 +83,8 @@ internal fun WeaponEnhancementCalculatorSection(
                 currentLevel = current,
                 currentExperienceWithinLevel = currentExp,
                 targetLevel = target,
-                maximumUnlockedLevel = maximumUnlockedLevel
+                maximumUnlockedLevel = maximumUnlockedLevel,
+                targetMaximumUnlockedLevel = targetMaximumUnlockedLevel
             ),
             candidate.cumulativeExperienceByLevel
         )
@@ -126,10 +131,15 @@ internal fun WeaponEnhancementCalculatorSection(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
+                targetMaximumUnlockedLevel == null -> Text(
+                    "Target level must be between 1 and 90.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
                 calculation?.status == WeaponExperienceCalculationStatus.INVALID_REQUEST -> Text(
                     when (calculation.issue) {
                         com.irminsul.codex.domain.analysis.WeaponExperienceCalculationIssue.TARGET_EXCEEDS_ASCENSION_CAP ->
-                            "Target exceeds the current ascension cap of level $maximumUnlockedLevel."
+                            "Target exceeds the planned ascension cap of level $targetMaximumUnlockedLevel."
                         com.irminsul.codex.domain.analysis.WeaponExperienceCalculationIssue.INVALID_CURRENT_EXPERIENCE ->
                             "Current EXP is invalid for the selected level or ascension cap."
                         com.irminsul.codex.domain.analysis.WeaponExperienceCalculationIssue.INVALID_LEVEL_RANGE ->
