@@ -5466,3 +5466,52 @@ Close the verified Batch 3 presentation gaps using the consolidated Battle Chron
 
 ### Boundary
 Presentation-only reference fidelity work. No account retrieval, raw source schema, persistence, analysis calculations, navigation architecture, dependencies, or SDK changes.
+
+
+## Milestone 109 - UI Revamp Batch 4: Expanded Battle Chronicle Coverage
+
+**Date recorded:** 2026-11-27  
+**Development phase:** UI Revamp - Batch 4  
+**Status:** Implemented on feature branch; automated verification pending; physical-device verification pending.
+
+### Objective
+Extend the existing Visuals Battle Chronicle experience with source-backed Stygian Onslaught data while establishing a typed domain boundary for this additional Chronicle section. This is part of the ongoing UI revamp, not a separate task.
+
+### Retrieval finding
+- The existing HoYoLAB `/index` request already returns the Battle Chronicle `stats` object.
+- Independent read-only endpoint research identifies `stats.hard_challenge.name` as the Stygian Onslaught best-record field and `stats.difficulty` as its difficulty field. See [HoYoLAB Genshin Battle Chronicle MCP field notes](https://glama.ai/mcp/servers/danisec/hoyolab-mcp), which document these fields and warn that the upstream endpoints are unofficial and undocumented.
+- No additional network request is added for this summary. The app reuses the retained `profile_and_exploration` payload and its existing section provenance/timestamp, avoiding redundant retrieval.
+- This does not establish that every detailed Stygian cycle/team field is available through the current account index. Detailed record retrieval remains subject to separate endpoint and response validation.
+
+### Implementation
+- Added `StygianOnslaughtSnapshot` as a typed domain model with optional best-record name and difficulty.
+- Derived the model from `profile_and_exploration.stats.hard_challenge.name` and `profile_and_exploration.stats.difficulty`.
+- Preserved missing, unavailable, failed, and stale source states. Missing record fields are not converted into fabricated values.
+- Added a dedicated Stygian Onslaught section to Visuals.
+- Kept the original raw export payload unchanged; no Room schema migration or new dependency was required.
+- Added mapper tests for valid values, missing fields, and failed index retrieval.
+
+### Files changed
+- `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
+- `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
+- `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
+- `README.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Verification
+- Feature branch: `ui-revamp/batch-4-chronicle-data`.
+- Automated tests and Debug APK build: pending GitHub Actions.
+- Physical-device verification: pending user testing.
+- Room schema: no change expected because the new typed field is derived from the existing persisted raw export.
+
+### Device checklist
+1. Verify Stygian Onslaught appears in Visuals when the index response includes the supported fields.
+2. Verify the best-record name and difficulty match the source data.
+3. Verify missing fields do not display invented values or misleading zeros.
+4. Verify failed/unavailable index data is communicated without crashing or hiding unrelated Chronicle sections.
+5. Confirm existing Account Overview, Exploration, Character Showcase, Abyss, Theater, Account Analysis, navigation, Home, and Tools remain functional.
+
+### Boundary
+This milestone adds typed Stygian summary mapping and Visuals presentation only. It does not add an unverified Stygian detail endpoint, historical cycle/team records, a separate cloud service, or a Room migration. Further Chronicle endpoint expansion remains part of the same ongoing UI revamp batch plan and must be evidence-led.
