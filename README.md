@@ -36,8 +36,8 @@ The product's primary purpose is to turn account data into actionable in-app int
 
 | Feature | Description |
 |---|---|
-| HoYoLAB Login | Embedded WebView login and authentication cookie capture. |
-| Manual Credentials | Manual entry of Genshin UID and HoYoLAB cookie. |
+| HoYoLAB Login | Centered first-run sign-in card with embedded WebView login and authentication cookie capture. |
+| Manual Credentials | Manual UID and HoYoLAB cookie entry remains available under Account as a fallback. |
 | Account Detection | Detects the Genshin Impact server from the account UID. |
 | Daily Note | Retrieves daily account activity information. |
 | Resin Tracking | Displays current Resin, maximum capacity, and estimated recovery time. |
@@ -268,7 +268,7 @@ Irminsul-codex/
 
 Responsible for:
 
-* Screen-level composition, navigation state, and coordination of extracted presentation sections.
+* Screen-level composition, navigation state, and coordination of extracted presentation sections, including the first-run sign-in experience.
 * Credential entry and orchestration through `HoYoLabCredentialStore` for Keystore-backed cookie encryption; non-sensitive UID and theme preferences remain in SharedPreferences.
 * Daily Note synchronization and account-export actions, including document-picker coordination.
 * Retaining screen-owned state and callbacks passed into presentation components.
