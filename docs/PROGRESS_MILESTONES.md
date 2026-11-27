@@ -4140,3 +4140,60 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 **Verification status:** CI runs #584 and #585 are pending. Physical-device verification is pending.
 
 **Boundary:** Structural extraction only; no measured performance improvement is claimed.
+
+
+## Milestone 072 - Genshin DB Progression Candidate Import Foundation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Connect the existing Genshin-DB cost parser to stable character/weapon progression identities while preserving the candidate-versus-verified trust boundary.
+
+**Implemented:**
+- Corrected Genshin-DB `ascend1` through `ascend6` level ranges to 20→40, 40→50, 50→60, 60→70, 70→80, and 80→90.
+- Added optional character `ascensionLevel` mapping from source `promote_level`; missing values remain null and zero is preserved.
+- Added stable, source-attributed candidate mapping for parsed upgrade-cost segments.
+- Added character import for ascension and separate Normal Attack, Elemental Skill, and Elemental Burst talent tracks.
+- Added weapon ascension import.
+- Preserved incomplete stages and invalid data as explicit import issues.
+- Character level EXP and weapon level EXP are explicitly reported as missing. The importer therefore returns partial coverage rather than pretending the progression dataset is complete.
+- Candidate data is not promoted to verified calculation records. No source permission is approved and no automatic cost dataset is connected to the Materials Planner UI.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinDbCostParser.kt`
+- `app/src/test/java/com/irminsul/codex/data/catalogue/GenshinDbCostParserTest.kt`
+- `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
+- `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinDbUpgradeCostCandidateMapper.kt`
+- `app/src/test/java/com/irminsul/codex/data/catalogue/GenshinDbUpgradeCostCandidateMapperTest.kt`
+- `app/src/main/java/com/irminsul/codex/data/catalogue/GenshinDbProgressionCandidateImporter.kt`
+- `app/src/test/java/com/irminsul/codex/data/catalogue/GenshinDbProgressionCandidateImporterTest.kt`
+
+**Commits:**
+- `f5a26e3576cc03bff1b2568138f46154180e65a9`
+- `2383c78db6ae379e2e67d428565f3f98b3cc8749`
+- `b82e69955b601cc0f6037c82c02ccbbaafdb9a90`
+- `e753dde949bdeecafd99ac82285c8165bc9eda1f`
+- `3be0b925f71e6afe86b896d6844fc7762d9ae9e8`
+- `ab986aceea117a4f8a38a9e1e341410699daa9b8`
+- `012b76623d8fc9fa16099d134bb72b03b2c04a9f`
+
+**Verification:**
+- CI #594 passed parser regression tests, Debug APK build, schema verification, signature verification, and artifact upload.
+- CI #595 passed after character ascension rank was added to the snapshot model.
+- CI #596 passed candidate-mapper tests.
+- CI #599 passed unit tests, Debug APK build, Room schema verification, signature verification, and artifact upload.
+- Intermediate failures were not hidden: #593 exposed the old ascension-range test expectation; #597 and #598 exposed incorrect importer test assertions. The assertions were corrected and the final #599 run passed.
+- CI #599: https://github.com/berao609/Irminsul-codex/actions/runs/45922119144
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.599-vc601` (artifact ID `15165061135`).
+- APK artifact SHA-256: `947ea64e01adcb586ee5eb21d4f0d6c90f52641c4537634e542462e1f06052f4`.
+
+**Physical-device verification:** Not performed. This milestone changes domain/data parsing only and introduces no visible UI or persistence behavior.
+
+**Remaining work:**
+- Add verified character EXP and weapon EXP progression curves.
+- Complete material metadata and source attribution review.
+- Verify source reuse/redistribution terms before bundling data.
+- Promote only reviewed, complete records into the calculation catalogue.
+- Connect the verified records to automatic character/weapon target inputs and the Materials Planner UI.
+
+**Result:** Progression data can now be imported as stable, provenance-carrying candidates. This is not yet a complete or user-facing automatic materials calculator.
