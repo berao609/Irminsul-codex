@@ -43,7 +43,7 @@ jobs:
           set +o pipefail
           yes | "$sdkmanager_path" --licenses
           set -o pipefail
-          "$sdkmanager_path" --install "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+          "$sdkmanager_path" --install "platforms;android-37" "build-tools;37.0.0" "platform-tools"
 
       - name: Configure persistent Debug signing
         shell: bash
@@ -207,17 +207,17 @@ jobs:
             echo "available=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run Room instrumentation tests on Android 17
+      - name: Run Room instrumentation tests on Android 17 API 37
         if: steps.room_tests.outputs.run == 'true'
         uses: reactivecircus/android-emulator-runner@v2
         env:
           ANDROID_I_WANT_MY_TCG: ${{ steps.kvm.outputs.available != 'true' && 'yes' || '' }}
         with:
-          # Keep the stable API 36 compile platform. Install the API 37
-          # Android 17 beta system image separately for runtime compatibility.
-          api-level: 36
+          # Compile against Android 17 API 37.1 and test on the matching
+          # stable Android 17 emulator system image.
+          api-level: 37
           system-image-api-level: 37
-          channel: beta
+          channel: stable
           arch: x86_64
           target: google_apis
           profile: pixel_2
