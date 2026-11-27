@@ -60,34 +60,5 @@ fun VisualDashboardSection(report: AccountIntelligenceOverview?) {
             )
         }
 
-        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Account data coverage", fontWeight = FontWeight.SemiBold)
-                Text(
-                    "${report.presentAccountSectionCount} of ${report.accountSectionCount} sections present",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    "${report.missingAccountSectionCount} missing • ${report.unavailableAccountSectionCount} unavailable • ${report.failedAccountSectionCount} failed",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (report.hasDataConfidenceConcerns) {
-                    Text(
-                        "Freshness or coverage needs review.",
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 12.sp
-                    )
-                } else {
-                    Text(
-                        "No reported coverage or freshness concerns.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
     }
 }
