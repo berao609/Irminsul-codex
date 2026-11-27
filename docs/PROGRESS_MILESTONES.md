@@ -4577,10 +4577,33 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - docs/CODEBASE_OPTIMIZATION_AUDIT.md
 - docs/PROGRESS_MILESTONES.md
 
-**Verification status:** Source extraction prepared for CI. Automated verification and physical-device testing are pending. No performance improvement is claimed.
+**Verification status:** User confirmed Debug CI run #727 succeeded and the app was tested on a physical device. The user-confirmed device checklist passed. No workflow run ID, artifact ID, or artifact checksum was independently retrieved in this session. No performance improvement is claimed.
+
+**Device verification:** User confirmed the app was tested and passed after CI #727. Exact device checklist details were not separately itemized in the confirmation.
+
+
+## Milestone 083 - Bottom Navigation Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by extracting the bottom navigation and central AI action from MainActivity.
+
+**Implemented:**
+- Moved the bottom navigation bar and raised AI action into CodexBottomNavigationBar.kt.
+- Moved CodexTab into the same presentation file.
+- Kept selected-tab state and Account credential-panel behavior in CodexScreen through callbacks.
+- Preserved the existing Home, Visuals, AI, Tools, Account arrangement.
+
+**Files changed:**
+- app/src/main/java/com/irminsul/codex/MainActivity.kt
+- app/src/main/java/com/irminsul/codex/CodexBottomNavigationBar.kt
+- docs/CODEBASE_OPTIMIZATION_AUDIT.md
+- docs/PROGRESS_MILESTONES.md
+
+**Verification status:** Source changes committed. CI and physical-device verification pending. No performance improvement is claimed.
 
 **Device checklist:**
-1. Inspect Home and Visuals metric cards and progress bars.
-2. Verify Daily Note metric rows and their status labels.
-3. Verify Resin recovery text for unavailable, zero, and positive recovery times.
-4. Confirm Home and Visuals navigation and account data remain unchanged.
+1. Verify Home, Visuals, Tools, and Account destinations.
+2. Verify the central AI button remains raised and opens the existing AI sheet.
+3. Verify selecting Account opens the credential panel.
+4. Verify selected-tab indication and tab switching.
