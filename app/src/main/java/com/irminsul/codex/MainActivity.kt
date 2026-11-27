@@ -457,20 +457,6 @@ private fun CodexScreen(
             )
         }
 
-        if (selectedTab == CodexTab.ACCOUNT) {
-            Text("Account & settings", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-            AccountSettingsSection(
-                themeMode = themeMode,
-                onThemeModeChange = onThemeModeChange,
-                uid = uid,
-                cookie = cookie,
-                showCredentials = showCredentials,
-                onClearSavedCredentials = { clearSavedCredentials() },
-                onManageAccount = { showCredentials = true },
-                onHideAccountCredentials = { showCredentials = false }
-            )
-        }
-
         (errorMessage ?: accountExportState.errorMessage)?.let { message ->
             ScreenErrorBanner(message)
         }
