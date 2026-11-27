@@ -71,7 +71,7 @@ internal fun CharacterEnhancementCalculatorSection(
 
     val current = currentLevel.toIntOrNull()
     val target = targetLevel.toIntOrNull()
-    val currentExp = currentExperience.toLongOrNull()
+    val currentExp = currentExperience.toLongOrNull() ?: 0L
     val rank = character.ascensionLevel ?: current?.let { level ->
         when {
             level < 20 -> 0
@@ -128,15 +128,15 @@ internal fun CharacterEnhancementCalculatorSection(
             OutlinedTextField(
                 value = currentExperience,
                 onValueChange = { currentExperience = it.filter(Char::isDigit).take(9) },
-                label = { Text("Current EXP within level") },
+                label = { Text("EXP already earned at current level (optional)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
             when {
-                current == null || target == null || currentExp == null -> Text(
-                    "Enter valid current and target levels, plus current EXP within the level.",
+                current == null || target == null -> Text(
+                    "Enter valid current and target character levels.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -213,7 +213,7 @@ internal fun CharacterEnhancementCalculatorSection(
                 }
             }
             Text(
-                "Automatic requirements are calculated from the bundled Genshin-DB 7.2 progression data. Source: Genshin-DB, version-pinned offline dataset.",
+                "Automatic preview costs use the bundled, version-pinned Genshin-DB 7.2 dataset.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
