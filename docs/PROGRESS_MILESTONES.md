@@ -39,8 +39,6 @@ Prevent missing, null, or malformed Daily Note values from being silently interp
 
 - `app/src/main/java/com/irminsul/codex/api/DailyNoteParser.kt` (new)
 - `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
-- `app/src/main/java/com/irminsul/codex/api/BattleChronicleCollector.kt`
-- `app/src/test/java/com/irminsul/codex/api/BattleChronicleCollectorTest.kt`
 - `app/src/main/java/com/irminsul/codex/MainActivity.kt`
 - `gradle/libs.versions.toml`
 - `app/build.gradle.kts`
@@ -441,6 +439,9 @@ Make the existing selected-section account export more reliable and auditable wi
 
 - `app/src/main/java/com/irminsul/codex/domain/model/AccountSnapshot.kt`
 - `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/main/java/com/irminsul/codex/api/HoYoLabClient.kt`
+- `app/src/main/java/com/irminsul/codex/api/BattleChronicleCollector.kt`
+- `app/src/test/java/com/irminsul/codex/api/BattleChronicleCollectorTest.kt`
 - `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
 
 ### Verification
@@ -5257,7 +5258,7 @@ Establish the shared theme foundation for the agreed high-fidelity Battle Chroni
 - Source implementation: committed on the Batch 1 branch.
 - Debug build and automated tests: pending GitHub Actions.
 - APK artifact: pending.
-- Physical-device verification: pending user testing.
+- Physical-device verification: partially tested by user; tested portions clear; remaining Batch 3.1 checklist items remain open and unverified.
 
 ### Device checklist
 1. Verify System, Light, and Dark appearance modes.
@@ -5474,7 +5475,7 @@ Presentation-only reference fidelity work. No account retrieval, raw source sche
 
 **Date recorded:** 2026-11-27  
 **Development phase:** UI Revamp - Batch 4  
-**Status:** Implemented on feature branch; automated verification pending; physical-device verification pending.
+**Status:** Implemented and merged in PRs #7 and #8; automated verification pending; physical-device verification pending.
 
 ### Objective
 Extend the existing Visuals Battle Chronicle experience with source-backed Stygian Onslaught data while establishing a typed domain boundary for this additional Chronicle section. This is part of the ongoing UI revamp, not a separate task.
@@ -5506,7 +5507,7 @@ Extend the existing Visuals Battle Chronicle experience with source-backed Stygi
 - `docs/PROGRESS_MILESTONES.md`
 
 ### Verification
-- Feature branch: `ui-revamp/batch-4-chronicle-data`.
+- PR #7 merged as `d34dede92c5fc557ae1b50df4b585cdb31ad67c9`; PR #8 merged as `2fd8d3d7ff14418a211e5976f8a598783b9bc63e`.
 - Automated tests and Debug APK build: pending GitHub Actions.
 - Physical-device verification: pending user testing.
 - Room schema: no change expected because the new typed field is derived from the existing persisted raw export.
