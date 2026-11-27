@@ -4800,3 +4800,33 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 7. Confirm Materials Calculator and the remaining tabs still work.
 
 **Result:** Lineup Simulator is now grouped with the app's calculators and utilities in Tools. CI #778 passed and the user confirmed successful physical-device testing. Its existing selection behavior and trust limitations are unchanged.
+
+
+## Milestone 090 - Account Settings and Credentials Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 by separating Account credential and settings presentation from MainActivity.
+
+**Implemented:**
+- Added `presentation/AccountSettingsSection.kt` with `AccountCredentialsSection` for manual UID/cookie entry, HoYoLAB sign-in, credential-unlock error, clear action, and Save & Sync.
+- Added `AccountSettingsSection` for appearance selection and account/session management.
+- Moved `ThemeMode` into the presentation package while preserving preference keys and System/Light/Dark behavior.
+- Kept credential values, visibility, loading/export state, secure storage, and all orchestration in CodexScreen.
+- Preserved existing visibility conditions, labels, callbacks, and disabled states.
+- No credential storage, account retrieval, export, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountSettingsSection.kt`
+
+**Verification status:** Source extraction committed; Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Verify System, Light, and Dark selection and persistence.
+2. Verify HoYoLAB sign-in, manual UID/cookie entry, credential error/clear, and Save & Sync.
+3. Verify sign-out clears credentials while retaining saved account snapshots.
+4. Verify Manage/Hide HoYoLAB account controls and Save JSON.
+5. Confirm Home, Visuals, Tools, Materials Calculator, and Lineup Simulator remain unchanged.
+
+**Boundary:** Structural extraction only; no performance improvement is claimed.
