@@ -476,6 +476,220 @@ private fun CodexScreen(
             )
         }
 
+
+        if (selectedTab == CodexTab.VISUALS) {
+            accountExportState.snapshot?.let { snapshot ->
+                Text(
+                    text = "Account Chronicle",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                ChronicleOverviewSection(snapshot.accountCard, snapshot.profileAndExploration)
+                ChronicleExplorationSection(snapshot.profileAndExploration)
+                ChronicleRecordSection("Spiral Abyss · Current Cycle", snapshot.spiralAbyssCurrent, ChronicleRecordMode.SPIRAL_ABYSS)
+                ChronicleRecordSection("Spiral Abyss · Previous Cycle", snapshot.spiralAbyssPrevious, ChronicleRecordMode.SPIRAL_ABYSS)
+                ChronicleRecordSection("Imaginarium Theater", snapshot.imaginariumTheater, ChronicleRecordMode.IMAGINARIUM_THEATER)
+            }
+        }
+
+        if (selectedTab == CodexTab.VISUALS) {
+            val roster = when (val value = accountExportState.snapshot?.characters) {
+                is DataValue.Available -> value.value
+                is DataValue.Stale -> value.value
+                else -> emptyList()
+            }
+            if (roster.isNotEmpty()) {
+                CharacterShowcaseSection(
+                    characters = roster,
+                    selectedCharacterId = selectedCharacterId,
+                    onCharacterSelected = { selectedCharacterId = it }
+                )
+            } else {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Character Showcase", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "Run Analyze Account to retrieve your character roster and open detailed character profiles here.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        if (selectedTab == CodexTab.VISUALS && uid.isNotBlank() && cookie.isNotBlank()) {
+            val overview = accountExportState.intelligenceOverview
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "Account Analysis",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "One balanced review of your available account data. Recommendations keep a consistent priority order based on confirmed issues, stat discrepancies, build warnings, and information gaps.",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Button(
+                        onClick = { accountViewModel.analyzeAccount(uid, cookie) },
+                        enabled = !accountExportState.isExporting,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text(
+                            when {
+                                accountExportState.isExporting -> "Retrieving account..."
+                                accountExportState.isRestoringSnapshot -> "Restoring saved analysis..."
+                                accountExportState.snapshot == null -> "Analyze Account"
+                                else -> "Refresh Analysis"
+                            }
+                        )
+                    }
+
+                    if (overview == null && !accountExportState.isAnalyzingIntelligence &&
+                        !accountExportState.isRestoringSnapshot &&
+                        accountExportState.intelligenceErrorMessage == null
+                    ) {
+                        Text(
+                            text = "Run an account analysis here. This is separate from the optional Save JSON export.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    if (accountExportState.isAnalyzingIntelligence) {
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text("Analyzing account data...", fontSize = 12.sp)
+                    }
+
+                    accountExportState.intelligenceErrorMessage?.let { message ->
+                        Text(
+                            text = message,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    overview?.let { report ->
+                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                        Text(
+                            text = "Character assessment",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Assessed: ${report.assessedCharacterCount ?: "Unavailable"} • Need attention: ${report.needsAttentionCount} • Review: ${report.reviewCharacterCount} • Clear: ${report.clearCharacterCount}",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Development recommendations (${report.recommendationCount})",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (report.goalAwareDevelopment.recommendations.isEmpty()) {
+                            Text(
+                                text = if (report.goalAwareDevelopment.availability.name in listOf("AVAILABLE", "STALE")) {
+                                    "No recommendations were identified by the available analysis."
+                                } else {
+                                    "Recommendations are not available from the current character data."
+                                },
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            val recommendations = report.goalAwareDevelopment.recommendations
+                            val visibleRecommendations = if (showAllRecommendations) {
+                                recommendations
+                            } else {
+                                recommendations.take(5)
+                            }
+                            val characterSnapshots = (accountExportState.snapshot?.characters as? DataValue.Available)?.value.orEmpty()
+                            visibleRecommendations.forEach { item ->
+                                val character = characterSnapshots.firstOrNull { it.id == item.recommendation.characterId }
+                                CharacterRecommendationCard(
+                                    item = item,
+                                    character = character,
+                                    expanded = showAllRecommendations
+                                )
+                            }
+                            if (report.recommendationCount > 5) {
+                                Text(
+                                    text = if (showAllRecommendations) {
+                                        "Showing all ${report.recommendationCount} recommendations."
+                                    } else {
+                                        "Showing 5 of ${report.recommendationCount} recommendations."
+                                    },
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                TextButton(
+                                    onClick = { showAllRecommendations = !showAllRecommendations },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(if (showAllRecommendations) "Show fewer recommendations" else "Show all recommendations")
+                                }
+                            }
+                        }
+
+                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                        Text(
+                            text = "Account gaps: ${report.confirmedAccountGapCount} confirmed • ${report.accountDataReviewCount} data review",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Account data: ${report.presentAccountSectionCount}/${report.accountSectionCount} sections present • ${report.missingAccountSectionCount} missing • ${report.unavailableAccountSectionCount} unavailable • ${report.failedAccountSectionCount} failed",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (report.hasStaleEvidence) {
+                            Text(
+                                text = "Some findings rely on stale account evidence.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        if (report.hasUnverifiedSources) {
+                            Text(
+                                text = "One or more analysis sources are missing, unavailable, or failed. Treat this overview as partial.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        if (report.hasDataConfidenceConcerns) {
+                            Text(
+                                text = "Account data coverage or freshness has unresolved concerns.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         if (selectedTab == CodexTab.TOOLS) {
             Text("Tools", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
             Text(
@@ -715,6 +929,8 @@ private fun CodexScreen(
                 isExporting = accountExportState.isExporting,
                 onRefresh = { refreshData() }
             )
+
+            VisualDashboardSection(accountExportState.intelligenceOverview)
         }
         }
         }
