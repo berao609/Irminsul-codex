@@ -39,6 +39,14 @@ import kotlinx.coroutines.withContext
 
 private val weaponAscensionLevelCaps = listOf(20, 40, 50, 60, 70, 80, 90)
 
+private fun weaponMaterialName(itemId: String): String = when (itemId) {
+    WeaponExperienceCalculator.MYSTIC_ENHANCEMENT_ORE_ITEM_ID -> "Mystic Enhancement Ore"
+    WeaponExperienceCalculator.FINE_ENHANCEMENT_ORE_ITEM_ID -> "Fine Enhancement Ore"
+    WeaponExperienceCalculator.ENHANCEMENT_ORE_ITEM_ID -> "Enhancement Ore"
+    WeaponExperienceCalculator.MORA_ITEM_ID -> "Mora"
+    else -> itemId
+}
+
 @Composable
 internal fun WeaponEnhancementCalculatorSection(
     weapon: WeaponSnapshot,
@@ -84,15 +92,15 @@ internal fun WeaponEnhancementCalculatorSection(
         }
     }
     val currentExp = currentExperience.toLongOrNull()
-    val candidate = when (weapon.rarity) {
+    val curve = when (weapon.rarity) {
         4 -> GenshinWeaponExperienceCurveCandidate.fourStar
         5 -> GenshinWeaponExperienceCurveCandidate.fiveStar
         else -> null
     }
-    val calculation = if (
+    val experienceCalculation = if (
         rarity != null && maximumUnlockedLevel != null &&
         current != null && target != null && targetMaximumUnlockedLevel != null &&
-        currentExp != null && candidate != null
+        currentExp != null && curve != null
     ) {
         WeaponExperienceCalculator.calculate(
             WeaponExperienceCalculationRequest(
@@ -103,15 +111,14 @@ internal fun WeaponEnhancementCalculatorSection(
                 maximumUnlockedLevel = maximumUnlockedLevel,
                 targetMaximumUnlockedLevel = targetMaximumUnlockedLevel
             ),
-            candidate.cumulativeExperienceByLevel
+            curve.cumulativeExperienceByLevel
         )
     } else null
 
-    val upgradePlan = if (
-        rarity != null && maximumUnlockedLevel != null &&
-        weapon.ascensionLevel != null &&
+    val combinedPlan = if (
+        rarity != null && weapon.ascensionLevel != null &&
         current != null && target != null && currentExp != null &&
-        candidate != null && ascensionCandidates != null
+        ascensionCandidates != null && curve != null
     ) {
         WeaponUpgradePlanCandidateCalculator.calculate(
             WeaponUpgradePlanCandidateRequest(
@@ -123,14 +130,14 @@ internal fun WeaponEnhancementCalculatorSection(
                 currentAscensionRank = weapon.ascensionLevel,
                 targetLevel = target
             ),
-            candidate.cumulativeExperienceByLevel,
+            curve.cumulativeExperienceByLevel,
             ascensionCandidates.orEmpty()
         )
     } else null
 
-    val displayRequirements = if (
-        upgradePlan?.status == WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA
-    ) upgradePlan.requirements else emptyList()
+    val completeRequirements = if (
+        combinedPlan?.status == WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA
+    ) combinedPlan.requirements else emptyList()
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -178,8 +185,8 @@ internal fun WeaponEnhancementCalculatorSection(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
-                calculation?.status == WeaponExperienceCalculationStatus.INVALID_REQUEST -> Text(
-                    when (calculation.issue) {
+                experienceCalculation?.status == WeaponExperienceCalculationStatus.INVALID_REQUEST -> Text(
+                    when (experienceCalculation.issue) {
                         com.irminsul.codex.domain.analysis.WeaponExperienceCalculationIssue.TARGET_EXCEEDS_ASCENSION_CAP ->
                             "Target exceeds the planned ascension cap of level $targetMaximumUnlockedLevel."
                         com.irminsul.codex.domain.analysis.WeaponExperienceCalculationIssue.INVALID_CURRENT_EXPERIENCE ->
@@ -191,81 +198,81 @@ internal fun WeaponEnhancementCalculatorSection(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
-                calculation != null -> {
+                else -> {
                     Text(
-                        "Required EXP: ${calculation.requiredExperience}",
+                        "Required EXP: ${experienceCalculation?.requiredExperience ?: 0L}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold
                     )
-
                     when {
                         weapon.ascensionLevel == null -> Text(
-                            "Ascension rank is missing from the account snapshot. Complete material totals cannot be calculated.",
+                            "Ascension rank is missing from the account snapshot. A complete weapon plan cannot be calculated.",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
                         ascensionCandidates == null && !candidateLoadFailed -> Text(
-                            "Loading offline weapon materials…",
+                            "Loading offline ascension materials…",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall
                         )
                         candidateLoadFailed -> Text(
-                            "The bundled weapon dataset could not be read. Complete material totals are unavailable.",
+                            "The bundled ascension dataset could not be read. A complete material total is unavailable.",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
-                        upgradePlan?.status == WeaponUpgradePlanCandidateStatus.INCOMPLETE -> Text(
-                            "Weapon ascension costs are incomplete at the level-${upgradePlan.missingAscensionFromLevel} gate. All material totals are withheld until the missing data is available.",
+                        combinedPlan?.status == WeaponUpgradePlanCandidateStatus.INCOMPLETE -> Text(
+                            "Ascension costs are incomplete at the level-${combinedPlan.missingAscensionFromLevel} gate. All combined material totals are withheld.",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
-                        upgradePlan?.status == WeaponUpgradePlanCandidateStatus.INVALID -> Text(
-                            "The combined weapon upgrade data failed validation. Material totals are withheld.",
+                        combinedPlan?.status == WeaponUpgradePlanCandidateStatus.INVALID -> Text(
+                            combinedPlan.issue ?: "Weapon upgrade data failed validation. Material totals are withheld.",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
-                    }
-
-                    if (upgradePlan?.status == WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA && displayRequirements.isEmpty()) {
-                        Text("No materials required for this level range.")
-                    } else if (upgradePlan?.status == WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA) {
-                        displayRequirements.forEach { requirement ->
-                            val ownedKey = "weapon_plan_owned_${weapon.id}_${requirement.itemId}"
-                            var owned by remember(weapon.id, requirement.itemId) {
-                                mutableStateOf(preferences.getString(ownedKey, "") ?: "")
-                            }
-                            LaunchedEffect(ownedKey, owned) {
-                                preferences.edit().putString(ownedKey, owned).apply()
-                            }
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(
-                                    "${requirement.itemName} · Required: ${requirement.quantity}",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                OutlinedTextField(
-                                    value = owned,
-                                    onValueChange = { owned = it.filter(Char::isDigit).take(12) },
-                                    label = { Text("Owned (optional)") },
-                                    placeholder = { Text("Unknown") },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                val ownedQuantity = owned.toLongOrNull()
-                                if (ownedQuantity != null) {
-                                    Text(
-                                        "Remaining: ${(requirement.quantity - ownedQuantity).coerceAtLeast(0L)}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                        combinedPlan?.status == WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA -> {
+                            if (completeRequirements.isEmpty()) {
+                                Text("No materials required for this level range.")
+                            } else {
+                                completeRequirements.forEach { requirement ->
+                                    val ownedKey = "weapon_plan_owned_${weapon.id}_${requirement.itemId}"
+                                    var owned by remember(weapon.id, requirement.itemId) {
+                                        mutableStateOf(preferences.getString(ownedKey, "") ?: "")
+                                    }
+                                    LaunchedEffect(ownedKey, owned) {
+                                        preferences.edit().putString(ownedKey, owned).apply()
+                                    }
+                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Text(
+                                            "${weaponMaterialName(requirement.itemId).takeIf { it != requirement.itemId } ?: requirement.itemName} · Required: ${requirement.quantity}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        OutlinedTextField(
+                                            value = owned,
+                                            onValueChange = { owned = it.filter(Char::isDigit).take(12) },
+                                            label = { Text("Owned (optional)") },
+                                            placeholder = { Text("Unknown") },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            singleLine = true,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                        val ownedQuantity = owned.toLongOrNull()
+                                        if (ownedQuantity != null) {
+                                            Text(
+                                                "Remaining: ${(requirement.quantity - ownedQuantity).coerceAtLeast(0L)}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                     Text(
-                        "Weapon EXP and ascension requirements use version-pinned Genshin-DB 7.2 candidate data. This source is not yet permission-reviewed or promoted to trusted knowledge. Weapon fodder is not included; enhancement ore is calculated instead.",
+                        "Ore, Mora, weapon ascension materials, and enemy drops are combined from version-pinned Genshin-DB 7.2 candidate data. Incomplete ascension data withholds the combined totals. Source permission and human review are pending; weapon fodder is not included.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
