@@ -4858,3 +4858,34 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 4. Confirm Home, Visuals, Tools, Account, Materials Calculator, and Lineup Simulator remain functional.
 
 **Boundary:** Structural extraction only; AI remains inactive.
+
+
+## Milestone 092 - Home Account Overview Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue Batch 6 / AUD-002 by extracting the Home account identity and saved-snapshot summary cards from MainActivity.
+
+**Implemented:**
+- Added `presentation/HomeAccountOverviewSection.kt` for the Adventurer account and Account snapshot cards.
+- MainActivity derives roster count and passes UID, detected server, snapshot timestamp, and the Analysis callback.
+- Kept snapshot state, roster interpretation, server detection, and navigation ownership in CodexScreen.
+- Preserved existing card visibility, text, unavailable-roster handling, timestamp, styling, and Analysis navigation.
+- No retrieval, persistence, account analysis, navigation structure, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeAccountOverviewSection.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Verification status:** Source and documentation committed. Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Verify the Adventurer account card with and without configured credentials.
+2. Verify the Account snapshot card appears only when a snapshot exists.
+3. Verify roster count, unavailable-roster fallback, and last-retrieved timestamp.
+4. Tap Analysis and confirm it opens Visuals.
+5. Confirm Daily Note, Visual Dashboard, Tools, Account, Materials Calculator, and Lineup Simulator remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
