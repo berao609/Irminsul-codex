@@ -5009,12 +5009,40 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - `760a08d6e08ef05fbbc4f1ff9e2e041245be272d` - extract Home destination composition.
 - `cf308f82ec5b571e8154e2f7a17baefce1e66eac` - delegate Home composition from MainActivity.
 
+**Verification status:** CI #815 (run `45966978956`) and CI #816 (run `45966984614`) passed. Unit tests, Debug APK assembly, Room schema verification, APK signature verification, and artifact upload passed; Room instrumentation tests were skipped by workflow conditions. Integration Debug APK: `irminsul-codex-debug-v1.0.0-dev.816-vc818` (artifact ID `15182808332`). User confirmed all physical-device checks clear, including account overview, Daily Note states/refresh, Visual Dashboard visibility, and other destinations/tools.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
+
+
+## Milestone 097 - Account Destination Composition Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 Batch 6 by extracting Account destination composition from MainActivity.
+
+**Implemented:**
+- Added `presentation/AccountSection.kt` to compose the existing credentials panel, JSON export panel, and Account & settings section.
+- MainActivity continues to own UID/cookie values, credential visibility, theme state, export progress/status, and all callbacks.
+- Passed existing visibility conditions explicitly, preserving credential and export gating.
+- Reused existing account presentation components without changing their internal UI or behavior.
+- Preserved the original content order and kept sign-in, credential storage, export, theme persistence, and navigation orchestration in CodexScreen.
+- No credential storage, account retrieval, export mapping, persistence, or calculator behavior was changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AccountSection.kt`
+
+**Commits:**
+- `711efc64ced18833a16a079a66e89fbe28274a23` - extract Account destination composition.
+- `9d140637c24244cf17aee59b0a07fb23842264ba` - delegate Account composition from MainActivity.
+
 **Verification status:** Source changes committed. Debug CI and physical-device verification pending.
 
 **Device checklist:**
-1. Verify Home account identity and snapshot summary with and without a saved snapshot.
-2. Verify Daily Note unavailable, loading, loaded, and refresh states.
-3. Verify the Visual Dashboard remains visible and populated/empty states are unchanged.
-4. Confirm Visuals, Tools, Account, navigation, AI placeholder, Materials Calculator, and Lineup Simulator remain functional.
+1. Verify Account credentials visibility, sign-in, save/sync, and clear-credentials behavior.
+2. Verify JSON export progress, status, and Save JSON action.
+3. Verify Appearance theme selection and persistence.
+4. Verify Manage HoYoLAB account and Hide account credentials controls.
+5. Confirm Home, Visuals, Tools, navigation, AI placeholder, Materials Calculator, and Lineup Simulator remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement is claimed.
