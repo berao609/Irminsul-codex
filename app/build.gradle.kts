@@ -112,7 +112,7 @@ android {
     }
 
     sourceSets {
-        getByName("androidTest").assets.directories.add(layout.projectDirectory.dir("schemas"))
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
     }
 
 }
