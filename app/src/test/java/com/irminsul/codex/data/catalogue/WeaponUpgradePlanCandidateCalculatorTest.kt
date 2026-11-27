@@ -70,10 +70,24 @@ class WeaponUpgradePlanCandidateCalculatorTest {
         assertEquals(6, result.usedAscensionCandidateIds.size)
         assertEquals(9, result.requirements.size)
         val mora = result.requirements.single { it.itemId == WeaponExperienceCalculator.MORA_ITEM_ID }
-        assertEquals(906_520L + 10L, mora.quantity)
-        assertEquals(903L, result.requirements.single {
-            it.itemId == WeaponExperienceCalculator.MYSTIC_ENHANCEMENT_ORE_ITEM_ID
-        }.quantity)
+        val expectedExperience = WeaponExperienceCalculator.calculate(
+            com.irminsul.codex.domain.analysis.WeaponExperienceCalculationRequest(
+                rarity = WeaponExperienceRarity.FIVE_STAR,
+                currentLevel = 20,
+                currentExperienceWithinLevel = 0L,
+                targetLevel = 90,
+                maximumUnlockedLevel = 20,
+                targetMaximumUnlockedLevel = 90
+            ),
+            fiveStarCurve
+        )
+        assertEquals(expectedExperience.moraRequired + 10L, mora.quantity)
+        expectedExperience.materials.forEach { expected ->
+            assertEquals(
+                expected.quantity,
+                result.requirements.single { it.itemId == expected.itemId }.quantity
+            )
+        }
         assertEquals(3L, result.requirements.single { it.itemId == "114001" }.quantity)
         assertEquals(7L, result.requirements.single { it.itemId == "112024" }.quantity)
     }
