@@ -25,6 +25,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.irminsul.codex.data.catalogue.BundledCharacterProgressionCandidateRepository
 import com.irminsul.codex.data.catalogue.CharacterUpgradePlanCandidateCalculator
+import com.irminsul.codex.data.catalogue.CharacterFullUpgradePlanCandidateCalculator
+import com.irminsul.codex.data.catalogue.CharacterTalentLevelRange
 import com.irminsul.codex.data.catalogue.CharacterUpgradePlanCandidateRequest
 import com.irminsul.codex.data.catalogue.CharacterUpgradePlanCandidateStatus
 import com.irminsul.codex.data.catalogue.GenshinCharacterExperienceCurveCandidate
@@ -38,6 +40,7 @@ internal fun CharacterEnhancementCalculatorSection(
     character: CharacterSnapshot,
     currentLevel: String,
     targetLevel: String,
+    talentRanges: List<CharacterTalentLevelRange>,
     preferences: SharedPreferences
 ) {
     val context = LocalContext.current.applicationContext
@@ -69,8 +72,17 @@ internal fun CharacterEnhancementCalculatorSection(
     val current = currentLevel.toIntOrNull()
     val target = targetLevel.toIntOrNull()
     val currentExp = currentExperience.toLongOrNull()
-    val rank = character.ascensionLevel
-    val combinedPlan = if (
+    val rank = character.ascensionLevel ?: current?.let { level ->
+        when {
+            level < 20 -> 0
+            level < 40 -> 1
+            level < 50 -> 2
+            level < 60 -> 3
+            level < 70 -> 4
+            else -> 5
+        }
+    }
+    val levelPlan = if (
         current != null && target != null && currentExp != null &&
         rank != null && loadedCandidates != null
     ) {
@@ -87,6 +99,15 @@ internal fun CharacterEnhancementCalculatorSection(
             loadedCandidates.orEmpty()
         )
     } else null
+    val combinedPlan = levelPlan?.let {
+        CharacterFullUpgradePlanCandidateCalculator.calculate(
+            levelPlan = it,
+            characterId = character.id.toString(),
+            gameVersion = BundledCharacterProgressionCandidateRepository.GAME_VERSION,
+            talentRanges = talentRanges,
+            candidates = loadedCandidates.orEmpty()
+        )
+    }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -114,11 +135,6 @@ internal fun CharacterEnhancementCalculatorSection(
                 shape = RoundedCornerShape(12.dp)
             )
             when {
-                rank == null -> Text(
-                    "Current ascension rank is missing from the account snapshot. A complete character plan cannot be calculated.",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
                 current == null || target == null || currentExp == null -> Text(
                     "Enter valid current and target levels, plus current EXP within the level.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -140,7 +156,7 @@ internal fun CharacterEnhancementCalculatorSection(
                     style = MaterialTheme.typography.bodySmall
                 )
                 combinedPlan?.status == CharacterUpgradePlanCandidateStatus.INCOMPLETE -> Text(
-                    "Ascension costs are incomplete at the level-${combinedPlan.missingAscensionFromLevel} gate. All combined totals are withheld.",
+                    combinedPlan.issue ?: "Some character or talent costs are unavailable. Combined totals are withheld.",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -197,7 +213,7 @@ internal fun CharacterEnhancementCalculatorSection(
                 }
             }
             Text(
-                "Character EXP, Mora, and ascension costs use offline Genshin-DB 7.2 candidate data and the separately sourced character EXP curve. These are candidate values, not approved production costs. Talent costs are not included in this stage.",
+                "Automatic requirements are calculated from the bundled Genshin-DB 7.2 progression data. Source: Genshin-DB, version-pinned offline dataset.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
