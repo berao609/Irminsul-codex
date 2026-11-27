@@ -20,7 +20,7 @@ data class WeaponExperienceCalculationRequest(
     val currentLevel: Int,
     val currentExperienceWithinLevel: Long,
     val targetLevel: Int,
-    /** Highest level unlocked by the weapon's current ascension phase. */
+    /** Highest level currently unlocked; future ascensions may be included in the plan. */
     val maximumUnlockedLevel: Int,
     /** Highest level the plan intends to unlock after paying required ascension costs. */
     val targetMaximumUnlockedLevel: Int = maximumUnlockedLevel
