@@ -5567,7 +5567,7 @@ The following is the initial candidate matrix, not a claim that the project has 
 | Component | Candidate | Compatibility basis |
 |---|---:|---|
 | Android Gradle Plugin | 9.3.1 | Within Kotlin 2.4.21's documented fully supported AGP range |
-| Gradle | 9.5.0 | AGP 9.3 requires Gradle 9.5.0; also within Kotlin 2.4.21's supported range |
+| Gradle | 9.7.0 | Latest Gradle version within Kotlin 2.4.21's documented fully supported range; exceeds AGP 9.3.1 minimum 9.5.0 |
 | Kotlin / Compose compiler plugin | 2.4.21 | Latest stable Kotlin release at review time |
 | KSP | 2.3.12 | Supports KGP 2.3.20-2.4.x, AGP 8.13+, Gradle 8.13+, and JDK 17+ |
 | Compose BOM | 2026.07.01 | Latest stable Compose BOM before the Compose 1.12 line adopted API 37 |
