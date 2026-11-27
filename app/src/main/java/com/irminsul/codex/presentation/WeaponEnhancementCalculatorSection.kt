@@ -26,9 +26,9 @@ import androidx.compose.ui.unit.dp
 import com.irminsul.codex.data.catalogue.BundledWeaponAscensionCandidateRepository
 import com.irminsul.codex.data.catalogue.GenshinDbUpgradeCostCandidate
 import com.irminsul.codex.data.catalogue.GenshinWeaponExperienceCurveCandidate
-import com.irminsul.codex.data.catalogue.WeaponAscensionCandidateCalculationRequest
-import com.irminsul.codex.data.catalogue.WeaponAscensionCandidateCalculationStatus
-import com.irminsul.codex.data.catalogue.WeaponAscensionCandidateCalculator
+import com.irminsul.codex.data.catalogue.WeaponUpgradePlanCandidateCalculator
+import com.irminsul.codex.data.catalogue.WeaponUpgradePlanCandidateRequest
+import com.irminsul.codex.data.catalogue.WeaponUpgradePlanCandidateStatus
 import com.irminsul.codex.domain.analysis.WeaponExperienceCalculationRequest
 import com.irminsul.codex.domain.analysis.WeaponExperienceCalculationStatus
 import com.irminsul.codex.domain.analysis.WeaponExperienceCalculator
@@ -38,20 +38,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 private val weaponAscensionLevelCaps = listOf(20, 40, 50, 60, 70, 80, 90)
-
-private data class WeaponMaterialDisplayRequirement(
-    val itemId: String,
-    val itemName: String,
-    val quantity: Long
-)
-
-private fun weaponMaterialName(itemId: String): String = when (itemId) {
-    WeaponExperienceCalculator.MYSTIC_ENHANCEMENT_ORE_ITEM_ID -> "Mystic Enhancement Ore"
-    WeaponExperienceCalculator.FINE_ENHANCEMENT_ORE_ITEM_ID -> "Fine Enhancement Ore"
-    WeaponExperienceCalculator.ENHANCEMENT_ORE_ITEM_ID -> "Enhancement Ore"
-    WeaponExperienceCalculator.MORA_ITEM_ID -> "Mora"
-    else -> "Unknown material ($itemId)"
-}
 
 @Composable
 internal fun WeaponEnhancementCalculatorSection(
@@ -121,43 +107,30 @@ internal fun WeaponEnhancementCalculatorSection(
         )
     } else null
 
-    val ascensionCalculation = if (
-        weapon.rarity != null && weapon.rarity in 4..5 &&
+    val upgradePlan = if (
+        rarity != null && maximumUnlockedLevel != null &&
         weapon.ascensionLevel != null &&
-        current != null && target != null &&
-        current in 1..90 && target in current..90 &&
-        ascensionCandidates != null
+        current != null && target != null && currentExp != null &&
+        candidate != null && ascensionCandidates != null
     ) {
-        WeaponAscensionCandidateCalculator.calculate(
-            WeaponAscensionCandidateCalculationRequest(
+        WeaponUpgradePlanCandidateCalculator.calculate(
+            WeaponUpgradePlanCandidateRequest(
                 weaponId = weapon.id.toString(),
-                rarity = weapon.rarity,
+                gameVersion = BundledWeaponAscensionCandidateRepository.GAME_VERSION,
+                rarity = rarity,
                 currentLevel = current,
+                currentExperienceWithinLevel = currentExp,
                 currentAscensionRank = weapon.ascensionLevel,
-                targetLevel = target,
-                gameVersion = BundledWeaponAscensionCandidateRepository.GAME_VERSION
+                targetLevel = target
             ),
+            candidate.cumulativeExperienceByLevel,
             ascensionCandidates.orEmpty()
         )
     } else null
 
-    val ascensionDataComplete = ascensionCalculation?.status in setOf(
-        WeaponAscensionCandidateCalculationStatus.CANDIDATE_DATA,
-        WeaponAscensionCandidateCalculationStatus.NO_ASCENSION_REQUIRED
-    )
-    val displayRequirements = if (calculation != null) {
-        val totals = linkedMapOf<String, Pair<String, Long>>()
-        calculation.materials.forEach { item ->
-            totals[item.itemId] = weaponMaterialName(item.itemId) to item.quantity
-        }
-        if (ascensionDataComplete) {
-            ascensionCalculation?.materials.orEmpty().forEach { item ->
-                val existing = totals[item.itemId]
-                totals[item.itemId] = item.itemName to Math.addExact(existing?.second ?: 0L, item.quantity)
-            }
-        }
-        totals.map { (id, value) -> WeaponMaterialDisplayRequirement(id, value.first, value.second) }
-    } else emptyList()
+    val displayRequirements = if (
+        upgradePlan?.status == WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA
+    ) upgradePlan.requirements else emptyList()
 
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -227,37 +200,35 @@ internal fun WeaponEnhancementCalculatorSection(
 
                     when {
                         weapon.ascensionLevel == null -> Text(
-                            "Ascension rank is missing from the account snapshot. Only enhancement ore costs can be calculated.",
+                            "Ascension rank is missing from the account snapshot. Complete material totals cannot be calculated.",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
                         ascensionCandidates == null && !candidateLoadFailed -> Text(
-                            "Loading offline ascension materials…",
+                            "Loading offline weapon materials…",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodySmall
                         )
                         candidateLoadFailed -> Text(
-                            "The bundled ascension dataset could not be read. Ascension costs are unavailable.",
+                            "The bundled weapon dataset could not be read. Complete material totals are unavailable.",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
-                        ascensionCalculation?.status == WeaponAscensionCandidateCalculationStatus.COST_DATA_INCOMPLETE -> Text(
-                            "Ascension costs are incomplete for this weapon at the level-${ascensionCalculation.missingFromLevel} gate. Listed totals exclude all ascension materials and ascension Mora.",
+                        upgradePlan?.status == WeaponUpgradePlanCandidateStatus.INCOMPLETE -> Text(
+                            "Weapon ascension costs are incomplete at the level-${upgradePlan.missingAscensionFromLevel} gate. All material totals are withheld until the missing data is available.",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
-                        ascensionCalculation?.status == WeaponAscensionCandidateCalculationStatus.OVERLAPPING_SEGMENTS ||
-                            ascensionCalculation?.status == WeaponAscensionCandidateCalculationStatus.INVALID_CANDIDATE_DATA ||
-                            ascensionCalculation?.status == WeaponAscensionCandidateCalculationStatus.QUANTITY_OVERFLOW -> Text(
-                            "Ascension source data failed validation. Ascension costs are withheld.",
+                        upgradePlan?.status == WeaponUpgradePlanCandidateStatus.INVALID -> Text(
+                            "The combined weapon upgrade data failed validation. Material totals are withheld.",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall
                         )
                     }
 
-                    if (displayRequirements.isEmpty()) {
+                    if (upgradePlan?.status == WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA && displayRequirements.isEmpty()) {
                         Text("No materials required for this level range.")
-                    } else {
+                    } else if (upgradePlan?.status == WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA) {
                         displayRequirements.forEach { requirement ->
                             val ownedKey = "weapon_plan_owned_${weapon.id}_${requirement.itemId}"
                             var owned by remember(weapon.id, requirement.itemId) {
