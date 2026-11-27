@@ -5794,6 +5794,7 @@ Move the existing Batch 5 modernization from the API 36.1 dependency baseline to
 - `2fcf368dad76c2c880cd7963395ae32a4b1036d4` - upgrade stable Compose and AndroidX dependencies.
 - `785474a5dd13f3b865c5697b39d5efd7c01d7173` - correct stable API 37.1 platform and API 37.2 emulator image package IDs.
 - `7ef063d33dd48b398bcfba169c239a79089e8a3d` - trigger CI on UI Revamp branch pushes as well as PR updates.
+- `5759e15f9f9f4d306c95f1cefa030e181110d0cf` - label the Android 17 API 37.2 runtime test.
 
 ### Verification
 
@@ -5803,4 +5804,4 @@ Move the existing Batch 5 modernization from the API 36.1 dependency baseline to
 
 ### Next action
 
-Check the next CI run for branch head `7ef063d33dd48b398bcfba169c239a79089e8a3d`. Confirm stable API 37.1 installation, API 37.2 emulator boot, Room migration tests, APK assembly, schema verification, signing, and artifact upload. Correct any remaining failure within PR #13. Do not merge without the user's explicit approval.
+Check the next CI run for branch head `5759e15f9f9f4d306c95f1cefa030e181110d0cf`. Confirm stable API 37.1 installation, API 37.2 emulator boot, Room migration tests, APK assembly, schema verification, signing, and artifact upload. Correct any remaining failure within PR #13. Do not merge without the user's explicit approval.
