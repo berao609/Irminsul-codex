@@ -1,6 +1,7 @@
 package com.irminsul.codex.data.catalogue
 
 import com.irminsul.codex.domain.analysis.WeaponExperienceRarity
+import com.irminsul.codex.domain.analysis.WeaponExperienceCalculator
 import com.irminsul.codex.domain.model.KnowledgeSourceReference
 import com.irminsul.codex.domain.model.UpgradeCostSubjectType
 import com.irminsul.codex.domain.model.UpgradeCostTrack
@@ -60,7 +61,7 @@ class WeaponUpgradePlanCandidateCalculatorTest {
         )
         assertEquals(WeaponUpgradePlanCandidateStatus.INCOMPLETE, result.status)
         assertEquals(listOf(40), result.missingAscensionFromLevels)
-        assertTrue(result.requirements.any { it.itemId == "202" })
+        assertTrue(result.requirements.isEmpty())
     }
 
     @Test fun alreadyCompletedAscensionStagesAreNotChargedAgain() {
@@ -70,7 +71,7 @@ class WeaponUpgradePlanCandidateCalculatorTest {
             listOf(candidate(50, 60))
         )
         assertEquals(WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA, result.status)
-        assertEquals(100L, result.requirements.first { it.itemId == "202" }.quantity)
+        assertEquals(result.experience!!.moraRequired + 100L, result.requirements.first { it.itemId == "202" }.quantity)
     }
 
     @Test fun noAscensionCostIsRequiredWhenTargetStopsAtCurrentCap() {
@@ -80,7 +81,8 @@ class WeaponUpgradePlanCandidateCalculatorTest {
             emptyList()
         )
         assertEquals(WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA, result.status)
-        assertTrue(result.requirements.none { it.itemId == "202" })
+        assertTrue(result.requirements.any { it.itemId == "202" })
+        assertTrue(result.requirements.any { it.itemId == WeaponExperienceCalculator.MYSTIC_ENHANCEMENT_ORE_ITEM_ID })
     }
 
     @Test fun rejectsDuplicateAscensionSegments() {
