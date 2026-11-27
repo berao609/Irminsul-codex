@@ -4517,13 +4517,15 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Traveler talent data and any missing candidate stages remain incomplete; combined totals are withheld rather than shown as complete.
 
 **Verification status:**
-- CI runs #709 and #710 passed.
-- CI run #711 for the optional EXP adjustment and current combined UI is pending at the time of this entry.
+- CI runs #709, #710, #711, and #712 passed.
+- CI run #713 passed for the milestone documentation commit.
+- CI run #714 passed unit tests, built the Debug APK, verified its signature, and uploaded the artifact. Room instrumentation tests were skipped by the workflow condition.
+- Latest calculator code commit: `d8ae884367b063492575872786e448404fe2c61c`.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.714-vc716` (artifact ID `15172589288`).
 - Earlier failures #703, #705, #706, and #707 were tied to an initial test assertion, an outdated composable call, and intermediate UI brace/structure edits. Later runs #704 and #708 passed after corrections.
-- Physical-device testing is pending.
+- Physical-device testing is pending. CI #714 produced the Debug APK; no device installation or functional test has been confirmed.
 
 **Remaining work:**
-- Confirm CI #711 and the final documentation commit workflow.
 - Verify current talent-level mapping against real exported account snapshots.
 - Review Genshin-DB source permissions, cost correctness, and material metadata before any production approval.
 - Test level gates, all three talent tracks, Mora aggregation, owned/remaining values, Traveler missing data, offline use, and independent weapon planning on device.
