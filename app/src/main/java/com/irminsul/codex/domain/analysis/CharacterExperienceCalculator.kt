@@ -84,7 +84,7 @@ object CharacterExperienceCalculator {
         val nextLevelTotal = if (request.currentLevel == 90) currentTotal
             else cumulativeExperienceByLevel[request.currentLevel]
         val currentLevelCapacity = nextLevelTotal - currentTotal
-        val currentExperienceIsValid = if (request.currentLevel == 90) {
+        val currentExperienceIsValid = if (request.currentLevel == request.maximumUnlockedLevel) {
             request.currentExperienceWithinLevel == 0L
         } else {
             request.currentExperienceWithinLevel >= 0L &&
@@ -94,37 +94,60 @@ object CharacterExperienceCalculator {
             return invalid(CharacterExperienceCalculationIssue.INVALID_CURRENT_EXPERIENCE)
         }
 
-        val targetTotal = cumulativeExperienceByLevel[request.targetLevel - 1]
-        val alreadyEarned = currentTotal + request.currentExperienceWithinLevel
-        val required = (targetTotal - alreadyEarned).coerceAtLeast(0L)
-        val granted = if (required == 0L) 0L else ((required + 999L) / 1_000L) * 1_000L
+        val ascensionPhaseEnds = listOf(20, 40, 50, 60, 70, 80, 90)
+        var cursorLevel = request.currentLevel
+        var experienceWithinCursorLevel = request.currentExperienceWithinLevel
+        var totalRequiredExperience = 0L
+        var totalGrantedExperience = 0L
+        var totalHerosWit = 0L
+        var totalAdventurersExperience = 0L
+        var totalWanderersAdvice = 0L
 
-        var remainder = granted
-        val herosWit = remainder / HEROS_WIT_EXP
-        remainder %= HEROS_WIT_EXP
-        val adventurersExperience = remainder / ADVENTURERS_EXPERIENCE_EXP
-        remainder %= ADVENTURERS_EXPERIENCE_EXP
-        val wanderersAdvice = remainder / WANDERERS_ADVICE_EXP
+        while (cursorLevel < request.targetLevel) {
+            val phaseEnd = ascensionPhaseEnds.first { it > cursorLevel }
+            val segmentTarget = minOf(request.targetLevel, phaseEnd)
+            val segmentStartTotal = cumulativeExperienceByLevel[cursorLevel - 1] +
+                experienceWithinCursorLevel
+            val segmentTargetTotal = cumulativeExperienceByLevel[segmentTarget - 1]
+            val segmentRequired = (segmentTargetTotal - segmentStartTotal).coerceAtLeast(0L)
+            val segmentGranted = if (segmentRequired == 0L) 0L
+                else ((segmentRequired + 999L) / 1_000L) * 1_000L
 
+            var remainder = segmentGranted
+            totalHerosWit += remainder / HEROS_WIT_EXP
+            remainder %= HEROS_WIT_EXP
+            totalAdventurersExperience += remainder / ADVENTURERS_EXPERIENCE_EXP
+            remainder %= ADVENTURERS_EXPERIENCE_EXP
+            totalWanderersAdvice += remainder / WANDERERS_ADVICE_EXP
+
+            totalRequiredExperience += segmentRequired
+            totalGrantedExperience += segmentGranted
+            cursorLevel = segmentTarget
+            experienceWithinCursorLevel = 0L
+        }
+
+        val totalWastedExperience = totalGrantedExperience - totalRequiredExperience
+        val moraRequired = totalGrantedExperience / MORA_PER_EXPERIENCE_DIVISOR
         val materials = buildList {
-            if (herosWit > 0L) add(CharacterExperienceMaterialRequirement(HEROS_WIT_ITEM_ID, herosWit))
-            if (adventurersExperience > 0L) {
-                add(CharacterExperienceMaterialRequirement(ADVENTURERS_EXPERIENCE_ITEM_ID, adventurersExperience))
+            if (totalHerosWit > 0L) {
+                add(CharacterExperienceMaterialRequirement(HEROS_WIT_ITEM_ID, totalHerosWit))
             }
-            if (wanderersAdvice > 0L) {
-                add(CharacterExperienceMaterialRequirement(WANDERERS_ADVICE_ITEM_ID, wanderersAdvice))
+            if (totalAdventurersExperience > 0L) {
+                add(CharacterExperienceMaterialRequirement(ADVENTURERS_EXPERIENCE_ITEM_ID, totalAdventurersExperience))
             }
-            val mora = granted / MORA_PER_EXPERIENCE_DIVISOR
-            if (mora > 0L) add(CharacterExperienceMaterialRequirement(MORA_ITEM_ID, mora))
+            if (totalWanderersAdvice > 0L) {
+                add(CharacterExperienceMaterialRequirement(WANDERERS_ADVICE_ITEM_ID, totalWanderersAdvice))
+            }
+            if (moraRequired > 0L) add(CharacterExperienceMaterialRequirement(MORA_ITEM_ID, moraRequired))
         }
 
         return CharacterExperienceCalculationResult(
             status = CharacterExperienceCalculationStatus.CANDIDATE_DATA,
             request = request,
-            requiredExperience = required,
-            grantedExperience = granted,
-            wastedExperience = granted - required,
-            moraRequired = granted / MORA_PER_EXPERIENCE_DIVISOR,
+            requiredExperience = totalRequiredExperience,
+            grantedExperience = totalGrantedExperience,
+            wastedExperience = totalWastedExperience,
+            moraRequired = moraRequired,
             materials = materials
         )
     }

@@ -74,6 +74,18 @@ class CharacterExperienceCalculatorTest {
         assertEquals(114_800L, calculated.moraRequired)
     }
 
+    @Test fun expBooksAreRoundedSeparatelyAtEachAscensionCap() {
+        val calculated = result(request(target = 90))
+        assertEquals(415L, calculated.materials.single { it.itemId == CharacterExperienceCalculator.HEROS_WIT_ITEM_ID }.quantity)
+        assertEquals(11L, calculated.materials.single { it.itemId == CharacterExperienceCalculator.ADVENTURERS_EXPERIENCE_ITEM_ID }.quantity)
+        assertEquals(12L, calculated.materials.single { it.itemId == CharacterExperienceCalculator.WANDERERS_ADVICE_ITEM_ID }.quantity)
+    }
+
+    @Test fun aCharacterAtItsUnlockedLevelCapCannotHaveUnspentWithinLevelExperience() {
+        val calculated = result(request(current = 20, currentExp = 1L, target = 20, cap = 20))
+        assertEquals(CharacterExperienceCalculationIssue.INVALID_CURRENT_EXPERIENCE, calculated.issue)
+    }
+
     @Test fun targetCannotExceedCurrentAscensionUnlockedCap() {
         val calculated = result(request(current = 20, target = 40, cap = 20))
         assertEquals(CharacterExperienceCalculationStatus.INVALID_REQUEST, calculated.status)
