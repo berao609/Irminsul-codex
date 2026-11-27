@@ -4482,3 +4482,50 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 - Keep Traveler talent requirements incomplete until separately sourced and reviewed data is available.
 
 **Result:** Character level/ascension candidate calculations are now connected to the Materials Planner UI. CI and physical-device verification remain pending.
+
+
+## Milestone 080 - Automatic Character Materials Preview and Planner Separation
+
+**Date recorded:** 2026-11-27  
+**Scope:** Deliver the requested character-first enhancement workflow using the bundled version-pinned candidate dataset. Keep candidate costs explicitly distinct from approved production cost records.
+
+**Implemented:**
+- Added `CharacterFullUpgradePlanCandidateCalculator` to combine the existing character EXP/ascension plan with independent Normal Attack, Skill, and Burst talent tracks.
+- Talent costs are selected by character ID, game version, talent slot, and exact level segment. Unchanged tracks incur no cost.
+- Missing talent stages withhold the entire combined total. Invalid/overlapping records and quantity overflow also withhold totals.
+- Mora and duplicate material IDs are aggregated across character levels, ascension, and all three talent tracks.
+- Character ascension rank mapping now falls back from the character detail payload to the outer character payload when the nested base object omits `promote_level`.
+- Current talent levels are prefilled from account skill records when their types are available; target levels default to the current levels.
+- Character selection is now separate from weapon selection. The character calculator no longer includes a planned-weapon editor.
+- Weapon selection and weapon level controls now have their own independent planner section.
+- Manual material tracking is collapsed and labelled optional. Existing stored rows are retained.
+- Character material requirements display source-derived material names, required quantities, optional owned quantities, and remaining quantities.
+- Current character EXP adjustment is optional and defaults to zero.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/data/catalogue/CharacterFullUpgradePlanCandidateCalculator.kt` (new)
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterEnhancementCalculatorSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/MaterialsPlannerSection.kt`
+- `app/src/main/java/com/irminsul/codex/data/mapper/AccountExportMapper.kt`
+- `app/src/test/java/com/irminsul/codex/data/catalogue/CharacterFullUpgradePlanCandidateCalculatorTest.kt` (new)
+- `app/src/test/java/com/irminsul/codex/data/mapper/AccountExportMapperTest.kt`
+- `README.md`
+
+**Important data status:**
+- The calculator currently previews costs from bundled Genshin-DB 7.2 candidate records and the character EXP curve.
+- This implementation does not promote candidate data into approved production `UpgradeCostRecord` records.
+- Traveler talent data and any missing candidate stages remain incomplete; combined totals are withheld rather than shown as complete.
+
+**Verification status:**
+- CI runs #709 and #710 passed.
+- CI run #711 for the optional EXP adjustment and current combined UI is pending at the time of this entry.
+- Earlier failures #703, #705, #706, and #707 were tied to an initial test assertion, an outdated composable call, and intermediate UI brace/structure edits. Later runs #704 and #708 passed after corrections.
+- Physical-device testing is pending.
+
+**Remaining work:**
+- Confirm CI #711 and the final documentation commit workflow.
+- Verify current talent-level mapping against real exported account snapshots.
+- Review Genshin-DB source permissions, cost correctness, and material metadata before any production approval.
+- Test level gates, all three talent tracks, Mora aggregation, owned/remaining values, Traveler missing data, offline use, and independent weapon planning on device.
+
+**Result:** The Materials Planner now has a character-first automatic cost preview and a separate weapon workflow. Production approval and physical-device verification are not complete.
