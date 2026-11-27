@@ -5531,7 +5531,7 @@ This milestone adds typed Stygian summary mapping, Visuals presentation, and a d
 
 # Active UI Revamp Continuation Plan
 **Updated:** 2026-11-28  
-**Plan status:** Active; next implementation batch not started  
+**Plan status:** Active; Batch 5 implementation in progress  
 **Reference authority:** `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md`, especially its updated Section 10, plus `docs/Irminsul Codex UI Design Instructions.md`.
 
 This is the continuation of the existing UI revamp. It does not create a separate product task or supersede completed milestones 107-109.
@@ -5559,7 +5559,7 @@ This is the continuation of the existing UI revamp. It does not create a separat
 
 ## Batch 5 - Visuals Navigation and Overview Hierarchy
 
-**Next implementation batch.**
+**Status:** In progress. Initial overview, nested navigation, and Lucide migration are implemented on `ui-revamp/batch-5-navigation-overview`; build and device verification remain pending.
 
 ### 5.1 Rebuild the Visuals landing page
 - Reproduce the top-most Battle Chronicles overview hierarchy from the updated reference.
@@ -5628,4 +5628,64 @@ This is the continuation of the existing UI revamp. It does not create a separat
 
 ## Immediate next action
 
-Start Batch 5 by auditing the current navigation state handling, `VisualsSection.kt`, all system icon usages, and the existing shared icon wrapper (if any). Then implement the Visuals overview and nested navigation foundation, with the Lucide dependency limited to the compatibility pilot. Do not begin detailed Chronicle endpoint expansion until the new navigation structure is in place.
+Continue Batch 5 by compiling and validating the new Visuals navigation and Lucide resource pilot. Fix any dependency/resource or Compose issues before visual refinement. Then inspect the overview and each destination on-device in Light and Dark themes. Do not begin detailed Chronicle endpoint expansion until the new navigation structure is verified.
+
+
+---
+
+## Milestone 110 - UI Revamp Batch 5: Visuals Navigation Foundation
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 5  
+**Status:** Implementation in progress on `ui-revamp/batch-5-navigation-overview`; CI and physical-device verification pending.
+
+### Objective
+
+Replace the long, fully expanded Visuals composition with a compact overview and dedicated nested destinations, while introducing the Lucide system-icon library.
+
+### Implemented on the feature branch
+
+- Added `VisualsDestination` and a small tested navigation-stack rule set.
+- Added nested Visuals routes for Character Roster, Character Details, World Exploration, current/previous Spiral Abyss, Imaginarium Theater, Stygian Onslaught, and Account Analysis.
+- Added Android system Back handling and visible detail-page back navigation without changing the four primary bottom-navigation destinations or centered AI action.
+- Added saveable per-destination scroll-state hosting so returning to a page can restore its scroll position.
+- Replaced the long inline Visuals composition with a compact overview: account statistics, horizontal character preview and selected-character summary, exploration region previews, four Chronicle mode summaries, and an Account Analysis preview.
+- Reused existing source-backed detail components on the new destinations. No new Chronicle fields or endpoint assumptions were added.
+- Added a character portrait selector on the dedicated Character Details destination and a View Selected Character action on the roster destination.
+- Audited system-icon usage across the presentation sources and app shell. Added a centralized `AppIcons` registry using `com.composables:icons-lucide-android:2.2.1`, migrated active app/system icon usages, and removed the unused Material Icons Extended dependency/catalog entry.
+- Kept Genshin character, weapon, element, rarity, region and mode artwork on existing game-asset paths.
+
+### Known boundaries
+
+- The account hero's latest-patch splash artwork is not added. The reference does not establish a permitted asset source/update process; do not bundle or scrape artwork until provenance and permission are verified.
+- Character roster filter layout and weapon roster reconstruction remain later Batch 8 work.
+- Exploration parent/subarea modeling remains Batch 7 work.
+- Dedicated Chronicle pages currently reuse the existing validated summaries. Full floor/chamber, Theater act, and Stygian challenge histories remain Batch 6 and require source validation.
+- Lucide resource resolution and compatibility with Kotlin 2.0.0, AGP 8.5.0 and Compose BOM 2024.06.00 are not yet build-verified.
+
+### Files changed
+
+- `app/build.gradle.kts`
+- `gradle/libs.versions.toml`
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AppIcons.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsDestination.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreen.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexBottomNavigationBar.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterShowcaseSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ToolsSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AiAssistantSheet.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/VisualsNavigationStackTest.kt`
+
+### Verification
+
+- Source files and branch diff were retrieved from GitHub after editing.
+- Navigation stack unit tests were added for push, duplicate destination, back, and root behavior; test execution is pending.
+- No successful Gradle build, GitHub Actions run, APK artifact, or physical-device verification is claimed.
+- Latest implementation commit: `bec6f3b95326251d04bc90b7e093f0c3439f729e` (includes the generated app-resource import correction for Lucide).
+
+### Next action
+
+Run the Debug build and unit tests for this branch. Resolve any Lucide dependency/resource or Compose compilation issues, then inspect the overview and nested destinations on-device before treating Batch 5 as complete.
