@@ -5424,7 +5424,7 @@ Visual presentation and composition only. No account retrieval, persistence, ana
 
 **Date recorded:** 2026-11-27  
 **Development phase:** UI Revamp - Batch 3.1  
-**Status:** Implemented and merged; automated verification pending CI correction.
+**Status:** Implemented, merged, and CI-verified; physical-device verification pending.
 
 ### Objective
 Close the verified Batch 3 presentation gaps using the consolidated Battle Chronicle references without changing account retrieval, persistence, analysis, or navigation architecture.
@@ -5446,9 +5446,12 @@ Close the verified Batch 3 presentation gaps using the consolidated Battle Chron
 
 ### Verification
 - Implementation merged in PR #5, main commit `786bea41a058754f3a42b6cf17b0077edd8180f4`.
-- GitHub Actions run #880 failed: 384 tests passed and one new overview grouping test failed because the secondary-statistics helper retained identity metrics. The failure is being corrected in PR #6.
-- Debug APK artifact: not produced by run #880 because the test step failed.
-- Physical-device verification: pending.
+- Follow-up test correction and milestone record merged in PR #6, commit `e1110d9174e2b6a5257a50c0430c1399c3dff232`.
+- GitHub Actions run #880 initially failed one new grouping assertion; the mapper was corrected in PR #6.
+- GitHub Actions run [#881](https://github.com/berao609/Irminsul-codex/actions/runs/46010779366) succeeded. Unit tests, Debug APK build, Room schema snapshot verification/upload, APK signature verification, and both artifact uploads succeeded. Room instrumentation tests were correctly skipped because no persistence or database code changed.
+- Debug APK: `irminsul-codex-debug-v1.0.0-dev.881-vc883`, artifact ID `15203742837`, archive SHA-256 `1cfa60f13a89b453e75cc39948d7e4a620f5c22662ca707d5cf7dd43cc0ed793`.
+- Room schema artifact ID: `15203702406`.
+- Physical-device verification: pending user testing.
 
 ### Device checklist
 1. Check Visuals in Light, Dark, and System modes.
