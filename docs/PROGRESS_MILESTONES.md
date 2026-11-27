@@ -4922,3 +4922,38 @@ This change defers nested traversal and lazy-composes expanded array rows. A mea
 6. Confirm Home, Visuals, Account, navigation, and AI placeholder sheet remain functional.
 
 **Boundary:** Structural presentation extraction only. No performance improvement or new calculator/lineup capability is claimed.
+
+
+## Milestone 094 - Visuals Destination Presentation Extraction
+
+**Date recorded:** 2026-11-27
+
+**Scope:** Continue AUD-002 Batch 6 by extracting the Visuals destination composition from MainActivity.
+
+**Implemented:**
+- Added `presentation/VisualsSection.kt` for Account Chronicle, Character Showcase (including its empty state), and Account Analysis composition.
+- MainActivity passes the existing account snapshot, intelligence overview, loading/error flags, credential availability, selected character, recommendation expansion state, and callbacks.
+- Kept screen state, snapshot ownership, credential checks, analysis invocation, and navigation in CodexScreen.
+- Preserved section order, stale-roster display, empty-state copy, Account Analysis credential gating, and its existing character input behavior.
+- No retrieval, mapping, persistence, analysis rules, navigation, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
+- `docs/CODEBASE_OPTIMIZATION_AUDIT.md`
+- `docs/PROGRESS_MILESTONES.md`
+
+**Commits:**
+- `c573d32169aa2d117c25d04faf8e1345989efcfd` - add Visuals destination presentation.
+- `92319ddc68a925f0d63c71fe9062c94853215ed9` - delegate Visuals composition from MainActivity.
+
+**Verification status:** Source changes committed. Debug CI and physical-device verification pending.
+
+**Device checklist:**
+1. Verify Account Chronicle overview and World Exploration & Collectibles.
+2. Verify current and previous Spiral Abyss and Imaginarium Theater sections.
+3. Verify Character Showcase roster, selection, and no-roster empty state.
+4. Verify Account Analysis refresh, loading/error feedback, recommendations, and credential visibility conditions.
+5. Confirm Home, Tools, Account, navigation, and AI placeholder remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
