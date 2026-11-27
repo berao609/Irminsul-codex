@@ -1296,3 +1296,28 @@ Closing this audit does not mean the application is perfect or that every option
 5. Confirm all four destinations and their existing features remain unaffected.
 
 **Boundary:** Structural extraction only. AI remains inactive; no provider or chat behavior is claimed.
+
+
+### Batch 6 - Step 12: Home account overview presentation extraction
+
+**Status:** Implemented; Debug CI and physical-device verification pending.
+
+**Implementation:**
+- Extracted the Home Adventurer account card and Account snapshot card into `presentation/HomeAccountOverviewSection.kt`.
+- MainActivity now derives the roster count and passes the existing UID, detected server, snapshot timestamp, and Analysis navigation callback to the component.
+- Kept account snapshot state, roster interpretation, server detection, and tab navigation ownership in CodexScreen.
+- Preserved the existing no-account text, unavailable-roster text, snapshot timestamp, card styling, and Analysis destination.
+- No account retrieval, persistence, analysis, navigation structure, or calculator behavior was intentionally changed.
+
+**Files changed:**
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/HomeAccountOverviewSection.kt`
+
+**Verification required:**
+1. Confirm Debug CI passes compilation, unit tests, Debug APK assembly, Room schema verification, signature verification, and artifact upload.
+2. On device, verify the Adventurer account card with and without configured credentials.
+3. Verify the Account snapshot card appears only when a snapshot exists and displays the correct roster count/unavailable state and timestamp.
+4. Verify Analysis opens Visuals.
+5. Confirm Daily Note, Visual Dashboard, all other destinations, Materials Calculator, and Lineup Simulator remain functional.
+
+**Boundary:** Structural presentation extraction only. No performance improvement is claimed.
