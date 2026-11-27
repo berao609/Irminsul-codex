@@ -49,7 +49,7 @@ val debugKeyPassword = providers.environmentVariable("DEBUG_KEY_PASSWORD").orNul
 android {
     namespace = "com.irminsul.codex"
     compileSdk {
-        version = release(36) {
+        version = release(37) {
             minorApiLevel = 1
         }
     }
