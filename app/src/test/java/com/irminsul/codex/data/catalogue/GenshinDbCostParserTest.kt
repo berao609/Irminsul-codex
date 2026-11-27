@@ -52,7 +52,7 @@ class GenshinDbCostParserTest {
         val result = GenshinDbCostParser.parseWeaponAscensionCosts(costs)
         assertEquals(CatalogueCostParseStatus.COMPLETE, result.status)
         assertTrue(result.segments[2].costs.isEmpty())
-        assertEquals(40 to 50, result.segments[2].fromLevel to result.segments[2].toLevel)
+        assertEquals(50 to 60, result.segments[2].fromLevel to result.segments[2].toLevel)
     }
 
     @Test fun rejectsMalformedStageAndMaterialRecords() {
