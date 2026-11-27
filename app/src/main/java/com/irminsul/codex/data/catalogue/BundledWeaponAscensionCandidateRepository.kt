@@ -16,6 +16,7 @@ import java.time.Instant
 object BundledWeaponAscensionCandidateRepository {
     const val GAME_VERSION = "7.2"
     private const val SOURCE_ID = "genshin-db-7.2"
+    private const val SOURCE_COMMIT = "8e5badd60b5d894284ccc927a56c9683529d2592"
     private const val ASSET_PATH = "genshin_db/english_weapons_7_2.gzip.b64"
 
     fun loadCandidates(context: Context, weaponId: String): List<GenshinDbUpgradeCostCandidate> {
@@ -23,7 +24,11 @@ object BundledWeaponAscensionCandidateRepository {
         val encoded = context.assets.open(ASSET_PATH).bufferedReader().use { it.readText() }
         val compressed = Base64.decode(encoded.trim(), Base64.DEFAULT)
         val json = GZIPInputStream(ByteArrayInputStream(compressed)).bufferedReader().use { it.readText() }
-        val root = JSONObject(json)
+        return parseCandidates(JSONObject(json), weaponId)
+    }
+
+    internal fun parseCandidates(root: JSONObject, weaponId: String): List<GenshinDbUpgradeCostCandidate> {
+        require(weaponId.isNotBlank()) { "A weapon ID is required." }
         val weapons = root.getJSONObject("data")
             .getJSONObject("English")
             .getJSONObject("weapons")
@@ -38,10 +43,13 @@ object BundledWeaponAscensionCandidateRepository {
 
         if (matches.isEmpty()) return emptyList()
         val canonical = matches.first()
-        require(matches.all { it.second.optJSONObject("costs")?.toString() == canonical.second.optJSONObject("costs")?.toString() }) {
+        require(matches.all {
+            it.third == canonical.third &&
+                it.second.optJSONObject("costs")?.toString() == canonical.second.optJSONObject("costs")?.toString()
+        }) {
             "The bundled source contains conflicting weapon records for ID $weaponId."
         }
-        val sourceUrl = "https://github.com/theBowja/genshin-db/blob/main/src/data/English/weapons/${canonical.first}.json"
+        val sourceUrl = "https://github.com/theBowja/genshin-db/blob/$SOURCE_COMMIT/src/data/English/weapons/${canonical.first}.json"
         val imported = GenshinDbProgressionCandidateImporter.importWeapon(
             weapon = canonical.second,
             gameVersion = GAME_VERSION,
