@@ -12,6 +12,7 @@ import com.irminsul.codex.presentation.VisualsSection
 import com.irminsul.codex.presentation.ScreenErrorBanner
 import com.irminsul.codex.presentation.HomeInitialLoadingIndicator
 import com.irminsul.codex.presentation.HomeSection
+import com.irminsul.codex.presentation.CodexScreenHeader
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -366,27 +367,10 @@ private fun CodexScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Irminsul Codex",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                if (uid.isNotBlank()) {
-                    Text(
-                        text = "UID ${uid.trim()} • ${HoYoLabClient.detectServer(uid)}",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
+        CodexScreenHeader(
+            uid = uid,
+            serverName = if (uid.isNotBlank()) HoYoLabClient.detectServer(uid) else null
+        )
 
         AccountSection(
             showCredentialsPanel = showCredentials && (
