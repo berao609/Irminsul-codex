@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import com.irminsul.codex.domain.model.DataValue
 import com.irminsul.codex.domain.model.StructuredData
+import com.irminsul.codex.domain.model.StygianOnslaughtSnapshot
 
 @Composable
 private fun ChronicleSection(title: String, subtitle: String? = null, content: @Composable () -> Unit) {
@@ -219,6 +220,50 @@ fun ChronicleRecordSection(title: String, value: DataValue<StructuredData>, mode
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun ChronicleStygianOnslaughtSection(value: DataValue<StygianOnslaughtSnapshot>) {
+    ChronicleSection("Stygian Onslaught", "Best recorded challenge") {
+        when (value) {
+            is DataValue.Available -> StygianOnslaughtRecord(value.value, stale = false)
+            is DataValue.Stale -> StygianOnslaughtRecord(value.value, stale = true)
+            DataValue.Missing -> Text(
+                "No Stygian Onslaught summary was included in this profile.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            DataValue.Unavailable -> Text(
+                "Stygian Onslaught data is not available from the source.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            is DataValue.Failed -> Text(
+                value.reason,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun StygianOnslaughtRecord(value: StygianOnslaughtSnapshot, stale: Boolean) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        value.bestRecordName?.let {
+            Text(it, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+            Text("Best Record", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        value.difficulty?.let {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Difficulty", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(it, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        if (stale) {
+            Text("Showing previously retrieved data.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

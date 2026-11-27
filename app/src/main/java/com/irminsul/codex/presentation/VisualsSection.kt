@@ -63,6 +63,7 @@ fun VisualsSection(
             ChronicleRecordSection("Spiral Abyss · Current Cycle", account.spiralAbyssCurrent, ChronicleRecordMode.SPIRAL_ABYSS)
             ChronicleRecordSection("Spiral Abyss · Previous Cycle", account.spiralAbyssPrevious, ChronicleRecordMode.SPIRAL_ABYSS)
             ChronicleRecordSection("Imaginarium Theater", account.imaginariumTheater, ChronicleRecordMode.IMAGINARIUM_THEATER)
+            ChronicleStygianOnslaughtSection(account.stygianOnslaught)
         }
 
         if (hasCredentials) {
