@@ -59,7 +59,7 @@ fun MaterialsPlannerSection(
                 is DataValue.Stale -> value.value
                 else -> null
             }
-            if (weapon != null) {
+            if (weapon != null && weapon.rarity in listOf(4, 5)) {
                 add(
                     MaterialTargetOption(
                         id = "weapon:" + character.id + ":" + weapon.id,
@@ -140,6 +140,16 @@ fun MaterialsPlannerSection(
         mutableStateOf(preferences.getString("material_planned_weapon_target_$weaponPlanKey-$plannedWeaponId", "") ?: "")
     }
     var weaponMenuExpanded by remember { mutableStateOf(false) }
+
+    val selectedWeapon = if (selectedTargetId.startsWith("weapon:")) {
+        val parts = selectedTargetId.split(":")
+        val owner = characters.firstOrNull { it.id.toString() == parts.getOrNull(1) }
+        when (val value = owner?.weapon) {
+            is DataValue.Available -> value.value.takeIf { it.id.toString() == parts.getOrNull(2) }
+            is DataValue.Stale -> value.value.takeIf { it.id.toString() == parts.getOrNull(2) }
+            else -> null
+        }
+    } else null
 
     LaunchedEffect(planStorageKey) {
         rows.clear()
@@ -284,6 +294,14 @@ fun MaterialsPlannerSection(
             }
         }
 
+        if (selectedWeapon != null) {
+            WeaponEnhancementCalculatorSection(
+                weapon = selectedWeapon,
+                currentLevel = currentLevel,
+                targetLevel = targetLevel,
+                preferences = preferences
+            )
+        }
         if (characterId != null) {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -419,17 +437,19 @@ fun MaterialsPlannerSection(
             }
         }
 
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Automatic costs are not connected yet", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                Text(
-                    "Only reviewed, approved cost data can populate automatic requirements. Manual tracking is available in the meantime.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        if (selectedWeapon == null) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Automatic costs are not connected yet", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Only reviewed, approved character and ascension costs can populate automatic requirements. Manual tracking remains available.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
