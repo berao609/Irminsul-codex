@@ -14,6 +14,8 @@ import com.irminsul.codex.presentation.ThemeMode
 import com.irminsul.codex.presentation.VisualDashboardSection
 import com.irminsul.codex.presentation.ToolsSection
 import com.irminsul.codex.presentation.VisualsSection
+import com.irminsul.codex.presentation.ScreenErrorBanner
+import com.irminsul.codex.presentation.HomeInitialLoadingIndicator
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -471,29 +473,12 @@ private fun CodexScreen(
             )
         }
 
-        if (errorMessage != null || accountExportState.errorMessage != null) {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF2B1618)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = (errorMessage ?: accountExportState.errorMessage)!!,
-                    color = MaterialTheme.colorScheme.error,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(14.dp)
-                )
-            }
+        (errorMessage ?: accountExportState.errorMessage)?.let { message ->
+            ScreenErrorBanner(message)
         }
 
         if (selectedTab == CodexTab.HOME && isLoading && dailyNote == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
+            HomeInitialLoadingIndicator()
         }
 
         if (selectedTab == CodexTab.HOME) {
