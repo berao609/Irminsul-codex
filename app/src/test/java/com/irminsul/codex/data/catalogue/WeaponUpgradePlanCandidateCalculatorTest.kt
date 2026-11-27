@@ -73,7 +73,7 @@ class WeaponUpgradePlanCandidateCalculatorTest {
         val expectedExperience = WeaponExperienceCalculator.calculate(
             com.irminsul.codex.domain.analysis.WeaponExperienceCalculationRequest(
                 rarity = WeaponExperienceRarity.FIVE_STAR,
-                currentLevel = 20,
+                currentLevel = 1,
                 currentExperienceWithinLevel = 0L,
                 targetLevel = 90,
                 maximumUnlockedLevel = 20,
