@@ -92,7 +92,7 @@ object WeaponUpgradePlanCandidateCalculator {
         val invalidIds = matching.filter {
             (it.fromLevel to it.toLevel) in duplicateRanges ||
                 (it.fromLevel to it.toLevel) !in ascensionRanges ||
-                it.costs.any { cost -> cost.itemId.isBlank() || cost.itemName.isBlank() || cost.quantity <= 0L }
+                it.costs.isEmpty() || it.costs.any { cost -> cost.itemId.isBlank() || cost.itemName.isBlank() || cost.quantity <= 0L }
         }.map { it.candidateId }
         if (invalidIds.isNotEmpty()) return invalid(expResult, invalidIds)
 
