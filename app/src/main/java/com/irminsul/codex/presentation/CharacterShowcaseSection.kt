@@ -322,25 +322,35 @@ private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer).padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 ShowcaseArtwork(
                     url = character.avatarIcon,
-                    description = "${character.name ?: "Character"} artwork",
+                    description = "${character.name ?: "Character"} portrait",
                     fallback = elementGlyph(character.element),
-                    modifier = Modifier.width(112.dp).height(142.dp)
+                    modifier = Modifier.width(148.dp).height(184.dp)
                 )
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.weight(1f)) {
-                    Text(character.name ?: "Character #${character.id}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Column(verticalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.weight(1f)) {
+                    Text(character.name ?: "Character #${character.id}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     Text(
                         "${character.element ?: "Element unavailable"} • ${character.rarity?.let { "★".repeat(it.coerceIn(1, 5)) } ?: "Rarity unavailable"}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                    Text("Level ${character.level ?: "—"}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                    Text("Level ${character.level ?: "—"}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     Text(
-                        "Friendship ${character.friendshipLevel ?: "—"} • Constellations ${character.activeConstellationCount ?: "—"}/6",
+                        "Friendship ${character.friendshipLevel ?: "—"}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        "${character.activeConstellationCount ?: "—"}/6 Constellations",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }

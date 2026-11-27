@@ -38,6 +38,14 @@ object ChroniclePresentationMapper {
         "medal_num" to "Medals"
     )
 
+    private val primaryOverviewLabels = setOf("Active Days", "Achievements", "Characters")
+
+    fun primaryOverviewMetrics(metrics: List<ChronicleMetric>): List<ChronicleMetric> =
+        metrics.filter { it.label in primaryOverviewLabels }
+
+    fun secondaryOverviewMetrics(metrics: List<ChronicleMetric>): List<ChronicleMetric> =
+        metrics.filterNot { it.label in primaryOverviewLabels }
+
     fun accountOverview(
         accountCard: DataValue<StructuredData>,
         profileAndExploration: DataValue<StructuredData>
