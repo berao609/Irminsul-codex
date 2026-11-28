@@ -178,10 +178,10 @@ class ChroniclePresentationMapperTest {
                 obj("id" to StructuredData.NumberValue("5"), "parent_id" to StructuredData.NumberValue("0"),
                     "name" to StructuredData.StringValue("The Chasm"), "exploration_percentage" to StructuredData.NumberValue("900")),
                 obj("id" to StructuredData.NumberValue("6"), "parent_id" to StructuredData.NumberValue("0"),
-                    "name" to StructuredData.StringValue("Chenyu Vale"), "exploration_percentage" to StructuredData.NumberValue("1000"))
-                ,obj("id" to StructuredData.NumberValue("15"), "parent_id" to StructuredData.NumberValue("0"),
-                    "name" to StructuredData.StringValue("Natlan"), "exploration_percentage" to StructuredData.NumberValue("280"))
-                ,obj("id" to StructuredData.NumberValue("16"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Chenyu Vale"), "exploration_percentage" to StructuredData.NumberValue("1000")),
+                obj("id" to StructuredData.NumberValue("15"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Natlan"), "exploration_percentage" to StructuredData.NumberValue("280")),
+                obj("id" to StructuredData.NumberValue("16"), "parent_id" to StructuredData.NumberValue("0"),
                     "name" to StructuredData.StringValue("Ancient Sacred Mountain"), "exploration_percentage" to StructuredData.NumberValue("406"))
             ))
         ), null)
