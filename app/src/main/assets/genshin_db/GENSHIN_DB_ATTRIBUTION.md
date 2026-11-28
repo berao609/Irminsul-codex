@@ -14,3 +14,8 @@ The application retains the upstream copyright and permission notice. The bundle
 These records are still candidate game data. MIT permission to redistribute the upstream dataset does not establish that every game fact has been independently verified. The application therefore preserves the candidate-data boundary and does not promote these records into trusted production costs automatically.
 
 No image binaries are included in these data files. The app also bundles `enhancement_visual_metadata.json`, a small ID-to-asset metadata map derived from EnkaNetwork/API-docs commit `26b4ddcd045a1264d0a8ef3ef5a3a3e33cbe16ce` (`store/gi/avatars.json` and `store/gi/weapons.json`). It maps character/weapon IDs to element, weapon type, and Enka CDN asset URLs. Image files are requested from the Enka CDN at runtime; this metadata attribution does not claim ownership or grant a license to HoYoverse artwork.
+
+
+### Supplemental weapon icon metadata
+
+Three 4-star Prized Isshin Blade catalogue variants are not present in the Enka weapon store snapshot. Their exact in-game icon names and weapon type are supplemented from `DimbreathBot/AnimeGameData`, commit `a311cd77d7dafbd2bedc7d3cac4e986c6125b586`, file `ExcelBinOutput/WeaponExcelConfigData.json` (IDs `11419`, `11420`, and `11421`). The corresponding image files are still requested from the Enka CDN at runtime; no image binaries are bundled.
