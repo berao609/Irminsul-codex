@@ -25,11 +25,18 @@ import com.irminsul.codex.domain.model.StructuredData
 import com.irminsul.codex.domain.model.StygianOnslaughtSnapshot
 
 @Composable
-private fun ChronicleSection(title: String, subtitle: String? = null, content: @Composable () -> Unit) {
+private fun ChronicleSection(
+    title: String,
+    subtitle: String? = null,
+    collapsible: Boolean = true,
+    content: @Composable () -> Unit
+) {
     var expanded by remember(title) { mutableStateOf(true) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
-            Modifier.fillMaxWidth().clickable(role = Role.Button) { expanded = !expanded }.padding(vertical = 4.dp),
+            Modifier.fillMaxWidth()
+                .then(if (collapsible) Modifier.clickable(role = Role.Button) { expanded = !expanded } else Modifier)
+                .padding(vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -37,9 +44,15 @@ private fun ChronicleSection(title: String, subtitle: String? = null, content: @
                 Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
                 subtitle?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
-            AppIcon(if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE, contentDescription = if (expanded) "Collapse $title" else "Expand $title", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (collapsible) {
+                AppIcon(
+                    if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
+                    contentDescription = if (expanded) "Collapse $title" else "Expand $title",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
-        if (expanded) content()
+        if (!collapsible || expanded) content()
     }
 }
 
@@ -362,7 +375,7 @@ private fun ChronicleTheaterSection(
 ) {
     val cycles = ChroniclePresentationMapper.theaterCycles(value, roster)
     var selectedCycle by rememberSaveable { mutableIntStateOf(0) }
-    ChronicleSection(title, "Imaginarium Theater · recorded cycles and round lineups") {
+    ChronicleSection(title, "Imaginarium Theater · recorded cycles and round lineups", collapsible = false) {
         if (cycles.isEmpty()) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
