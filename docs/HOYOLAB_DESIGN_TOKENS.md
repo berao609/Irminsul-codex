@@ -97,7 +97,7 @@ Colors below are CSS source values, not substitutions from the native app theme.
 |---|---|---|---|
 | HoYoLAB gold accent | `body[data-game-id="2"] .title[data-v-4b6b351e]`, `.tw-bg-ys-l-brand-yellow-3`, `.tw-text-ys-l-brand-yellow-3` | `#D3BC8E` / `rgba(211,188,142,1)` | `Color(0xFFD3BC8E)` |
 | Light parchment text | `.tw-text-ys-l-grey-white-2` | `rgba(240,234,224,1)` | `Color(0xFFF0EAE0)` |
-| Muted parchment | `.tw-text-ys-l-grey-white-5` | `rgba(203,189,167,1)` | `Color(0xFFCB BDA7)` (hex in Kotlin: `0xFFCB BDA7` without spaces) |
+| Muted parchment | `.tw-text-ys-l-grey-white-5` | `rgba(203,189,167,1)` | `Color(0xFFCBBDA7)` (hex in Kotlin: `0xFFCBBDA7` without spaces) |
 | White 90% | `.tw-text-gt-l-text-white-2` | `rgba(255,255,255,.90)` | `Color(0xE6FFFFFF)` |
 | White 65% | `.tw-text-gt-l-text-white-3` | `rgba(255,255,255,.65)` | `Color(0xA6FFFFFF)` |
 | White 64% surface | `.tw-bg-gt-g-grey-white-9` | `rgba(255,255,255,.64)` | `Color(0xA3FFFFFF)` |
