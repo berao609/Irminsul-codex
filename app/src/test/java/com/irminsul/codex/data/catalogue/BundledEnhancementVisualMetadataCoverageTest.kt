@@ -34,6 +34,18 @@ class BundledEnhancementVisualMetadataCoverageTest {
     }
 
     @Test
+    fun elementAndWeaponTypeFilterIconsAreSourceBackedAndComplete() {
+        val metadata = JSONObject(File(assets, "enhancement_visual_metadata.json").readText())
+        val icons = BundledEnhancementCatalogueRepository.parseFilterIconMetadata(metadata)
+
+        assertEquals(setOf("Anemo", "Geo", "Electro", "Dendro", "Hydro", "Pyro", "Cryo"), icons.elementIcons.keys)
+        assertEquals(setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST"), icons.weaponTypeIcons.keys)
+        assertTrue((icons.elementIcons.values + icons.weaponTypeIcons.values).all {
+            it.startsWith("https://enka.network/ui/")
+        })
+    }
+
+    @Test
     fun everyEligibleWeaponHasIconAndWeaponTypeMetadata() {
         val encoded = File(assets, "english_weapons_7_2.gzip.b64").readText()
         val compressed = Base64.getMimeDecoder().decode(encoded)

@@ -20,6 +20,11 @@ data class EnhancementCatalogueEntry(
     val iconUrl: String? = null
 )
 
+data class EnhancementFilterIconMetadata(
+    val elementIcons: Map<String, String>,
+    val weaponTypeIcons: Map<String, String>
+)
+
 /**
  * Loads the complete 4-star/5-star selection catalogue from the version-pinned
  * Genshin-DB assets. Ownership is deliberately not used as a catalogue filter.
@@ -151,6 +156,38 @@ object BundledEnhancementCatalogueRepository {
 
     private fun JSONObject.nullableMetadataString(key: String): String? =
         if (isNull(key)) null else optString(key).takeIf(String::isNotBlank)
+
+    fun loadFilterIconMetadata(context: Context): EnhancementFilterIconMetadata {
+        val root = context.assets.open(VISUAL_METADATA_ASSET).bufferedReader().use {
+            JSONObject(it.readText())
+        }
+        return parseFilterIconMetadata(root)
+    }
+
+    internal fun parseFilterIconMetadata(root: JSONObject): EnhancementFilterIconMetadata {
+        require(root.optInt("schemaVersion", -1) == 1) {
+            "The bundled enhancement visual metadata schema is unsupported."
+        }
+        fun readIcons(key: String): Map<String, String> {
+            val source = root.optJSONObject(key)
+                ?: throw IllegalArgumentException("Enhancement visual metadata has no $key map.")
+            return source.keys().asSequence().mapNotNull { name ->
+                source.nullableMetadataString(name)?.let { name to it }
+            }.toMap()
+        }
+        val elements = readIcons("elementFilterIcons")
+        val weaponTypes = readIcons("weaponTypeFilterIcons")
+        require(elements.keys.containsAll(listOf("Anemo", "Geo", "Electro", "Dendro", "Hydro", "Pyro", "Cryo"))) {
+            "One or more element filter icons are missing."
+        }
+        require(weaponTypes.keys.containsAll(listOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST"))) {
+            "One or more weapon-type filter icons are missing."
+        }
+        require((elements.values + weaponTypes.values).all { it.startsWith("https://enka.network/ui/") }) {
+            "A bundled filter icon does not use the approved Enka asset host."
+        }
+        return EnhancementFilterIconMetadata(elements, weaponTypes)
+    }
 
     fun loadAll(context: Context): List<EnhancementCatalogueEntry> =
         loadCharacters(context) + loadWeapons(context)

@@ -89,6 +89,7 @@ internal fun EnhancementCalculatorSection(
     var page by remember { mutableStateOf(CalculatorPage.CHOOSE_TYPE) }
     var subjectType by remember { mutableStateOf(EnhancementSubjectType.CHARACTER) }
     var catalogue by remember { mutableStateOf<List<EnhancementCatalogueEntry>>(emptyList()) }
+    var filterIconMetadata by remember { mutableStateOf<com.irminsul.codex.data.catalogue.EnhancementFilterIconMetadata?>(null) }
     var loading by remember { mutableStateOf(true) }
     var catalogueError by remember { mutableStateOf<String?>(null) }
     var selectedElementFilter by remember { mutableStateOf<String?>(null) }
@@ -122,9 +123,12 @@ internal fun EnhancementCalculatorSection(
     LaunchedEffect(Unit) {
         loading = true
         try {
-            catalogue = withContext(Dispatchers.IO) {
-                BundledEnhancementCatalogueRepository.loadAll(context)
+            val loaded = withContext(Dispatchers.IO) {
+                BundledEnhancementCatalogueRepository.loadAll(context) to
+                    BundledEnhancementCatalogueRepository.loadFilterIconMetadata(context)
             }
+            catalogue = loaded.first
+            filterIconMetadata = loaded.second
             catalogueError = null
         } catch (cancelled: CancellationException) {
             throw cancelled
@@ -288,11 +292,11 @@ internal fun EnhancementCalculatorSection(
                 }
                 CalculatorRarityFilters(selectedRarityFilter) { selectedRarityFilter = it }
                 if (subjectType == EnhancementSubjectType.CHARACTER) {
-                    CalculatorIconFilterRow("Element", calculatorElementFilterOptions, selectedElementFilter) {
+                    CalculatorIconFilterRow("Element", calculatorElementFilterOptions(filterIconMetadata?.elementIcons.orEmpty()), selectedElementFilter) {
                         selectedElementFilter = it
                     }
                 }
-                CalculatorIconFilterRow("Weapon type", calculatorWeaponTypeFilterOptions, selectedWeaponTypeFilter) {
+                CalculatorIconFilterRow("Weapon type", calculatorWeaponTypeFilterOptions(filterIconMetadata?.weaponTypeIcons.orEmpty()), selectedWeaponTypeFilter) {
                     selectedWeaponTypeFilter = it
                 }
                 Text(choices.size.toString() + " available · 4-star and 5-star", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -334,11 +338,39 @@ internal fun EnhancementCalculatorSection(
                     Text("Choose a character or weapon first.")
                     TextButton(onClick = { page = CalculatorPage.CHOOSE_TYPE }) { Text("Choose item") }
                 } else {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(9.dp)
+                    ) {
                         TextButton(onClick = { page = CalculatorPage.CHOOSE_ITEM; result = null }) { Text("‹ Change") }
-                        Column {
-                            Text(entry.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            Text(entry.rarity.toString() + "★ · " + if (entry.subjectType == EnhancementSubjectType.CHARACTER) "Character" else (entry.detail ?: "Weapon"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (!entry.iconUrl.isNullOrBlank()) {
+                            SubcomposeAsyncImage(
+                                model = entry.iconUrl,
+                                contentDescription = "${entry.name} icon",
+                                modifier = Modifier.size(54.dp).clip(RoundedCornerShape(10.dp)),
+                                contentScale = if (entry.subjectType == EnhancementSubjectType.CHARACTER) ContentScale.Crop else ContentScale.Fit,
+                                loading = { Text("✦") },
+                                error = { Text("✦") }
+                            )
+                        } else {
+                            Surface(
+                                modifier = Modifier.size(54.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(if (entry.subjectType == EnhancementSubjectType.CHARACTER) "✦" else "⚔")
+                                }
+                            }
+                        }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(entry.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 2)
+                            Text(
+                                entry.rarity.toString() + "★ · " + if (entry.subjectType == EnhancementSubjectType.CHARACTER) "Character" else (entry.detail ?: "Weapon"),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                     CalculatorInputSection(if (entry.subjectType == EnhancementSubjectType.CHARACTER) "Character level" else "Weapon level") {
@@ -397,7 +429,15 @@ internal fun EnhancementCalculatorSection(
                 } else if (plan.materials.isEmpty()) {
                     Text("No additional materials are required for these levels.")
                 } else {
-                    Text("Change your owned quantities. Remaining requirements update immediately.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Adjust owned quantities to update the remaining amount.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(
+                        Modifier.fillMaxWidth().padding(start = 43.dp, end = 1.dp),
+                        horizontalArrangement = Arrangement.spacedBy(7.dp)
+                    ) {
+                        Text("Material / owned", Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Consumed", Modifier.width(62.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Still needed", Modifier.width(68.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     plan.materials.forEachIndexed { index, material ->
                         val legacyStorageKey = "enhancement_owned_" +
                             selected?.subjectType?.name + ":" + selected?.id + ":" + material.id
@@ -449,22 +489,20 @@ private fun CalculatorTypeCard(title: String, subtitle: String, onClick: () -> U
 }
 
 private data class CalculatorFilterOption(val key: String, val label: String, val iconUrl: String)
-private val calculatorElementFilterOptions = listOf(
-    CalculatorFilterOption("Anemo", "Anemo", "https://enka.network/ui/UI_Buff_Element_Wind.png"),
-    CalculatorFilterOption("Geo", "Geo", "https://enka.network/ui/UI_Buff_Element_Rock.png"),
-    CalculatorFilterOption("Electro", "Electro", "https://enka.network/ui/UI_Buff_Element_Electric.png"),
-    CalculatorFilterOption("Dendro", "Dendro", "https://enka.network/ui/UI_Buff_Element_Grass.png"),
-    CalculatorFilterOption("Hydro", "Hydro", "https://enka.network/ui/UI_Buff_Element_Water.png"),
-    CalculatorFilterOption("Pyro", "Pyro", "https://enka.network/ui/UI_Buff_Element_Fire.png"),
-    CalculatorFilterOption("Cryo", "Cryo", "https://enka.network/ui/UI_Buff_Element_Ice.png")
-)
-private val calculatorWeaponTypeFilterOptions = listOf(
-    CalculatorFilterOption("SWORD", "Sword", "https://enka.network/ui/UI_EquipIcon_Sword_Blunt.png"),
-    CalculatorFilterOption("CLAYMORE", "Claymore", "https://enka.network/ui/UI_EquipIcon_Claymore_Aniki.png"),
-    CalculatorFilterOption("BOW", "Bow", "https://enka.network/ui/UI_EquipIcon_Bow_Hunters.png"),
-    CalculatorFilterOption("POLEARM", "Polearm", "https://enka.network/ui/UI_EquipIcon_Pole_Gewalt.png"),
-    CalculatorFilterOption("CATALYST", "Catalyst", "https://enka.network/ui/UI_EquipIcon_Catalyst_Apprentice.png")
-)
+private fun calculatorElementFilterOptions(icons: Map<String, String>): List<CalculatorFilterOption> =
+    listOf("Anemo", "Geo", "Electro", "Dendro", "Hydro", "Pyro", "Cryo").mapNotNull { key ->
+        icons[key]?.let { CalculatorFilterOption(key, key, it) }
+    }
+private fun calculatorWeaponTypeFilterOptions(icons: Map<String, String>): List<CalculatorFilterOption> =
+    listOf(
+        "SWORD" to "Sword",
+        "CLAYMORE" to "Claymore",
+        "BOW" to "Bow",
+        "POLEARM" to "Polearm",
+        "CATALYST" to "Catalyst"
+    ).mapNotNull { (key, label) ->
+        icons[key]?.let { CalculatorFilterOption(key, label, it) }
+    }
 private fun calculatorMaterialIconUrl(id: String): String = "https://enka.network/ui/UI_ItemIcon_$id.png"
 
 @Composable
@@ -520,8 +558,12 @@ private fun CalculatorChoiceCard(entry: EnhancementCatalogueEntry, owned: Boolea
 }
 @Composable
 private fun CalculatorInputSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f)), shape = RoundedCornerShape(16.dp)) {
-        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.26f)),
+        shape = RoundedCornerShape(14.dp)
+    ) {
+        Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
     }
 }
 @Composable
@@ -536,17 +578,36 @@ private fun CalculatorTalentWheelRow(title: String, current: Int, target: Int, o
 }
 @Composable
 private fun CalculatorMaterialRow(material: CalculatorMaterial, ownedQuantity: Long, remaining: Long?, isInventoryKnown: Boolean, onOwnedChange: (Long) -> Unit, onConfirmZero: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-        SubcomposeAsyncImage(model = material.iconUrl, contentDescription = "${material.name} icon", modifier = Modifier.size(43.dp).clip(RoundedCornerShape(9.dp)), contentScale = ContentScale.Fit, loading = { Text("✦") }, error = { Text("✦") })
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(material.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 2)
-            Text("Required  ${material.required}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(remaining?.let { "Still needed  $it" } ?: "Still needed  —", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
-            if (!isInventoryKnown) TextButton(onClick = onConfirmZero, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) { Text("Confirm 0 owned", style = MaterialTheme.typography.labelSmall) }
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(7.dp)
+    ) {
+        SubcomposeAsyncImage(
+            model = material.iconUrl,
+            contentDescription = "${material.name} icon",
+            modifier = Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)),
+            contentScale = ContentScale.Fit,
+            loading = { Text("✦") },
+            error = { Text("✦") }
+        )
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(material.name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, maxLines = 2)
             Text("Owned", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            CalculatorQuantityControl("", ownedQuantity, onOwnedChange)
+            if (isInventoryKnown) {
+                CalculatorQuantityControl("", ownedQuantity, onOwnedChange)
+            } else {
+                TextButton(
+                    onClick = onConfirmZero,
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = 0.dp)
+                ) { Text("Set 0 owned", style = MaterialTheme.typography.labelSmall) }
+            }
+        }
+        Column(Modifier.width(62.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(material.required.toString(), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        }
+        Column(Modifier.width(68.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(remaining?.toString() ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, maxLines = 1)
         }
     }
 }
