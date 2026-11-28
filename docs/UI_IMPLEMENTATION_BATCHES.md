@@ -71,6 +71,18 @@ This is the former Batch 8. Its scope and acceptance intent remain unchanged; on
 - Keep the catalogue version-pinned and source-attributed. The current bundled selection data has no complete portrait/icon mapping for all unowned items; do not fabricate artwork. Candidate cost/EXP data must remain clearly labelled and incomplete totals must be withheld.
 - Preserve the existing app architecture and verify the result with deterministic tests, CI, and physical-device testing.
 
+#### User device-test corrections - 2026-11-28
+
+The first physical-device acceptance attempt was **unsatisfactory**. Apply the four-page reference recorded in `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md` §6.6:
+
+- Character selection: seven actual element icons, five actual weapon-type icons, dense portrait grid, no search field.
+- Weapon selection: matching grid layout, rarity filters, and actual weapon-type icons; no search field.
+- Planning page: subtle parchment-style input sections and vertical wheel/scroll pickers. Remove visible current-EXP-within-level and current-ascension-rank inputs. Preserve calculation correctness and disclose assumptions for unknown values.
+- Material details: compact scrollable rows with correct item icons, readable names, and aligned required/consumed/still-needed quantities.
+- Global UI: replace keyboard-opening text fields with appropriate non-keyboard controls; make expand/collapse affordances tiny, subtle, and centered while preserving touch accessibility.
+
+**Room regression:** PR #16's Batch 8 persistence added schema v3 (`private_account_data`); the Batch 9 branch had schema v2. Retain schema v3 and migrate v2->3. Do not use destructive fallback. User reported saved-analysis restoration failure; physical retest is required after the migration fix.
+
 ### Batch 10 - Chronicles UI Visual Refinement
 
 **Status:** Planned; approved by the user for work after Batch 9.

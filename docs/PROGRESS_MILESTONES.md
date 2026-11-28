@@ -6148,3 +6148,33 @@ Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account 
 ### Next action
 
 Complete source-level catalogue and calculation edge-case review, then perform physical-device acceptance of the latest APK. Keep candidate costs labelled unverified until their game-data accuracy and provenance have been independently reviewed. Do not close or merge Batch 9 before all scope and physical-device checks pass.
+
+
+---
+
+## Milestone 117 - Batch 9 Device-Test Corrections and Room Schema Compatibility
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 9  
+**Status:** Device feedback recorded; Room schema compatibility correction committed; CI and device retest pending. Calculator visual refinements remain pending.
+
+### User acceptance feedback
+
+- User tested the Batch 9 APK and reported the calculator UI as unsatisfactory.
+- Four-page visual references are recorded in `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md` §6.6.
+- Required redesign: icon-based character filters and matching character grid; same visual logic for weapon selection; subtle planning inputs using wheel/scroll pickers; compact material rows with actual item icons.
+- Remove selection search fields and the visible current-EXP-within-level and current-ascension-rank inputs.
+- Global UI requirement: remove keyboard-opening text-entry sections, replacing them with suitable non-keyboard controls. Expand/collapse affordances must be tiny, subtle, and centered without losing accessible touch targets.
+- Physical-device acceptance is **not** granted.
+
+### Room migration regression
+
+- Device error: `A migration from 3 to 2 was required but not found.`
+- Root cause verified from PR #16: Batch 8 introduced Room schema v3 with `private_account_data`; PR #17 was based on schema v2 and omitted that entity/table. Existing devices with schema v3 therefore encountered a downgrade requirement.
+- Commit `f56ce67d408c55b62b226b1a234304de6ef2b12b` restores the v3 entity, DAO, schema snapshot, and 2->3 migration while retaining 1->2. No destructive migration fallback was added.
+- Commit `d4caaaddc86658c9d16f6ed6adcc2bdb15a21806` adds instrumentation coverage for 2->3 migration and preservation of existing snapshot chunks; the existing 1->2 test now exercises the full 1->2->3 path.
+- CI verification and device confirmation remain pending. Do not claim the error is resolved until the new CI and a device upgrade from the user's existing installation are verified.
+
+### Next action
+
+Implement the four-page Enhancement Calculator visual redesign and the app-wide non-keyboard input policy, then run CI. Provide a new Debug APK and ask the user to retest saved-analysis restoration and all four calculator pages. Preserve the user's existing Room database; never ask them to clear app data as a workaround.

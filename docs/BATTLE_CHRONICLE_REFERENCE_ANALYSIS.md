@@ -783,3 +783,57 @@ Dedicated pages should have a clear title/header, back navigation, independent s
 - Continue implementing with native Kotlin and Jetpack Compose, existing app architecture, validated local account data and approved asset-loading paths.
 - Preserve all existing scope exclusions and product decisions in Sections 1, 8 and 9. This reference does not authorize adding unrelated Battle Chronicle modules.
 - This analysis is design research. The implementation plan and source changes must still be scoped and verified against the current app before work begins.
+
+
+## 6.6 Enhancement Calculator screenshot references (user-supplied, 2026-11-28)
+
+The user supplied a four-page mobile PDF reference and physically tested the current Irminsul Enhancement Calculator. The current implementation was judged unsatisfactory. Treat the four screenshot pages as the approved layout direction for the next calculator refinement, not as permission to copy protected assets or source code.
+
+### Page 1 - Character selection
+
+- Use a full-screen selection surface with a clear title and back navigation.
+- Place compact, image-based elemental filters in one horizontal group. Use the seven actual in-game element icons, not text-only element names.
+- Place compact, image-based weapon-type filters in a second horizontal group. Use the five actual in-game weapon-type icons.
+- Show the eligible character catalogue in a dense portrait grid. Cards should include the character image, name, and rarity treatment.
+- Keep selection independent of ownership; an owned-only view may be represented as a separate selection state where supported.
+- **Irminsul-specific correction:** remove the search field from this selector. Do not open the software keyboard here.
+
+### Page 2 - Weapon selection
+
+- Reuse the character selector's overall hierarchy, spacing, grid geometry, selected-state treatment, and back navigation.
+- Use rarity filters and actual weapon-type icons.
+- Show actual weapon artwork in a compact grid, with readable names and rarity treatment.
+- Do not use a text search field or trigger the software keyboard.
+
+### Page 3 - Upgrade target input
+
+- Use a restrained parchment-style planning surface with the selected character/weapon identity at the top.
+- Keep level and talent inputs subtle and integrated into compact sections rather than prominent generic form fields.
+- Use a vertical wheel/scroll picker for numeric levels. This replaces the previously misunderstood slider request.
+- Remove the visible **EXP already earned within current level** and **Current ascension rank** controls.
+- Derive or retain the necessary calculation state internally. Do not silently claim unknown current EXP or ascension state is known; disclose assumptions where they affect totals.
+- Keep Normal Attack, Elemental Skill, and Elemental Burst levels independently adjustable for characters.
+- No input on this page may open the software keyboard.
+
+### Page 4 - Material details
+
+- Use a compact, continuous material list rather than one large card per material.
+- Show each material's actual item icon, full readable name, consumed/required quantity, and still-needed quantity in aligned columns.
+- Keep the list vertically scrollable and dense enough to inspect many materials without excessive padding.
+- Use a consistent fallback for missing icons; do not fabricate or mismatch material artwork.
+
+### Global interaction refinements from device testing
+
+- Remove or replace text-entry controls across the app when they open the software keyboard. Prefer wheel pickers, steppers, chips, segmented choices, or other non-keyboard controls appropriate to the data.
+- Remove the Enhancement Calculator selection search bar.
+- Make expand/collapse affordances tiny, visually quiet, and centered within their section.
+- Preserve accessibility descriptions and adequate touch targets even when the visible expand/collapse glyph is small.
+- Recheck Light and Dark themes, narrow-screen behavior, scrolling, and back navigation after the global changes.
+
+### Device-reported persistence regression
+
+The user observed: `Could not restore the saved account analysis: A migration from 3 to 2 was required but not found.`
+
+Source inspection confirmed that Batch 8 PR #16 introduced Room schema version 3 with the `private_account_data` table, while Batch 9 PR #17 had reverted to schema version 2 and omitted that table/migration. This created a downgrade requirement on devices that had already opened schema 3.
+
+**Required correction:** retain schema version 3 and the `private_account_data` entity/table, provide the 2-to-3 migration for version-2 databases, and preserve the existing 1-to-2 migration. Never use destructive migration as a workaround. The compatibility correction and migration tests are tracked in the active Batch 9 milestone; CI and device retest remain pending until observed.
