@@ -93,12 +93,12 @@ class IrminsulDatabaseMigrationTest {
             IrminsulDatabase::class.java,
             databaseName
         )
-            .addMigrations(IrminsulDatabase.MIGRATION_1_2)
+            .addMigrations(IrminsulDatabase.MIGRATION_1_2, IrminsulDatabase.MIGRATION_2_3)
             .build()
 
         try {
-            // Opening the production Room database executes MIGRATION_1_2 and
-            // performs Room's own schema validation without MigrationTestHelper.
+            // Opening the production Room database executes MIGRATION_1_2 and MIGRATION_2_3
+            // and performs Room's own schema validation without MigrationTestHelper.
             val database = migrated.openHelper.writableDatabase
             val snapshots = database.query(
                 """
@@ -144,6 +144,11 @@ class IrminsulDatabaseMigrationTest {
                     }
                 }
             }
+
+            val privateTable = database.query(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'private_account_data'"
+            )
+            privateTable.use { assertTrue(it.moveToFirst()) }
 
             val accountCursor = database.query(
                 "SELECT createdAtEpochMillis, lastUpdatedAtEpochMillis FROM accounts WHERE uid = ? AND server = ?",
