@@ -5925,7 +5925,7 @@ No further work is pending for Milestone 113.
 
 **Date recorded:** 2026-11-28  
 **Development phase:** UI Revamp - Batch 7  
-**Status:** Core hierarchy and first layout refinements passed CI #1004 and user device testing. Follow-up emblem fallback and Natlan grouping fixes are implemented; fresh CI and device verification are pending.
+**Status:** Complete; final implementation CI-verified, merged to `main`, and physical-device tested.
 
 ### Source evidence
 
@@ -6023,3 +6023,18 @@ Run the full Debug CI for the latest branch head. If successful, verify Natlan, 
 - Implementation commit: `21d3f8a497769ffaf13e5e284c1cafa403834b7a`.
 - Test commit: `348abb8ed4e826458d641eb5dedaa7c820dcaa17`.
 - CI and physical-device verification for this final adjustment are pending.
+
+
+### Final verification and closure
+
+- Final implementation/test head: `348abb8ed4e826458d641eb5dedaa7c820dcaa17`; PR documentation head before this closure record: `5909685fdd7038ca7ccec462b58c0f86a085ae32`.
+- GitHub Actions run #1032: https://github.com/berao609/Irminsul-codex/actions/runs/46115368528 - **Success**.
+- Unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and APK artifact upload passed. Room instrumentation tests were skipped because the change does not affect Room persistence or schema.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.1032-vc1034` (artifact ID `15251815121`; 15,909,720 bytes; SHA-256 `b6557ad05e9261c009b2bdf94b3be19509961b24819016b4dba97744817222fe`).
+- Physical-device verification: user confirmed the final Batch 7 build was verified and tested, including the Enkanomiya hierarchy adjustment and final regional presentation refinements.
+- This final confirmation supersedes the earlier pending device-verification notes and the previously recorded Temple of Space rendering concern.
+- PR #15 was merged to `main`; merge commit and integrated main state are recorded after merge.
+
+### Closure
+
+Batch 7 is complete. Continue with the next planned UI Revamp task without reopening this scope unless a new regression is reported.
