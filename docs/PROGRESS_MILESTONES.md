@@ -6104,8 +6104,12 @@ Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account 
 ### Verification
 
 - PR #17 is open as a draft and mergeable.
-- GitHub Actions run #1079 was triggered for the initial implementation; its result is pending.
-- No successful CI result, APK artifact, or physical-device verification is claimed yet.
+- Initial CI runs #1096-#1103 failed because the first catalogue tests expected ID order rather than the repository's alphabetical ordering. The test expectations were corrected in commit `6e7eac54ae792849e79e1676062d75bf48e434b9`.
+- GitHub Actions run #1105: https://github.com/berao609/Irminsul-codex/actions/runs/46129891082 - **Success** for code head `6e7eac54ae792849e79e1676062d75bf48e434b9`.
+- Unit tests, Debug APK build, Room schema snapshot verification/upload, APK signature verification, and APK artifact upload passed. Room instrumentation tests were skipped because this change does not affect Room persistence/schema.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.1105-vc1107` (artifact ID `15256314648`; 15,991,443 bytes; SHA-256 `0875b7e69b6255efa9eac2d24efd5f8ce49f65e6e5176e7605fa6651554cba94`).
+- The successful CI run verifies commit `6e7eac5`; subsequent commits `cc5ab17`, `424a20d`, and `6e7eac5` contain the ascension-rank constraint, unused-import cleanup, and corrected test ordering. The latest tested source includes the rank constraint and corrected tests; the current branch head is `6e7eac5`.
+- Physical-device verification remains pending. Test the full calculator flow, especially the complete catalogue grid, level/talent controls, ascension rank, large result dialog, persistent owned-material steppers, and live remaining quantities in both themes.
 - Batch 8 PR #16 remains open pending physical-device acceptance; CI #1070 passed.
 
 ### Enhancement Calculator implementation added
