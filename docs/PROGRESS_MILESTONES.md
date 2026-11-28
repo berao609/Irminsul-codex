@@ -6008,3 +6008,10 @@ Run the full Debug CI for the latest branch head. If successful, verify Natlan, 
 - GitHub Actions run #1020 succeeded for code head `fb42676d7774f01fb28651db35dacf96f737a9ed`: unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and APK upload passed. Room instrumentation tests were skipped because this change does not affect Room persistence or schema.
 - Debug APK: `irminsul-codex-debug-v1.0.0-dev.1020-vc1022` (artifact ID `15250137616`; 15,909,754 bytes; SHA-256 `aa07b68d49ae2b3730fe45379068a7dd141672070be1a8b4ab4c6d70def18cb7`). Run: https://github.com/berao609/Irminsul-codex/actions/runs/46113459072.
 - Physical-device verification of the Fontaine grouping and corrected emblems remains pending.
+### Emblem correction follow-up
+
+- User device testing confirmed the previous APK fixed only Sea of Bygone Eras nesting; Natlan and Nod-Krai still displayed the wrong emblems, and Temple of Space remained blank. The earlier claim that the emblem changes were fixed was incorrect.
+- Corrected the selection priority: Natlan and Nod-Krai now use the export's regional `icon` first, with `inner_icon` only as fallback. The previous implementation incorrectly prioritized `inner_icon`.
+- Temple of Space has no regional image fields in the replacement export. Its only source-backed candidate remains the `Temple of Space: Memory Core` offering icon. The mapper produces this candidate in tests, but its actual image rendering failure is not yet explained and must not be marked fixed.
+- Code/test commits: `f86c18e1439794ec44928283205bdb5c34187f38`, `25b1771bf1e97fb9c2da9ccb8d621e370aa06c50`.
+- CI and physical-device verification for this follow-up are pending.
