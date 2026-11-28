@@ -5981,7 +5981,7 @@ No further work is pending for Milestone 113.
 
 - User confirmed the initial Batch 7 implementation was successful on-device.
 - Follow-up refinements requested: place Windrest Peak and Dragonspine under Mondstadt; place The Chasm and Chenyu Vale under Liyue; make each regional card independently expandable with a subtle, tiny control centered at its bottom; render subareas in a compact two-column grid.
-- Natlan and Nod-Krai still lack regional emblems. Do not invent or substitute unrelated artwork; keep the emblem area empty until valid source-backed assets are available.
+- Natlan and Nod-Krai have source-backed regional emblem URLs in the export (`UI_ChapterIcon_Nata.png` and `UI_ChapterIcon_Nordkalei.png`). The earlier omission was incorrect; map the source `icon` field (with `inner_icon` as a fallback) and render these official assets.
 - These refinements supersede the original flat detail presentation but do not change source progress values or aggregation rules.
 
 ### Next action
