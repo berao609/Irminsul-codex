@@ -32,23 +32,21 @@ private fun ChronicleSection(
     content: @Composable () -> Unit
 ) {
     var expanded by remember(title) { mutableStateOf(true) }
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(
-            Modifier.fillMaxWidth()
-                .then(if (collapsible) Modifier.clickable(role = Role.Button) { expanded = !expanded } else Modifier)
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
-                subtitle?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            }
-            if (collapsible) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+            subtitle?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        }
+        if (collapsible) {
+            IconButton(
+                onClick = { expanded = !expanded },
+                modifier = Modifier.align(Alignment.CenterHorizontally).size(24.dp)
+            ) {
                 AppIcon(
                     if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = if (expanded) "Collapse $title" else "Expand $title",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    modifier = Modifier.size(12.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                 )
             }
         }
@@ -97,21 +95,20 @@ fun ChronicleOverviewSection(accountCard: DataValue<StructuredData>, profileAndE
                 }
             }
             if (secondaryStatistics.isNotEmpty()) {
-                Row(
-                    Modifier.fillMaxWidth().clickable(role = Role.Button) { secondaryExpanded = !secondaryExpanded }.padding(vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(0.dp)) {
                     Text(
                         if (secondaryExpanded) "Additional statistics · ${secondaryStatistics.size}" else "View additional statistics · ${secondaryStatistics.size}",
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    AppIcon(
-                        if (secondaryExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
-                        contentDescription = if (secondaryExpanded) "Collapse additional statistics" else "Expand additional statistics",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    IconButton(onClick = { secondaryExpanded = !secondaryExpanded }, modifier = Modifier.size(22.dp)) {
+                        AppIcon(
+                            if (secondaryExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
+                            contentDescription = if (secondaryExpanded) "Collapse additional statistics" else "Expand additional statistics",
+                            modifier = Modifier.size(11.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        )
+                    }
                 }
                 if (secondaryExpanded) {
                     secondaryStatistics.chunked(3).forEach { row ->
@@ -296,7 +293,7 @@ private fun RegionDetailCard(region: ChronicleRegion, nested: Boolean = false) {
                 AppIcon(
                     if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = null,
-                    modifier = Modifier.size(14.dp),
+                    modifier = Modifier.size(11.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
