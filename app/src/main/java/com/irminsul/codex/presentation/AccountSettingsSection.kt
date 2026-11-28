@@ -13,13 +13,11 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -64,21 +62,21 @@ fun AccountCredentialsSection(
                 Text("Sign in with HoYoLAB")
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-            OutlinedTextField(
-                value = uid,
-                onValueChange = onUidChange,
-                label = { Text("Genshin UID (auto-filled on login)") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = cookie,
-                onValueChange = onCookieChange,
-                label = { Text("HoYoLAB Cookie (ltoken_v2 / ltuid_v2)") },
-                visualTransformation = PasswordVisualTransformation(),
-                maxLines = 3,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text("Genshin UID", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(uid.ifBlank { "Automatically filled after HoYoLAB sign-in" }, style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    if (cookie.isNotBlank()) "HoYoLAB session is saved securely on this device."
+                    else "No saved HoYoLAB session.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    "Account credentials are managed through HoYoLAB sign-in. Manual text entry is disabled to keep the app keyboard-free.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             if (credentialLoadError) {
                 Text(
                     "The saved session could not be unlocked. Clear it before signing in again.",
