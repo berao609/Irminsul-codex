@@ -183,76 +183,90 @@ private fun RegionOverviewCard(region: ChronicleRegion) {
 
 @Composable
 private fun RegionDetailCard(region: ChronicleRegion, nested: Boolean = false) {
-    Column(
+    val cardColor = if (nested) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
+    Box(
         Modifier.fillMaxWidth()
-            .background(
-                if (nested) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant,
-                RoundedCornerShape(14.dp)
-            )
-            .padding(if (nested) 12.dp else 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(cardColor)
     ) {
-        Row(
-            Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        if (!region.backgroundImageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = region.backgroundImageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+            Box(
+                Modifier.matchParentSize()
+                    .background(cardColor.copy(alpha = 0.88f))
+            )
+        }
+        Column(
+            Modifier.fillMaxWidth().padding(if (nested) 12.dp else 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            RegionEmblem(region, Modifier.size(if (nested) 42.dp else 56.dp))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text(region.name, style = if (nested) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                LinearProgressIndicator(
-                    region.progress,
-                    Modifier.fillMaxWidth().height(6.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.outlineVariant
-                )
-            }
-            Text(region.percentageLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        }
-
-        val progression = buildList {
-            region.reputationLevel?.let { add("Reputation · Lv. $it") }
-            region.statueLevel?.let { add("Statue of The Seven · Lv. $it") }
-        }
-        progression.forEach { label ->
-            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-
-        if (region.offerings.isNotEmpty()) {
-            Text("Offerings", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            region.offerings.forEach { offering ->
-                RegionProgressionRow(offering.name, offering.level, offering.iconUrl)
-            }
-        }
-
-        if (region.tribalReputations.isNotEmpty()) {
-            Text("Tribal Reputation", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            region.tribalReputations.forEach { tribe ->
-                RegionProgressionRow(tribe.name, tribe.level, tribe.iconUrl)
-            }
-        }
-
-        if (region.subareas.isNotEmpty()) {
-            Text("Subareas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            region.subareas.forEach { area ->
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(area.name, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                        Text(area.percentageLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-                    }
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                RegionEmblem(region, Modifier.size(if (nested) 42.dp else 56.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(region.name, style = if (nested) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     LinearProgressIndicator(
-                        area.progress,
-                        Modifier.fillMaxWidth().height(4.dp),
-                        color = MaterialTheme.colorScheme.secondary,
+                        region.progress,
+                        Modifier.fillMaxWidth().height(6.dp),
+                        color = MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.outlineVariant
                     )
                 }
+                Text(region.percentageLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
-        }
 
-        if (region.childRegions.isNotEmpty()) {
-            Text("Subregions", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            region.childRegions.forEach { child -> RegionDetailCard(child, nested = true) }
+            val progression = buildList {
+                region.reputationLevel?.let { add("Reputation · Lv. $it") }
+                region.statueLevel?.let { add("Statue of The Seven · Lv. $it") }
+            }
+            progression.forEach { label ->
+                Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+
+            if (region.offerings.isNotEmpty()) {
+                Text("Offerings", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                region.offerings.forEach { offering ->
+                    RegionProgressionRow(offering.name, offering.level, offering.iconUrl)
+                }
+            }
+
+            if (region.tribalReputations.isNotEmpty()) {
+                Text("Tribal Reputation", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                region.tribalReputations.forEach { tribe ->
+                    RegionProgressionRow(tribe.name, tribe.level, tribe.iconUrl)
+                }
+            }
+
+            if (region.subareas.isNotEmpty()) {
+                Text("Subareas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                region.subareas.forEach { area ->
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(area.name, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                            Text(area.percentageLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                        }
+                        LinearProgressIndicator(
+                            area.progress,
+                            Modifier.fillMaxWidth().height(4.dp),
+                            color = MaterialTheme.colorScheme.secondary,
+                            trackColor = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+                }
+            }
+
+            if (region.childRegions.isNotEmpty()) {
+                Text("Subregions", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                region.childRegions.forEach { child -> RegionDetailCard(child, nested = true) }
+            }
         }
     }
 }
