@@ -12,10 +12,11 @@ private val weaponReleaseDateByName: Map<String, String> = buildMap {
     fun add(date: String, names: String) {
         names.split("|").forEach { put(it.trim().lowercase(), date) }
     }
-    add("2020-09-27", "Amos' Bow|Aquila Favonia|Lost Prayer to the Sacred Winds|Primordial Jade Winged-Spear|Skyward Atlas|Skyward Blade|Skyward Harp|Skyward Pride|Skyward Spine|Wolf's Gravestone")
+    add("2020-09-27", "Amos' Bow|Aquila Favonia|Lost Prayer to the Sacred Winds|Primordial Jade Winged-Spear|Skyward Atlas|Skyward Blade|Skyward Harp|Skyward Pride|Skyward Spine|Wolf's Gravestone|Blackcliff Pole|Compound Bow|Crescent Pike|Deathmatch|Dragon's Bane|Eye of Perception|Favonius Codex|Favonius Greatsword|Favonius Lance|Favonius Sword|Favonius Warbow|Iron Sting|Lion's Roar|Mappa Mare|Prototype Amber|Prototype Archaic|Prototype Crescent|Prototype Rancour|Prototype Starglitter|Rainslasher|Royal Bow|Royal Greatsword|Royal Grimoire|Royal Longsword|Rust|Sacrificial Bow|Sacrificial Fragments|Sacrificial Greatsword|Sacrificial Sword|Serpent Spine|Solar Pearl|Sword of Descension|The Bell|The Black Sword|The Flute|The Stringless|The Viridescent Hunt|The Widsith|Whiteblind")
     add("2020-11-10", "Memory of Dust")
-    add("2020-11-30", "The Unforged|Vortex Vanquisher")
-    add("2020-12-22", "Summit Shaper|Dragonspine Spear|Frostbearer")
+    add("2020-10-31", "Blackcliff Agate|Blackcliff Longsword|Blackcliff Slasher|Blackcliff Warbow")
+    add("2020-11-30", "The Unforged|Vortex Vanquisher|Royal Spear")
+    add("2020-12-22", "Summit Shaper|Dragonspine Spear|Frostbearer|Snow-Tombed Starsilver")
     add("2021-02-02", "Primordial Jade Cutter")
     add("2021-02-22", "Staff of Homa|Lithic Blade|Lithic Spear")
     add("2021-03-16", "Elegy for the End|The Alley Flash|Wine and Song")
@@ -66,7 +67,7 @@ private val weaponReleaseDateByName: Map<String, String> = buildMap {
     add("2024-06-06", "Cloudforged")
     add("2024-06-24", "Silvershower Heartstrings")
     add("2024-08-05", "Lumidouce Elegy")
-    add("2024-08-27", "Surf's Up|Ash-Graven Drinking Horn|Chain Breaker|Earth Shaker|Flute of Ezpitzal|Footprint of the Rainbow|Ring of Yaxche|Waveriding Whirl")
+    add("2024-08-27", "Surf's Up|Ash-Graven Drinking Horn|Chain Breaker|Earth Shaker|Flute of Ezpitzal|Footprint of the Rainbow|Ring of Yaxche")
     add("2024-09-16", "Fang of the Mountain King")
     add("2024-10-08", "Peak Patrol Song|Mountain-Bracing Bolt|Sturdy Bone")
     add("2024-10-28", "Fruitful Hook")
