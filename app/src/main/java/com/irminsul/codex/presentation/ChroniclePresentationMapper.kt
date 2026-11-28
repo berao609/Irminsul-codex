@@ -67,6 +67,7 @@ data class ChronicleRegion(
     val progress: Float,
     val percentageLabel: String,
     val iconUrl: String? = null,
+    val iconUrlCandidates: List<String> = listOfNotNull(iconUrl),
     val backgroundImageUrl: String? = null,
     val reputationLevel: Int? = null,
     val statueLevel: Int? = null,
@@ -191,7 +192,8 @@ object ChroniclePresentationMapper {
                 name = name,
                 progress = progress.first,
                 percentageLabel = progress.second,
-                iconUrl = regionFields["icon"].httpUrl() ?: regionFields["inner_icon"].httpUrl() ?: regionFields["image"].httpUrl(),
+                iconUrl = listOfNotNull(regionFields["icon"].httpUrl(), regionFields["inner_icon"].httpUrl(), regionFields["cover"].httpUrl(), regionFields["image"].httpUrl(), offerings.firstNotNullOfOrNull { it.iconUrl }).firstOrNull(),
+                iconUrlCandidates = listOfNotNull(regionFields["icon"].httpUrl(), regionFields["inner_icon"].httpUrl(), regionFields["cover"].httpUrl(), regionFields["image"].httpUrl(), offerings.firstNotNullOfOrNull { it.iconUrl }).distinct(),
                 backgroundImageUrl = regionFields["background_image"].httpUrl(),
                 reputationLevel = if (progressionType == "Reputation") regionFields["level"].displayScalar()?.toIntOrNull() else null,
                 statueLevel = regionFields["seven_statue_level"].displayScalar()?.toIntOrNull()?.takeIf { it > 0 },
@@ -208,7 +210,8 @@ object ChroniclePresentationMapper {
             "dragonspine" to "mondstadt",
             "the chasm" to "liyue",
             "chasm" to "liyue",
-            "chenyu vale" to "liyue"
+            "chenyu vale" to "liyue",
+            "ancient sacred mountain" to "natlan"
         )
         val grouped = parsed.map { region ->
             val parentName = requestedParents[region.name.trim().lowercase(java.util.Locale.ROOT)]
