@@ -1,0 +1,67 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "eee923dcd0f181e17debd7e83a8b1aca",
+    "entities": [
+      {
+        "tableName": "accounts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `server` TEXT NOT NULL, `createdAtEpochMillis` INTEGER NOT NULL, `lastUpdatedAtEpochMillis` INTEGER NOT NULL, PRIMARY KEY(`uid`, `server`))",
+        "fields": [
+          {"fieldPath":"uid","columnName":"uid","affinity":"TEXT","notNull":true},
+          {"fieldPath":"server","columnName":"server","affinity":"TEXT","notNull":true},
+          {"fieldPath":"createdAtEpochMillis","columnName":"createdAtEpochMillis","affinity":"INTEGER","notNull":true},
+          {"fieldPath":"lastUpdatedAtEpochMillis","columnName":"lastUpdatedAtEpochMillis","affinity":"INTEGER","notNull":true}
+        ],
+        "primaryKey":{"autoGenerate":false,"columnNames":["uid","server"]}
+      },
+      {
+        "tableName": "account_snapshots",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`snapshotId` TEXT NOT NULL, `uid` TEXT NOT NULL, `server` TEXT NOT NULL, `exportedAt` TEXT NOT NULL, `exportedAtEpochMillis` INTEGER NOT NULL, `exportFormatVersion` INTEGER NOT NULL, `overallStatus` TEXT NOT NULL, `origin` TEXT NOT NULL, `rawJson` TEXT NOT NULL, PRIMARY KEY(`snapshotId`), FOREIGN KEY(`uid`, `server`) REFERENCES `accounts`(`uid`, `server`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {"fieldPath":"snapshotId","columnName":"snapshotId","affinity":"TEXT","notNull":true},
+          {"fieldPath":"uid","columnName":"uid","affinity":"TEXT","notNull":true},
+          {"fieldPath":"server","columnName":"server","affinity":"TEXT","notNull":true},
+          {"fieldPath":"exportedAt","columnName":"exportedAt","affinity":"TEXT","notNull":true},
+          {"fieldPath":"exportedAtEpochMillis","columnName":"exportedAtEpochMillis","affinity":"INTEGER","notNull":true},
+          {"fieldPath":"exportFormatVersion","columnName":"exportFormatVersion","affinity":"INTEGER","notNull":true},
+          {"fieldPath":"overallStatus","columnName":"overallStatus","affinity":"TEXT","notNull":true},
+          {"fieldPath":"origin","columnName":"origin","affinity":"TEXT","notNull":true},
+          {"fieldPath":"rawJson","columnName":"rawJson","affinity":"TEXT","notNull":true}
+        ],
+        "primaryKey":{"autoGenerate":false,"columnNames":["snapshotId"]},
+        "indices":[
+          {"name":"index_account_snapshots_uid_server_exportedAtEpochMillis","unique":false,"columnNames":["uid","server","exportedAtEpochMillis"],"orders":[],"createSql":"CREATE INDEX IF NOT EXISTS `index_account_snapshots_uid_server_exportedAtEpochMillis` ON `${TABLE_NAME}` (`uid`, `server`, `exportedAtEpochMillis`)"}],
+        "foreignKeys":[{"table":"accounts","onDelete":"CASCADE","onUpdate":"NO ACTION","columns":["uid","server"],"referencedColumns":["uid","server"]}]
+      },
+      {
+        "tableName": "account_snapshot_json_chunks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`snapshotId` TEXT NOT NULL, `chunkIndex` INTEGER NOT NULL, `content` TEXT NOT NULL, PRIMARY KEY(`snapshotId`, `chunkIndex`), FOREIGN KEY(`snapshotId`) REFERENCES `account_snapshots`(`snapshotId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {"fieldPath":"snapshotId","columnName":"snapshotId","affinity":"TEXT","notNull":true},
+          {"fieldPath":"chunkIndex","columnName":"chunkIndex","affinity":"INTEGER","notNull":true},
+          {"fieldPath":"content","columnName":"content","affinity":"TEXT","notNull":true}
+        ],
+        "primaryKey":{"autoGenerate":false,"columnNames":["snapshotId","chunkIndex"]},
+        "indices":[{"name":"index_account_snapshot_json_chunks_snapshotId","unique":false,"columnNames":["snapshotId"],"orders":[],"createSql":"CREATE INDEX IF NOT EXISTS `index_account_snapshot_json_chunks_snapshotId` ON `${TABLE_NAME}` (`snapshotId`)"}],
+        "foreignKeys":[{"table":"account_snapshots","onDelete":"CASCADE","onUpdate":"NO ACTION","columns":["snapshotId"],"referencedColumns":["snapshotId"]}]
+      },
+      {
+        "tableName":"private_account_data",
+        "createSql":"CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`uid` TEXT NOT NULL, `dailyNoteJson` TEXT, `dailyNoteRetrievedAt` TEXT, `accountProfileJson` TEXT, `accountProfileRetrievedAt` TEXT, PRIMARY KEY(`uid`))",
+        "fields":[
+          {"fieldPath":"uid","columnName":"uid","affinity":"TEXT","notNull":true},
+          {"fieldPath":"dailyNoteJson","columnName":"dailyNoteJson","affinity":"TEXT"},
+          {"fieldPath":"dailyNoteRetrievedAt","columnName":"dailyNoteRetrievedAt","affinity":"TEXT"},
+          {"fieldPath":"accountProfileJson","columnName":"accountProfileJson","affinity":"TEXT"},
+          {"fieldPath":"accountProfileRetrievedAt","columnName":"accountProfileRetrievedAt","affinity":"TEXT"}
+        ],
+        "primaryKey":{"autoGenerate":false,"columnNames":["uid"]}
+      }
+    ],
+    "setupQueries":[
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'eee923dcd0f181e17debd7e83a8b1aca')"
+    ]
+  }
+}

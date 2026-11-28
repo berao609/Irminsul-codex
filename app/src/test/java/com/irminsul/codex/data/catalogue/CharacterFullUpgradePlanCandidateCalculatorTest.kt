@@ -84,6 +84,20 @@ class CharacterFullUpgradePlanCandidateCalculatorTest {
         assertFalse(complete.requirements.any { it.itemId == "book-normal" || it.itemId == "book-burst" })
     }
 
+    @Test fun emptyTalentStageIsInvalidAndWithholdsAllTotals() {
+        val result = CharacterFullUpgradePlanCandidateCalculator.calculate(
+            levelPlan(), "10000002", "7.2",
+            listOf(
+                CharacterTalentLevelRange("normal", 1, 2),
+                CharacterTalentLevelRange("skill", 1, 1),
+                CharacterTalentLevelRange("burst", 1, 1)
+            ),
+            listOf(talent("normal", 1, 2, "book-normal").copy(costs = emptyList()))
+        )
+        assertEquals(CharacterUpgradePlanCandidateStatus.INVALID, result.status)
+        assertTrue(result.requirements.isEmpty())
+    }
+
     @Test fun rejectsInvalidTalentLevels() {
         val result = CharacterFullUpgradePlanCandidateCalculator.calculate(
             levelPlan(), "10000002", "7.2",

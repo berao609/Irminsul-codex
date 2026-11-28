@@ -3,13 +3,11 @@ package com.irminsul.codex.presentation
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.irminsul.codex.domain.model.CharacterSnapshot
 import com.irminsul.codex.domain.model.DataValue
@@ -80,7 +78,7 @@ fun MaterialsPlannerSection(
         val legacy = if (selectedTargetId == legacyTargetId) {
             preferences.getString("material_current_level", "")
         } else {
-            selectedTarget?.currentLevel?.toString() ?: ""
+            selectedTarget?.currentLevel?.toString() ?: "1"
         }
         mutableStateOf(stored ?: legacy ?: "")
     }
@@ -91,7 +89,7 @@ fun MaterialsPlannerSection(
         } else {
             ""
         }
-        mutableStateOf(stored ?: legacy ?: "")
+        mutableStateOf(stored ?: legacy ?: currentLevel)
     }
     val planStorageKey = remember(selectedTargetId) {
         "manual_material_plan_rows_" + selectedTargetId
@@ -151,11 +149,11 @@ fun MaterialsPlannerSection(
     var weaponCurrentLevel by remember(selectedWeaponId) {
         mutableStateOf(
             preferences.getString("material_weapon_current_$selectedWeaponId", null)
-                ?: selectedWeaponOption?.currentLevel?.toString().orEmpty()
+                ?: selectedWeaponOption?.currentLevel?.toString().orEmpty().ifBlank { "1" }
         )
     }
     var weaponTargetLevel by remember(selectedWeaponId) {
-        mutableStateOf(preferences.getString("material_weapon_target_$selectedWeaponId", "") ?: "")
+        mutableStateOf(preferences.getString("material_weapon_target_$selectedWeaponId", "") ?: weaponCurrentLevel)
     }
     var weaponMenuExpanded by remember { mutableStateOf(false) }
     var manualTrackingExpanded by remember { mutableStateOf(false) }
@@ -270,25 +268,16 @@ fun MaterialsPlannerSection(
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = currentLevel,
-                        onValueChange = { currentLevel = it.filter(Char::isDigit).take(3) },
-                        label = { Text("Current") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    OutlinedTextField(
-                        value = targetLevel,
-                        onValueChange = { targetLevel = it.filter(Char::isDigit).take(3) },
-                        label = { Text("Target") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
+                val currentLevelValue = currentLevel.toIntOrNull()?.coerceIn(1, 90) ?: 1
+                val targetLevelValue = targetLevel.toIntOrNull()?.coerceIn(currentLevelValue, 90) ?: currentLevelValue
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    WheelNumberPicker("Current", currentLevelValue, 1, 90, Modifier.weight(1f)) {
+                        currentLevel = it.toString()
+                        if (targetLevelValue < it) targetLevel = it.toString()
+                    }
+                    WheelNumberPicker("Target", targetLevelValue, currentLevelValue, 90, Modifier.weight(1f)) {
+                        targetLevel = it.toString()
+                    }
                 }
             }
         }
@@ -311,41 +300,25 @@ fun MaterialsPlannerSection(
                         )
                     }
                     talentValues.forEach { (track, label, levels) ->
-                        Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                        val currentValue = levels.first.toIntOrNull()?.coerceIn(1, 10) ?: 1
+                        val targetValue = levels.second.toIntOrNull()?.coerceIn(currentValue, 10) ?: currentValue
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium)
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                OutlinedTextField(
-                                    value = levels.first,
-                                    onValueChange = { next ->
-                                        val level = next.filter(Char::isDigit).take(2)
-                                        when (track) {
-                                            "normal" -> normalTalentCurrent = level
-                                            "skill" -> skillTalentCurrent = level
-                                            "burst" -> burstTalentCurrent = level
-                                        }
-                                    },
-                                    label = { Text("Current") },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    singleLine = true,
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                OutlinedTextField(
-                                    value = levels.second,
-                                    onValueChange = { next ->
-                                        val level = next.filter(Char::isDigit).take(2)
-                                        when (track) {
-                                            "normal" -> normalTalentTarget = level
-                                            "skill" -> skillTalentTarget = level
-                                            "burst" -> burstTalentTarget = level
-                                        }
-                                    },
-                                    label = { Text("Target") },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    singleLine = true,
-                                    modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                                WheelNumberPicker("Current", currentValue, 1, 10, Modifier.weight(1f)) { next ->
+                                    when (track) {
+                                        "normal" -> { normalTalentCurrent = next.toString(); if (targetValue < next) normalTalentTarget = next.toString() }
+                                        "skill" -> { skillTalentCurrent = next.toString(); if (targetValue < next) skillTalentTarget = next.toString() }
+                                        "burst" -> { burstTalentCurrent = next.toString(); if (targetValue < next) burstTalentTarget = next.toString() }
+                                    }
+                                }
+                                WheelNumberPicker("Target", targetValue, currentValue, 10, Modifier.weight(1f)) { next ->
+                                    when (track) {
+                                        "normal" -> normalTalentTarget = next.toString()
+                                        "skill" -> skillTalentTarget = next.toString()
+                                        "burst" -> burstTalentTarget = next.toString()
+                                    }
+                                }
                             }
                         }
                     }
@@ -394,25 +367,16 @@ fun MaterialsPlannerSection(
                             }
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        OutlinedTextField(
-                            value = weaponCurrentLevel,
-                            onValueChange = { weaponCurrentLevel = it.filter(Char::isDigit).take(3) },
-                            label = { Text("Current level") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        OutlinedTextField(
-                            value = weaponTargetLevel,
-                            onValueChange = { weaponTargetLevel = it.filter(Char::isDigit).take(3) },
-                            label = { Text("Target level") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        )
+                    val weaponCurrentValue = weaponCurrentLevel.toIntOrNull()?.coerceIn(1, 90) ?: 1
+                    val weaponTargetValue = weaponTargetLevel.toIntOrNull()?.coerceIn(weaponCurrentValue, 90) ?: weaponCurrentValue
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        WheelNumberPicker("Current", weaponCurrentValue, 1, 90, Modifier.weight(1f)) {
+                            weaponCurrentLevel = it.toString()
+                            if (weaponTargetValue < it) weaponTargetLevel = it.toString()
+                        }
+                        WheelNumberPicker("Target", weaponTargetValue, weaponCurrentValue, 90, Modifier.weight(1f)) {
+                            weaponTargetLevel = it.toString()
+                        }
                     }
                 }
             }
@@ -426,12 +390,12 @@ fun MaterialsPlannerSection(
             }
         }
 
-        OutlinedButton(
+        TextButton(
             onClick = { manualTrackingExpanded = !manualTrackingExpanded },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
         ) {
-            Text(if (manualTrackingExpanded) "Hide manual material tracking" else "Manual material tracking (optional)")
+            Text(if (manualTrackingExpanded) "Hide manual material tracking" else "Show manual material tracking", style = MaterialTheme.typography.labelSmall)
         }
         if (manualTrackingExpanded) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -448,12 +412,11 @@ fun MaterialsPlannerSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Button(
-                    onClick = { rows.add(ManualMaterialPlanRow(id = UUID.randomUUID().toString())) },
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Add material")
-                }
+                Text(
+                    "Existing saved rows remain available. Create new material plans in the Enhancement Calculator.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             if (rows.isEmpty()) {
@@ -467,7 +430,7 @@ fun MaterialsPlannerSection(
                     ) {
                         Text("Your material list is empty", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Text(
-                            "Add a material to track its required and owned quantities. Existing saved rows are loaded automatically.",
+                            "No saved custom rows. Use the Enhancement Calculator to create new material plans.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -497,34 +460,16 @@ fun MaterialsPlannerSection(
                             )
                             TextButton(onClick = { rows.removeAt(index) }) { Text("Remove") }
                         }
-                        OutlinedTextField(
-                            value = row.materialName,
-                            onValueChange = { rows[index] = row.copy(materialName = it) },
-                            label = { Text("Material name") },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                        Text(
+                            row.materialName.ifBlank { "Unnamed material" },
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
                         )
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            OutlinedTextField(
-                                value = row.requiredQuantity,
-                                onValueChange = { rows[index] = row.copy(requiredQuantity = it.filter(Char::isDigit)) },
-                                label = { Text("Required") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            OutlinedTextField(
-                                value = row.ownedQuantity,
-                                onValueChange = { rows[index] = row.copy(ownedQuantity = it.filter(Char::isDigit)) },
-                                label = { Text("Owned") },
-                                placeholder = { Text("Not entered") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                singleLine = true,
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp)
-                            )
+                        ManualQuantityStepper("Required", row.requiredQuantity) {
+                            rows[index] = row.copy(requiredQuantity = it)
+                        }
+                        ManualQuantityStepper("Owned", row.ownedQuantity) {
+                            rows[index] = row.copy(ownedQuantity = it)
                         }
                         when (calculation.status) {
                             ManualPlanCalculationStatus.COMPLETE -> {
@@ -568,6 +513,29 @@ fun MaterialsPlannerSection(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        }
+    }
+}
+
+@Composable
+private fun ManualQuantityStepper(label: String, value: String, onChange: (String) -> Unit) {
+    val parsed = value.toLongOrNull()?.coerceAtLeast(0L)
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        TextButton(
+            onClick = { onChange(((parsed ?: 0L) - 1L).coerceAtLeast(0L).toString()) },
+            enabled = parsed != null && parsed > 0L,
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+        ) { Text("−") }
+        Text(parsed?.toString() ?: "—", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        TextButton(
+            onClick = { onChange(((parsed ?: 0L) + 1L).coerceAtMost(Long.MAX_VALUE - 1L).toString()) },
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+        ) { Text("+") }
+        if (parsed == null) {
+            TextButton(onClick = { onChange("0") }, contentPadding = PaddingValues(horizontal = 3.dp, vertical = 0.dp)) {
+                Text("0", style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }

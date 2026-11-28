@@ -1,7 +1,5 @@
 package com.irminsul.codex.presentation
 
-import android.content.SharedPreferences
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,18 +13,16 @@ import com.irminsul.codex.domain.model.CharacterSnapshot
 
 /**
  * Presentation-only container for the Tools destination.
- * Calculator preferences and lineup selection state remain owned by the caller.
+ * The enhancement calculator opens as a dedicated screen owned by the caller.
  */
 @Composable
 fun ToolsSection(
     characters: List<CharacterSnapshot>,
-    preferences: SharedPreferences,
-    showMaterialsPlanner: Boolean,
     showLineupSimulator: Boolean,
     selectedLineupCharacterIds: List<Int>,
     rosterIsStale: Boolean,
     rosterIsPartial: Boolean,
-    onToggleMaterialsPlanner: () -> Unit,
+    onOpenEnhancementCalculator: () -> Unit,
     onToggleLineupSimulator: () -> Unit,
     onToggleLineupCharacter: (Int) -> Unit
 ) {
@@ -39,48 +35,35 @@ fun ToolsSection(
         )
 
         Card(
-            modifier = Modifier.fillMaxWidth().clickable(onClick = onToggleMaterialsPlanner),
+            onClick = onOpenEnhancementCalculator,
+            modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AppIcon(AppIconName.TOOLS, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("Materials Calculator", fontWeight = FontWeight.SemiBold)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text("Enhancement Calculator", fontWeight = FontWeight.SemiBold)
                     Text(
-                        "Automatically plan character and weapon upgrade materials",
+                        "Choose any 4-star or 5-star character or weapon and calculate upgrade materials",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                AppIcon(
-                    if (showMaterialsPlanner) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
-                    contentDescription = if (showMaterialsPlanner) "Collapse Materials Calculator" else "Expand Materials Calculator"
-                )
+                AppIcon(AppIconName.CHEVRON_RIGHT, contentDescription = "Open Enhancement Calculator")
             }
-        }
-        if (showMaterialsPlanner) {
-            MaterialsPlannerSection(
-                characters = characters,
-                preferences = preferences
-            )
         }
 
         Card(
-            modifier = Modifier.fillMaxWidth().clickable(onClick = onToggleLineupSimulator),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text("Lineup Simulator", fontWeight = FontWeight.SemiBold)
                     Text(
                         "${selectedLineupCharacterIds.size}/4 characters selected",
@@ -88,10 +71,14 @@ fun ToolsSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                AppIcon(
-                    if (showLineupSimulator) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
-                    contentDescription = if (showLineupSimulator) "Collapse Lineup Simulator" else "Expand Lineup Simulator"
-                )
+                IconButton(onClick = onToggleLineupSimulator, modifier = Modifier.align(Alignment.CenterHorizontally).size(24.dp)) {
+                    AppIcon(
+                        if (showLineupSimulator) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
+                        contentDescription = if (showLineupSimulator) "Collapse Lineup Simulator" else "Expand Lineup Simulator",
+                        modifier = Modifier.size(12.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                    )
+                }
             }
         }
         if (showLineupSimulator) {

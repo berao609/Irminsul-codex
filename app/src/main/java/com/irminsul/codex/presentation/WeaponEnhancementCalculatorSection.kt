@@ -3,15 +3,15 @@ package com.irminsul.codex.presentation
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,7 +21,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.irminsul.codex.data.catalogue.BundledWeaponAscensionCandidateRepository
 import com.irminsul.codex.data.catalogue.GenshinDbUpgradeCostCandidate
@@ -63,13 +62,6 @@ internal fun WeaponEnhancementCalculatorSection(
     val maximumUnlockedLevel = weapon.ascensionLevel?.let { rank ->
         weaponAscensionLevelCaps.getOrNull(rank)
     }
-    var currentExperience by remember(weapon.id) {
-        mutableStateOf(preferences.getString("weapon_plan_current_exp_${weapon.id}", "0") ?: "0")
-    }
-    LaunchedEffect(weapon.id, currentExperience) {
-        preferences.edit().putString("weapon_plan_current_exp_${weapon.id}", currentExperience).apply()
-    }
-
     var ascensionCandidates by remember(weapon.id) {
         mutableStateOf<List<GenshinDbUpgradeCostCandidate>?>(null)
     }
@@ -91,7 +83,7 @@ internal fun WeaponEnhancementCalculatorSection(
             maximumUnlockedLevel?.let { maxOf(it, targetCap) } ?: targetCap
         }
     }
-    val currentExp = currentExperience.toLongOrNull()
+    val currentExp = 0L
     val curve = when (weapon.rarity) {
         4 -> GenshinWeaponExperienceCurveCandidate.fourStar
         5 -> GenshinWeaponExperienceCurveCandidate.fiveStar
@@ -117,7 +109,7 @@ internal fun WeaponEnhancementCalculatorSection(
 
     val combinedPlan = if (
         rarity != null && weapon.ascensionLevel != null &&
-        current != null && target != null && currentExp != null &&
+        current != null && target != null &&
         ascensionCandidates != null && curve != null
     ) {
         WeaponUpgradePlanCandidateCalculator.calculate(
@@ -155,15 +147,6 @@ internal fun WeaponEnhancementCalculatorSection(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            OutlinedTextField(
-                value = currentExperience,
-                onValueChange = { currentExperience = it.filter(Char::isDigit).take(9) },
-                label = { Text("Current EXP within level") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
             when {
                 rarity == null -> Text(
                     "Only 4-star and 5-star weapons are supported.",
@@ -175,8 +158,8 @@ internal fun WeaponEnhancementCalculatorSection(
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
-                current == null || target == null || currentExp == null -> Text(
-                    "Enter valid current and target levels, plus the current EXP within the level.",
+                current == null || target == null -> Text(
+                    "Enter valid current and target levels.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -248,23 +231,18 @@ internal fun WeaponEnhancementCalculatorSection(
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Medium
                                         )
-                                        OutlinedTextField(
-                                            value = owned,
-                                            onValueChange = { owned = it.filter(Char::isDigit).take(12) },
-                                            label = { Text("Owned (optional)") },
-                                            placeholder = { Text("Unknown") },
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                            singleLine = true,
-                                            modifier = Modifier.fillMaxWidth(),
-                                            shape = RoundedCornerShape(12.dp)
-                                        )
                                         val ownedQuantity = owned.toLongOrNull()
+                                        WeaponOwnedQuantityStepper("Owned", ownedQuantity) { next ->
+                                            owned = next?.toString().orEmpty()
+                                        }
                                         if (ownedQuantity != null) {
                                             Text(
                                                 "Remaining: ${(requirement.quantity - ownedQuantity).coerceAtLeast(0L)}",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.primary
                                             )
+                                        } else {
+                                            Text("Remaining: enter owned quantity", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                     }
                                 }
@@ -272,11 +250,33 @@ internal fun WeaponEnhancementCalculatorSection(
                         }
                     }
                     Text(
-                        "Ore, Mora, weapon ascension materials, and enemy drops are combined from version-pinned Genshin-DB 7.2 candidate data. Incomplete ascension data withholds the combined totals. Source permission and human review are pending; weapon fodder is not included.",
+                        "Current EXP within the selected level is assumed to be 0. Ore, Mora, weapon ascension materials, and enemy drops are combined from version-pinned Genshin-DB 7.2 candidate data. Incomplete ascension data withholds the combined totals. Source permission and human review are pending; weapon fodder is not included.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeaponOwnedQuantityStepper(label: String, value: Long?, onChange: (Long?) -> Unit) {
+    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        TextButton(
+            onClick = { onChange(((value ?: 0L) - 1L).coerceAtLeast(0L)) },
+            enabled = value != null && value > 0L,
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 3.dp, vertical = 0.dp)
+        ) { Text("−") }
+        Text(value?.toString() ?: "—", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        TextButton(
+            onClick = { onChange(((value ?: 0L) + 1L).coerceAtMost(Long.MAX_VALUE - 1L)) },
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 3.dp, vertical = 0.dp)
+        ) { Text("+") }
+        if (value == null) {
+            TextButton(onClick = { onChange(0L) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 3.dp, vertical = 0.dp)) {
+                Text("0", style = MaterialTheme.typography.labelSmall)
             }
         }
     }

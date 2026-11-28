@@ -82,7 +82,7 @@ internal fun CodexScreen(
     var selectedTab by remember { mutableStateOf(CodexTab.HOME) }
     var visualsBackStack by rememberSaveable { mutableStateOf(listOf(VisualsDestination.OVERVIEW)) }
     var showAiSheet by remember { mutableStateOf(false) }
-    var showMaterialsPlanner by remember { mutableStateOf(false) }
+    var showEnhancementCalculator by remember { mutableStateOf(false) }
     var showLineupSimulator by remember { mutableStateOf(false) }
     var selectedLineupCharacterIds by remember { mutableStateOf(emptyList<Int>()) }
     val aiSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -259,6 +259,12 @@ internal fun CodexScreen(
         backFromVisuals()
     }
 
+    BackHandler(
+        enabled = selectedTab == CodexTab.TOOLS && showEnhancementCalculator && !showAiSheet
+    ) {
+        showEnhancementCalculator = false
+    }
+
     if (showWebLogin) {
         HoYoLabLoginDialog(
             onCookieCaptured = { handleWebLoginSuccess(it) },
@@ -266,16 +272,22 @@ internal fun CodexScreen(
         )
     }
 
+    val isNestedDestination =
+        (selectedTab == CodexTab.TOOLS && showEnhancementCalculator) ||
+            (selectedTab == CodexTab.VISUALS && visualsBackStack.size > 1)
+
     Scaffold(
         bottomBar = {
-            CodexBottomNavigationBar(
-                selectedTab = selectedTab,
-                onTabSelected = { tab ->
-                    selectedTab = tab
-                    if (tab == CodexTab.ACCOUNT) showCredentials = true
-                },
-                onOpenAi = { showAiSheet = true }
-            )
+            if (!isNestedDestination) {
+                CodexBottomNavigationBar(
+                    selectedTab = selectedTab,
+                    onTabSelected = { tab ->
+                        selectedTab = tab
+                        if (tab == CodexTab.ACCOUNT) showCredentials = true
+                    },
+                    onOpenAi = { showAiSheet = true }
+                )
+            }
         }
     ) { innerPadding ->
         if (isInitialSignIn) {
@@ -287,6 +299,30 @@ internal fun CodexScreen(
                 onSignIn = { showWebLogin = true },
                 onClearSavedCredentials = { clearSavedCredentials() }
             )
+        } else if (selectedTab == CodexTab.TOOLS && showEnhancementCalculator) {
+            val toolsCharacters = when (val value = accountExportState.snapshot?.characters) {
+                is DataValue.Available -> value.value
+                is DataValue.Stale -> value.value
+                else -> emptyList()
+            }
+            Column(Modifier.fillMaxSize().padding(innerPadding)) {
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 8.dp, end = 20.dp, top = 8.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    IconButton(onClick = { showEnhancementCalculator = false }) {
+                        AppIcon(AppIconName.BACK, contentDescription = "Back to Tools")
+                    }
+                    Text("Enhancement Calculator", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Column(
+                    Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(20.dp)
+                ) {
+                    EnhancementCalculatorSection(characters = toolsCharacters, preferences = prefs)
+                }
+            }
         } else if (selectedTab == CodexTab.VISUALS) {
             VisualsSection(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
@@ -356,13 +392,11 @@ internal fun CodexScreen(
                     val activeLineupIds = selectedLineupCharacterIds.filter { it in availableLineupIds }
                     ToolsSection(
                         characters = toolsCharacters,
-                        preferences = prefs,
-                        showMaterialsPlanner = showMaterialsPlanner,
                         showLineupSimulator = showLineupSimulator,
                         selectedLineupCharacterIds = activeLineupIds,
                         rosterIsStale = accountExportState.snapshot?.characters is DataValue.Stale,
                         rosterIsPartial = accountExportState.snapshot?.sections?.get("characters")?.status?.name == "PARTIAL",
-                        onToggleMaterialsPlanner = { showMaterialsPlanner = !showMaterialsPlanner },
+                        onOpenEnhancementCalculator = { showEnhancementCalculator = true },
                         onToggleLineupSimulator = { showLineupSimulator = !showLineupSimulator },
                         onToggleLineupCharacter = { characterId ->
                             selectedLineupCharacterIds = LineupSelectionRules.toggle(activeLineupIds, characterId)

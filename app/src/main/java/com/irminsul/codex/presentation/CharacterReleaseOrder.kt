@@ -7,7 +7,7 @@ import com.irminsul.codex.domain.model.CharacterSnapshot
  * Characters released in the same update are alphabetized; unknown names remain at the end.
  */
 private val releaseGroups = listOf(
-    listOf("Amber", "Barbara", "Beidou", "Bennett", "Chongyun", "Diluc", "Fischl", "Jean", "Kaeya", "Keqing", "Klee", "Lisa", "Mona", "Ningguang", "Noelle", "Qiqi", "Razor", "Sucrose", "Traveler", "Venti", "Xiangling", "Xingqiu"),
+    listOf("Aether", "Amber", "Barbara", "Beidou", "Bennett", "Chongyun", "Diluc", "Fischl", "Jean", "Kaeya", "Keqing", "Klee", "Lisa", "Mona", "Ningguang", "Noelle", "Qiqi", "Razor", "Sucrose", "Traveler", "Lumine", "Venti", "Xiangling", "Xingqiu"),
     listOf("Diona", "Tartaglia", "Xinyan", "Zhongli"),
     listOf("Albedo", "Ganyu"),
     listOf("Hu Tao", "Xiao"),
@@ -59,13 +59,16 @@ private val releaseGroups = listOf(
     listOf("Sandrone"),
     listOf("Alyosha", "Odette"),
     listOf("Vesna", "Vodyanitsa"),
-    listOf("Mitya", "Valeriy")
+    listOf("Mitya", "Valeriy", "Manekin", "Manekina")
 )
 
 private val releaseRankByName = releaseGroups
     .asReversed()
-    .flatMapIndexed { versionIndex, names -> names.map { it.lowercase() to versionIndex } }
+    .flatMapIndexed { releaseIndex, names -> names.map { it.lowercase() to releaseIndex } }
     .toMap()
+
+internal fun characterReleaseIndex(name: String): Int? =
+    releaseRankByName[name.trim().lowercase()]
 
 fun sortCharactersByRelease(characters: List<CharacterSnapshot>): List<CharacterSnapshot> =
     characters.sortedWith(

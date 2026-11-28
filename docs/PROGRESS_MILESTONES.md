@@ -6065,3 +6065,202 @@ Batch 7 is complete. Continue with the next planned UI Revamp task without reope
 ### Next action
 
 Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account repository, data models, snapshot persistence, JSON export contract, and asset cache. Design the smallest compatible channel boundaries before implementation; preserve existing behavior and add independent partial-failure tests.
+
+---
+
+## Milestone 116 - UI Revamp Batch 9: Character and Weapon Fidelity Started
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 9  
+**Status:** Initial implementation committed; CI and physical-device verification pending.
+
+### Scope and decisions
+
+- Continue the character-first Battle Chronicles experience and preserve the existing Character Roster and Character Details destinations.
+- Add a dedicated Weapon Roster destination with weapon rarity and weapon-type filters plus clear/reset behavior.
+- Use source-backed weapon records attached to retrieved character entries. The current model does not establish a complete inventory of unequipped weapons; the UI discloses this limitation.
+- Do not reintroduce the rejected character rarity filter or redundant sorting controls.
+- Batch 10 is separately approved for Chronicles foreground-surface transparency and visual consistency after Batch 9.
+
+### Initial implementation
+
+- Branch: `ui-revamp/batch-9-character-weapon-fidelity`
+- PR: #17 - https://github.com/berao609/Irminsul-codex/pull/17
+- Added `VisualsDestination.WEAPON_ROSTER` and connected it to the Battle Chronicles overview.
+- Added `WeaponShowcaseSection.kt` for a deduplicated equipped-weapon grid, weapon rarity/type filters, reset behavior, source-backed artwork, and equipped-character attribution.
+- Added `WeaponRosterRules.kt` and `WeaponRosterRulesTest.kt` for deterministic deduplication and filter coverage.
+- Existing character release ordering, rarity backgrounds, selected highlight, roster filters, and character detail presentation remain in place.
+
+### Implementation commits
+
+- `c23ff1aa032ac6cfcae5cb0b6707bb9e1355a0fc` - add Weapon Roster section.
+- `0447592acb479735bcc8c468d28c59639320bcd0` - add Weapon Roster navigation destination.
+- `eab75c5926d223561ec9654fbf76d655cdaa4ecf` - connect overview and destination.
+- `603dfbf25f4afbb890bad3a2a732e3368e6b1fd8` - extract deterministic weapon roster rules.
+- `fc8a2f91f993f4db80771a96cb877dbc481cc32b` - add roster rules tests.
+- `287a14b53157885db7934732040a6521e73f2a34` - use tested roster rules in the UI.
+- `80b0cf42311428d78f6f806b0b06c5e674b72d62` - activate Batch 9 and schedule Batch 10 in the roadmap.
+
+### Verification
+
+- PR #17 remains open as a draft and mergeable.
+- Initial CI runs #1096-#1103 failed because the first catalogue tests expected ID order rather than alphabetical ordering; corrected before the successful baseline.
+- CI #1105 passed for code head `6e7eac54ae792849e79e1676062d75bf48e434b9`.
+- CI #1109 passed for `708991667925d91f91f10fa4d8d84d4791199171` (account-wide inventory and unknown-vs-zero handling).
+- CI #1111 passed for `170d05f4c50af6274259b5be4173df3fe262dfd2` (empty talent-stage rejection).
+- CI #1113 passed for `50ce2e570775bf7b1625b83a7d7a5a3dcf0723d5` (bounded EXP slider and internal back navigation).
+- CI #1115 passed for latest code head `33d190a56db99ba54315fefec5c058c49b942aa3`. Unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload succeeded. Room instrumentation tests were skipped because no Room schema/persistence changes were included.
+- Latest Debug APK: `irminsul-codex-debug-v1.0.0-dev.1115-vc1117` (artifact ID `15259360765`; 15,995,993 bytes; SHA-256 `80a33636931b4ea9eb7101d28264b127e9c726679806bf628ea68fdbce9d1ed0`).
+- Physical-device verification remains pending. Test the full calculator flow, catalogue completeness, level/talent and EXP controls, ascension boundaries, system back navigation, narrow-screen dialog, inventory persistence across different plans, explicit zero, and Light/Dark themes.
+- Candidate upgrade costs and EXP curves remain unverified production data; a green build does not certify game-data accuracy.
+- Batch 8 PR #16 remains open pending physical-device acceptance; CI #1070 passed.
+
+### Enhancement Calculator implementation added
+
+- Added `BundledEnhancementCatalogueRepository.kt` to load all 4-star/5-star character records from the 15 version-pinned JSON chunks and all 4-star/5-star weapons from the bundled compressed weapon dataset. Selection is independent of account ownership.
+- Added `EnhancementCalculatorSection.kt` and connected it through `ToolsSection.kt`.
+- Replaced the Tools calculator entry point with a three-stage flow: choose Character/Weapon; search and select from a grid; configure upgrade levels and calculate.
+- Character planning includes current/target character level, current ascension rank, and independent Normal Attack, Skill, and Burst current/target levels. Weapon planning includes current/target level and ascension rank.
+- Numeric controls use sliders and plus/minus steppers. Current EXP uses a curve-bounded slider and ±1 steppers, constrained by the current level and ascension cap. The large material dialog stores account-wide owned quantities by material ID, distinguishes unknown inventory from explicit zero, and recalculates remaining amounts immediately.
+- Added `BundledEnhancementCatalogueRepositoryTest.kt` for 4-star/5-star filtering, cross-chunk duplicate rejection, and weapon type metadata.
+- The current catalogue assets do not include a complete portrait/icon mapping for every unowned character/weapon. The grid uses neutral placeholders and source-backed names/rarity rather than invented images.
+- Upgrade costs and EXP curves remain candidate data. The UI discloses this and withholds totals when required candidate data is incomplete.
+
+### Additional implementation commits
+
+- `bdfd6d452221d85bcd7882e32abdb39b8ad58f16` - add full 4-star/5-star catalogue loader.
+- `b9e5d974e6bf9b9a480f8c065396a43bdf536de6` - add grid-based calculator planning flow.
+- `51fac219823270388790bdb2c42c270e0ed0e118` - connect the new calculator to Tools.
+- `7d73c3f8757b8e63ab15adaf10f85fffd3040d79` - isolate catalogue parsing for tests.
+- `2791337d948cd4d4b37dd92eacf46c0c6b5dbffe` - add catalogue filtering and duplicate tests.
+- `39b7c4f31c482482fe8eb43809f4184c3cb78b33` - retain EXP input and account ascension state.
+- `b5987cccecbf58dc1a05cb788d9790ca8589ffa8` - rename the Tools entry point.
+- `a73185135c9fe729bbb0ad3bf15d72f8b85a2f3e` - document calculator scope.
+
+### Calculator correctness follow-up
+
+- `708991667925d91f91f10fa4d8d84d4791199171` - store owned materials account-wide by material ID; preserve a legacy per-plan fallback; distinguish unknown inventory from explicit zero.
+- `170d05f4c50af6274259b5be4173df3fe262dfd2` - reject empty talent-cost stages and invalid candidate provenance; add a regression test that withholds totals.
+- `50ce2e570775bf7b1625b83a7d7a5a3dcf0723d5` - constrain current EXP to the selected level/ascension cap with a slider and exact steppers; support system back navigation between calculator pages.
+- `33d190a56db99ba54315fefec5c058c49b942aa3` - add explicit confirmation when the user owns zero materials and keep dialog dismissal separate from page navigation.
+- Added deterministic tests for unknown, zero, partial, excess, and invalid inventory quantities. All newly added tests passed in CI #1115.
+
+### Next action
+
+Complete source-level catalogue and calculation edge-case review, then perform physical-device acceptance of the latest APK. Keep candidate costs labelled unverified until their game-data accuracy and provenance have been independently reviewed. Do not close or merge Batch 9 before all scope and physical-device checks pass.
+
+
+---
+
+## Milestone 117 - Batch 9 Device-Test Corrections and Room Schema Compatibility
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 9  
+**Status:** Device feedback recorded; Room schema compatibility correction committed; CI and device retest pending. Calculator visual refinements remain pending.
+
+### User acceptance feedback
+
+- User tested the Batch 9 APK and reported the calculator UI as unsatisfactory.
+- Four-page visual references are recorded in `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md` §6.6.
+- Required redesign: icon-based character filters and matching character grid; same visual logic for weapon selection; subtle planning inputs using wheel/scroll pickers; compact material rows with actual item icons.
+- Remove selection search fields and the visible current-EXP-within-level and current-ascension-rank inputs.
+- Global UI requirement: remove keyboard-opening text-entry sections, replacing them with suitable non-keyboard controls. Expand/collapse affordances must be tiny, subtle, and centered without losing accessible touch targets.
+- Physical-device acceptance is **not** granted.
+
+### Room migration regression
+
+- Device error: `A migration from 3 to 2 was required but not found.`
+- Root cause verified from PR #16: Batch 8 introduced Room schema v3 with `private_account_data`; PR #17 was based on schema v2 and omitted that entity/table. Existing devices with schema v3 therefore encountered a downgrade requirement.
+- Commit `f56ce67d408c55b62b226b1a234304de6ef2b12b` restores the v3 entity, DAO, schema snapshot, and 2->3 migration while retaining 1->2. No destructive migration fallback was added.
+- Commit `d4caaaddc86658c9d16f6ed6adcc2bdb15a21806` adds instrumentation coverage for 2->3 migration and preservation of existing snapshot chunks; the existing 1->2 test now exercises the full 1->2->3 path.
+- CI verification and device confirmation remain pending. Do not claim the error is resolved until the new CI and a device upgrade from the user's existing installation are verified.
+
+### Next action
+
+Implement the four-page Enhancement Calculator visual redesign and the app-wide non-keyboard input policy, then run CI. Provide a new Debug APK and ask the user to retest saved-analysis restoration and all four calculator pages. Preserve the user's existing Room database; never ask them to clear app data as a workaround.
+
+
+### Milestone 117 implementation update
+
+- Room migration code commit: `f56ce67d408c55b62b226b1a234304de6ef2b12b`; migration instrumentation test commit: `d4caaaddc86658c9d16f6ed6adcc2bdb15a21806`.
+- CI #1119 and #1121 passed Room instrumentation, including v1->2->3 migration and v2->3 snapshot-chunk preservation.
+- Selector and wheel-picker implementation: `e3d7f54aa654778870793f31b88e51a3ecc2ef15`; follow-up callback fix: `100bf293b156e753487e287acfb9a7231de0d4df`.
+- Global keyboard-free control and compact expand/collapse refinements are included in the current app source. The current code-tested source head is `005a4d84aea18891ff89252b98bd414eaddcd999`; latest PR head `51985f1ab77f4186ef7b106fecc240e738462804` adds strict Room schema-v3 comparison in CI.
+- CI #1152/#1153 passed unit tests, Debug APK build, schema-v3 snapshot existence, APK signature, and artifact upload. Their Room instrumentation steps were skipped. CI #1154 is running Room instrumentation and strict generated-schema comparison.
+- APK #1153: `1.0.0-dev.1153`, version code `1155`, artifact ID `15259978932`, SHA-256 `b9cc0147c91214a82eb3392e9b863dcb7659d98003cd6367e66d07566695ce4d`.
+- Physical-device acceptance is still pending. Preserve the user's existing installation and verify the saved-analysis upgrade without clearing app data.
+
+
+
+### Milestone 117 visual refinement follow-up
+
+- `23d5920ef1a20875f4fd010c2a14e74b51919516` - load the seven element and five weapon-type filter icons from the bundled visual metadata; add completeness/source tests; add selected-item artwork to the planning header; soften input surfaces; align compact material-result columns.
+- `e6e1df9277a665684b7f7e7e2a6b7c40b365c898` - remove remaining legacy calculator numeric text fields and convert owned quantities to steppers; replace the disabled AI text field with static setup text; refine centered Chronicle expand/collapse controls.
+- `85a7c5d45ff6cda7cfb9a9dade8af1c96203e3ea` - center and soften character/weapon detail expand controls and recommendation expansion.
+- `2d33b9c0f2dab6e8d126a4400be45f84a1d5fddd` - add missing Compose imports required by the visual refinements.
+- CI #1169 passed unit tests, Debug APK build, schema-v3 snapshot verification, APK signature verification, and artifact upload for workflow head `8f53593c14ee2ddfb03e133dbfc6f4137fac00a0`. Room instrumentation was skipped because that workflow commit changed documentation only. APK #1169: artifact `15263680332`, version `1.0.0-dev.1169`, SHA-256 `4f66f201c27722c0c276a1fcffcb8f9da4aab1c2bea210c165fac4ad3faf2d1d`.
+- The earlier CI #1155 instrumentation attempt exposed obsolete visual-metadata assertions. Current source uses JVM asset-coverage tests for character/weapon metadata and filter-icon maps; CI #1169 passed those unit tests. Room migration instrumentation independently passed in CI #1119/#1121.
+- CI #1177 is running against the latest UI refinement commit. Physical-device acceptance remains pending; do not merge.
+
+
+### Milestone 117 latest verification - 2026-11-28
+
+- CI #1177 passed for code head `2d33b9c0f2dab6e8d126a4400be45f84a1d5fddd`.
+- CI #1179 passed for documentation head `2558e32ba0629d846e7192eb4e39a27d1a815fcc`.
+- CI #1181 passed for latest UI code head `4ce56a4a6788dfff2d96d0f43f6bfd2e081cadb9`: unit tests, Debug APK build, Room schema-v3 snapshot verification, APK signature verification, and artifact upload succeeded. Room instrumentation was skipped because no Room persistence/schema files changed; migration instrumentation remains covered by #1119/#1121.
+- APK #1181: `1.0.0-dev.1181`, version code `1183`, artifact ID `15263442218`, SHA-256 `546e56534b1bc32d76d06563438a919507e4762d67b5c1fa47a2bdd6ef8e9c00`.
+- The latest visual refinements are code-tested. Physical-device acceptance remains pending for the four screenshot pages, narrow-screen material rows, both themes, and saved-analysis restoration from the existing installation. Do not merge before the user retests.
+
+
+### Batch 9 corrective UI implementation - 2026-11-28
+
+- Added `docs/NATIVE_UI_STANDARD.md` (commit `f99d0550f86d7213b1a0d41a2cb89c3466915d34`) and recorded the supplied four-page PDF in `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md` §6.7 (commit `fb389783b113859aeca4d27338f408a2166588c0`).
+- Calculator selector updates: four-column grid, All / Already Owned tabs, icon-only element/weapon-type chips, and weapon rarity filters. Concealed modal wheel triggers now require Confirm / Cancel. Code commits: `5732b794caf578ce143e8989a3910f828d9d816a`, `4c05b5b75c14619295adf5c6ff0acfe4a576bac0`.
+- Tools calculator entry flattened (`d4452bef3a830be3b0201b11c284c55ccf3a942d`). Character Roster inline min/max wheel controls removed; selected state now uses tonal fill rather than a border (`d62084678ed5c970d64c723bfde6adcd67e91d92`). World Exploration region parent surfaces and Spiral Abyss floor cards flattened (`ec072601e0c800645098d00ccf8ae8f7d53b4b3f`).
+- Current PR head at record time: `3bda61a18215c055b72f63b4742a6f949205bbc0`; CI #1212 is **in progress**. No build/test result is claimed yet.
+- Remaining before retest: finish selection footer behavior; inspect/refine material owned-value input and row density; complete a source audit of all modified UI files for strokes, nested surfaces, inline pickers, and keyboard-triggering controls; fix any CI failures. Physical-device acceptance is pending and PR #17 remains unmerged.
+
+- CI #1212 on intermediate code head `3bda61a18215c055b72f63b4742a6f949205bbc0` **failed** during Kotlin compilation: missing `ExperimentalMaterial3Api` opt-in for `ModalBottomSheet` and an extra closing brace in `CalculatorInputSection`. Both issues were corrected in `6968511531ffe4bf3c911abd70f43feb528a4bc6`. A workflow run for the corrected head has not yet been observed; do not treat the fix as verified until CI passes.
+
+
+---
+
+## Milestone 118 - Enhancement Calculator Navigation and Selector Fixes
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 9  
+**Status:** Corrective implementation committed; CI and physical-device retest pending.
+
+### User feedback after CI #1218
+
+- Calculator was embedded in one expandable Tools section; user expects a dedicated calculator screen.
+- All Characters / Already Owned tabs did not switch the displayed catalogue.
+- Cryo element symbol did not render.
+
+### Implementation
+
+- `3183aa665bca9e20fcf1ea4e815f7aa56dc3704f`: replace inline expandable calculator with a dedicated Tools destination card.
+- `e6a15fa4d0f2ce55c37bad5406bae70a9d9b3346`: add a standalone calculator page with explicit back navigation in `CodexScreen.kt`.
+- `4fc418b96d1f20ea2598a5c1abee45d6e78f8987`: include `ownedOnly` and account character data in the derived catalogue `remember` keys; provide visible Cryo loading/error fallback.
+- `c5274d80e993535cec54dce8d02065dc3a9b4ac9`: tint the Cryo game asset ice-blue for contrast.
+
+### Verification
+
+- CI #1218 passed for prior head `7c75c4a844d68b50188c7f2bb5b791734a8288a6`; it does not include these corrections.
+- CI #1223 was queued for code head `4fc418b96d1f20ea2598a5c1abee45d6e78f8987` at the time of this record. The subsequent Cryo tint commit `c5274d80e993535cec54dce8d02065dc3a9b4ac9` also requires verification by a later run.
+- No physical-device acceptance is claimed. Verify that the Cryo remote icon renders (or its visible fallback appears), the ownership tabs actually filter, and the calculator opens as a separate screen and returns correctly.
+- PR #17 remains open, draft, and unmerged.
+
+### Next action
+
+Check CI for the latest branch head, correct any build/test failures, publish a new Debug APK, then ask the user to retest the three reported issues.
+
+
+## Milestone 119 - Batch 9 compact materials, full-screen destinations, chronological catalogue
+
+- PR #17 remains open, draft, and unmerged.
+- Compact material requirements dialog and inline owned controls implemented in EnhancementCalculatorSection.kt.
+- Nested Enhancement Calculator and Visuals destinations hide the app bottom navigation; root tabs retain it.
+- Character release order changed to newest-first. Calculator catalogue sorts characters and weapons by first release date, newest first; weapon dates are bundled from GachaTracker. Unknown dates sort last.
+- Added/updated release-order tests.
+- CI and physical-device retest pending. Do not mark accepted until the user verifies the latest APK.

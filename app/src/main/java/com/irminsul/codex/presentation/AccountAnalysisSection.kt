@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
@@ -88,8 +89,15 @@ fun AccountAnalysisSection(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    TextButton(onClick = { onShowAllRecommendationsChange(!showAllRecommendations) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(if (showAllRecommendations) "Show fewer" else "Show all recommendations")
+                    TextButton(
+                        onClick = { onShowAllRecommendationsChange(!showAllRecommendations) },
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                    ) {
+                        Text(
+                            if (showAllRecommendations) "Show fewer" else "Show all recommendations",
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                 }
             }

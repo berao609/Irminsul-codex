@@ -783,3 +783,102 @@ Dedicated pages should have a clear title/header, back navigation, independent s
 - Continue implementing with native Kotlin and Jetpack Compose, existing app architecture, validated local account data and approved asset-loading paths.
 - Preserve all existing scope exclusions and product decisions in Sections 1, 8 and 9. This reference does not authorize adding unrelated Battle Chronicle modules.
 - This analysis is design research. The implementation plan and source changes must still be scoped and verified against the current app before work begins.
+
+
+## 6.6 Enhancement Calculator screenshot references (user-supplied, 2026-11-28)
+
+The user supplied a four-page mobile PDF reference and physically tested the current Irminsul Enhancement Calculator. The current implementation was judged unsatisfactory. Treat the four screenshot pages as the approved layout direction for the next calculator refinement, not as permission to copy protected assets or source code.
+
+### Page 1 - Character selection
+
+- Use a full-screen selection surface with a clear title and back navigation.
+- Place compact, image-based elemental filters in one horizontal group. Use the seven actual in-game element icons, not text-only element names.
+- Place compact, image-based weapon-type filters in a second horizontal group. Use the five actual in-game weapon-type icons.
+- Show the eligible character catalogue in a dense portrait grid. Cards should include the character image, name, and rarity treatment.
+- Keep selection independent of ownership; an owned-only view may be represented as a separate selection state where supported.
+- **Irminsul-specific correction:** remove the search field from this selector. Do not open the software keyboard here.
+
+### Page 2 - Weapon selection
+
+- Reuse the character selector's overall hierarchy, spacing, grid geometry, selected-state treatment, and back navigation.
+- Use rarity filters and actual weapon-type icons.
+- Show actual weapon artwork in a compact grid, with readable names and rarity treatment.
+- Do not use a text search field or trigger the software keyboard.
+
+### Page 3 - Upgrade target input
+
+- Use a restrained parchment-style planning surface with the selected character/weapon identity at the top.
+- Keep level and talent inputs subtle and integrated into compact sections rather than prominent generic form fields.
+- Use a vertical wheel/scroll picker for numeric levels. This replaces the previously misunderstood slider request.
+- Remove the visible **EXP already earned within current level** and **Current ascension rank** controls.
+- Derive or retain the necessary calculation state internally. Do not silently claim unknown current EXP or ascension state is known; disclose assumptions where they affect totals.
+- Keep Normal Attack, Elemental Skill, and Elemental Burst levels independently adjustable for characters.
+- No input on this page may open the software keyboard.
+
+### Page 4 - Material details
+
+- Use a compact, continuous material list rather than one large card per material.
+- Show each material's actual item icon, full readable name, consumed/required quantity, and still-needed quantity in aligned columns.
+- Keep the list vertically scrollable and dense enough to inspect many materials without excessive padding.
+- Use a consistent fallback for missing icons; do not fabricate or mismatch material artwork.
+
+### Global interaction refinements from device testing
+
+- Remove or replace text-entry controls across the app when they open the software keyboard. Prefer wheel pickers, steppers, chips, segmented choices, or other non-keyboard controls appropriate to the data.
+- Remove the Enhancement Calculator selection search bar.
+- Make expand/collapse affordances tiny, visually quiet, and centered within their section.
+- Preserve accessibility descriptions and adequate touch targets even when the visible expand/collapse glyph is small.
+- Recheck Light and Dark themes, narrow-screen behavior, scrolling, and back navigation after the global changes.
+
+### Device-reported persistence regression
+
+The user observed: `Could not restore the saved account analysis: A migration from 3 to 2 was required but not found.`
+
+Source inspection confirmed that Batch 8 PR #16 introduced Room schema version 3 with the `private_account_data` table, while Batch 9 PR #17 had reverted to schema version 2 and omitted that table/migration. This created a downgrade requirement on devices that had already opened schema 3.
+
+**Required correction:** retain schema version 3 and the `private_account_data` entity/table, provide the 2-to-3 migration for version-2 databases, and preserve the existing 1-to-2 migration. Never use destructive migration as a workaround. The compatibility correction and migration tests are tracked in the active Batch 9 milestone; CI and device retest remain pending until observed.
+
+
+### 6.7 Implementation progress - 2026-11-28
+
+The first corrective implementation is now committed on Batch 9. Physical-device acceptance remains pending.
+
+- Character and weapon selectors now share the same grid-card treatment, rarity filters, back-navigation flow, and icon-based weapon-type filters. Character selection additionally has seven icon-based element filters.
+- Removed the selector search field. Full character portraits and weapon item art are mapped by game ID through `enhancement_visual_metadata.json`; character portraits use the full `UI_AvatarIcon_*.png` assets.
+- Visual metadata snapshot source: EnkaNetwork/API-docs commit `26b4ddcd045a1264d0a8ef3ef5a3a3e33cbe16ce`. It contains 142 character metadata records and 222 eligible weapon metadata records. The 126-entry 7.2 character catalogue is mapped; four Traveler forms intentionally have no fixed element because their element changes. Aloy has an explicit Cryo/Bow mapping.
+- Element filter icons use the game `UI_Buff_Element_*.png` assets. Weapon-type filters use representative game weapon icons. Missing image loads retain a neutral fallback. Image binaries are not bundled; the UI loads assets from the Enka CDN.
+- Planning controls now use a native vertical wheel picker with descendant focus blocked to prevent the software keyboard. The visible current-EXP-within-level and current-ascension-rank controls were removed. Current within-level EXP is assumed to be 0; ascension rank is retained from account data when available and otherwise inferred from current level.
+- Planning sections use restrained surface styling. Material requirements now render as compact icon rows with required, owned, and still-needed quantities.
+- Removed active in-app text-entry controls from the roster filters, Materials Planner, weapon planner, and account credential settings. The HoYoLAB WebView login retains its normal keyboard because remote sign-in requires credential entry. The disabled AI composer remains non-interactive.
+- Existing manual material rows retain quantity steppers, but custom row-name editing and adding new custom rows are disabled; use the Enhancement Calculator to create new material plans.
+- Expand/collapse affordances in the roster, Chronicles sections, and Tools cards are now small, subdued, and centered.
+
+**Room compatibility:** schema version 3 and the `private_account_data` entity/table are restored. The v2->3 migration and snapshot-chunk preservation test passed in CI #1121; the v1->2->3 path passed in #1119. The workflow now verifies the generated version-3 schema snapshot against the checked-in file.
+
+**Current verification:** CI #1152 and #1153 passed unit tests, Debug APK build, schema-v3 existence check, signature verification, and artifact upload. Room instrumentation was skipped in those runs. CI #1154 is running the Room instrumentation suite and strict schema snapshot comparison. Do not mark device acceptance complete until the user retests the new APK.
+
+
+### 6.6.1 Implementation refinements following the device retest
+
+The next implementation pass keeps the four screenshot pages in §6.6 as the visual acceptance target and records these implementation details:
+
+- Element and weapon-type filter icon URLs are read from the bundled `enhancement_visual_metadata.json` maps. The loader requires all seven element icons and all five weapon-type icons to be present and use the Enka asset host; it does not rely on text-only filter labels or duplicate hardcoded URL lists.
+- The planning header shows the selected character/weapon artwork. Level and talent controls remain native vertical wheel pickers. Input surfaces use a lower-opacity, lightly outlined treatment.
+- Material results use a compact aligned layout: actual item icon and name, owned quantity control, consumed quantity, and still-needed quantity. Unknown inventory remains distinct from confirmed zero. Missing artwork uses a neutral placeholder.
+- The legacy character calculator's numeric text fields were removed. Owned quantities use non-keyboard steppers; current within-level EXP is assumed to be zero as documented by the active calculator.
+- The disabled AI composer is presented as static setup information, not a disabled text field. The HoYoLAB sign-in WebView remains the sole intentional keyboard exception because the remote authentication form requires credential entry.
+- Expand/collapse controls across Chronicle and character-detail sections use centered, subdued icons with accessible descriptions. The visible glyph is small; touch interaction remains available.
+
+These are implementation requirements, not evidence of physical-device acceptance. Recheck all four pages on the target Android device, especially icon loading, material-name wrapping, and the aligned columns on narrow screens.
+
+
+## 6.7 Four-page mobile calculator reference - 2026-11-28
+
+The user supplied a four-page PDF reference for the Enhancement Calculator. The PDF is retained in the conversation, not committed as a repository asset. The following are direct observations from its pages, while the four-column native grid and borderless tonal adaptation are explicit Irminsul requirements:
+
+- **Page 1 - Character selection:** All Characters / Already Owned segmented tabs; separate Elemental Type and Weapon Type rows made of circular image-only icon chips; compact character portrait tiles with rarity-colored backplates, level strip, and name; fixed bottom selection count and OK action. The PDF screenshot visually shows five tiles across at its viewport, but Irminsul's explicit native requirement is four columns.
+- **Page 2 - Weapon selection:** same catalogue/grid and bottom-selection pattern; rarity filter plus weapon-type icon chips; weapon artwork tiles with level strip and truncated name.
+- **Page 3 - Target setup:** selected character artwork/name header; compact current-to-target level trigger; independent Normal Attack, Elemental Skill, and Elemental Burst rows with current-to-target value triggers; optional weapon slot; one prominent calculation CTA. The wheel itself is not part of the resting layout.
+- **Page 4 - All Material Details:** compact list/table with material icon and name, consumed quantity, and still-needed quantity. Irminsul additionally shows account-owned quantity and allows non-keyboard owned-quantity adjustment.
+
+Apply [Native UI Standard](NATIVE_UI_STANDARD.md): borderless tonal surfaces, no card-in-card nesting, flat rows, no keyboard-triggering app inputs, concealed wheel pickers in modal sheets, and tiny centered expansion controls. Do not treat screenshot-specific ornamental parchment textures, gradients, or exact colors as mandatory native styling.
