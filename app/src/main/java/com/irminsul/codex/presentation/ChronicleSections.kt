@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
+import com.irminsul.codex.domain.model.CharacterSnapshot
 import com.irminsul.codex.domain.model.DataValue
 import com.irminsul.codex.domain.model.StructuredData
 import com.irminsul.codex.domain.model.StygianOnslaughtSnapshot
