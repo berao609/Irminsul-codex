@@ -118,6 +118,14 @@ object BundledEnhancementCatalogueRepository {
         val root = context.assets.open(VISUAL_METADATA_ASSET).bufferedReader().use {
             JSONObject(it.readText())
         }
+        return applyVisualMetadata(entries, root, subject)
+    }
+
+    internal fun applyVisualMetadata(
+        entries: List<EnhancementCatalogueEntry>,
+        root: JSONObject,
+        subject: String
+    ): List<EnhancementCatalogueEntry> {
         require(root.optInt("schemaVersion", -1) == 1) {
             "The bundled enhancement visual metadata schema is unsupported."
         }
