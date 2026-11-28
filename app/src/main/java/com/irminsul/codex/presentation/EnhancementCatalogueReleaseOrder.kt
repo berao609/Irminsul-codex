@@ -106,7 +106,7 @@ fun sortEnhancementCatalogueByRelease(entries: List<EnhancementCatalogueEntry>):
             }
         }.thenByDescending { entry ->
             when (entry.subjectType) {
-                EnhancementSubjectType.CHARACTER -> characterReleaseIndex(entry.name) ?: Int.MIN_VALUE
+                EnhancementSubjectType.CHARACTER -> -(characterReleaseIndex(entry.name) ?: Int.MAX_VALUE)
                 EnhancementSubjectType.WEAPON -> weaponReleaseDateByName[entry.name.trim().lowercase()]
                     ?.replace("-", "")?.toIntOrNull() ?: Int.MIN_VALUE
             }
