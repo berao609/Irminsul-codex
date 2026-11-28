@@ -188,31 +188,62 @@ private fun RegionEmblem(region: ChronicleRegion, modifier: Modifier = Modifier)
 }
 
 @Composable
-fun ChronicleRecordSection(title: String, value: DataValue<StructuredData>, mode: ChronicleRecordMode) {
+fun ChronicleRecordSection(
+    title: String,
+    value: DataValue<StructuredData>,
+    mode: ChronicleRecordMode,
+    roster: List<CharacterSnapshot> = emptyList()
+) {
     if (mode == ChronicleRecordMode.IMAGINARIUM_THEATER) {
-        ChronicleTheaterSection(title, value)
+        ChronicleTheaterSection(title, value, roster)
         return
     }
     val metrics = ChroniclePresentationMapper.recordMetrics(value, mode)
-    val primaryMetric = metrics.firstOrNull { it.label == "Best Floor" }
-        ?: metrics.firstOrNull { it.label == "Stars" }
-    ChronicleSection(title, "Spiral Abyss battle record") {
-        if (metrics.isEmpty()) {
+    val cycle = ChroniclePresentationMapper.spiralAbyss(value, roster)
+    ChronicleSection(title, "Spiral Abyss · floor and chamber records") {
+        if (metrics.isEmpty() && cycle == null) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            primaryMetric?.let {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(it.value, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(it.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        Text("Recorded result", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-            metrics.filterNot { it == primaryMetric }.forEach { metric ->
+            metrics.forEach { metric ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(metric.label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(metric.value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                }
+            }
+            cycle?.floors.orEmpty().forEach { floor ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text("Floor \${floor.floorNumber}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("\${floor.stars ?: "—"}/\${floor.maxStars ?: "—"} ★", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        }
+                        floor.leyLineDisorders.forEach { disorder ->
+                            Text(disorder, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        floor.chambers.forEach { chamber ->
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text("Chamber \${chamber.chamberNumber}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                                    Text("\${chamber.stars ?: "—"}/\${chamber.maxStars ?: "—"} ★", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                                }
+                                chamber.battles.forEach { battle ->
+                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                            Text(battle.half, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium)
+                                            battle.completedAt?.let {
+                                                Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
+                                        ChronicleRecordCharacterLineup(battle.characters)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -220,15 +251,55 @@ fun ChronicleRecordSection(title: String, value: DataValue<StructuredData>, mode
 }
 
 @Composable
-private fun ChronicleTheaterSection(title: String, value: DataValue<StructuredData>) {
-    val cycles = ChroniclePresentationMapper.theaterCycles(value)
-    ChronicleSection(title, "Imaginarium Theater · recorded cycles") {
+private fun ChronicleRecordCharacterLineup(characters: List<ChronicleRecordCharacter>) {
+    if (characters.isEmpty()) {
+        Text("Character lineup was not included.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        return
+    }
+    Row(
+        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        characters.forEach { character ->
+            Row(
+                Modifier.widthIn(min = 112.dp).background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp)).padding(7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                if (character.iconUrl != null) {
+                    AsyncImage(
+                        model = character.iconUrl,
+                        contentDescription = "\${character.name ?: "Character"} portrait",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(38.dp)
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(character.name ?: "Character", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    val detail = listOfNotNull(character.element, character.level?.let { "Lv. $it" }).joinToString(" · ")
+                    if (detail.isNotBlank()) {
+                        Text(detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChronicleTheaterSection(
+    title: String,
+    value: DataValue<StructuredData>,
+    roster: List<CharacterSnapshot>
+) {
+    val cycles = ChroniclePresentationMapper.theaterCycles(value, roster)
+    ChronicleSection(title, "Imaginarium Theater · recorded cycles and round lineups") {
         if (cycles.isEmpty()) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             cycles.forEachIndexed { index, cycle ->
                 if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(cycle.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     val metrics = listOfNotNull(
                         cycle.difficulty?.let { ChronicleMetric("Difficulty", it) },
@@ -244,18 +315,28 @@ private fun ChronicleTheaterSection(title: String, value: DataValue<StructuredDa
                             Text(metric.value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                         }
                     }
+                    if (cycle.performanceMetrics.isNotEmpty()) {
+                        Text("Performance", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        cycle.performanceMetrics.forEach { metric ->
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(metric.label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(metric.value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
                     if (cycle.rounds.isNotEmpty()) {
                         Text("Round results", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                         cycle.rounds.forEach { round ->
-                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("Round ${round.roundNumber}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Round \${round.roundNumber}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                                     round.medalEarned?.let {
                                         Text(if (it) "Medal earned" else "No medal", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
-                                if (round.characters.isNotEmpty()) {
-                                    Text(round.characters.joinToString(" · "), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                ChronicleRecordCharacterLineup(round.characters)
+                                if (round.buffs.isNotEmpty()) {
+                                    Text("Blessings: \${round.buffs.joinToString(" · ")}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
