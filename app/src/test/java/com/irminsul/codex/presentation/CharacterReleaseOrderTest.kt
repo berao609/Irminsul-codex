@@ -6,7 +6,7 @@ import org.junit.Test
 
 class CharacterReleaseOrderTest {
     @Test
-    fun sortsByFirstReleaseNewestFirstAndKeepsUnknownNamesLast() {
+    fun sortsByFirstReleaseOldestFirstAndKeepsUnknownNamesLast() {
         val input = listOf(
             CharacterSnapshot(id = 3, name = "Vesna", level = 1, rarity = 5, element = null, friendshipLevel = null, activeConstellationCount = null),
             CharacterSnapshot(id = 2, name = "Xiao", level = 1, rarity = 5, element = null, friendshipLevel = null, activeConstellationCount = null),
@@ -15,7 +15,7 @@ class CharacterReleaseOrderTest {
             CharacterSnapshot(id = 5, name = "Unknown Character", level = 1, rarity = 4, element = null, friendshipLevel = null, activeConstellationCount = null)
         )
         assertEquals(
-            listOf("Vesna", "Xiao", "Albedo", "Amber", "Unknown Character"),
+            listOf("Amber", "Albedo", "Xiao", "Vesna", "Unknown Character"),
             sortCharactersByRelease(input).map { it.name }
         )
     }
