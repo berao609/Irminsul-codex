@@ -65,6 +65,10 @@ This is the former Batch 8. Its scope and acceptance intent remain unchanged; on
 - **Data boundary:** the current Battle Chronicle model exposes equipped weapons through character records, not a complete inventory of unequipped weapons. The initial roster must disclose that limitation and must not imply complete weapon ownership.
 - Do not reintroduce the rejected character rarity filter or redundant sorting controls.
 - Use source-backed data and existing approved game assets; do not invent missing values, passive descriptions, or artwork.
+- **Enhancement Calculator flow:** choose Character or Weapon, then navigate to a searchable grid containing the complete bundled 4-star/5-star catalogue regardless of account ownership; select an entry to open its dedicated planning page.
+- Character planning includes current/target character level, ascension rank, and independent Normal Attack/Skill/Burst talent levels. Weapon planning includes current/target level and ascension rank.
+- Replace numeric keyboard fields with sliders and/or plus/minus steppers. Calculate opens a large material-requirements dialog; each material has an owned-quantity stepper and a live remaining-quantity calculation. Persist owned quantities locally.
+- Keep the catalogue version-pinned and source-attributed. The current bundled selection data has no complete portrait/icon mapping for all unowned items; do not fabricate artwork. Candidate cost/EXP data must remain clearly labelled and incomplete totals must be withheld.
 - Preserve the existing app architecture and verify the result with deterministic tests, CI, and physical-device testing.
 
 ### Batch 10 - Chronicles UI Visual Refinement
