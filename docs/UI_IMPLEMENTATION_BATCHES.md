@@ -65,7 +65,7 @@ This is the former Batch 8. Its scope and acceptance intent remain unchanged; on
 - **Data boundary:** the current Battle Chronicle model exposes equipped weapons through character records, not a complete inventory of unequipped weapons. The initial roster must disclose that limitation and must not imply complete weapon ownership.
 - Do not reintroduce the rejected character rarity filter or redundant sorting controls.
 - Use source-backed data and existing approved game assets; do not invent missing values, passive descriptions, or artwork.
-- **Enhancement Calculator flow:** choose Character or Weapon, then navigate to a filterable, non-searchable grid containing the complete bundled 4-star/5-star catalogue regardless of account ownership; select an entry to open its dedicated planning page.
+- **Enhancement Calculator flow:** open the calculator from Tools as a dedicated screen with its own back navigation (never as an inline expandable Tools section); choose Character or Weapon, then navigate to a filterable, non-searchable grid containing the complete bundled 4-star/5-star catalogue regardless of account ownership; select an entry to open its dedicated planning page.
 - Character planning includes current/target character level, ascension rank, and independent Normal Attack/Skill/Burst talent levels. Weapon planning includes current/target level and ascension rank.
 - Replace numeric keyboard fields with vertical wheel/scroll pickers for levels/talents and plus/minus steppers for quantities. Calculate opens a large material-requirements dialog; each material has an owned-quantity stepper and a live remaining-quantity calculation. Persist owned quantities account-wide by material ID, distinguish unknown inventory from explicit zero, and do not display a remaining total until inventory is entered.
 - Keep the catalogue version-pinned and source-attributed. The current bundled selection data has no complete portrait/icon mapping for all unowned items; do not fabricate artwork. Candidate cost/EXP data must remain clearly labelled and incomplete totals must be withheld.
@@ -122,3 +122,12 @@ The first physical-device acceptance attempt was **unsatisfactory**. Apply the f
 - Character and Weapon Fidelity is now Batch 9; its scope is not otherwise changed.
 - No further numbered UI batch is currently defined in this roadmap. Add later batches only when their scope is explicitly agreed.
 - Update this document when a batch is approved, started, completed, or materially re-scoped. Record implementation and verification evidence in `docs/PROGRESS_MILESTONES.md`.
+
+
+#### Additional device feedback - 2026-11-28
+
+- The user rejected the #1218 calculator presentation because it was embedded in one expandable Tools section. The calculator entry now navigates to a dedicated screen with back navigation.
+- Fixed stale All / Already Owned catalogue results by including `ownedOnly` and the current account character list in the Compose memoization keys.
+- Cryo filter now receives an ice-blue tint and a visible snowflake fallback for image loading/error. The remote asset's successful rendering still requires device verification.
+- Corrective commits: `3183aa665bca9e20fcf1ea4e815f7aa56dc3704f`, `e6a15fa4d0f2ce55c37bad5406bae70a9d9b3346`, `4fc418b96d1f20ea2598a5c1abee45d6e78f8987`, `c5274d80e993535cec54dce8d02065dc3a9b4ac9`.
+- CI and device acceptance are pending. Do not merge until the dedicated screen, both ownership tabs, and Cryo symbol are confirmed on device.
