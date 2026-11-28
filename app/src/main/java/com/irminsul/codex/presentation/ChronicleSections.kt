@@ -228,7 +228,7 @@ fun ChronicleSpiralAbyssSection(
     roster: List<CharacterSnapshot>
 ) {
     var selectedCycle by rememberSaveable { mutableIntStateOf(0) }
-    ChronicleSection("Spiral Abyss", "Floor and chamber records") {
+    ChronicleSection("Spiral Abyss", "Floor and chamber records", collapsible = false) {
         ChronicleCycleSelector(
             selectedIndex = selectedCycle,
             labels = listOf("Current Cycle", "Previous Cycle"),
@@ -451,7 +451,7 @@ private fun ChronicleTheaterSection(
 
 @Composable
 fun ChronicleStygianOnslaughtSection(value: DataValue<StygianOnslaughtSnapshot>) {
-    ChronicleSection("Stygian Onslaught", "Best recorded challenge") {
+    ChronicleSection("Stygian Onslaught", "Best recorded challenge", collapsible = false) {
         when (value) {
             is DataValue.Available -> StygianOnslaughtRecord(value.value, stale = false)
             is DataValue.Stale -> StygianOnslaughtRecord(value.value, stale = true)
