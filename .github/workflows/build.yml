@@ -127,7 +127,12 @@ jobs:
             exit 0
           fi
 
-          changed_files="$(git diff --name-only "$BEFORE_SHA" "$GITHUB_SHA")"
+          # Evaluate the complete branch delta against main, not only the
+          # latest push. This keeps database tests enabled for a PR whose
+          # migration landed in an earlier commit of the same branch.
+          git fetch origin main --quiet
+          merge_base="$(git merge-base origin/main "$GITHUB_SHA")"
+          changed_files="$(git diff --name-only "$merge_base" "$GITHUB_SHA")"
           run_room_tests=false
 
           while IFS= read -r path; do
