@@ -3,7 +3,7 @@ package com.irminsul.codex.presentation
 import com.irminsul.codex.domain.model.CharacterSnapshot
 
 /**
- * Stable first-release ordering for playable characters, newest release first.
+ * Stable first-release ordering for playable characters, oldest release first.
  * Characters released in the same update are alphabetized; unknown names remain at the end.
  */
 private val releaseGroups = listOf(
@@ -63,8 +63,7 @@ private val releaseGroups = listOf(
 )
 
 private val releaseRankByName = releaseGroups
-    .asReversed()
-    .flatMapIndexed { versionIndex, names -> names.map { it.lowercase() to versionIndex } }
+    .flatMapIndexed { releaseIndex, names -> names.map { it.lowercase() to releaseIndex } }
     .toMap()
 
 fun sortCharactersByRelease(characters: List<CharacterSnapshot>): List<CharacterSnapshot> =
