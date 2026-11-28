@@ -6144,3 +6144,8 @@ Verify CI #1046 and the generated Room schema v3 artifact, then continue the rem
 ### Next action
 
 User tests the generated APK. After confirmation, mark PR #16 ready, verify the latest head CI, and merge; then start Batch 9.
+
+
+### Verification wording correction
+
+The schema v3 snapshot was reconstructed from the generated CI artifact and checked for valid JSON, Room version 3, and expected entity tables. The documentation/schema-only commits did not trigger another workflow run; CI #1050 passed for the Kotlin implementation head. Do not describe the exact committed schema bytes as directly copied from the artifact or claim a CI run on the final docs-only head.
