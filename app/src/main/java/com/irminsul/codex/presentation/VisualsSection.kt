@@ -194,19 +194,19 @@ internal fun VisualsSection(
 
                     VisualsDestination.SPIRAL_ABYSS_CURRENT -> {
                         snapshot?.let {
-                            ChronicleRecordSection("Current Cycle", it.spiralAbyssCurrent, ChronicleRecordMode.SPIRAL_ABYSS)
+                            ChronicleRecordSection("Current Cycle", it.spiralAbyssCurrent, ChronicleRecordMode.SPIRAL_ABYSS, roster = it.characters.charactersOrEmpty())
                         } ?: Text("Analyze your account to load Spiral Abyss records.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
 
                     VisualsDestination.SPIRAL_ABYSS_PREVIOUS -> {
                         snapshot?.let {
-                            ChronicleRecordSection("Previous Cycle", it.spiralAbyssPrevious, ChronicleRecordMode.SPIRAL_ABYSS)
+                            ChronicleRecordSection("Previous Cycle", it.spiralAbyssPrevious, ChronicleRecordMode.SPIRAL_ABYSS, roster = it.characters.charactersOrEmpty())
                         } ?: Text("Analyze your account to load Spiral Abyss records.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
 
                     VisualsDestination.IMAGINARIUM_THEATER -> {
                         snapshot?.let {
-                            ChronicleRecordSection("Imaginarium Theater", it.imaginariumTheater, ChronicleRecordMode.IMAGINARIUM_THEATER)
+                            ChronicleRecordSection("Imaginarium Theater", it.imaginariumTheater, ChronicleRecordMode.IMAGINARIUM_THEATER, roster = it.characters.charactersOrEmpty())
                         } ?: Text("Analyze your account to load Imaginarium Theater records.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
 
