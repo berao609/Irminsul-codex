@@ -6015,3 +6015,11 @@ Run the full Debug CI for the latest branch head. If successful, verify Natlan, 
 - Temple of Space has no regional image fields in the replacement export. Its only source-backed candidate remains the `Temple of Space: Memory Core` offering icon. The mapper produces this candidate in tests, but its actual image rendering failure is not yet explained and must not be marked fixed.
 - Code/test commits: `f86c18e1439794ec44928283205bdb5c34187f38`, `25b1771bf1e97fb9c2da9ccb8d621e370aa06c50`.
 - CI and physical-device verification for this follow-up are pending.
+
+### Final hierarchy adjustment - Enkanomiya
+
+- Added an explicit presentation-parent override placing Enkanomiya beneath Inazuma, consistent with the other requested named-area groupings.
+- Added mapper coverage asserting Enkanomiya appears under Inazuma and that both source exploration percentages remain independent.
+- Implementation commit: `21d3f8a497769ffaf13e5e284c1cafa403834b7a`.
+- Test commit: `348abb8ed4e826458d641eb5dedaa7c820dcaa17`.
+- CI and physical-device verification for this final adjustment are pending.
