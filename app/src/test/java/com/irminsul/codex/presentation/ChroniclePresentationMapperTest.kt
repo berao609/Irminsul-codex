@@ -167,8 +167,8 @@ class ChroniclePresentationMapperTest {
 
     @Test fun spiralAbyssMapsFloorsChambersTeamsAndUsesOwnedCharacterNames() {
         val roster = listOf(
-            com.irminsul.codex.domain.model.CharacterSnapshot(id = 10000120, name = "Flins", level = 90, rarity = 5, element = "Electro"),
-            com.irminsul.codex.domain.model.CharacterSnapshot(id = 10000025, name = "Xingqiu", level = 70, rarity = 4, element = "Hydro")
+            com.irminsul.codex.domain.model.CharacterSnapshot(id = 10000120, name = "Flins", level = 90, rarity = 5, element = "Electro", friendshipLevel = 0, activeConstellationCount = 0),
+            com.irminsul.codex.domain.model.CharacterSnapshot(id = 10000025, name = "Xingqiu", level = 70, rarity = 4, element = "Hydro", friendshipLevel = 0, activeConstellationCount = 0)
         )
         val value = DataValue.Available(obj(
             "total_battle_times" to StructuredData.NumberValue("38"),
@@ -239,7 +239,7 @@ class ChroniclePresentationMapperTest {
 
     @Test fun theaterMapsCharacterDetailsBuffNamesAndAvailablePerformanceStatistics() {
         val roster = listOf(
-            com.irminsul.codex.domain.model.CharacterSnapshot(id = 10000111, name = "Varesa", level = 90, rarity = 5, element = "Electro")
+            com.irminsul.codex.domain.model.CharacterSnapshot(id = 10000111, name = "Varesa", level = 90, rarity = 5, element = "Electro", friendshipLevel = 0, activeConstellationCount = 0)
         )
         val value = DataValue.Available(obj(
             "data" to StructuredData.ArrayValue(listOf(
