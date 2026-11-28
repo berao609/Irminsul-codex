@@ -113,12 +113,12 @@ fun CharacterShowcaseSection(
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                IconButton(onClick = { rosterExpanded = !rosterExpanded }, modifier = Modifier.size(26.dp)) {
+                IconButton(onClick = { rosterExpanded = !rosterExpanded }, modifier = Modifier.size(22.dp)) {
                     AppIcon(
                         if (rosterExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                         contentDescription = if (rosterExpanded) "Collapse character roster" else "Expand character roster",
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        modifier = Modifier.size(10.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 }
             }
@@ -127,13 +127,13 @@ fun CharacterShowcaseSection(
         if (rosterExpanded) {
             IconButton(
                 onClick = { filtersExpanded = !filtersExpanded },
-                modifier = Modifier.align(Alignment.CenterHorizontally).size(26.dp)
+                modifier = Modifier.align(Alignment.CenterHorizontally).size(22.dp)
             ) {
                 AppIcon(
                     if (filtersExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = if (filtersExpanded) "Hide roster filters" else "Show roster filters",
-                    modifier = Modifier.size(14.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    modifier = Modifier.size(10.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             }
 
@@ -528,9 +528,16 @@ private fun ShowcaseExpandableSection(
                 Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Text(summary, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+        }
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.align(Alignment.CenterHorizontally).size(20.dp)
+        ) {
             AppIcon(
                 if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
-                contentDescription = if (expanded) "Collapse $title" else "Expand $title"
+                contentDescription = if (expanded) "Collapse $title" else "Expand $title",
+                modifier = Modifier.size(10.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
         }
         if (expanded) ShowcaseDetailSurface(content)
@@ -597,9 +604,16 @@ private fun WeaponShowcaseRow(
                 )
                 if (stale) Text("Using older account data", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
             }
+        }
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.align(Alignment.CenterHorizontally).size(20.dp)
+        ) {
             AppIcon(
                 if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
-                contentDescription = if (expanded) "Collapse weapon details" else "Expand weapon details"
+                contentDescription = if (expanded) "Collapse weapon details" else "Expand weapon details",
+                modifier = Modifier.size(10.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
         }
         if (expanded) {

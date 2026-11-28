@@ -88,8 +88,15 @@ fun AccountAnalysisSection(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    TextButton(onClick = { onShowAllRecommendationsChange(!showAllRecommendations) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(if (showAllRecommendations) "Show fewer" else "Show all recommendations")
+                    TextButton(
+                        onClick = { onShowAllRecommendationsChange(!showAllRecommendations) },
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                    ) {
+                        Text(
+                            if (showAllRecommendations) "Show fewer" else "Show all recommendations",
+                            style = MaterialTheme.typography.labelSmall
+                        )
                     }
                 }
             }
