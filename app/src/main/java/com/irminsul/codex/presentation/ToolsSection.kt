@@ -1,7 +1,5 @@
 package com.irminsul.codex.presentation
 
-import android.content.SharedPreferences
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,18 +13,16 @@ import com.irminsul.codex.domain.model.CharacterSnapshot
 
 /**
  * Presentation-only container for the Tools destination.
- * Calculator preferences and lineup selection state remain owned by the caller.
+ * The enhancement calculator opens as a dedicated screen owned by the caller.
  */
 @Composable
 fun ToolsSection(
     characters: List<CharacterSnapshot>,
-    preferences: SharedPreferences,
-    showMaterialsPlanner: Boolean,
     showLineupSimulator: Boolean,
     selectedLineupCharacterIds: List<Int>,
     rosterIsStale: Boolean,
     rosterIsPartial: Boolean,
-    onToggleMaterialsPlanner: () -> Unit,
+    onOpenEnhancementCalculator: () -> Unit,
     onToggleLineupSimulator: () -> Unit,
     onToggleLineupCharacter: (Int) -> Unit
 ) {
@@ -38,10 +34,19 @@ fun ToolsSection(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Card(
+            onClick = onOpenEnhancementCalculator,
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Row(
+                Modifier.fillMaxWidth().padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 AppIcon(AppIconName.TOOLS, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     Text("Enhancement Calculator", fontWeight = FontWeight.SemiBold)
                     Text(
                         "Choose any 4-star or 5-star character or weapon and calculate upgrade materials",
@@ -49,21 +54,8 @@ fun ToolsSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                AppIcon(AppIconName.CHEVRON_RIGHT, contentDescription = "Open Enhancement Calculator")
             }
-            IconButton(onClick = onToggleMaterialsPlanner, modifier = Modifier.align(Alignment.CenterHorizontally).size(24.dp)) {
-                AppIcon(
-                    if (showMaterialsPlanner) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
-                    contentDescription = if (showMaterialsPlanner) "Collapse Materials Calculator" else "Expand Materials Calculator",
-                    modifier = Modifier.size(12.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
-                )
-            }
-        }
-        if (showMaterialsPlanner) {
-            EnhancementCalculatorSection(
-                characters = characters,
-                preferences = preferences
-            )
         }
 
         Card(
