@@ -4,6 +4,7 @@ internal enum class VisualsDestination(val title: String) {
     OVERVIEW("Battle Chronicles"),
     CHARACTER_ROSTER("All Characters"),
     CHARACTER_DETAILS("Character Details"),
+    WEAPON_ROSTER("Weapon Roster"),
     WORLD_EXPLORATION("World Exploration"),
     SPIRAL_ABYSS("Spiral Abyss"),
     IMAGINARIUM_THEATER("Imaginarium Theater"),
