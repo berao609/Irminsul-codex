@@ -6005,4 +6005,6 @@ Run the full Debug CI for the latest branch head. If successful, verify Natlan, 
 - Temple of Space has no regional `icon`, `inner_icon`, or `cover` in either export. Its Memory Core offering icon is used as the regional emblem, with a verified source-URL fallback so the emblem remains available when the offering list is absent.
 - Mapper tests cover Fontaine/Sea of Bygone Eras nesting, independent percentages, the Natlan/Nod-Krai inner-icon priority, and Temple of Space fallback.
 - Implementation and test commits: `4a823c396cb8165c6b894eb5a00194deec6d12d6` and `f05456711c269319cad0101a1057019c2bb7971b`.
-- CI and physical-device verification for this follow-up remain pending.
+- GitHub Actions run #1020 succeeded for code head `fb42676d7774f01fb28651db35dacf96f737a9ed`: unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and APK upload passed. Room instrumentation tests were skipped because this change does not affect Room persistence or schema.
+- Debug APK: `irminsul-codex-debug-v1.0.0-dev.1020-vc1022` (artifact ID `15250137616`; 15,909,754 bytes; SHA-256 `aa07b68d49ae2b3730fe45379068a7dd141672070be1a8b4ab4c6d70def18cb7`). Run: https://github.com/berao609/Irminsul-codex/actions/runs/46113459072.
+- Physical-device verification of the Fontaine grouping and corrected emblems remains pending.
