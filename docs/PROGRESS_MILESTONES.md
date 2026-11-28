@@ -5816,3 +5816,62 @@ Move the existing Batch 5 modernization from the API 36.1 dependency baseline to
 ### Next action
 
 Check the next CI run after integrating the latest `main` head and the JVM 11 correction. Confirm stable API 37.1 installation, API 37.2 emulator boot, Room migration tests, APK assembly, schema verification, signing, and artifact upload. Correct any remaining failure within PR #13. Do not merge without the user's explicit approval.
+
+---
+
+## Milestone 112 - UI Revamp Batch 6: Chronicle Detail Data and Presentation
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 6  
+**Status:** Initial implementation committed on the feature branch; CI, APK, and device verification pending.
+
+### Objective
+
+Replace summary-only Spiral Abyss and Imaginarium Theater detail pages with source-backed floor, chamber, lineup, round, and performance details. Keep Stygian Onslaught limited to its currently validated summary.
+
+### Source evidence
+
+- Account export: docs/genshin_865157206.json
+- Exported: 2026-11-27T20:42:56Z
+- Export blob SHA: 0c9dc9967c37cd58744495eaeddb4ead780e93bb
+- Spiral Abyss current and previous sections contain floor/chamber stars, battle halves, character IDs/portraits/levels, completion date parts, and Ley Line Disorder text.
+- Imaginarium Theater contains cycle statistics, round lineups with names/elements/levels/portraits, round medal state, finish dates, round blessing names, and fight_statisic performance fields.
+- This export has no dedicated Stygian Onslaught record section. No detailed Stygian history or team data is inferred.
+
+### Implemented on ui-revamp/batch-6-chronicle-details
+
+- Added typed presentation mapping for Spiral Abyss cycles, floors, chambers, battle halves, character lineups, stars, completion timestamps, and Ley Line Disorder text.
+- Resolves Spiral Abyss character names and fallback portraits/levels from the already retrieved account roster; does not display raw character IDs.
+- Expanded Theater round mapping with character portraits, names, elements, levels, rarity, medal state, finish date, and both ordinary and splendour_buff.buffs blessing names.
+- Maps source-provided Theater performance values for highest damage, most defeats, most damage taken, and total battle time. Character names are resolved against the account roster when possible.
+- Passes roster context into the current/previous Abyss and Theater destinations.
+- Keeps missing, unavailable, malformed, and stale section handling distinct. Stale records receive a visible freshness note.
+- Added mapper tests for Abyss floors/chambers/teams and partial/malformed data, plus Theater character, blessing, date, and performance mapping.
+
+### Files changed
+
+- app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationMapper.kt
+- app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt
+- app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt
+- app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationMapperTest.kt
+- docs/PROGRESS_MILESTONES.md
+
+### Verification
+
+- Repository source and export schema were retrieved from GitHub before implementation.
+- Focused unit tests were added but have not yet been observed passing in CI.
+- No successful Gradle build, APK artifact, or physical-device verification is claimed.
+- No Batch 6 PR has been opened yet.
+
+### Remaining
+
+- Confirm compilation and run testDebugUnitTest through the branch CI workflow.
+- Fix any compiler/test failures before opening the PR.
+- Inspect current and previous Abyss pages and Theater on the Redmi Turbo 4 Pro after obtaining the new APK.
+- Review visual density, portrait loading, date presentation, and long blessing text on-device.
+- Keep Stygian Onslaught unchanged beyond its existing source-backed summary until a real record payload is captured and validated.
+
+### Next action
+
+Verify the latest branch commit and its GitHub Actions result. Resolve all unit-test/build failures, then open the Batch 6 PR for review. Device verification remains a separate acceptance step.
+
