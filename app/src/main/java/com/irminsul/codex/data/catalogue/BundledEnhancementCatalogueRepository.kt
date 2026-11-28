@@ -3,6 +3,7 @@ package com.irminsul.codex.data.catalogue
 import android.content.Context
 import android.util.Base64
 import org.json.JSONObject
+import org.json.JSONArray
 import java.io.ByteArrayInputStream
 import java.util.zip.GZIPInputStream
 
@@ -13,28 +14,33 @@ data class EnhancementCatalogueEntry(
     val name: String,
     val rarity: Int,
     val subjectType: EnhancementSubjectType,
-    val detail: String? = null
+    val detail: String? = null,
+    val element: String? = null,
+    val weaponType: String? = null,
+    val iconUrl: String? = null
 )
 
 /**
  * Loads the complete 4-star/5-star selection catalogue from the version-pinned
  * Genshin-DB assets. Ownership is deliberately not used as a catalogue filter.
  *
- * The bundled source contains names, rarity, and weapon type, but no complete
- * portrait/icon mapping for every character and weapon.
+ * Names, rarity, progression candidates, and icon metadata are sourced separately.
+ * Enka icon metadata supplies official game asset names and CDN paths; missing
+ * mappings remain null and must render a neutral placeholder.
  */
 object BundledEnhancementCatalogueRepository {
     const val GAME_VERSION = BundledCharacterProgressionCandidateRepository.GAME_VERSION
     const val SOURCE_COMMIT = BundledCharacterProgressionCandidateRepository.SOURCE_COMMIT
     private const val CHARACTER_CHUNK_COUNT = 15
     private const val WEAPON_ASSET = "genshin_db/english_weapons_7_2.gzip.b64"
+    private const val VISUAL_METADATA_ASSET = "genshin_db/enhancement_visual_metadata.json"
 
     fun loadCharacters(context: Context): List<EnhancementCatalogueEntry> {
         val chunks = (1..CHARACTER_CHUNK_COUNT).map { index ->
             val fileName = "genshin_db/characters_7_2_${index.toString().padStart(2, '0')}.json"
             context.assets.open(fileName).bufferedReader().use { JSONObject(it.readText()) }
         }
-        return parseCharacters(chunks)
+        return applyVisualMetadata(context, parseCharacters(chunks), "characters")
     }
 
     internal fun parseCharacters(chunks: List<JSONObject>): List<EnhancementCatalogueEntry> {
@@ -76,7 +82,7 @@ object BundledEnhancementCatalogueRepository {
         val encoded = context.assets.open(WEAPON_ASSET).bufferedReader().use { it.readText() }
         val compressed = Base64.decode(encoded.trim(), Base64.DEFAULT)
         val rootText = GZIPInputStream(ByteArrayInputStream(compressed)).bufferedReader().use { it.readText() }
-        return parseWeapons(JSONObject(rootText))
+        return applyVisualMetadata(context, parseWeapons(JSONObject(rootText)), "weapons")
     }
 
     internal fun parseWeapons(root: JSONObject): List<EnhancementCatalogueEntry> {
@@ -101,6 +107,38 @@ object BundledEnhancementCatalogueRepository {
             "The bundled weapon catalogue contains duplicate IDs."
         }
         return entries.sortedWith(compareBy<EnhancementCatalogueEntry> { it.name.lowercase() }.thenBy { it.id })
+    }
+
+
+    private fun applyVisualMetadata(
+        context: Context,
+        entries: List<EnhancementCatalogueEntry>,
+        subject: String
+    ): List<EnhancementCatalogueEntry> {
+        val root = context.assets.open(VISUAL_METADATA_ASSET).bufferedReader().use {
+            JSONObject(it.readText())
+        }
+        require(root.optInt("schemaVersion", -1) == 1) {
+            "The bundled enhancement visual metadata schema is unsupported."
+        }
+        val key = if (subject == "characters") "characters" else "weapons"
+        val records: JSONArray = root.optJSONArray(key)
+            ?: throw IllegalArgumentException("Enhancement visual metadata has no $key records.")
+        val byId = buildMap {
+            for (index in 0 until records.length()) {
+                val record = records.optJSONObject(index) ?: continue
+                val id = record.optString("id").takeIf(String::isNotBlank) ?: continue
+                put(id, record)
+            }
+        }
+        return entries.map { entry ->
+            val visual = byId[entry.id] ?: return@map entry
+            entry.copy(
+                element = visual.optString("element").takeIf(String::isNotBlank),
+                weaponType = visual.optString("weaponType").takeIf(String::isNotBlank),
+                iconUrl = visual.optString("iconUrl").takeIf(String::isNotBlank)
+            )
+        }
     }
 
     fun loadAll(context: Context): List<EnhancementCatalogueEntry> =
