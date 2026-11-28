@@ -5925,7 +5925,7 @@ No further work is pending for Milestone 113.
 
 **Date recorded:** 2026-11-28  
 **Development phase:** UI Revamp - Batch 7  
-**Status:** Implementation in progress; CI, APK, and physical-device verification pending.
+**Status:** Core hierarchy implementation passed initial CI and user device testing; requested grouping and card-layout refinements are in progress and require fresh CI/device verification.
 
 ### Source evidence
 
@@ -5977,6 +5977,13 @@ No further work is pending for Milestone 113.
 - Room instrumentation tests were skipped because this change does not affect Room persistence or schema.
 - Physical-device verification is pending. No on-device behavior is claimed.
 
+### User-verified baseline and requested refinements
+
+- User confirmed the initial Batch 7 implementation was successful on-device.
+- Follow-up refinements requested: place Windrest Peak and Dragonspine under Mondstadt; place The Chasm and Chenyu Vale under Liyue; make each regional card independently expandable with a subtle, tiny control centered at its bottom; render subareas in a compact two-column grid.
+- Natlan and Nod-Krai still lack regional emblems. Do not invent or substitute unrelated artwork; keep the emblem area empty until valid source-backed assets are available.
+- These refinements supersede the original flat detail presentation but do not change source progress values or aggregation rules.
+
 ### Next action
 
-Verify mapper tests and the full Debug build. Inspect the World Exploration detail page on-device, including parent regions, Chenyu Vale and Chasm child regions, subareas, offerings, statue levels, and Natlan tribal reputation. Confirm parent percentages remain unchanged and no child data is double-counted.
+Run the mapper/unit tests and full Debug CI for the refinement commit. Verify all four requested parent assignments, independent expand/collapse controls, compact subarea grid, and unchanged parent percentages on-device.
