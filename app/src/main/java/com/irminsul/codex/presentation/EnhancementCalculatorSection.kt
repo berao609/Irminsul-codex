@@ -498,7 +498,7 @@ internal fun EnhancementCalculatorSection(
                     }
                 }
                 Text(
-                    "Candidate costs · Genshin-DB " + BundledEnhancementCatalogueRepository.GAME_VERSION,
+                    "Candidate costs · not production-verified · Genshin-DB " + BundledEnhancementCatalogueRepository.GAME_VERSION,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
