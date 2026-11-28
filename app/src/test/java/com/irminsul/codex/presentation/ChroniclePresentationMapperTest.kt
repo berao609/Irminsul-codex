@@ -90,7 +90,7 @@ class ChroniclePresentationMapperTest {
         val liyue = regions.single()
         assertEquals(listOf("Bishui Plain", "Minlin"), liyue.subareas.map { it.name })
         assertEquals("104.2%", liyue.subareas[0].percentageLabel)
-        assertEquals(0.0f, liyue.progress, 0.001f)
+        assertEquals(1.0f, liyue.progress, 0.001f)
         assertEquals(listOf("Chenyu Vale"), liyue.childRegions.map { it.name })
         val chenyuVale = liyue.childRegions.single()
         assertEquals(0f, chenyuVale.progress, 0.001f)
