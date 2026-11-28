@@ -442,32 +442,34 @@ internal fun EnhancementCalculatorSection(
     result?.let { plan ->
         Dialog(onDismissRequest = { result = null }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Column(
-                Modifier.fillMaxWidth(0.96f).fillMaxHeight(0.92f)
-                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+                Modifier.fillMaxWidth(0.985f).fillMaxHeight(0.97f)
+                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
                     .verticalScroll(rememberScrollState())
-                    .padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Material Requirements", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        Text(selected?.name.orEmpty(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                        Text("Materials", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(selected?.name.orEmpty(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     }
-                    TextButton(onClick = { result = null }) { Text("Close") }
+                    TextButton(onClick = { result = null }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
+                        Text("Close", style = MaterialTheme.typography.labelMedium)
+                    }
                 }
                 if (plan.issue != null) {
-                    Text(plan.issue, color = MaterialTheme.colorScheme.error)
+                    Text(plan.issue, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                 } else if (plan.materials.isEmpty()) {
-                    Text("No additional materials are required for these levels.")
+                    Text("No additional materials required.", style = MaterialTheme.typography.bodySmall)
                 } else {
-                    Text("Adjust owned quantities to update the remaining amount.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(
-                        Modifier.fillMaxWidth().padding(start = 43.dp, end = 1.dp),
-                        horizontalArrangement = Arrangement.spacedBy(7.dp)
+                        Modifier.fillMaxWidth().padding(start = 30.dp, end = 2.dp, bottom = 2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Material / owned", Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Consumed", Modifier.width(62.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Still needed", Modifier.width(68.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Material · owned", Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("Required", Modifier.width(58.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        Text("Needed", Modifier.width(54.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     }
                     plan.materials.forEachIndexed { index, material ->
                         val legacyStorageKey = "enhancement_owned_" +
@@ -490,13 +492,13 @@ internal fun EnhancementCalculatorSection(
                                 preferences.edit().putString(storageKey, "0").apply()
                             }
                         )
-                        if (index != plan.materials.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+                        if (index != plan.materials.lastIndex) {
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f), thickness = 0.5.dp)
+                        }
                     }
                 }
-                Spacer(Modifier.size(4.dp))
                 Text(
-                    "Source: Genshin-DB " + BundledEnhancementCatalogueRepository.GAME_VERSION +
-                        " and bundled EXP candidate tables. These values are not yet verified production costs.",
+                    "Candidate costs · Genshin-DB " + BundledEnhancementCatalogueRepository.GAME_VERSION,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -618,38 +620,55 @@ private fun CalculatorValueTrigger(label: String, value: Int, modifier: Modifier
     }
 }
 @Composable
-private fun CalculatorMaterialRow(material: CalculatorMaterial, ownedQuantity: Long, remaining: Long?, isInventoryKnown: Boolean, onOwnedChange: (Long) -> Unit, onConfirmZero: () -> Unit) {
+private fun CalculatorMaterialRow(
+    material: CalculatorMaterial,
+    ownedQuantity: Long,
+    remaining: Long?,
+    isInventoryKnown: Boolean,
+    onOwnedChange: (Long) -> Unit,
+    onConfirmZero: () -> Unit
+) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 5.dp),
+        Modifier.fillMaxWidth().padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(7.dp)
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         SubcomposeAsyncImage(
             model = material.iconUrl,
             contentDescription = "${material.name} icon",
-            modifier = Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)),
+            modifier = Modifier.size(26.dp).clip(RoundedCornerShape(5.dp)),
             contentScale = ContentScale.Fit,
-            loading = { Text("✦") },
-            error = { Text("✦") }
+            loading = { Text("✦", style = MaterialTheme.typography.labelSmall) },
+            error = { Text("✦", style = MaterialTheme.typography.labelSmall) }
         )
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(material.name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, maxLines = 2)
-            Text("Owned", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (isInventoryKnown) {
-                CalculatorQuantityControl("", ownedQuantity, onOwnedChange)
-            } else {
-                TextButton(
-                    onClick = onConfirmZero,
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = 0.dp)
-                ) { Text("Set 0 owned", style = MaterialTheme.typography.labelSmall) }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(0.dp)) {
+            Text(material.name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Medium, maxLines = 1)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text("Own", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (isInventoryKnown) {
+                    Surface(
+                        onClick = { onOwnedChange((ownedQuantity - 1L).coerceAtLeast(0L)) },
+                        modifier = Modifier.size(20.dp),
+                        shape = RoundedCornerShape(5.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) { Box(contentAlignment = Alignment.Center) { Text("−", style = MaterialTheme.typography.labelMedium) } }
+                    Text(ownedQuantity.toString(), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+                    Surface(
+                        onClick = { onOwnedChange((ownedQuantity + 1L).coerceAtMost(Long.MAX_VALUE - 1L)) },
+                        modifier = Modifier.size(20.dp),
+                        shape = RoundedCornerShape(5.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) { Box(contentAlignment = Alignment.Center) { Text("+", style = MaterialTheme.typography.labelMedium) } }
+                } else {
+                    TextButton(
+                        onClick = onConfirmZero,
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 3.dp, vertical = 0.dp)
+                    ) { Text("Set 0", style = MaterialTheme.typography.labelSmall) }
+                }
             }
         }
-        Column(Modifier.width(62.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(material.required.toString(), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, maxLines = 1)
-        }
-        Column(Modifier.width(68.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(remaining?.toString() ?: "—", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, maxLines = 1)
-        }
+        Text(material.required.toString(), Modifier.width(58.dp), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Medium, maxLines = 1)
+        Text(remaining?.toString() ?: "—", Modifier.width(54.dp), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, maxLines = 1)
     }
 }
 
