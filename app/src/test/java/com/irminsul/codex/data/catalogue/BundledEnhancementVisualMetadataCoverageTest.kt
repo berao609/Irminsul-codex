@@ -27,7 +27,7 @@ class BundledEnhancementVisualMetadataCoverageTest {
         val missingIcons = mapped.filter { it.iconUrl?.startsWith("https://enka.network/ui/UI_AvatarIcon_") != true }
         assertTrue("Missing character portraits: " + missingIcons.joinToString { "${it.id}:${it.name}" }, missingIcons.isEmpty())
         val validWeaponTypes = setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST")
-        val missingTypes = mapped.filter { it.weaponType !in validWeaponTypes }
+        val missingTypes = mapped.filter { it.weaponType?.let { type -> type in validWeaponTypes } != true }
         assertTrue("Missing character weapon types: " + missingTypes.joinToString { "${it.id}:${it.name}" }, missingTypes.isEmpty())
         assertEquals(4, mapped.count { it.element == null })
         assertTrue(mapped.filter { it.element == null }.all { it.weaponType == "SWORD" })
@@ -46,7 +46,7 @@ class BundledEnhancementVisualMetadataCoverageTest {
         val missingIcons = mapped.filter { it.iconUrl?.startsWith("https://enka.network/ui/") != true }
         assertTrue("Missing weapon icons: " + missingIcons.joinToString { "${it.id}:${it.name}" }, missingIcons.isEmpty())
         val validWeaponTypes = setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST")
-        val missingTypes = mapped.filter { it.weaponType !in validWeaponTypes }
+        val missingTypes = mapped.filter { it.weaponType?.let { type -> type in validWeaponTypes } != true }
         assertTrue("Missing weapon types: " + missingTypes.joinToString { "${it.id}:${it.name}" }, missingTypes.isEmpty())
     }
 }
