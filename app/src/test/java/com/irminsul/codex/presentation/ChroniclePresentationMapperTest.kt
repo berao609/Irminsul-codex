@@ -152,9 +152,30 @@ class ChroniclePresentationMapperTest {
         assertEquals("4", cycles[0].difficulty)
         assertEquals("10", cycles[0].medals)
         assertEquals("1140", cycles[0].coins)
-        assertEquals(listOf("Flins", "Xingqiu"), cycles[0].rounds.single().characters)
+        assertEquals(listOf("Flins", "Xingqiu"), cycles[0].rounds.single().characters.mapNotNull { it.name })
         assertEquals(true, cycles[0].rounds.single().medalEarned)
         assertEquals("October 2026", cycles[1].title)
+    }
+
+    @Test fun theaterPreservesCyclePositionsWhenARecordIsExplicitlyUnavailable() {
+        val value = DataValue.Available(obj(
+            "data" to StructuredData.ArrayValue(listOf(
+                obj(
+                    "has_data" to StructuredData.BooleanValue(false),
+                    "schedule" to obj("schedule_id" to StructuredData.NumberValue("31"))
+                ),
+                obj(
+                    "has_data" to StructuredData.BooleanValue(true),
+                    "stat" to obj("difficulty_id" to StructuredData.NumberValue("4")),
+                    "schedule" to obj("schedule_id" to StructuredData.NumberValue("30"))
+                )
+            ))
+        ), null)
+        val cycles = ChroniclePresentationMapper.theaterCycles(value)
+        assertEquals(2, cycles.size)
+        assertEquals(false, cycles[0].hasData)
+        assertEquals("Cycle 30", cycles[1].title)
+        assertEquals(true, cycles[1].hasData)
     }
 
     @Test fun theaterDoesNotInventCyclesForMissingOrUnavailableData() {
@@ -163,5 +184,123 @@ class ChroniclePresentationMapperTest {
         val empty = DataValue.Available(obj("data" to StructuredData.ArrayValue(emptyList())), null)
         assertTrue(ChroniclePresentationMapper.theaterCycles(empty).isEmpty())
     }
+
+
+    @Test fun spiralAbyssMapsFloorsChambersTeamsAndUsesOwnedCharacterNames() {
+        val roster = listOf(
+            com.irminsul.codex.domain.model.CharacterSnapshot(id = 10000120, name = "Flins", level = 90, rarity = 5, element = "Electro", friendshipLevel = 0, activeConstellationCount = 0),
+            com.irminsul.codex.domain.model.CharacterSnapshot(id = 10000025, name = "Xingqiu", level = 70, rarity = 4, element = "Hydro", friendshipLevel = 0, activeConstellationCount = 0)
+        )
+        val value = DataValue.Available(obj(
+            "total_battle_times" to StructuredData.NumberValue("38"),
+            "total_win_times" to StructuredData.NumberValue("6"),
+            "total_star" to StructuredData.NumberValue("36"),
+            "max_floor" to StructuredData.StringValue("12-3"),
+            "floors" to StructuredData.ArrayValue(listOf(
+                obj(
+                    "index" to StructuredData.NumberValue("12"),
+                    "star" to StructuredData.NumberValue("9"),
+                    "max_star" to StructuredData.NumberValue("9"),
+                    "ley_line_disorder" to StructuredData.ArrayValue(listOf(StructuredData.StringValue("All party members gain a 60% Electro DMG Bonus."))),
+                    "levels" to StructuredData.ArrayValue(listOf(
+                        obj(
+                            "index" to StructuredData.NumberValue("1"),
+                            "star" to StructuredData.NumberValue("3"),
+                            "max_star" to StructuredData.NumberValue("3"),
+                            "battles" to StructuredData.ArrayValue(listOf(
+                                obj(
+                                    "index" to StructuredData.NumberValue("1"),
+                                    "settle_date_time" to obj(
+                                        "year" to StructuredData.NumberValue("2026"),
+                                        "month" to StructuredData.NumberValue("11"),
+                                        "day" to StructuredData.NumberValue("16"),
+                                        "hour" to StructuredData.NumberValue("9"),
+                                        "minute" to StructuredData.NumberValue("8")
+                                    ),
+                                    "avatars" to StructuredData.ArrayValue(listOf(
+                                        obj("id" to StructuredData.NumberValue("10000120"), "level" to StructuredData.NumberValue("90"), "rarity" to StructuredData.NumberValue("5")),
+                                        obj("id" to StructuredData.NumberValue("10000025"), "level" to StructuredData.NumberValue("70"), "rarity" to StructuredData.NumberValue("4"))
+                                    ))
+                                )
+                            ))
+                        )
+                    ))
+                )
+            ))
+        ), null)
+        val cycle = ChroniclePresentationMapper.spiralAbyss(value, roster)
+        assertEquals("38", cycle?.battles)
+        assertEquals("6", cycle?.wins)
+        assertEquals("36", cycle?.stars)
+        assertEquals("12-3", cycle?.bestFloor)
+        assertEquals("12", cycle?.floors?.single()?.floorNumber)
+        assertEquals("All party members gain a 60% Electro DMG Bonus.", cycle?.floors?.single()?.leyLineDisorders?.single())
+        val chamber = cycle?.floors?.single()?.chambers?.single()
+        assertEquals("1", chamber?.chamberNumber)
+        assertEquals("3", chamber?.stars)
+        assertEquals("First Half", chamber?.battles?.single()?.half)
+        assertEquals("2026-11-16 · 9:08", chamber?.battles?.single()?.completedAt)
+        assertEquals(listOf("Flins", "Xingqiu"), chamber?.battles?.single()?.characters?.mapNotNull { it.name })
+        assertEquals(listOf("Electro", "Hydro"), chamber?.battles?.single()?.characters?.mapNotNull { it.element })
+    }
+
+    @Test fun spiralAbyssIgnoresMalformedEntriesAndPreservesMissingSectionState() {
+        assertEquals(null, ChroniclePresentationMapper.spiralAbyss(DataValue.Missing))
+        assertEquals(null, ChroniclePresentationMapper.spiralAbyss(DataValue.Unavailable))
+        val malformed = DataValue.Available(obj(
+            "floors" to StructuredData.ArrayValue(listOf(
+                StructuredData.StringValue("not a floor"),
+                obj("index" to StructuredData.StringValue(""), "levels" to StructuredData.ArrayValue(emptyList()))
+            ))
+        ), null)
+        val cycle = ChroniclePresentationMapper.spiralAbyss(malformed)
+        assertTrue(cycle?.floors.isNullOrEmpty())
+        assertEquals(null, cycle?.stars)
+    }
+
+    @Test fun theaterMapsCharacterDetailsBuffNamesAndAvailablePerformanceStatistics() {
+        val roster = listOf(
+            com.irminsul.codex.domain.model.CharacterSnapshot(id = 10000111, name = "Varesa", level = 90, rarity = 5, element = "Electro", friendshipLevel = 0, activeConstellationCount = 0)
+        )
+        val value = DataValue.Available(obj(
+            "data" to StructuredData.ArrayValue(listOf(
+                obj(
+                    "has_data" to StructuredData.BooleanValue(true),
+                    "stat" to obj("difficulty_id" to StructuredData.NumberValue("4"), "max_round_id" to StructuredData.NumberValue("10"), "medal_num" to StructuredData.NumberValue("10")),
+                    "schedule" to obj("schedule_id" to StructuredData.NumberValue("31"), "start_date_time" to obj("year" to StructuredData.NumberValue("2026"), "month" to StructuredData.NumberValue("11"))),
+                    "detail" to obj(
+                        "rounds_data" to StructuredData.ArrayValue(listOf(
+                            obj(
+                                "round_id" to StructuredData.NumberValue("1"),
+                                "is_get_medal" to StructuredData.BooleanValue(true),
+                                "avatars" to StructuredData.ArrayValue(listOf(
+                                    obj("avatar_id" to StructuredData.NumberValue("10000111"), "name" to StructuredData.StringValue("Varesa"), "element" to StructuredData.StringValue("Electro"), "level" to StructuredData.NumberValue("90"), "rarity" to StructuredData.NumberValue("5"), "image" to StructuredData.StringValue("https://example.invalid/varesa.png"))
+                                )),
+                                "finish_date_time" to obj("year" to StructuredData.NumberValue("2026"), "month" to StructuredData.NumberValue("11"), "day" to StructuredData.NumberValue("2")),
+                                "buffs" to StructuredData.ArrayValue(emptyList()),
+                                "splendour_buff" to obj("buffs" to StructuredData.ArrayValue(listOf(obj("name" to StructuredData.StringValue("Electro Crystal Blessing")))))
+                            )
+                        )),
+                        "fight_statisic" to obj(
+                            "max_damage_avatar" to obj("avatar_id" to StructuredData.NumberValue("10000111"), "value" to StructuredData.StringValue("816241")),
+                            "max_defeat_avatar" to obj("avatar_id" to StructuredData.NumberValue("10000111"), "value" to StructuredData.StringValue("9")),
+                            "max_take_damage_avatar" to obj("avatar_id" to StructuredData.NumberValue("10000111"), "value" to StructuredData.StringValue("17892")),
+                            "total_use_time" to StructuredData.NumberValue("679")
+                        )
+                    )
+                )
+            ))
+        ), null)
+        val cycle = ChroniclePresentationMapper.theaterCycles(value, roster).single()
+        val round = cycle.rounds.single()
+        assertEquals("Varesa", round.characters.single().name)
+        assertEquals("Electro", round.characters.single().element)
+        assertEquals(90, round.characters.single().level)
+        assertEquals("2026-11-2", round.completedAt)
+        assertEquals("Electro Crystal Blessing", round.buffs.single())
+        assertEquals("816241 · Varesa", cycle.performanceMetrics.first().value)
+        assertEquals("679 seconds", cycle.performanceMetrics.last().value)
+    }
+
 
 }

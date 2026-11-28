@@ -28,6 +28,17 @@ class VisualsNavigationStackTest {
     }
 
     @Test
+    fun unifiedSpiralAbyssDestinationCanBeOpenedFromOverview() {
+        assertEquals(
+            listOf(VisualsDestination.OVERVIEW, VisualsDestination.SPIRAL_ABYSS),
+            VisualsNavigationStack.navigate(
+                listOf(VisualsDestination.OVERVIEW),
+                VisualsDestination.SPIRAL_ABYSS
+            )
+        )
+    }
+
+    @Test
     fun backReturnsToPreviousDestination() {
         val start = listOf(
             VisualsDestination.OVERVIEW,

@@ -5816,3 +5816,98 @@ Move the existing Batch 5 modernization from the API 36.1 dependency baseline to
 ### Next action
 
 Check the next CI run after integrating the latest `main` head and the JVM 11 correction. Confirm stable API 37.1 installation, API 37.2 emulator boot, Room migration tests, APK assembly, schema verification, signing, and artifact upload. Correct any remaining failure within PR #13. Do not merge without the user's explicit approval.
+
+---
+
+## Milestone 112 - UI Revamp Batch 6: Chronicle Detail Data and Presentation
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 6  
+**Status:** Implemented and CI-verified on the feature branch; physical-device verification pending.
+
+### Objective
+
+Replace summary-only Spiral Abyss and Imaginarium Theater detail pages with source-backed floor, chamber, lineup, round, and performance details. Keep Stygian Onslaught limited to its currently validated summary.
+
+### Source evidence
+
+- Account export: docs/genshin_865157206.json
+- Exported: 2026-11-27T20:42:56Z
+- Export blob SHA: 0c9dc9967c37cd58744495eaeddb4ead780e93bb
+- Spiral Abyss current and previous sections contain floor/chamber stars, battle halves, character IDs/portraits/levels, completion date parts, and Ley Line Disorder text.
+- Imaginarium Theater contains cycle statistics, round lineups with names/elements/levels/portraits, round medal state, finish dates, round blessing names, and fight_statisic performance fields.
+- This export has no dedicated Stygian Onslaught record section. No detailed Stygian history or team data is inferred.
+
+### Implemented on ui-revamp/batch-6-chronicle-details
+
+- Added typed presentation mapping for Spiral Abyss cycles, floors, chambers, battle halves, character lineups, stars, completion timestamps, and Ley Line Disorder text.
+- Resolves Spiral Abyss character names and fallback portraits/levels from the already retrieved account roster; does not display raw character IDs.
+- Expanded Theater round mapping with character portraits, names, elements, levels, rarity, medal state, finish date, and both ordinary and splendour_buff.buffs blessing names.
+- Maps source-provided Theater performance values for highest damage, most defeats, most damage taken, and total battle time. Character names are resolved against the account roster when possible.
+- Passes roster context into the current/previous Abyss and Theater destinations.
+- Keeps missing, unavailable, malformed, and stale section handling distinct. Stale records receive a visible freshness note.
+- Added mapper tests for Abyss floors/chambers/teams and partial/malformed data, plus Theater character, blessing, date, and performance mapping.
+
+### Files changed
+
+- app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationMapper.kt
+- app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt
+- app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt
+- app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationMapperTest.kt
+- docs/PROGRESS_MILESTONES.md
+
+### Verification
+
+- Repository source and export schema were retrieved from GitHub before implementation.
+- GitHub Actions run #943: https://github.com/berao609/Irminsul-codex/actions/runs/46089004111 - Success.
+- Unit tests: passed.
+- Debug APK assembly: passed.
+- Room schema snapshot verification and upload: passed.
+- Debug APK signature verification: passed.
+- Debug APK artifact: irminsul-codex-debug-v1.0.0-dev.943-vc945 (artifact ID 15239923231; 15,879,814 bytes).
+- Room instrumentation tests were skipped by the workflow because the changed files do not affect Room persistence or schema.
+- Draft PR #14: https://github.com/berao609/Irminsul-codex/pull/14.
+- Physical-device verification is pending. No on-device behavior is claimed.
+
+### Remaining
+
+- Download the Debug APK from run #943 and inspect current/previous Abyss plus Theater on the Redmi Turbo 4 Pro.
+- Review visual density, portrait loading, date presentation, and long blessing text on-device.
+- Check the latest PR checks after the milestone documentation update.
+- Keep Stygian Onslaught unchanged beyond its existing source-backed summary until a real record payload is captured and validated.
+
+### Next action
+
+Install the run #943 Debug APK and report the current/previous Abyss and Theater results, including any visual or runtime defects. Do not merge PR #14 until device review and the latest PR checks are complete.
+
+
+
+---
+
+## Milestone 113 - UI Revamp Batch 6: Consistent Expanded Endgame Cards
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 6  
+**Status:** Implemented; CI and APK verification pending.
+
+### Change
+
+- Applied the Theater card's non-collapsible presentation to Spiral Abyss and Stygian Onslaught.
+- Both cards now render their content continuously; their section headers no longer show a collapse icon or respond to collapse clicks.
+- Preserved the Spiral Abyss current/previous cycle selector and all existing record content.
+- Preserved the existing Stygian Onslaught best-record summary and source-data limitations.
+- No data mapping, retrieval, or other Chronicle section behavior was changed.
+
+### Implementation
+
+- Commit: `a03425bdc888d2c35aba9f586edddd5173e0bc7e`
+- File: `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+
+### Verification
+
+- Source changes are committed on `ui-revamp/batch-6-chronicle-details`.
+- CI, Debug APK artifact, and physical-device verification for this commit are pending. No successful build or device result is claimed.
+
+### Next action
+
+Check the CI run for the implementation commit. If successful, install its Debug APK and verify that all three endgame cards (Spiral Abyss, Imaginarium Theater, and Stygian Onslaught) stay expanded and that the Abyss cycle selector still works.

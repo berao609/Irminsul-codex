@@ -5,8 +5,7 @@ internal enum class VisualsDestination(val title: String) {
     CHARACTER_ROSTER("All Characters"),
     CHARACTER_DETAILS("Character Details"),
     WORLD_EXPLORATION("World Exploration"),
-    SPIRAL_ABYSS_CURRENT("Spiral Abyss"),
-    SPIRAL_ABYSS_PREVIOUS("Previous Spiral Abyss"),
+    SPIRAL_ABYSS("Spiral Abyss"),
     IMAGINARIUM_THEATER("Imaginarium Theater"),
     STYGIAN_ONSLAUGHT("Stygian Onslaught"),
     ACCOUNT_ANALYSIS("Account Analysis")
