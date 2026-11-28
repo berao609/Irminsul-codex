@@ -165,6 +165,108 @@ class IrminsulDatabaseMigrationTest {
         }
     }
 
+    @Test
+    fun migratesVersionTwoDatabaseToThreeWithoutLosingSnapshotChunks() {
+        val databaseName = "irminsul-migration-2-3-test"
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        context.deleteDatabase(databaseName)
+        val helper = object : SQLiteOpenHelper(context, databaseName, null, 2) {
+            override fun onCreate(database: SQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE accounts (
+                        uid TEXT NOT NULL, server TEXT NOT NULL,
+                        createdAtEpochMillis INTEGER NOT NULL, lastUpdatedAtEpochMillis INTEGER NOT NULL,
+                        PRIMARY KEY(uid, server)
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE account_snapshots (
+                        snapshotId TEXT NOT NULL PRIMARY KEY, uid TEXT NOT NULL, server TEXT NOT NULL,
+                        exportedAt TEXT NOT NULL, exportedAtEpochMillis INTEGER NOT NULL,
+                        exportFormatVersion INTEGER NOT NULL, overallStatus TEXT NOT NULL,
+                        origin TEXT NOT NULL, rawJson TEXT NOT NULL,
+                        FOREIGN KEY(uid, server) REFERENCES accounts(uid, server)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    "CREATE INDEX index_account_snapshots_uid_server_exportedAtEpochMillis " +
+                        "ON account_snapshots(uid, server, exportedAtEpochMillis)"
+                )
+                database.execSQL(
+                    """
+                    CREATE TABLE account_snapshot_json_chunks (
+                        snapshotId TEXT NOT NULL, chunkIndex INTEGER NOT NULL, content TEXT NOT NULL,
+                        PRIMARY KEY(snapshotId, chunkIndex),
+                        FOREIGN KEY(snapshotId) REFERENCES account_snapshots(snapshotId)
+                            ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                database.execSQL(
+                    "CREATE INDEX index_account_snapshot_json_chunks_snapshotId " +
+                        "ON account_snapshot_json_chunks(snapshotId)"
+                )
+                database.execSQL("CREATE TABLE room_master_table (id INTEGER PRIMARY KEY, identity_hash TEXT)")
+                database.execSQL(
+                    "INSERT OR REPLACE INTO room_master_table (id, identity_hash) " +
+                        "VALUES(42, '503fa45c4baaeaa8cf85132545c93d81')"
+                )
+            }
+
+            override fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+                error("Unexpected version-two fixture upgrade: $oldVersion to $newVersion")
+            }
+        }
+        helper.writableDatabase.apply {
+            execSQL(
+                "INSERT INTO accounts(uid, server, createdAtEpochMillis, lastUpdatedAtEpochMillis) VALUES(?, ?, ?, ?)",
+                arrayOf<Any>("800000001", "os_asia", 1000L, 2000L)
+            )
+            execSQL(
+                """
+                INSERT INTO account_snapshots(
+                    snapshotId, uid, server, exportedAt, exportedAtEpochMillis,
+                    exportFormatVersion, overallStatus, origin, rawJson
+                ) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """.trimIndent(),
+                arrayOf<Any>("snapshot-v2", "800000001", "os_asia", "2026-11-25T08:00:00Z", 3000L, 1, "SUCCESS", "hoyolab", "")
+            )
+            execSQL(
+                "INSERT INTO account_snapshot_json_chunks(snapshotId, chunkIndex, content) VALUES(?, ?, ?)",
+                arrayOf<Any>("snapshot-v2", 0, """{"uid":"800000001","preserved":true}""")
+            )
+            close()
+        }
+        helper.close()
+
+        val migrated = Room.databaseBuilder(context, IrminsulDatabase::class.java, databaseName)
+            .addMigrations(IrminsulDatabase.MIGRATION_1_2, IrminsulDatabase.MIGRATION_2_3)
+            .build()
+        try {
+            val database = migrated.openHelper.writableDatabase
+            val chunk = database.query(
+                "SELECT content FROM account_snapshot_json_chunks WHERE snapshotId = ? AND chunkIndex = 0",
+                arrayOf("snapshot-v2")
+            )
+            chunk.use {
+                assertTrue(it.moveToFirst())
+                assertEquals("""{"uid":"800000001","preserved":true}""", it.getString(0))
+            }
+            val privateTable = database.query(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'private_account_data'"
+            )
+            privateTable.use { assertTrue(it.moveToFirst()) }
+        } finally {
+            migrated.close()
+            context.deleteDatabase(databaseName)
+        }
+    }
+
     private fun SQLiteDatabase.insertLegacySnapshot(
         snapshotId: String,
         rawJson: String,
