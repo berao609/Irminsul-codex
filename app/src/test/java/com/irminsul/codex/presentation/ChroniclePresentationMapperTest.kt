@@ -122,6 +122,48 @@ class ChroniclePresentationMapperTest {
         assertEquals(nodKraiIcon, regions.single { it.name == "Nod-Krai" }.iconUrl)
     }
 
+    @Test fun explorationUsesSourceBackedIconFallbacksIncludingTempleOfSpaceOffering() {
+        val natlanIcon = "https://example.invalid/natlan.png"
+        val natlanInner = "https://example.invalid/natlan-inner.png"
+        val nodKraiIcon = "https://example.invalid/nod-krai.png"
+        val nodKraiCover = "https://example.invalid/nod-krai-cover.png"
+        val templeOffering = "https://example.invalid/temple-memory-core.png"
+        val data = DataValue.Available(obj(
+            "world_explorations" to StructuredData.ArrayValue(listOf(
+                obj("id" to StructuredData.NumberValue("15"), "name" to StructuredData.StringValue("Natlan"),
+                    "exploration_percentage" to StructuredData.NumberValue("280"),
+                    "icon" to StructuredData.StringValue(natlanIcon),
+                    "inner_icon" to StructuredData.StringValue(natlanInner)),
+                obj("id" to StructuredData.NumberValue("17"), "name" to StructuredData.StringValue("Nod-Krai"),
+                    "exploration_percentage" to StructuredData.NumberValue("1000"),
+                    "icon" to StructuredData.StringValue(nodKraiIcon),
+                    "cover" to StructuredData.StringValue(nodKraiCover)),
+                obj("id" to StructuredData.NumberValue("19"), "name" to StructuredData.StringValue("Temple of Space"),
+                    "exploration_percentage" to StructuredData.NumberValue("1000"),
+                    "icon" to StructuredData.StringValue(""),
+                    "inner_icon" to StructuredData.StringValue(""),
+                    "cover" to StructuredData.StringValue(""),
+                    "offerings" to StructuredData.ArrayValue(listOf(
+                        obj("name" to StructuredData.StringValue("Temple of Space: Memory Core"),
+                            "level" to StructuredData.NumberValue("10"),
+                            "icon" to StructuredData.StringValue(templeOffering))
+                    )))
+            ))
+        ), null)
+
+        val regions = ChroniclePresentationMapper.explorationRegions(data)
+        val natlan = regions.single { it.name == "Natlan" }
+        val nodKrai = regions.single { it.name == "Nod-Krai" }
+        val temple = regions.single { it.name == "Temple of Space" }
+
+        assertEquals(natlanIcon, natlan.iconUrl)
+        assertEquals(listOf(natlanIcon, natlanInner), natlan.iconUrlCandidates)
+        assertEquals(nodKraiIcon, nodKrai.iconUrl)
+        assertEquals(listOf(nodKraiIcon, nodKraiCover), nodKrai.iconUrlCandidates)
+        assertEquals(templeOffering, temple.iconUrl)
+        assertEquals(listOf(templeOffering), temple.iconUrlCandidates)
+    }
+
     @Test fun explorationPlacesNamedAreasUnderTheirRequestedRegions() {
         val data = DataValue.Available(obj(
             "world_explorations" to StructuredData.ArrayValue(listOf(
@@ -137,6 +179,10 @@ class ChroniclePresentationMapperTest {
                     "name" to StructuredData.StringValue("The Chasm"), "exploration_percentage" to StructuredData.NumberValue("900")),
                 obj("id" to StructuredData.NumberValue("6"), "parent_id" to StructuredData.NumberValue("0"),
                     "name" to StructuredData.StringValue("Chenyu Vale"), "exploration_percentage" to StructuredData.NumberValue("1000"))
+                ,obj("id" to StructuredData.NumberValue("15"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Natlan"), "exploration_percentage" to StructuredData.NumberValue("280"))
+                ,obj("id" to StructuredData.NumberValue("16"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Ancient Sacred Mountain"), "exploration_percentage" to StructuredData.NumberValue("406"))
             ))
         ), null)
 
@@ -146,6 +192,9 @@ class ChroniclePresentationMapperTest {
 
         assertEquals(listOf("Windrest Peak", "Dragonspine"), mondstadt.childRegions.map { it.name })
         assertEquals(listOf("The Chasm", "Chenyu Vale"), liyue.childRegions.map { it.name })
+        val natlan = regions.single { it.name == "Natlan" }
+        assertEquals(listOf("Ancient Sacred Mountain"), natlan.childRegions.map { it.name })
+        assertEquals(40.6f, natlan.childRegions.single().progress * 100f, 0.001f)
         assertEquals(50f, mondstadt.progress * 100f, 0.001f)
         assertEquals(60f, liyue.progress * 100f, 0.001f)
         assertEquals(70f, mondstadt.childRegions[0].progress * 100f, 0.001f)
