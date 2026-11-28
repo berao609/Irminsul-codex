@@ -92,6 +92,13 @@ internal fun VisualsSection(
                             onViewAll = { onNavigate(VisualsDestination.CHARACTER_ROSTER) },
                             emptyMessage = if (snapshot == null) null else rosterAvailabilityText(rosterValue)
                         )
+                        TextButton(
+                            onClick = { onNavigate(VisualsDestination.WEAPON_ROSTER) },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = roster.isNotEmpty()
+                        ) {
+                            Text("View Weapon Roster")
+                        }
 
                         snapshot?.let { account ->
                             ChronicleExplorationSection(
@@ -177,6 +184,21 @@ internal fun VisualsSection(
                                 onCharacterSelected = onCharacterSelected
                             )
                             CharacterShowcaseDetail(character)
+                        }
+                    }
+
+                    VisualsDestination.WEAPON_ROSTER -> {
+                        val rosterValue = snapshot?.characters
+                        val roster = rosterValue.charactersOrEmpty()
+                        if (roster.isEmpty()) {
+                            Text(
+                                if (snapshot == null) "Analyze your account to load equipped weapons."
+                                else rosterAvailabilityText(rosterValue),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            WeaponShowcaseSection(roster)
                         }
                     }
 
