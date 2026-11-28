@@ -5967,8 +5967,14 @@ No further work is pending for Milestone 113.
 ### Verification
 
 - Raw account export fields were inspected directly from the repository blob before mapping changes.
-- GitHub Actions run #976 succeeded for the initial hierarchy/progression implementation. Its Debug APK was `irminsul-codex-debug-v1.0.0-dev.976-vc978` (artifact ID 15245105257; SHA-256 `4385c7c3da1f981fb609c7412fd4b1bea577105921a676fa2bae9237bb421f28`).
-- Source-backed region background artwork was added after run #976; CI for the final source revision is pending.
+- GitHub Actions run #985 succeeded for the final source-code revision: https://github.com/berao609/Irminsul-codex/actions/runs/46099310591.
+- The PR-head verification run #987 also succeeded: https://github.com/berao609/Irminsul-codex/actions/runs/46099331462.
+- Unit tests: passed.
+- Debug APK build: passed.
+- Room schema snapshot verification and upload: passed.
+- Debug APK signature verification: passed.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.987-vc989` (artifact ID 15244723457; 15,902,059 bytes; SHA-256 `9c449ef6ed653a93e61845e92cc4843b0b8c4ad3a92f5caf885557bb11c3594a`).
+- Room instrumentation tests were skipped because this change does not affect Room persistence or schema.
 - Physical-device verification is pending. No on-device behavior is claimed.
 
 ### Next action
