@@ -56,3 +56,20 @@ Source inspection of the current PR branch's `IrminsulDatabase.kt` confirms sche
 ## Source reference
 
 See `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md`, Section 6.6, for the original screenshot-based UI direction. This retest feedback supersedes any prior implication that the current calculator UI was accepted.
+
+
+## Retest follow-up - 2026-11-28
+
+The user tested CI #1218 and reported three additional issues:
+
+1. The complete Enhancement Calculator was embedded inside one expandable Tools section. It must open as a dedicated screen with its own back navigation, not expand inline inside the Tools list.
+2. The All Characters / Already Owned selector did not change the catalogue. Root cause found in `EnhancementCalculatorSection.kt`: the `remember(...)` key set omitted both `ownedOnly` and the account `characters` list, so the derived choices remained stale after tab/account changes.
+3. The Cryo filter symbol was not visibly rendering. The filter renderer used a tiny dot as its loading/error fallback. Keep the source-backed Cryo game asset, apply a visible ice-blue tint, and show a visible snowflake fallback if the remote image cannot load.
+
+Corrective commits:
+- `3183aa665bca9e20fcf1ea4e815f7aa56dc3704f` - Tools entry now opens a dedicated calculator screen.
+- `e6a15fa4d0f2ce55c37bad5406bae70a9d9b3346` - Added screen-level back navigation and moved calculator composition out of the expandable Tools section.
+- `4fc418b96d1f20ea2598a5c1abee45d6e78f8987` - Added ownership/account data to catalogue-choice memoization keys and visible Cryo fallback.
+- `c5274d80e993535cec54dce8d02065dc3a9b4ac9` - Applied an ice-blue tint to the Cryo source icon.
+
+Verification pending: new CI run and physical-device retest. The Cryo asset's remote successful-load state is not independently verified; the fallback is implemented to prevent an invisible filter if loading fails. Do not mark device acceptance complete.
