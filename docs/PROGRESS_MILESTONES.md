@@ -6221,3 +6221,36 @@ Implement the four-page Enhancement Calculator visual redesign and the app-wide 
 - Remaining before retest: finish selection footer behavior; inspect/refine material owned-value input and row density; complete a source audit of all modified UI files for strokes, nested surfaces, inline pickers, and keyboard-triggering controls; fix any CI failures. Physical-device acceptance is pending and PR #17 remains unmerged.
 
 - CI #1212 on intermediate code head `3bda61a18215c055b72f63b4742a6f949205bbc0` **failed** during Kotlin compilation: missing `ExperimentalMaterial3Api` opt-in for `ModalBottomSheet` and an extra closing brace in `CalculatorInputSection`. Both issues were corrected in `6968511531ffe4bf3c911abd70f43feb528a4bc6`. A workflow run for the corrected head has not yet been observed; do not treat the fix as verified until CI passes.
+
+
+---
+
+## Milestone 118 - Enhancement Calculator Navigation and Selector Fixes
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 9  
+**Status:** Corrective implementation committed; CI and physical-device retest pending.
+
+### User feedback after CI #1218
+
+- Calculator was embedded in one expandable Tools section; user expects a dedicated calculator screen.
+- All Characters / Already Owned tabs did not switch the displayed catalogue.
+- Cryo element symbol did not render.
+
+### Implementation
+
+- `3183aa665bca9e20fcf1ea4e815f7aa56dc3704f`: replace inline expandable calculator with a dedicated Tools destination card.
+- `e6a15fa4d0f2ce55c37bad5406bae70a9d9b3346`: add a standalone calculator page with explicit back navigation in `CodexScreen.kt`.
+- `4fc418b96d1f20ea2598a5c1abee45d6e78f8987`: include `ownedOnly` and account character data in the derived catalogue `remember` keys; provide visible Cryo loading/error fallback.
+- `c5274d80e993535cec54dce8d02065dc3a9b4ac9`: tint the Cryo game asset ice-blue for contrast.
+
+### Verification
+
+- CI #1218 passed for prior head `7c75c4a844d68b50188c7f2bb5b791734a8288a6`; it does not include these corrections.
+- CI #1223 was queued for code head `4fc418b96d1f20ea2598a5c1abee45d6e78f8987` at the time of this record. The subsequent Cryo tint commit `c5274d80e993535cec54dce8d02065dc3a9b4ac9` also requires verification by a later run.
+- No physical-device acceptance is claimed. Verify that the Cryo remote icon renders (or its visible fallback appears), the ownership tabs actually filter, and the calculator opens as a separate screen and returns correctly.
+- PR #17 remains open, draft, and unmerged.
+
+### Next action
+
+Check CI for the latest branch head, correct any build/test failures, publish a new Debug APK, then ask the user to retest the three reported issues.
