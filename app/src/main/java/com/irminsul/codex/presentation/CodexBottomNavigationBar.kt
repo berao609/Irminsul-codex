@@ -2,12 +2,6 @@ package com.irminsul.codex.presentation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.outlined.DoorFront
-import androidx.compose.material.icons.outlined.InsertChart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,14 +30,14 @@ fun CodexBottomNavigationBar(
             NavigationBarItem(
                 selected = selectedTab == CodexTab.HOME,
                 onClick = { onTabSelected(CodexTab.HOME) },
-                icon = { Icon(Icons.Outlined.DoorFront, contentDescription = "Home") },
+                icon = { AppIcon(AppIconName.HOME, contentDescription = "Home") },
                 label = { Text("Home", fontSize = 10.sp) },
                 alwaysShowLabel = true
             )
             NavigationBarItem(
                 selected = selectedTab == CodexTab.VISUALS,
                 onClick = { onTabSelected(CodexTab.VISUALS) },
-                icon = { Icon(Icons.Outlined.InsertChart, contentDescription = "Visuals") },
+                icon = { AppIcon(AppIconName.VISUALS, contentDescription = "Visuals") },
                 label = { Text("Visuals", fontSize = 10.sp) },
                 alwaysShowLabel = true
             )
@@ -51,14 +45,14 @@ fun CodexBottomNavigationBar(
             NavigationBarItem(
                 selected = selectedTab == CodexTab.TOOLS,
                 onClick = { onTabSelected(CodexTab.TOOLS) },
-                icon = { Icon(Icons.Outlined.Build, contentDescription = "Tools") },
+                icon = { AppIcon(AppIconName.TOOLS, contentDescription = "Tools") },
                 label = { Text("Tools", fontSize = 10.sp) },
                 alwaysShowLabel = true
             )
             NavigationBarItem(
                 selected = selectedTab == CodexTab.ACCOUNT,
                 onClick = { onTabSelected(CodexTab.ACCOUNT) },
-                icon = { Icon(Icons.Outlined.AccountCircle, contentDescription = "Account") },
+                icon = { AppIcon(AppIconName.ACCOUNT, contentDescription = "Account") },
                 label = { Text("Account", fontSize = 10.sp) },
                 alwaysShowLabel = true
             )
@@ -70,7 +64,7 @@ fun CodexBottomNavigationBar(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
         ) {
-            Icon(Icons.Outlined.AutoAwesome, contentDescription = "Open AI assistant")
+            AppIcon(AppIconName.AI_ASSISTANT, contentDescription = "Open AI assistant")
         }
     }
 }

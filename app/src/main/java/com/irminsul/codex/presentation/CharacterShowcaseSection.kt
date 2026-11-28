@@ -10,9 +10,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,9 +31,11 @@ import com.irminsul.codex.domain.model.DataValue
 fun CharacterShowcaseSection(
     characters: List<CharacterSnapshot>,
     selectedCharacterId: Int?,
-    onCharacterSelected: (Int) -> Unit
+    onCharacterSelected: (Int) -> Unit,
+    initialRosterExpanded: Boolean = false,
+    showSelectedDetail: Boolean = true
 ) {
-    var rosterExpanded by remember { mutableStateOf(false) }
+    var rosterExpanded by remember(characters) { mutableStateOf(initialRosterExpanded) }
     var filtersExpanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var minimumLevel by remember { mutableStateOf("") }
@@ -104,7 +103,7 @@ fun CharacterShowcaseSection(
                 }
             }
         }
-        CharacterShowcaseDetail(character = selected)
+        if (showSelectedDetail) CharacterShowcaseDetail(character = selected)
 
         Card(
             onClick = { rosterExpanded = !rosterExpanded },
@@ -126,8 +125,8 @@ fun CharacterShowcaseSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Icon(
-                    if (rosterExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                AppIcon(
+                    if (rosterExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = if (rosterExpanded) "Collapse character roster" else "Expand character roster"
                 )
             }
@@ -307,7 +306,7 @@ private fun CharacterSnapshot.rosterWeaponType(): String? {
 }
 
 @Composable
-private fun CharacterShowcaseDetail(character: CharacterSnapshot) {
+internal fun CharacterShowcaseDetail(character: CharacterSnapshot) {
     var expandedDetailKey by remember(character.id) { mutableStateOf<String?>(null) }
     fun toggleDetail(key: String) {
         expandedDetailKey = if (expandedDetailKey == key) null else key
@@ -558,8 +557,8 @@ private fun ShowcaseExpandableSection(
                 Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 Text(summary, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(
-                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+            AppIcon(
+                if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                 contentDescription = if (expanded) "Collapse $title" else "Expand $title"
             )
         }
@@ -627,8 +626,8 @@ private fun WeaponShowcaseRow(
                 )
                 if (stale) Text("Using older account data", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
             }
-            Icon(
-                imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+            AppIcon(
+                if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                 contentDescription = if (expanded) "Collapse weapon details" else "Expand weapon details"
             )
         }

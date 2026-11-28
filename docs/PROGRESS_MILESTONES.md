@@ -5473,7 +5473,7 @@ Presentation-only reference fidelity work. No account retrieval, raw source sche
 
 **Date recorded:** 2026-11-27  
 **Development phase:** UI Revamp - Batch 4  
-**Status:** Implemented, merged, and CI-verified in PRs #7 and #8; physical-device verification pending.
+**Status:** Implemented, merged, and CI-verified in PRs #7 and #8; partially device-verified on 2026-11-28 (mode visibility and initial expanded state confirmed; detailed behavior remains unverified).
 
 ### Objective
 Extend the existing Visuals Battle Chronicle experience with source-backed Stygian Onslaught data while establishing a typed domain boundary for this additional Chronicle section. This is part of the ongoing UI revamp, not a separate task.
@@ -5513,7 +5513,7 @@ Extend the existing Visuals Battle Chronicle experience with source-backed Stygi
 - GitHub Actions [run #884](https://github.com/berao609/Irminsul-codex/actions/runs/46018327952) succeeded for PR #8's merge commit. Unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact uploads succeeded. Room instrumentation tests were correctly skipped because PR #8 changed no persistence or snapshot-model code.
 - Latest Debug APK: `irminsul-codex-debug-v1.0.0-dev.884-vc886`, artifact ID `15207231460`, SHA-256 `38f044b90e71d48367f372afc25c39e45e5e727996c0a5f4817f95dfa9be838c`.
 - Room schema artifact ID: `15207725741`; SHA-256 `bc3887f3199ac6c94af8895d458a449df68ebccf414b7778a58d8ddb547c126f`.
-- Physical-device verification: pending user testing.
+- Physical-device verification (2026-11-28): user confirmed Spiral Abyss, Imaginarium Theater, and Stygian Onslaught all appear in Visuals and are expanded on entry. This verifies section visibility and the current default-expanded behavior only; detail completeness, navigation, and all data fields remain unverified.
 - No Room schema migration was required; the typed Stygian summary is derived from the existing persisted raw index payload.
 
 ### Device checklist
@@ -5525,3 +5525,391 @@ Extend the existing Visuals Battle Chronicle experience with source-backed Stygi
 
 ### Boundary
 This milestone adds typed Stygian summary mapping, Visuals presentation, and a dedicated local Battle Chronicle collector. It does not add an unverified Stygian detail endpoint, historical cycle/team records, a separate cloud service, or a Room migration. Further Chronicle endpoint expansion remains part of the same ongoing UI revamp batch plan and must be evidence-led.
+
+
+---
+
+# Active UI Revamp Continuation Plan
+**Updated:** 2026-11-28  
+**Plan status:** Active; Batch 5 implementation in progress  
+**Reference authority:** `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md`, especially its updated Section 10, plus `docs/Irminsul Codex UI Design Instructions.md`.
+
+This is the continuation of the existing UI revamp. It does not create a separate product task or supersede completed milestones 107-109.
+
+## Current verified position
+
+- Milestones 107-109 established the Visuals overview, reference-aligned account/exploration/character presentation, and typed Chronicle coverage.
+- PRs #7 and #8 delivered the initial Stygian summary and Theater mapping; the latest relevant implementation merge is `2272910489dbf672466f165e19d4a4ec6e88a621`. The latest reference-document commit on `main` is `3dc6ad9610843b1e566ef8851b61365d4e801121`.
+- User device check (2026-11-28): Spiral Abyss, Imaginarium Theater, and Stygian Onslaught all appear in Visuals and are expanded on entry.
+- Current source still renders Visuals as one long vertical composition (`VisualsSection.kt`). Shared `ChronicleSection()` starts expanded (`remember(title) { mutableStateOf(true) }`). This matches the observed device behavior but is not the intended final navigation model.
+- No standalone UI revamp implementation-plan file was found in the repository. This active continuation plan is recorded here beside the milestone history to avoid creating a duplicate plan document.
+
+## Batch 5 prerequisite - Android platform modernization
+
+**Status:** Integrated prerequisite within the existing UI Revamp. This is not a separate product task or a new UI batch.
+
+### Why this is required
+- Batch 5 is merged on `main` at `237eb2393230c694c0e6eecc4611f005d9c58f15`.
+- GitHub Actions [Build Debug APK run #895](https://github.com/berao609/Irminsul-codex/actions/runs/46080591345) failed at `:app:checkDebugAarMetadata` before tests or APK assembly.
+- Lucide Android 2.2.1 resolves Compose 1.9.3, which requires a newer compile SDK and AGP than the existing AGP 8.5.0 / compileSdk 34 baseline.
+- This exposed a broader toolchain gap. Resolve it before Batch 5 device verification and before continuing the next UI implementation batches.
+
+### Verified current baseline
+- AGP 8.5.0; CI Gradle 8.14.8; JDK 17.
+- Kotlin 2.0.0; Compose BOM 2024.06.00.
+- compileSdk 34; targetSdk 34; minSdk 26.
+- KSP 2.0.0-1.0.21; Room 2.6.1; Lifecycle 2.8.2; Activity Compose 1.9.0.
+- Lucide Android 2.2.1.
+
+### Implemented stable upgrade baseline
+This matrix is implemented on PR #13. CI verification and physical-device testing remain pending.
+
+| Component | Implemented version | Compatibility basis |
+|---|---:|---|
+| Android Gradle Plugin | 9.3.1 | Documented minimum AGP for API 37.1; within Kotlin 2.4.21's fully supported range |
+| Gradle | 9.7.0 | Latest Gradle within Kotlin 2.4.21's documented fully supported range |
+| Kotlin / Compose compiler plugin | 2.4.21 | Stable release; supports AGP through 9.3.1 and Gradle through 9.7.0 |
+| KSP | 2.3.12 | Supports KGP 2.3.20-2.4.x, AGP 8.13+, Gradle 8.13+, and JDK 17+ |
+| Compose BOM | 2026.11.01 | Stable Compose 1.13 line; requires compileSdk 37.1 and Kotlin 2.2+ |
+| compileSdk | API 37.1 | Stable minor API platform; use `release(37) { minorApiLevel = 1 }` |
+| targetSdk | API 36 | Retained until Android 17 target-behavior changes are audited |
+| minSdk | API 26 | Preserved |
+| Room | 2.8.5 | Stable Room release |
+| Lifecycle | 2.11.1 | Stable Lifecycle release |
+| Activity Compose | 1.13.0 | Stable Activity release |
+| Core KTX | 1.19.1 | Stable Core release |
+
+CI package IDs:
+- Compile platform: `platforms;android-37.1`
+- Build tools: `build-tools;37.0.0`
+- Emulator image: `system-images;android-37.2;google_apis_ps16k;x86_64` (stable Android 17 QPR2, 16 KB page size)
+
+Official compatibility references reviewed:
+- [AGP API-level support and Gradle requirements](https://developer.android.com/build/releases/about-agp)
+- [Kotlin Gradle plugin compatibility table](https://kotlinlang.org/docs/gradle-configure-project.html)
+- [AGP built-in Kotlin migration](https://developer.android.com/build/migrate-to-built-in-kotlin)
+- [KSP requirements](https://kotlinlang.org/docs/ksp-overview.html)
+- [Compose November 2026 stable release](https://developer.android.com/blog/posts/jetpack-compose-november-2026-release)
+- [Android Emulator release notes](https://developer.android.com/studio/releases/emulator)
+- [Google Play target API requirement](https://support.google.com/googleplay/android-developer/answer/11926878)
+
+### Migration requirements
+
+**Stable Android 17 SDK package correction (2026-11-28):** The failed CI attempts used the major-only package IDs `platforms;android-37` and `system-images;android-37;google_apis;x86_64`. The stable packages carry minor API identifiers: compile against `platforms;android-37.1`, and test on `system-images;android-37.2;google_apis_ps16k;x86_64`. This makes the stable Compose 1.13 BOM and API 37.1 compile platform viable without using a preview SDK. CI still needs to verify both package installations and emulator boot.
+
+1. Recheck the compatibility matrix against official release notes immediately before implementation. Prefer the latest stable versions that are mutually supported; do not use alpha, beta, RC, or dynamic dependency versions. Keep compileSdk at stable API 37.1 and use the stable API 37.2 emulator image for runtime testing.
+2. Migrate AGP 9 built-in Kotlin correctly. Remove the redundant `org.jetbrains.kotlin.android` plugin where required; retain and align the Kotlin Compose compiler plugin. Inspect AGP 9 DSL and build behavior changes rather than suppressing migration warnings blindly.
+3. Upgrade KSP independently to a version supported by the selected KGP/AGP/Gradle combination. Keep Room's compiler and runtime versions aligned.
+4. Review every existing library individually. Do not force unrelated major migrations (for example Coil 2 to Coil 3) merely to claim that every dependency is newest. Preserve behavior and update only where compatibility, security, maintenance, or platform support justifies it.
+5. Compile against API 37.1 and keep targetSdk at 36 until Android 17 target-behavior changes are audited. Review edge-to-edge/system bars, predictive back, orientation/resizability behavior on large screens, permissions, background execution, notifications, and storage behavior. Keep minSdk 26 unless a demonstrated dependency requirement forces a separately reviewed decision.
+6. Update CI Gradle setup and Android emulator API coherently. Preserve persistent Debug signing, version-code calculation, Room schema verification, signature verification, artifact naming, and temporary-keystore cleanup.
+7. Add/adjust dependency-resolution and build checks so future incompatible AAR metadata, plugin, Kotlin, or SDK combinations fail before a UI batch is treated as ready.
+8. Preserve the existing single-module native Kotlin/Compose architecture, local-first design, account data integrity, export compatibility, and all Batch 5 UI behavior.
+
+### Acceptance criteria
+- AGP, Gradle, Kotlin, Compose, KSP, SDK, and AndroidX versions are mutually supported by official compatibility documentation.
+- No alpha/beta/RC or dynamic versions are used in the production build.
+- Gradle configuration and AGP migration complete without unresolved deprecations or compatibility workarounds that hide future breakage.
+- Unit tests, Room instrumentation/migration tests, lint/build checks, Debug APK assembly, Room schema verification, signing verification, and artifact upload succeed.
+- Batch 5's Lucide resources resolve and render correctly in Light, Dark, and System themes.
+- Physical-device checks are recorded separately from CI. Do not mark Batch 5 complete until the user verifies the APK on-device.
+- The next UI Revamp batch proceeds on the verified modernized foundation without creating a separate modernization task.
+
+## Locked direction and constraints
+
+1. Reconstruct the top-level Battle Chronicles overview as a compact landing page, not a long page of fully expanded feature content.
+2. Use concise, source-backed previews with clear entry actions. Detailed content belongs on dedicated destinations.
+3. Preserve the four existing bottom destinations (Home, Visuals, Tools, Account) and the centered AI action. Add nested destinations under Visuals; do not add or fake a new bottom-navigation destination.
+4. Detail destinations need their own title/back action, independent scrolling, and appropriate state preservation. Returning from a detail page should restore the Visuals overview position and relevant selections.
+5. Keep the reference's distinct composition and mode identity. Do not replace it with generic cards or a uniform metrics dashboard.
+6. Preserve missing, null, malformed, unavailable, stale, failed, and actual-zero distinctions. Never invent record fields, region progress, or account values.
+7. Stygian's currently validated source supports the best-record name and difficulty only. Do not imply that historical cycles, teams, or detailed challenge statistics are available until their source is validated.
+8. Do not add a runtime Battle Chronicles dependency, WebView, scraping, remote CSS, or a mandatory backend. Keep implementation native Compose and local-first.
+9. **System icon preference:** use Lucide icons for application/system UI icons. Centralize them through the shared app icon wrapper/registry (create or extend one only if the code audit shows it is needed). Preserve Genshin character, weapon, element, rarity, region, and mode artwork as game assets; do not replace those with Lucide.
+10. Lucide Android 2.2.1 and its centralized registry are already implemented in Batch 5. Build #895 proves the old build foundation is incompatible with its Compose dependency. Keep the Lucide implementation; complete the integrated platform-modernization prerequisite and verify the generated resource names, APK build, and rendered appearance. Audit Material icon usage before removing any remaining dependency.
+
+## Batch 5 - Visuals Navigation and Overview Hierarchy
+
+**Status:** Implemented and merged on `main` in `237eb2393230c694c0e6eecc4611f005d9c58f15`. Build #895 failed before tests/APK assembly due to the Lucide/Compose/AGP/compileSdk incompatibility. Complete the integrated platform-modernization prerequisite above, then perform CI and device verification.
+
+### 5.1 Rebuild the Visuals landing page
+- Reproduce the top-most Battle Chronicles overview hierarchy from the updated reference.
+- Keep the account identity/overview compact, retaining the existing primary/secondary statistics behavior.
+- Keep My Characters as a horizontal portrait selector with a compact selected-character preview and a clear route to the full roster/details.
+- Keep World Exploration as horizontal region previews using the reference's `Main Areas Only` treatment and a dedicated View More destination.
+- Present Spiral Abyss, Imaginarium Theater, and Stygian Onslaught as compact mode-specific summaries with clear detail entry points.
+- Keep Account Analysis as a concise preview/entry point; preserve its current calculation, recommendation ordering, and source-state behavior.
+- Remove the current requirement that all Chronicle content be expanded inline. Do not merely change every section's default to collapsed; replace the long-form inline presentation with purposeful summaries and navigation.
+
+### 5.2 Establish nested Visuals navigation
+- Add an internal destination/state model for Visuals pages without changing the four primary bottom-navigation destinations.
+- Support back navigation and direct transitions among the Visuals landing page and its child pages.
+- Give each destination its own scroll container and preserve the overview scroll/selection state when returning.
+- Ensure system back and visible back controls behave consistently.
+- Keep the implementation incremental and compatible with the existing app architecture; do not introduce a navigation dependency or broad navigation rewrite without demonstrated need.
+
+### 5.3 Add the Lucide compatibility pilot
+- Inspect all current system icon usages and any existing shared icon wrapper before changing dependencies.
+- Add the Android vector-resource artifact as a pilot only; verify the exact generated resource names from the resolved artifact rather than assuming them.
+- Replace a small representative set of app-shell/navigation/action icons with Lucide through the shared wrapper.
+- Build and inspect the APK in Light and Dark themes. Check optical sizing, tinting, accessibility descriptions, and APK/resource impact.
+- If compatible, migrate remaining system icons in a controlled follow-up and remove Material Icons Extended only after a full usage audit. If incompatible, stop and document the blocker; do not silently switch to a newer incompatible stack.
+
+### Batch 5 acceptance checks
+- Visuals opens to a compact Battle Chronicles overview, not the current long expanded page.
+- All three Chronicle modes remain visible as summaries when their data is available; tapping each opens its own detail destination.
+- Character, exploration, and analysis entry points remain usable.
+- Back navigation restores the overview position and selected character/region where applicable.
+- Home, Tools, Account, AI sheet, refresh/analyze actions, and existing account data behavior remain intact.
+- Light, Dark, and System themes; edge-to-edge insets; narrow-screen layout; touch targets; and accessibility semantics are checked.
+- Lucide pilot resolves and builds before wider icon migration is accepted.
+- Automated tests/build and physical-device verification are recorded separately.
+
+## Batch 6 - Battle Chronicle Detail Experiences
+
+- Build dedicated Spiral Abyss, Imaginarium Theater, and Stygian Onslaught pages using validated source fields and reference-specific layouts.
+- Spiral Abyss: current/previous cycle context, floor/chamber grouping, stars, teams, character presentation, and available record details.
+- Theater: nested cycle structure, act/round details, available character levels/lineups, medals/blessings, and period navigation only where the payload supports them.
+- Stygian: begin with the validated best-record name/difficulty summary. Investigate historical phases, teams, and challenge details through captured exports/validated endpoint responses before modeling or displaying them.
+- Keep per-section retrieval status and provenance. Add parser/mapper tests for valid, missing, malformed, and failed data. No fabricated placeholders that look like real records.
+
+## Batch 7 - World Exploration Detail and Data Hierarchy
+
+- Build the dedicated vertically stacked exploration page.
+- Extend the model/mapper to represent parent regions and nested subareas (for example, subareas belonging to Liyue) only where the source export provides reliable grouping.
+- Add region progression systems (Statues, offerings, and similar levels) only when source-backed.
+- Preserve overview carousel values and detail-page totals without double-counting or conflating parent and child percentages.
+- Add mapper tests for grouping, missing values, and incomplete source sections.
+
+## Batch 8 - Character and Weapon Reference Fidelity
+
+- Refine the dedicated Character Roster and Character Details destinations against the reference, preserving the horizontal selector/detail relationship and source-backed character artwork.
+- Implement the Weapon Roster as a dedicated destination with the reference-matched rarity and weapon-type filter layout and roster grid.
+- Filters must operate on the actual roster, support clear/reset behavior, and expose selected state accessibly. Do not add unnecessary sorting controls or unrelated rarity categories.
+- Preserve the existing character/weapon detail data and approved artwork-loading path. Do not fabricate passive descriptions or other missing fields.
+- Validate the roster and details on-device in both themes and narrow layouts.
+
+## Cross-batch data and verification gates
+
+- Before adding or expanding a data field, inspect the raw account export and current mapper/model. Use Lemur DevTools or another read-only capture only when a specific missing source field needs validation.
+- Keep retrieval, domain mapping, presentation state, and Compose rendering responsibilities separated.
+- Add deterministic tests for new mapping/navigation state behavior. Do not let UI code parse raw JSON or orchestrate network requests.
+- Record exact source files, commits, CI run/artifacts, and user device checks in the relevant milestone. A successful build is not physical-device verification.
+- Do not mark a batch complete while any known regression or unverified acceptance item is hidden.
+
+## Immediate next action
+
+Continue Batch 5 by compiling and validating the new Visuals navigation and Lucide resource pilot. Fix any dependency/resource or Compose issues before visual refinement. Then inspect the overview and each destination on-device in Light and Dark themes. Do not begin detailed Chronicle endpoint expansion until the new navigation structure is verified.
+
+
+---
+
+## Milestone 110 - UI Revamp Batch 5: Visuals Navigation Foundation
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 5  
+**Status:** Implementation in progress on `ui-revamp/batch-5-navigation-overview`; CI and physical-device verification pending.
+
+### Objective
+
+Replace the long, fully expanded Visuals composition with a compact overview and dedicated nested destinations, while introducing the Lucide system-icon library.
+
+### Implemented on the feature branch
+
+- Added `VisualsDestination` and a small tested navigation-stack rule set.
+- Added nested Visuals routes for Character Roster, Character Details, World Exploration, current/previous Spiral Abyss, Imaginarium Theater, Stygian Onslaught, and Account Analysis.
+- Added Android system Back handling and visible detail-page back navigation without changing the four primary bottom-navigation destinations or centered AI action.
+- Added saveable per-destination scroll-state hosting so returning to a page can restore its scroll position.
+- Replaced the long inline Visuals composition with a compact overview: account statistics, horizontal character preview and selected-character summary, exploration region previews, four Chronicle mode summaries, and an Account Analysis preview.
+- Reused existing source-backed detail components on the new destinations. No new Chronicle fields or endpoint assumptions were added.
+- Added a character portrait selector on the dedicated Character Details destination and a View Selected Character action on the roster destination.
+- Audited system-icon usage across the presentation sources and app shell. Added a centralized `AppIcons` registry using `com.composables:icons-lucide-android:2.2.1`, migrated active app/system icon usages, and removed the unused Material Icons Extended dependency/catalog entry.
+- Kept Genshin character, weapon, element, rarity, region and mode artwork on existing game-asset paths.
+
+### Known boundaries
+
+- The account hero's latest-patch splash artwork is not added. The reference does not establish a permitted asset source/update process; do not bundle or scrape artwork until provenance and permission are verified.
+- Character roster filter layout and weapon roster reconstruction remain later Batch 8 work.
+- Exploration parent/subarea modeling remains Batch 7 work.
+- Dedicated Chronicle pages currently reuse the existing validated summaries. Full floor/chamber, Theater act, and Stygian challenge histories remain Batch 6 and require source validation.
+- Lucide resource resolution and compatibility with Kotlin 2.0.0, AGP 8.5.0 and Compose BOM 2024.06.00 are not yet build-verified.
+
+### Files changed
+
+- `app/build.gradle.kts`
+- `gradle/libs.versions.toml`
+- `app/src/main/java/com/irminsul/codex/MainActivity.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AppIcons.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsDestination.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexScreen.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CodexBottomNavigationBar.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/CharacterShowcaseSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ToolsSection.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/AiAssistantSheet.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/VisualsNavigationStackTest.kt`
+
+### Verification
+
+- Source files and branch diff were retrieved from GitHub after editing.
+- Navigation stack unit tests were added for push, duplicate destination, back, and root behavior; test execution is pending.
+- No successful Gradle build, GitHub Actions run, APK artifact, or physical-device verification is claimed.
+- Latest implementation commit: `bec6f3b95326251d04bc90b7e093f0c3439f729e` (includes the generated app-resource import correction for Lucide).
+
+### Next action
+
+Run the Debug build and unit tests for this branch. Resolve any Lucide dependency/resource or Compose compilation issues, then inspect the overview and nested destinations on-device before treating Batch 5 as complete.
+
+
+---
+
+## Milestone 111 - UI Revamp Batch 5: Android 17 API 37.1 Modernization
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 5 integrated platform modernization  
+**Status:** JVM target correction committed; main branch integration commit prepared; CI rerun pending; APK and physical-device verification pending.
+
+### Objective
+
+Move the existing Batch 5 modernization from the API 36.1 dependency baseline to the current stable Android 17 API 37.1 / Compose baseline without changing targetSdk behavior or creating a separate task.
+
+### Implemented on `ui-revamp/batch-5-platform-modernization`
+
+- Kept the mutually supported AGP 9.3.1, Gradle 9.7.0, Kotlin 2.4.21, and KSP 2.3.12 toolchain.
+- Raised compileSdk to API 37.1 using `release(37) { minorApiLevel = 1 }`.
+- Kept targetSdk 36 and minSdk 26. Android 17 target-behavior opt-in is deferred until its behavior changes are audited.
+- Upgraded Compose BOM to stable 2026.11.01 and AndroidX Core KTX to 1.19.1 / Lifecycle to 2.11.1. Activity Compose 1.13.0 and Room 2.8.5 remain aligned.
+- Updated CI to install stable platform API 37.1 / Build Tools 37.0.0 and use the stable Android 17 API 37.2 QPR2 16 KB page-size emulator image.
+- Replaced `MigrationTestHelper` with a manually created version-1 SQLite fixture opened by the production Room database. The test still executes `MIGRATION_1_2`, exercises Room's schema validation, and verifies that migrated JSON chunks and metadata are preserved.
+- Removed the unused `room-testing` dependency to avoid the observed `FieldBundle$$serializer` / kotlinx-serialization runtime linkage failure.
+
+### Files changed
+
+- `.github/workflows/build.yml`
+- `app/build.gradle.kts`
+- `app/src/androidTest/java/com/irminsul/codex/data/local/IrminsulDatabaseMigrationTest.kt`
+- `gradle/libs.versions.toml`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- `060f21d0880403746e47b41e7c464b08be766799` - replace the Room migration helper test path.
+- `e545200becb6cf539a25ee264e3b809fc2ecf995` - remove the unused Room testing dependency.
+- `a8e93f859e48d9b17032615e5766966c1b2ab226` - update CI SDK and emulator configuration to API 37.
+- `917161ebbb3418bc5d2b769b5314f79f9e943e24` - compile against API 37.1.
+- `2fcf368dad76c2c880cd7963395ae32a4b1036d4` - upgrade stable Compose and AndroidX dependencies.
+- `785474a5dd13f3b865c5697b39d5efd7c01d7173` - correct stable API 37.1 platform and API 37.2 emulator image package IDs.
+- `7ef063d33dd48b398bcfba169c239a79089e8a3d` - trigger CI on UI Revamp branch pushes as well as PR updates.
+- `5759e15f9f9f4d306c95f1cefa030e181110d0cf` - label the Android 17 API 37.2 runtime test.
+- `dade60c8ecf96c1803dd58b50996606d03e7ae55` - align Java and Kotlin bytecode targets to JVM 11.
+- `20697379d817c63007c1b27596a3c361c46be869` - reconcile the milestone plan with the latest main documentation.
+
+### Verification
+
+- Run #915 failed at the Room migration instrumentation test with `AbstractMethodError` from `androidx.room.migration.bundle.FieldBundle$$serializer`. Unit tests passed; APK assembly and upload were skipped.
+- Run #918 failed because the emulator action requested the obsolete package ID `system-images;android-37;google_apis;x86_64`; the current image package uses `android-37.2` and `google_apis_ps16k`. Run #920 failed because CI requested `platforms;android-37`; the stable platform package uses `platforms;android-37.1`. Both failures occurred before instrumentation tests. The corrected package IDs were verified to install successfully in run #926.
+- Run #926: stable API 37.1 SDK installation succeeded. Unit-test compilation then failed because Java source/target remained 1.8 while Kotlin inline dependencies were JVM 11. The Android emulator and APK steps were skipped.
+- The branch now explicitly aligns Java compatibility and Kotlin `jvmTarget` to JVM 11. This correction is not yet CI-verified.
+- No successful API 37.1 build, instrumentation test run, APK artifact, or physical-device verification is claimed.
+
+### Next action
+
+Check the next CI run after integrating the latest `main` head and the JVM 11 correction. Confirm stable API 37.1 installation, API 37.2 emulator boot, Room migration tests, APK assembly, schema verification, signing, and artifact upload. Correct any remaining failure within PR #13. Do not merge without the user's explicit approval.
+
+---
+
+## Milestone 112 - UI Revamp Batch 6: Chronicle Detail Data and Presentation
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 6  
+**Status:** Complete; CI-verified, merged to `main`, and physical-device tested.
+
+### Objective
+
+Replace summary-only Spiral Abyss and Imaginarium Theater detail pages with source-backed floor, chamber, lineup, round, and performance details. Keep Stygian Onslaught limited to its currently validated summary.
+
+### Source evidence
+
+- Account export: docs/genshin_865157206.json
+- Exported: 2026-11-27T20:42:56Z
+- Export blob SHA: 0c9dc9967c37cd58744495eaeddb4ead780e93bb
+- Spiral Abyss current and previous sections contain floor/chamber stars, battle halves, character IDs/portraits/levels, completion date parts, and Ley Line Disorder text.
+- Imaginarium Theater contains cycle statistics, round lineups with names/elements/levels/portraits, round medal state, finish dates, round blessing names, and fight_statisic performance fields.
+- This export has no dedicated Stygian Onslaught record section. No detailed Stygian history or team data is inferred.
+
+### Implemented on ui-revamp/batch-6-chronicle-details
+
+- Added typed presentation mapping for Spiral Abyss cycles, floors, chambers, battle halves, character lineups, stars, completion timestamps, and Ley Line Disorder text.
+- Resolves Spiral Abyss character names and fallback portraits/levels from the already retrieved account roster; does not display raw character IDs.
+- Expanded Theater round mapping with character portraits, names, elements, levels, rarity, medal state, finish date, and both ordinary and splendour_buff.buffs blessing names.
+- Maps source-provided Theater performance values for highest damage, most defeats, most damage taken, and total battle time. Character names are resolved against the account roster when possible.
+- Passes roster context into the current/previous Abyss and Theater destinations.
+- Keeps missing, unavailable, malformed, and stale section handling distinct. Stale records receive a visible freshness note.
+- Added mapper tests for Abyss floors/chambers/teams and partial/malformed data, plus Theater character, blessing, date, and performance mapping.
+
+### Files changed
+
+- app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationMapper.kt
+- app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt
+- app/src/main/java/com/irminsul/codex/presentation/VisualsSection.kt
+- app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationMapperTest.kt
+- docs/PROGRESS_MILESTONES.md
+
+### Verification
+
+- Repository source and export schema were retrieved from GitHub before implementation.
+- GitHub Actions run #943: https://github.com/berao609/Irminsul-codex/actions/runs/46089004111 - Success.
+- Unit tests: passed.
+- Debug APK assembly: passed.
+- Room schema snapshot verification and upload: passed.
+- Debug APK signature verification: passed.
+- Debug APK artifact: irminsul-codex-debug-v1.0.0-dev.943-vc945 (artifact ID 15239923231; 15,879,814 bytes).
+- Room instrumentation tests were skipped by the workflow because the changed files do not affect Room persistence or schema.
+- PR #14 was marked ready for review and merged to `main`.
+- Latest integrated branch CI: run #968 succeeded, including unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact upload.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.968-vc970` (artifact ID 15244045907; SHA-256 `34a839872cdf2fbcd7dbfa1f6776512ef926692da8d65b92fabe249f923794df`).
+- Physical-device verification: user confirmed Batch 6 was successful and tested.
+
+### Remaining
+
+- Detailed Stygian Onslaught history and team data remain out of scope until a real source record payload is captured and validated.
+
+### Next action
+
+Batch 6 is complete. Continue with the next planned UI Revamp task.
+
+
+
+---
+
+## Milestone 113 - UI Revamp Batch 6: Consistent Expanded Endgame Cards
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 6  
+**Status:** Complete; CI-verified, merged to `main`, and physical-device tested.
+
+### Change
+
+- Applied the Theater card's non-collapsible presentation to Spiral Abyss and Stygian Onslaught.
+- Both cards now render their content continuously; their section headers no longer show a collapse icon or respond to collapse clicks.
+- Preserved the Spiral Abyss current/previous cycle selector and all existing record content.
+- Preserved the existing Stygian Onslaught best-record summary and source-data limitations.
+- No data mapping, retrieval, or other Chronicle section behavior was changed.
+
+### Implementation
+
+- Commit: `a03425bdc888d2c35aba9f586edddd5173e0bc7e`
+- File: `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+
+### Verification
+
+- Implementation commit: `a03425bdc888d2c35aba9f586edddd5173e0bc7e`.
+- Latest branch-head CI run #968: success; unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact upload passed.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.968-vc970` (artifact ID 15244045907; SHA-256 `34a839872cdf2fbcd7dbfa1f6776512ef926692da8d65b92fabe249f923794df`).
+- Physical-device verification: user confirmed the three endgame cards remain expanded and the Abyss cycle selector works.
+- PR #14 merged to `main` in commit `2e5e2a016135f52a9487d41e48d7aee645ee44fc`.
+
+### Next action
+
+No further work is pending for Milestone 113.

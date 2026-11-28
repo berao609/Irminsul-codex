@@ -557,3 +557,229 @@ Use this analysis as the first reference lookup. Retrieve the raw captures again
 **Implementation rule:** This document is design research, not permission to change product scope. The current `docs/Irminsul Codex UI Design Instructions.md`, approved UI revamp decisions, native architecture, and validated account data remain authoritative. Reconcile conflicts in favor of explicit Irminsul decisions, not the reference website.
 
 **Remaining evidence gaps:** Exact computed dimensions for the account overview and individual cards; full responsive breakpoint behavior; and detailed calculator form/result DOM captures. These are not prerequisites for continuing the current revamp unless a specific implementation decision depends on them. Do not conduct exhaustive control testing or invent missing measurements.
+
+
+## 10. Expanded Battle Chronicles Screenshot Reference (2026-11-28)
+
+**Reference source:** User-supplied 16-page Battle Chronicles screenshot PDF reviewed on 2026-11-28. The page references below use the PDF's page order. These screenshots supplement the earlier seven-page screenshot review in Section 6.6; they do not invalidate earlier HTML/CSS observations.
+
+**Evidence boundary:** The screenshots establish visible composition and displayed information, not the underlying service/API, source implementation, or behavior of every control. Record the user's explicit product requirements separately from screenshot-confirmed observations. Do not copy the example account's identity, UID, character ownership, levels, records, or progression values into fixtures or defaults.
+
+### 10.1 Account header and latest-patch splash artwork
+
+**Screenshot evidence:** Pages 1 and 16.
+
+- The Battle Chronicles landing screen uses a large Genshin illustration as the background of the upper account/profile region.
+- The profile identity and account summary are layered over this artwork.
+- The visible identity includes avatar, nickname, Adventure Rank, server and UID.
+- Account metrics follow in a compact multi-column summary. Page 16 shows a more expanded summary with additional collectible/progression counts.
+- The account overview continues into My Characters and other sections below the hero region.
+
+**Irminsul direction:**
+- Reconstruct this as a prominent, full-width account hero rather than a generic header card.
+- Use the latest-patch splash illustration as the hero background, with an appropriate dark overlay/contrast treatment so account information remains readable.
+- Keep profile identity and account metrics grouped within the hero/summary hierarchy.
+- Treat the artwork as patch-aware content, not a permanently hardcoded screenshot.
+- The PDF does not establish the artwork's source URL, update mechanism, or redistribution permission. Verify provenance and permitted use before adding an asset. Do not introduce a runtime Battle Chronicles dependency or scrape the reference site in production.
+
+### 10.2 Weapon roster and filter layout
+
+**Screenshot evidence:** Page 14.
+
+Observed:
+- A dedicated Select Weapon screen with a back action, title and search action.
+- A rarity filter row represented by star symbols, including an all-rarities option and the individual weapon rarity levels.
+- A separate weapon-type filter row using weapon-category symbols.
+- A dense, five-column weapon grid.
+- Weapon artwork is the primary tile content; level and weapon name are displayed with each item.
+
+**Irminsul direction:**
+- Reproduce the separate rarity and weapon-type filter rows and their compact icon-led layout.
+- Keep the two filter dimensions independently selectable, with clear selected states and an all/reset state.
+- Preserve the dense multi-column roster and the association between each weapon image, level and name.
+- Use the app's actual weapon inventory and existing asset-loading path. Do not copy account-specific items or levels from the screenshot.
+- The screenshot supports the layout; exact filter transition/selection behavior has not been independently tested.
+
+### 10.3 Character roster, filters and sorting
+
+**Screenshot evidence:** Pages 11–13.
+
+Observed roster:
+- A dedicated All Characters screen with a four-column portrait grid.
+- Character portraits carry an elemental symbol at the upper-left and a constellation indicator at the upper-right.
+- Character level is shown at the bottom of the portrait, with the character name below.
+- A sorting selector and Filter action appear above the grid.
+
+Observed sorting choices on page 13:
+1. High → Low Level.
+2. Low → High Level.
+3. High → Low Quality.
+4. Low → High Quality.
+5. High → Low Friendship Level.
+6. Low → High Friendship Level.
+
+Observed filter panel on page 12:
+- Element options are arranged in two columns: Pyro, Hydro, Dendro, Electro, Anemo, Cryo and Geo.
+- Weapon options are arranged in two columns: Sword, Claymore, Bow, Polearm and Catalyst.
+- Reset and OK actions appear at the bottom.
+- The filter panel overlays and dims the roster behind it.
+
+**Irminsul direction:**
+- Reproduce the four-column portrait composition, elemental and constellation overlays, level placement and name hierarchy.
+- Keep sorting and filtering as separate controls.
+- Reproduce the two-column Element and Weapons filter organization, with Reset and Apply/OK behavior.
+- Preserve all six observed sorting choices where the corresponding account fields are available.
+- Do not reintroduce a character-rarity filter contrary to the current Irminsul roster decision. The Quality sorting option is a sort criterion shown in the reference and is distinct from adding a rarity filter.
+- Keep missing friendship/level data distinguishable from zero or a valid low value.
+
+### 10.4 Spiral Abyss expanded interface
+
+**Screenshot evidence:** Page 4.
+
+Observed:
+- Dedicated Spiral Abyss Overview screen.
+- Current Lunar Phase and Previous Lunar Phase selection with period context.
+- Challenge Summary containing total stars, deepest descent and battles fought.
+- Most Played Characters with usage counts.
+- A Notable Stats group including Most Defeats, Strongest Single Strike, Most Damage Taken, Elemental Bursts Unleashed and Elemental Skills Cast.
+- Floor sections (the screenshot shows Floors 11 and 12), each with a total star result.
+- Each floor contains Chamber 1, 2 and 3 records, timestamps and separate First Half / Second Half team lineups.
+- Character portraits show their levels; chamber star results are displayed alongside the chamber.
+
+**Irminsul direction:**
+- Give Spiral Abyss its own detail destination rather than continuously expanding the account overview.
+- Preserve the hierarchy: selected phase/period → summary → floor → chamber → first/second-half team.
+- Keep the mode-specific summary metrics and per-chamber results distinct.
+- Display only records and fields supported by the account data. Do not synthesize missing floors, teams, stars or timestamps.
+
+### 10.5 Imaginarium Theater expanded interface
+
+**Screenshot evidence:** Pages 2–3.
+
+Observed:
+- Dedicated Imaginarium Theater screen with Current Lunar Phase and Previous Lunar Phase selection.
+- Past Performances summary with period, Best Record, Reached Act, Star Challenge result, Fantasia Flowers Used, Triggered External Audience Support and Supporting Cast Characters Assist.
+- Visionary Mode performance summary includes performance duration, Highest Damage Dealt, Most Opponents Defeated, Most Damage Taken, the team that completed the performance fastest, and Fantasia Flowers Used This Time.
+- A Cast List follows, organized into Act records.
+- Each Act record shows its date/time, character lineup and character levels, Performance Details, Brilliant Blessings and their levels. Mystery Cache rewards are also shown where present.
+- Page 2 shows the long, vertically scrolling act-detail presentation; page 3 shows the performance summary and the beginning of the act list in greater detail.
+
+**Irminsul direction:**
+- Give Theater its own dedicated destination and preserve its distinction from Spiral Abyss.
+- Separate overall Past Performances, Visionary Mode statistics, fastest team and the detailed Cast List.
+- Group each act's lineup, performance details, Brilliant Blessings and Mystery Cache with that act.
+- Preserve phase/period selection where the source data supports it.
+- Do not force Theater records into an Abyss floor/chamber schema or invent unavailable act data.
+
+### 10.6 Stygian Onslaught expanded interface
+
+**Screenshot evidence:** Pages 6–8.
+
+Observed:
+- Dedicated Stygian Onslaught page with Current Lunar Phase and Previous Lunar Phase selection and period context.
+- Mode selection distinguishes Single Player and Co-op.
+- Best Record is displayed with difficulty emblem and completion time.
+- Individual challenge cards show boss/challenge name and artwork.
+- Each challenge includes Time Elapsed, a character team lineup with levels, Strongest Single Strike and Highest Total Damage Dealt.
+- Page 8 shows the Battle Records Review summary with phase selection, mode context, Best Record, per-challenge records and a View Challenge Details action.
+- Pages 6–7 show the more detailed individual challenge-record presentation.
+
+**Irminsul direction:**
+- Give Stygian Onslaught its own dedicated destination.
+- Preserve the distinction between overall Battle Records Review and individual challenge details.
+- Keep phase, mode, boss/challenge, difficulty, time, team and damage metrics associated with the correct record.
+- Use boss artwork where a permitted and available asset exists.
+- Do not merge Stygian-specific records into the Abyss or Theater data structures merely to reuse a screen layout.
+
+### 10.7 World Exploration region cards and subareas
+
+**Screenshot evidence:** Pages 9–10.
+
+Observed:
+- A dedicated World Exploration screen uses vertically stacked region cards.
+- Cards use region-specific background artwork/color treatment and a prominent regional emblem.
+- Each card identifies the region and shows its applicable progression information, such as Statue of The Seven level or a region-specific offering/progression system.
+- Main Area Exploration Degree and a progress percentage/bar are displayed.
+- The visible cards demonstrate that progression systems differ by region; not every region has the same progression fields.
+
+**Explicit Irminsul requirement from the user (2026-11-28):**
+- Subarea exploration must be presented inside its parent region's card, not as an unrelated top-level region.
+- Chenyu Vale must be grouped under Liyue rather than represented as a separate region.
+- Keep the parent region's background, emblem and progression identity as the enclosing visual context for its subareas.
+
+**Irminsul direction:**
+- Model and render the parent-region/subarea hierarchy explicitly.
+- Show regional emblem, background, applicable Statue level, applicable offering-system level, main-region exploration progress and subarea exploration progress within the parent region's card.
+- Only show progression systems that apply to that region and are present in the account data.
+- Do not assume every region has a Statue or offering system.
+- Preserve the distinction between main-area progress and subarea progress; do not silently combine or double-count them.
+- Missing or unavailable values must not be rendered as zero.
+- The screenshot establishes regional visual identity and progression presentation. The precise nesting behavior for every subarea is an explicit Irminsul requirement, not a claim that every subarea interaction was tested on the reference site.
+
+### 10.8 Character Details composition and elemental symbols
+
+**Screenshot evidence:** Page 15.
+
+Observed:
+- Dedicated Character Details screen with a character-specific blue background/presentation.
+- A horizontal character portrait selector near the top.
+- Large character artwork occupies the central visual area.
+- Six constellation symbols are arranged in an arch/vertical progression to the right of the character artwork.
+- Character name, elemental symbol, level and friendship information appear beneath the artwork.
+- A horizontal talent lineup appears below the character identity.
+- Character Stats is a distinct section below the identity/talent area.
+- Weapon information begins further down the page.
+
+**Irminsul direction:**
+- Preserve the large character-first composition and character-specific background treatment.
+- Place the six constellation symbols in an arch to the right of the character, rather than moving them into a generic horizontal row.
+- Place the talent lineup horizontally below the character presentation.
+- Use the correct elemental symbol alongside the character identity.
+- Reuse the same accurate seven-element icon set throughout character roster portraits, character details, team lineups and other relevant game-data surfaces.
+- Keep the existing Irminsul stat semantics and local equipment-detail behavior. The reference's external Wiki links are not a requirement to replace Irminsul's approved in-app interactions.
+- Confirm asset provenance and theme contrast for every element/constellation/talent symbol.
+
+### 10.9 Overview-to-detail navigation and progressive disclosure
+
+**Explicit Irminsul interaction requirement from the user (2026-11-28):**
+
+An elaborate expansion must navigate to a separate page instead of indefinitely increasing the length and clutter of the current overview.
+
+Apply two levels of disclosure:
+
+1. **Compact inline expansion:** Use only for a small amount of supplementary information that belongs naturally inside the current section.
+2. **Dedicated detail page:** Use for extensive records, full character information, detailed game-mode histories, and other content that needs its own hierarchy and scrolling space.
+
+Examples:
+- Account overview shows concise Spiral Abyss, Theater and Stygian summaries; selecting View More opens that mode's dedicated destination.
+- Character roster selection can open a dedicated Character Details page.
+- World Exploration opens its dedicated region overview; subareas remain grouped inside their parent region's card.
+- Weapon selection/filtering remains a dedicated roster surface when entered from a weapon-selection workflow.
+
+Dedicated pages should have a clear title/header, back navigation, independent scrolling and appropriate state preservation. Do not create endless nested expansions inside the Visuals overview. Do not add a separate destination for every subarea when grouping it within the parent region is the intended hierarchy.
+
+### 10.10 Consolidated reconstruction matrix
+
+| Area | PDF evidence | Required Irminsul reconstruction |
+|---|---|---|
+| Account hero | Pages 1, 16 | Latest-patch splash artwork behind profile identity and account summary |
+| Weapon roster | Page 14 | Rarity and weapon-type filter rows; dense weapon grid |
+| Character roster | Pages 11–13 | Four-column portrait grid; element/constellation overlays; filter and sorting layouts |
+| Spiral Abyss | Page 4 | Dedicated phase, summary, floor, chamber and team history |
+| Imaginarium Theater | Pages 2–3 | Dedicated performance summary, Visionary Mode stats and act/cast records |
+| Stygian Onslaught | Pages 6–8 | Dedicated phase/mode selection, best record and boss challenge details |
+| World Exploration | Pages 9–10 | Region-specific cards, progression systems and nested subarea progress |
+| Character Details | Page 15 | Character artwork, constellation arch, elemental symbol and talent lineup |
+| Element iconography | Pages 11–15 | Consistent, accurate seven-element symbols across relevant screens |
+| Navigation | Cross-screen requirement | Summary/overview to dedicated detail-page transitions |
+
+### 10.11 Evidence gaps and implementation boundaries
+
+- The 16-page PDF is visual evidence. It does not establish backend/API contracts, original source code, or all interaction states.
+- Exact Android dp dimensions must be measured against the actual app/device; do not convert screenshot pixels directly into dp.
+- The screenshot does not establish the approved source or update process for latest-patch splash artwork.
+- Asset provenance and permission must be checked before bundling official game artwork, emblems or symbols.
+- The user's explicit requirements for Chenyu Vale nesting and dedicated detail-page navigation are product decisions even where the screenshot alone does not prove every interaction.
+- Continue implementing with native Kotlin and Jetpack Compose, existing app architecture, validated local account data and approved asset-loading paths.
+- Preserve all existing scope exclusions and product decisions in Sections 1, 8 and 9. This reference does not authorize adding unrelated Battle Chronicle modules.
+- This analysis is design research. The implementation plan and source changes must still be scoped and verified against the current app before work begins.

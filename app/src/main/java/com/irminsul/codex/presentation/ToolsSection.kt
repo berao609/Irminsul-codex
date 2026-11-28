@@ -4,10 +4,6 @@ import android.content.SharedPreferences
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -52,7 +48,7 @@ fun ToolsSection(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Outlined.Build, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                AppIcon(AppIconName.TOOLS, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text("Materials Calculator", fontWeight = FontWeight.SemiBold)
                     Text(
@@ -61,8 +57,8 @@ fun ToolsSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Icon(
-                    if (showMaterialsPlanner) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                AppIcon(
+                    if (showMaterialsPlanner) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = if (showMaterialsPlanner) "Collapse Materials Calculator" else "Expand Materials Calculator"
                 )
             }
@@ -92,8 +88,8 @@ fun ToolsSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Icon(
-                    if (showLineupSimulator) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                AppIcon(
+                    if (showLineupSimulator) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = if (showLineupSimulator) "Collapse Lineup Simulator" else "Expand Lineup Simulator"
                 )
             }
