@@ -6210,3 +6210,12 @@ Implement the four-page Enhancement Calculator visual redesign and the app-wide 
 - CI #1181 passed for latest UI code head `4ce56a4a6788dfff2d96d0f43f6bfd2e081cadb9`: unit tests, Debug APK build, Room schema-v3 snapshot verification, APK signature verification, and artifact upload succeeded. Room instrumentation was skipped because no Room persistence/schema files changed; migration instrumentation remains covered by #1119/#1121.
 - APK #1181: `1.0.0-dev.1181`, version code `1183`, artifact ID `15263442218`, SHA-256 `546e56534b1bc32d76d06563438a919507e4762d67b5c1fa47a2bdd6ef8e9c00`.
 - The latest visual refinements are code-tested. Physical-device acceptance remains pending for the four screenshot pages, narrow-screen material rows, both themes, and saved-analysis restoration from the existing installation. Do not merge before the user retests.
+
+
+### Batch 9 corrective UI implementation - 2026-11-28
+
+- Added `docs/NATIVE_UI_STANDARD.md` (commit `f99d0550f86d7213b1a0d41a2cb89c3466915d34`) and recorded the supplied four-page PDF in `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md` §6.7 (commit `fb389783b113859aeca4d27338f408a2166588c0`).
+- Calculator selector updates: four-column grid, All / Already Owned tabs, icon-only element/weapon-type chips, and weapon rarity filters. Concealed modal wheel triggers now require Confirm / Cancel. Code commits: `5732b794caf578ce143e8989a3910f828d9d816a`, `4c05b5b75c14619295adf5c6ff0acfe4a576bac0`.
+- Tools calculator entry flattened (`d4452bef3a830be3b0201b11c284c55ccf3a942d`). Character Roster inline min/max wheel controls removed; selected state now uses tonal fill rather than a border (`d62084678ed5c970d64c723bfde6adcd67e91d92`). World Exploration region parent surfaces and Spiral Abyss floor cards flattened (`ec072601e0c800645098d00ccf8ae8f7d53b4b3f`).
+- Current PR head at record time: `3bda61a18215c055b72f63b4742a6f949205bbc0`; CI #1212 is **in progress**. No build/test result is claimed yet.
+- Remaining before retest: finish selection footer behavior; inspect/refine material owned-value input and row density; complete a source audit of all modified UI files for strokes, nested surfaces, inline pickers, and keyboard-triggering controls; fix any CI failures. Physical-device acceptance is pending and PR #17 remains unmerged.
