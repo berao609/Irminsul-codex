@@ -17,7 +17,7 @@ class BundledEnhancementVisualMetadataTest {
 
         assertEquals(126, characters.size)
         assertTrue(characters.all { it.iconUrl?.startsWith("https://enka.network/ui/") == true })
-        assertTrue(characters.all { it.weaponType != null && it.weaponType in setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST") })
+        assertTrue(characters.all { it.weaponType?.let { type -> type in setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST") } == true })
         assertEquals(4, characters.count { it.element == null })
         assertTrue(characters.filter { it.element == null }.all { it.weaponType == "SWORD" })
     }
@@ -29,6 +29,6 @@ class BundledEnhancementVisualMetadataTest {
 
         assertTrue("The 4-star/5-star weapon catalogue must not be empty.", weapons.isNotEmpty())
         assertTrue(weapons.all { it.iconUrl?.startsWith("https://enka.network/ui/") == true })
-        assertTrue(weapons.all { it.weaponType in setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST") })
+        assertTrue(weapons.all { it.weaponType?.let { type -> type in setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST") } == true })
     }
 }
