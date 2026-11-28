@@ -200,15 +200,30 @@ object ChroniclePresentationMapper {
                 subareas = subareas
             )
         }
-        val regionsById = parsed.mapNotNull { region -> region.id?.let { it to region } }.toMap()
+        val regionIdsByName = parsed.mapNotNull { region ->
+            region.id?.let { region.name.trim().lowercase(java.util.Locale.ROOT) to it }
+        }.toMap()
+        val requestedParents = mapOf(
+            "windrest peak" to "mondstadt",
+            "dragonspine" to "mondstadt",
+            "the chasm" to "liyue",
+            "chasm" to "liyue",
+            "chenyu vale" to "liyue"
+        )
+        val grouped = parsed.map { region ->
+            val parentName = requestedParents[region.name.trim().lowercase(java.util.Locale.ROOT)]
+            val requestedParentId = parentName?.let(regionIdsByName::get)
+            if (requestedParentId != null) region.copy(parentId = requestedParentId) else region
+        }
+        val regionsById = grouped.mapNotNull { region -> region.id?.let { it to region } }.toMap()
         fun attachChildren(region: ChronicleRegion, ancestors: Set<Int> = emptySet()): ChronicleRegion {
             val id = region.id ?: return region
             if (id in ancestors) return region
-            val children = parsed.filter { it.parentId == id }
+            val children = grouped.filter { it.parentId == id }
                 .map { attachChildren(it, ancestors + id) }
             return region.copy(childRegions = children)
         }
-        return parsed.filter { region ->
+        return grouped.filter { region ->
             region.parentId == null || region.parentId == 0 || region.parentId !in regionsById
         }.map { attachChildren(it) }
     }
