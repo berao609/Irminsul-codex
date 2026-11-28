@@ -6108,6 +6108,28 @@ Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account 
 - No successful CI result, APK artifact, or physical-device verification is claimed yet.
 - Batch 8 PR #16 remains open pending physical-device acceptance; CI #1070 passed.
 
+### Enhancement Calculator implementation added
+
+- Added `BundledEnhancementCatalogueRepository.kt` to load all 4-star/5-star character records from the 15 version-pinned JSON chunks and all 4-star/5-star weapons from the bundled compressed weapon dataset. Selection is independent of account ownership.
+- Added `EnhancementCalculatorSection.kt` and connected it through `ToolsSection.kt`.
+- Replaced the Tools calculator entry point with a three-stage flow: choose Character/Weapon; search and select from a grid; configure upgrade levels and calculate.
+- Character planning includes current/target character level, current ascension rank, and independent Normal Attack, Skill, and Burst current/target levels. Weapon planning includes current/target level and ascension rank.
+- Numeric controls use sliders and plus/minus steppers. Current EXP is adjustable in 1,000-EXP steps. The large material dialog supports per-material owned-quantity steppers, persists values locally, and recalculates remaining amounts immediately.
+- Added `BundledEnhancementCatalogueRepositoryTest.kt` for 4-star/5-star filtering, cross-chunk duplicate rejection, and weapon type metadata.
+- The current catalogue assets do not include a complete portrait/icon mapping for every unowned character/weapon. The grid uses neutral placeholders and source-backed names/rarity rather than invented images.
+- Upgrade costs and EXP curves remain candidate data. The UI discloses this and withholds totals when required candidate data is incomplete.
+
+### Additional implementation commits
+
+- `bdfd6d452221d85bcd7882e32abdb39b8ad58f16` - add full 4-star/5-star catalogue loader.
+- `b9e5d974e6bf9b9a480f8c065396a43bdf536de6` - add grid-based calculator planning flow.
+- `51fac219823270388790bdb2c42c270e0ed0e118` - connect the new calculator to Tools.
+- `7d73c3f8757b8e63ab15adaf10f85fffd3040d79` - isolate catalogue parsing for tests.
+- `2791337d948cd4d4b37dd92eacf46c0c6b5dbffe` - add catalogue filtering and duplicate tests.
+- `39b7c4f31c482482fe8eb43809f4184c3cb78b33` - retain EXP input and account ascension state.
+- `b5987cccecbf58dc1a05cb788d9790ca8589ffa8` - rename the Tools entry point.
+- `a73185135c9fe729bbb0ad3bf15d72f8b85a2f3e` - document calculator scope.
+
 ### Next action
 
-Check CI #1079, confirm the new roster rules tests compile and pass, then continue the remaining Batch 9 character/weapon fidelity work. Do not close or merge Batch 9 before the full scope and physical-device checklist pass.
+Run CI on the latest PR #17 head, fix any compile/test failures, and inspect the complete material result path before APK/device acceptance. Do not close or merge Batch 9 before all scope and physical-device checks pass.
