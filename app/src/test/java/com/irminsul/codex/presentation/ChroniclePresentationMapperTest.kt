@@ -122,22 +122,24 @@ class ChroniclePresentationMapperTest {
         assertEquals(nodKraiIcon, regions.single { it.name == "Nod-Krai" }.iconUrl)
     }
 
-    @Test fun explorationUsesSourceBackedIconFallbacksIncludingTempleOfSpaceOffering() {
-        val natlanIcon = "https://example.invalid/natlan.png"
-        val natlanInner = "https://example.invalid/natlan-inner.png"
-        val nodKraiIcon = "https://example.invalid/nod-krai.png"
-        val nodKraiCover = "https://example.invalid/nod-krai-cover.png"
-        val templeOffering = "https://example.invalid/temple-memory-core.png"
+    @Test fun explorationUsesCorrectRegionalEmblemsAndTempleOfferingFallback() {
+        val natlanIcon = "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterIcon_Nata.png"
+        val natlanInner = "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterInnerIcon_Nata.png"
+        val nodKraiIcon = "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterIcon_Nordkalei.png"
+        val nodKraiInner = "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterInnerIcon_Nordkalei.png"
+        val templeOffering = "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterOffering_SkyTempleMemoryCore.png"
         val data = DataValue.Available(obj(
             "world_explorations" to StructuredData.ArrayValue(listOf(
                 obj("id" to StructuredData.NumberValue("15"), "name" to StructuredData.StringValue("Natlan"),
                     "exploration_percentage" to StructuredData.NumberValue("280"),
                     "icon" to StructuredData.StringValue(natlanIcon),
-                    "inner_icon" to StructuredData.StringValue(natlanInner)),
+                    "inner_icon" to StructuredData.StringValue(natlanInner),
+                    "cover" to StructuredData.StringValue("https://example.invalid/natlan-cover.png")),
                 obj("id" to StructuredData.NumberValue("17"), "name" to StructuredData.StringValue("Nod-Krai"),
                     "exploration_percentage" to StructuredData.NumberValue("1000"),
                     "icon" to StructuredData.StringValue(nodKraiIcon),
-                    "cover" to StructuredData.StringValue(nodKraiCover)),
+                    "inner_icon" to StructuredData.StringValue(nodKraiInner),
+                    "cover" to StructuredData.StringValue("https://example.invalid/nod-krai-cover.png")),
                 obj("id" to StructuredData.NumberValue("19"), "name" to StructuredData.StringValue("Temple of Space"),
                     "exploration_percentage" to StructuredData.NumberValue("1000"),
                     "icon" to StructuredData.StringValue(""),
@@ -156,12 +158,28 @@ class ChroniclePresentationMapperTest {
         val nodKrai = regions.single { it.name == "Nod-Krai" }
         val temple = regions.single { it.name == "Temple of Space" }
 
-        assertEquals(natlanIcon, natlan.iconUrl)
-        assertEquals(listOf(natlanIcon, natlanInner), natlan.iconUrlCandidates)
-        assertEquals(nodKraiIcon, nodKrai.iconUrl)
-        assertEquals(listOf(nodKraiIcon, nodKraiCover), nodKrai.iconUrlCandidates)
+        assertEquals(natlanInner, natlan.iconUrl)
+        assertEquals(listOf(natlanInner, natlanIcon), natlan.iconUrlCandidates)
+        assertEquals(nodKraiInner, nodKrai.iconUrl)
+        assertEquals(listOf(nodKraiInner, nodKraiIcon), nodKrai.iconUrlCandidates)
         assertEquals(templeOffering, temple.iconUrl)
         assertEquals(listOf(templeOffering), temple.iconUrlCandidates)
+    }
+
+    @Test fun explorationProvidesVerifiedTempleEmblemWhenOfferingDataIsMissing() {
+        val data = DataValue.Available(obj(
+            "world_explorations" to StructuredData.ArrayValue(listOf(
+                obj("id" to StructuredData.NumberValue("19"), "name" to StructuredData.StringValue("Temple of Space"),
+                    "exploration_percentage" to StructuredData.NumberValue("1000"))
+            ))
+        ), null)
+
+        val temple = ChroniclePresentationMapper.explorationRegions(data).single()
+
+        assertEquals(
+            "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterOffering_SkyTempleMemoryCore.png",
+            temple.iconUrl
+        )
     }
 
     @Test fun explorationPlacesNamedAreasUnderTheirRequestedRegions() {
@@ -171,6 +189,10 @@ class ChroniclePresentationMapperTest {
                     "name" to StructuredData.StringValue("Mondstadt"), "exploration_percentage" to StructuredData.NumberValue("500")),
                 obj("id" to StructuredData.NumberValue("2"), "parent_id" to StructuredData.NumberValue("0"),
                     "name" to StructuredData.StringValue("Liyue"), "exploration_percentage" to StructuredData.NumberValue("600")),
+                obj("id" to StructuredData.NumberValue("9"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Fontaine"), "exploration_percentage" to StructuredData.NumberValue("650")),
+                obj("id" to StructuredData.NumberValue("14"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Sea of Bygone Eras"), "exploration_percentage" to StructuredData.NumberValue("750")),
                 obj("id" to StructuredData.NumberValue("3"), "parent_id" to StructuredData.NumberValue("0"),
                     "name" to StructuredData.StringValue("Windrest Peak"), "exploration_percentage" to StructuredData.NumberValue("700")),
                 obj("id" to StructuredData.NumberValue("4"), "parent_id" to StructuredData.NumberValue("0"),
@@ -192,6 +214,10 @@ class ChroniclePresentationMapperTest {
 
         assertEquals(listOf("Windrest Peak", "Dragonspine"), mondstadt.childRegions.map { it.name })
         assertEquals(listOf("The Chasm", "Chenyu Vale"), liyue.childRegions.map { it.name })
+        val fontaine = regions.single { it.name == "Fontaine" }
+        assertEquals(listOf("Sea of Bygone Eras"), fontaine.childRegions.map { it.name })
+        assertEquals(65f, fontaine.progress * 100f, 0.001f)
+        assertEquals(75f, fontaine.childRegions.single().progress * 100f, 0.001f)
         val natlan = regions.single { it.name == "Natlan" }
         assertEquals(listOf("Ancient Sacred Mountain"), natlan.childRegions.map { it.name })
         assertEquals(40.6f, natlan.childRegions.single().progress * 100f, 0.001f)
