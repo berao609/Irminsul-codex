@@ -50,7 +50,8 @@ data class ChronicleTheaterCycle(
     val bonusCharacters: String?,
     val rentedCharacters: String?,
     val rounds: List<ChronicleTheaterRound>,
-    val performanceMetrics: List<ChronicleMetric>
+    val performanceMetrics: List<ChronicleMetric>,
+    val hasData: Boolean = true
 )
 data class ChronicleRegion(val name: String, val progress: Float, val percentageLabel: String, val iconUrl: String? = null)
 enum class ChronicleRecordMode { SPIRAL_ABYSS, IMAGINARIUM_THEATER }
@@ -227,7 +228,7 @@ object ChroniclePresentationMapper {
         val rosterById = roster.associateBy { it.id }
         return records.items.mapNotNull { item ->
             val record = item.objectFields()
-            if (record["has_data"] == StructuredData.BooleanValue(false)) return@mapNotNull null
+            val hasData = record["has_data"] != StructuredData.BooleanValue(false)
             val stat = record["stat"].objectFields()
             val schedule = record["schedule"].objectFields()
             val start = schedule["start_date_time"].objectFields()
@@ -237,6 +238,20 @@ object ChroniclePresentationMapper {
                 "${monthName(month)} $year"
             } else {
                 schedule["schedule_id"].displayScalar()?.let { "Cycle $it" } ?: "Theater cycle"
+            }
+            if (!hasData) {
+                return@mapNotNull ChronicleTheaterCycle(
+                    title = title,
+                    difficulty = null,
+                    medals = null,
+                    roundsCompleted = null,
+                    coins = null,
+                    bonusCharacters = null,
+                    rentedCharacters = null,
+                    rounds = emptyList(),
+                    performanceMetrics = emptyList(),
+                    hasData = false
+                )
             }
             val detail = record["detail"].objectFields()
             val rounds = (detail["rounds_data"] as? StructuredData.ArrayValue)?.items.orEmpty().mapNotNull { roundValue ->
@@ -291,7 +306,8 @@ object ChroniclePresentationMapper {
                 bonusCharacters = stat["avatar_bonus_num"].displayScalar(),
                 rentedCharacters = stat["rent_cnt"].displayScalar(),
                 rounds = rounds,
-                performanceMetrics = performance
+                performanceMetrics = performance,
+                hasData = true
             )
         }
     }
