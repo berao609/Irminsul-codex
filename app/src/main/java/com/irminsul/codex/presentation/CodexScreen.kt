@@ -272,16 +272,22 @@ internal fun CodexScreen(
         )
     }
 
+    val isNestedDestination =
+        (selectedTab == CodexTab.TOOLS && showEnhancementCalculator) ||
+            (selectedTab == CodexTab.VISUALS && visualsBackStack.size > 1)
+
     Scaffold(
         bottomBar = {
-            CodexBottomNavigationBar(
-                selectedTab = selectedTab,
-                onTabSelected = { tab ->
-                    selectedTab = tab
-                    if (tab == CodexTab.ACCOUNT) showCredentials = true
-                },
-                onOpenAi = { showAiSheet = true }
-            )
+            if (!isNestedDestination) {
+                CodexBottomNavigationBar(
+                    selectedTab = selectedTab,
+                    onTabSelected = { tab ->
+                        selectedTab = tab
+                        if (tab == CodexTab.ACCOUNT) showCredentials = true
+                    },
+                    onOpenAi = { showAiSheet = true }
+                )
+            }
         }
     ) { innerPadding ->
         if (isInitialSignIn) {
