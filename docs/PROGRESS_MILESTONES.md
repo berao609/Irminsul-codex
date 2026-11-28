@@ -5871,13 +5871,12 @@ Replace summary-only Spiral Abyss and Imaginarium Theater detail pages with sour
 
 ### Remaining
 
-- Confirm compilation and run testDebugUnitTest through the branch CI workflow.
-- Fix any compiler/test failures before opening the PR.
-- Inspect current and previous Abyss pages and Theater on the Redmi Turbo 4 Pro after obtaining the new APK.
+- Download the Debug APK from run #943 and inspect current/previous Abyss plus Theater on the Redmi Turbo 4 Pro.
 - Review visual density, portrait loading, date presentation, and long blessing text on-device.
+- Check the latest PR checks after the milestone documentation update.
 - Keep Stygian Onslaught unchanged beyond its existing source-backed summary until a real record payload is captured and validated.
 
 ### Next action
 
-Verify the latest branch commit and its GitHub Actions result. Resolve all unit-test/build failures, then open the Batch 6 PR for review. Device verification remains a separate acceptance step.
+Install the run #943 Debug APK and report the current/previous Abyss and Theater results, including any visual or runtime defects. Do not merge PR #14 until device review and the latest PR checks are complete.
 
