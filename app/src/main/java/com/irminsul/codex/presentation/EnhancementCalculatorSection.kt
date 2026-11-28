@@ -147,13 +147,13 @@ internal fun EnhancementCalculatorSection(
     }
 
     val choices = remember(catalogue, characters, subjectType, selectedElementFilter, selectedWeaponTypeFilter, selectedRarityFilter, ownedOnly) {
-        catalogue.filter { entry ->
+        sortEnhancementCatalogueByRelease(catalogue.filter { entry ->
             entry.subjectType == subjectType &&
                 (selectedElementFilter == null || entry.element == selectedElementFilter) &&
                 (selectedWeaponTypeFilter == null || entry.weaponType == selectedWeaponTypeFilter) &&
                 (selectedRarityFilter == null || entry.rarity == selectedRarityFilter) &&
                 (!ownedOnly || if (entry.subjectType == EnhancementSubjectType.CHARACTER) characters.any { it.id.toString() == entry.id } else characters.any { c -> when (val w = c.weapon) { is DataValue.Available -> w.value.id.toString() == entry.id; is DataValue.Stale -> w.value.id.toString() == entry.id; else -> false } })
-        }
+        })
     }
 
     fun selectItem(entry: EnhancementCatalogueEntry) {
