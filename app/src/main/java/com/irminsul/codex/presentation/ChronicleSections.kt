@@ -201,7 +201,9 @@ fun ChronicleRecordSection(
     if (mode == ChronicleRecordMode.IMAGINARIUM_THEATER) {
         ChronicleTheaterSection(title, value, roster)
     } else {
-        ChronicleAbyssCycleContent(value, roster)
+        ChronicleSection(title, "Spiral Abyss · floor and chamber records") {
+            ChronicleAbyssCycleContent(value, roster)
+        }
     }
 }
 
@@ -230,10 +232,9 @@ private fun ChronicleAbyssCycleContent(
     value: DataValue<StructuredData>,
     roster: List<CharacterSnapshot>
 ) {
-    val metrics = ChroniclePresentationMapper.recordMetrics(value, mode)
+    val metrics = ChroniclePresentationMapper.recordMetrics(value, ChronicleRecordMode.SPIRAL_ABYSS)
     val cycle = ChroniclePresentationMapper.spiralAbyss(value, roster)
-    ChronicleSection("Spiral Abyss", "Floor and chamber records") {
-        if (metrics.isEmpty() && cycle == null) {
+    if (metrics.isEmpty() && cycle == null) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             if (value is DataValue.Stale) Text("Showing previously retrieved data.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -280,7 +281,6 @@ private fun ChronicleAbyssCycleContent(
                 }
             }
         }
-    }
 }
 
 @Composable
