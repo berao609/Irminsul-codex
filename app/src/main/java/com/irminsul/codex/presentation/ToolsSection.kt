@@ -64,7 +64,7 @@ fun ToolsSection(
             }
         }
         if (showMaterialsPlanner) {
-            MaterialsPlannerSection(
+            EnhancementCalculatorSection(
                 characters = characters,
                 preferences = preferences
             )
