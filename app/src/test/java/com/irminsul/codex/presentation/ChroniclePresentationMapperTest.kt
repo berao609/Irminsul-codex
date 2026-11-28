@@ -255,7 +255,9 @@ class ChroniclePresentationMapperTest {
                                 "avatars" to StructuredData.ArrayValue(listOf(
                                     obj("avatar_id" to StructuredData.NumberValue("10000111"), "name" to StructuredData.StringValue("Varesa"), "element" to StructuredData.StringValue("Electro"), "level" to StructuredData.NumberValue("90"), "rarity" to StructuredData.NumberValue("5"), "image" to StructuredData.StringValue("https://example.invalid/varesa.png"))
                                 )),
-                                "buffs" to StructuredData.ArrayValue(listOf(obj("name" to StructuredData.StringValue("Electro Crystal Blessing"))))
+                                "finish_date_time" to obj("year" to StructuredData.NumberValue("2026"), "month" to StructuredData.NumberValue("11"), "day" to StructuredData.NumberValue("2")),
+                                "buffs" to StructuredData.ArrayValue(emptyList()),
+                                "splendour_buff" to obj("buffs" to StructuredData.ArrayValue(listOf(obj("name" to StructuredData.StringValue("Electro Crystal Blessing")))))
                             )
                         )),
                         "fight_statisic" to obj(
@@ -273,6 +275,7 @@ class ChroniclePresentationMapperTest {
         assertEquals("Varesa", round.characters.single().name)
         assertEquals("Electro", round.characters.single().element)
         assertEquals(90, round.characters.single().level)
+        assertEquals("2026-11-2", round.completedAt)
         assertEquals("Electro Crystal Blessing", round.buffs.single())
         assertEquals("816241 · Varesa", cycle.performanceMetrics.first().value)
         assertEquals("679 seconds", cycle.performanceMetrics.last().value)
