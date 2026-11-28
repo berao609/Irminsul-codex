@@ -218,8 +218,8 @@ fun ChronicleRecordSection(
                 ) {
                     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Floor \${floor.floorNumber}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text("\${floor.stars ?: "—"}/\${floor.maxStars ?: "—"} ★", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                            Text("Floor ${floor.floorNumber}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("${floor.stars ?: "—"}/${floor.maxStars ?: "—"} ★", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         }
                         floor.leyLineDisorders.forEach { disorder ->
                             Text(disorder, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -228,8 +228,8 @@ fun ChronicleRecordSection(
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                    Text("Chamber \${chamber.chamberNumber}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                                    Text("\${chamber.stars ?: "—"}/\${chamber.maxStars ?: "—"} ★", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                                    Text("Chamber ${chamber.chamberNumber}", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                                    Text("${chamber.stars ?: "—"}/${chamber.maxStars ?: "—"} ★", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                                 }
                                 chamber.battles.forEach { battle ->
                                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -270,7 +270,7 @@ private fun ChronicleRecordCharacterLineup(characters: List<ChronicleRecordChara
                 if (character.iconUrl != null) {
                     AsyncImage(
                         model = character.iconUrl,
-                        contentDescription = "\${character.name ?: "Character"} portrait",
+                        contentDescription = "${character.name ?: "Character"} portrait",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.size(38.dp)
                     )
@@ -330,14 +330,14 @@ private fun ChronicleTheaterSection(
                         cycle.rounds.forEach { round ->
                             Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Round \${round.roundNumber}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                    Text("Round ${round.roundNumber}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                                     round.medalEarned?.let {
                                         Text(if (it) "Medal earned" else "No medal", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                                 ChronicleRecordCharacterLineup(round.characters)
                                 if (round.buffs.isNotEmpty()) {
-                                    Text("Blessings: \${round.buffs.joinToString(" · ")}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("Blessings: ${round.buffs.joinToString(" · ")}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }
