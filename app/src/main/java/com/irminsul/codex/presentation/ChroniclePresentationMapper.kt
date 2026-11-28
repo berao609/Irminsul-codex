@@ -191,7 +191,7 @@ object ChroniclePresentationMapper {
                 name = name,
                 progress = progress.first,
                 percentageLabel = progress.second,
-                iconUrl = regionFields["icon"].httpUrl() ?: regionFields["image"].httpUrl(),
+                iconUrl = regionFields["icon"].httpUrl() ?: regionFields["inner_icon"].httpUrl() ?: regionFields["image"].httpUrl(),
                 backgroundImageUrl = regionFields["background_image"].httpUrl(),
                 reputationLevel = if (progressionType == "Reputation") regionFields["level"].displayScalar()?.toIntOrNull() else null,
                 statueLevel = regionFields["seven_statue_level"].displayScalar()?.toIntOrNull()?.takeIf { it > 0 },
