@@ -159,6 +159,11 @@ internal fun CodexScreen(
             isLoading = true
             errorMessage = null
 
+            // One refresh starts the portable account/Battle Chronicle retrieval
+            // alongside the independent Daily Note and profile channels.
+            // This path updates the in-app snapshot only; JSON export remains explicit.
+            accountViewModel.analyzeAccount(targetUid.trim(), targetCookie.trim())
+
             if (privateDataUid != targetUid.trim()) {
                 privateDataUid = targetUid.trim()
                 dailyNoteChannel = RetrievalChannelState()
