@@ -157,6 +157,27 @@ class ChroniclePresentationMapperTest {
         assertEquals("October 2026", cycles[1].title)
     }
 
+    @Test fun theaterPreservesCyclePositionsWhenARecordIsExplicitlyUnavailable() {
+        val value = DataValue.Available(obj(
+            "data" to StructuredData.ArrayValue(listOf(
+                obj(
+                    "has_data" to StructuredData.BooleanValue(false),
+                    "schedule" to obj("schedule_id" to StructuredData.NumberValue("31"))
+                ),
+                obj(
+                    "has_data" to StructuredData.BooleanValue(true),
+                    "stat" to obj("difficulty_id" to StructuredData.NumberValue("4")),
+                    "schedule" to obj("schedule_id" to StructuredData.NumberValue("30"))
+                )
+            ))
+        ), null)
+        val cycles = ChroniclePresentationMapper.theaterCycles(value)
+        assertEquals(2, cycles.size)
+        assertEquals(false, cycles[0].hasData)
+        assertEquals("Cycle 30", cycles[1].title)
+        assertEquals(true, cycles[1].hasData)
+    }
+
     @Test fun theaterDoesNotInventCyclesForMissingOrUnavailableData() {
         assertTrue(ChroniclePresentationMapper.theaterCycles(DataValue.Missing).isEmpty())
         assertTrue(ChroniclePresentationMapper.theaterCycles(DataValue.Unavailable).isEmpty())
