@@ -1,8 +1,10 @@
 # UI Implementation Batches
 
 **Repository:** `berao609/Irminsul-codex`  
-**Current completed batch:** Batch 7 - World Exploration  
-**Roadmap status:** Batch 8 inserted; later approved work renumbered.
+**Latest completed batch:** Batch 7 - World Exploration  
+**Active:** Batch 9 - Character and Weapon Fidelity  
+**Pending acceptance:** Batch 8 - Multi-Channel Data Fetching (CI #1070 passed; physical-device verification pending)  
+**Planned:** Batch 10 - Chronicles UI Visual Refinement
 
 This document is the active sequence for the UI Revamp implementation. Completed batches retain their historical numbers. The new data-retrieval work is inserted after Batch 7; later planned work moves forward by one number without changing its approved scope.
 
@@ -13,6 +15,8 @@ This document is the active sequence for the UI Revamp implementation. Completed
 ## Upcoming
 
 ### Batch 8 - Multi-Channel Data Fetching
+
+**Status:** Implementation and CI verification complete; physical-device acceptance pending. PR #16 remains open and unmerged.
 
 **Objective:** Separate retrieved account information by purpose and lifecycle, instead of treating one JSON export as the only durable output.
 
@@ -50,14 +54,29 @@ This document is the active sequence for the UI Revamp implementation. Completed
 
 ### Batch 9 - Character and Weapon Fidelity
 
+**Status:** Active on `ui-revamp/batch-9-character-weapon-fidelity`.
+
 This is the former Batch 8. Its scope and acceptance intent remain unchanged; only its number moves.
 
-- Reconstruct the character and weapon roster/detail experiences with high Battle Chronicles fidelity.
-- Preserve character-first presentation, relevant character/weapon information, and established native Android interaction.
-- Include the previously planned roster and detail refinements, including weapon rarity and weapon-type filters where they are useful and supported by the source data.
-- Do not reintroduce controls the user has explicitly rejected, such as an unnecessary character rarity filter or redundant sorting controls.
-- Use source-backed data and existing approved game assets; do not invent missing values or artwork.
-- Preserve the existing app architecture and verify the result with tests, CI, and physical-device testing.
+- Refine the dedicated Character Roster and Character Details destinations against the established Battle Chronicles presentation.
+- Preserve character-first presentation, newest-first release ordering, rarity-based card artwork, selected-character highlighting, source-backed character artwork, and existing detail interactions.
+- Implement a dedicated Weapon Roster destination using distinct weapon records present in the retrieved character roster.
+- Provide weapon rarity and weapon-type filters with clear/reset behavior and accessible selected state.
+- **Data boundary:** the current Battle Chronicle model exposes equipped weapons through character records, not a complete inventory of unequipped weapons. The initial roster must disclose that limitation and must not imply complete weapon ownership.
+- Do not reintroduce the rejected character rarity filter or redundant sorting controls.
+- Use source-backed data and existing approved game assets; do not invent missing values, passive descriptions, or artwork.
+- Preserve the existing app architecture and verify the result with deterministic tests, CI, and physical-device testing.
+
+### Batch 10 - Chronicles UI Visual Refinement
+
+**Status:** Planned; approved by the user for work after Batch 9.
+
+- Refine foreground surface opacity/transparency across the Chronicles UI so existing regional background artwork is more visible.
+- Apply the treatment to the affected Exploration region cards first, including regions that already have backgrounds.
+- Keep text, icons, progress indicators, and interactive controls readable in both Light and Dark themes.
+- Preserve existing artwork, data, layout, navigation, and regions without artwork. Adding missing regional backgrounds is a separate future task.
+- Review consistency across the wider Chronicles UI after the Exploration treatment is validated.
+- This is a visual-surface refinement, not a global theme rewrite or background-artwork acquisition task.
 
 ## Numbering and change control
 
