@@ -6033,7 +6033,7 @@ Run the full Debug CI for the latest branch head. If successful, verify Natlan, 
 - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.1032-vc1034` (artifact ID `15251815121`; 15,909,720 bytes; SHA-256 `b6557ad05e9261c009b2bdf94b3be19509961b24819016b4dba97744817222fe`).
 - Physical-device verification: user confirmed the final Batch 7 build was verified and tested, including the Enkanomiya hierarchy adjustment and final regional presentation refinements.
 - This final confirmation supersedes the earlier pending device-verification notes and the previously recorded Temple of Space rendering concern.
-- PR #15 was merged to `main`; merge commit and integrated main state are recorded after merge.
+- PR #15 was merged to `main` by squash merge. Merge commit: `c699d3c3636eda2cb50fbfbb73d7d00a7af70360` ([GitHub](https://github.com/berao609/Irminsul-codex/commit/c699d3c3636eda2cb50fbfbb73d7d00a7af70360)). The merge commit was fetched successfully and the closure record is present on `main`.
 
 ### Closure
 
