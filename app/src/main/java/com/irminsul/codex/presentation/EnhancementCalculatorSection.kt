@@ -4,8 +4,11 @@ import android.content.SharedPreferences
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,9 +26,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,6 +43,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,32 +72,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import coil.compose.SubcomposeAsyncImage
 
 private enum class CalculatorPage { CHOOSE_TYPE, CHOOSE_ITEM, PLAN }
-private data class CalculatorMaterial(val id: String, val name: String, val required: Long)
+private data class CalculatorMaterial(val id: String, val name: String, val required: Long, val iconUrl: String)
 private data class CalculatorResult(val materials: List<CalculatorMaterial>, val issue: String? = null)
 private val calculatorLevelCaps = listOf(20, 40, 50, 60, 70, 80, 90)
-
-private fun calculatorExperienceCurve(entry: EnhancementCatalogueEntry): List<Long> =
-    when (entry.subjectType) {
-        EnhancementSubjectType.CHARACTER ->
-            GenshinCharacterExperienceCurveCandidate.current.cumulativeExperienceByLevel
-        EnhancementSubjectType.WEAPON ->
-            if (entry.rarity == 4) GenshinWeaponExperienceCurveCandidate.fourStar.cumulativeExperienceByLevel
-            else GenshinWeaponExperienceCurveCandidate.fiveStar.cumulativeExperienceByLevel
-    }
-
-private fun calculatorCurrentExperienceMaximum(
-    currentLevel: Int,
-    currentAscensionRank: Int,
-    cumulativeExperienceByLevel: List<Long>
-): Long {
-    val unlockedCap = calculatorLevelCaps.getOrNull(currentAscensionRank) ?: return 0L
-    if (currentLevel !in 1 until unlockedCap) return 0L
-    val currentTotal = cumulativeExperienceByLevel.getOrNull(currentLevel - 1) ?: return 0L
-    val nextTotal = cumulativeExperienceByLevel.getOrNull(currentLevel) ?: return 0L
-    return (nextTotal - currentTotal - 1L).coerceAtLeast(0L)
-}
 
 @Composable
 internal fun EnhancementCalculatorSection(
@@ -105,11 +91,12 @@ internal fun EnhancementCalculatorSection(
     var catalogue by remember { mutableStateOf<List<EnhancementCatalogueEntry>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var catalogueError by remember { mutableStateOf<String?>(null) }
-    var search by remember { mutableStateOf("") }
+    var selectedElementFilter by remember { mutableStateOf<String?>(null) }
+    var selectedWeaponTypeFilter by remember { mutableStateOf<String?>(null) }
+    var selectedRarityFilter by remember { mutableStateOf<Int?>(null) }
     var selected by remember { mutableStateOf<EnhancementCatalogueEntry?>(null) }
     var currentLevel by remember { mutableIntStateOf(1) }
     var targetLevel by remember { mutableIntStateOf(90) }
-    var currentExperience by remember { mutableStateOf(0L) }
     var currentRank by remember { mutableIntStateOf(0) }
     var normalCurrent by remember { mutableIntStateOf(1) }
     var normalTarget by remember { mutableIntStateOf(1) }
@@ -148,9 +135,12 @@ internal fun EnhancementCalculatorSection(
         }
     }
 
-    val choices = remember(catalogue, subjectType, search) {
-        catalogue.filter { it.subjectType == subjectType &&
-            (search.isBlank() || it.name.contains(search.trim(), ignoreCase = true))
+    val choices = remember(catalogue, subjectType, selectedElementFilter, selectedWeaponTypeFilter, selectedRarityFilter) {
+        catalogue.filter { entry ->
+            entry.subjectType == subjectType &&
+                (selectedElementFilter == null || entry.element == selectedElementFilter) &&
+                (selectedWeaponTypeFilter == null || entry.weaponType == selectedWeaponTypeFilter) &&
+                (selectedRarityFilter == null || entry.rarity == selectedRarityFilter)
         }
     }
 
@@ -170,7 +160,6 @@ internal fun EnhancementCalculatorSection(
         }
         currentLevel = (ownedLevel ?: 1).coerceIn(1, 90)
         targetLevel = 90
-        currentExperience = 0L
         val rankFloor = calculatorLevelCaps.indexOfFirst { currentLevel <= it }.coerceAtLeast(0)
         val rankCeiling = if (currentLevel == calculatorLevelCaps[rankFloor]) {
             (rankFloor + 1).coerceAtMost(6)
@@ -195,7 +184,6 @@ internal fun EnhancementCalculatorSection(
         normalTarget = normalCurrent
         skillTarget = skillCurrent
         burstTarget = burstCurrent
-        search = ""
         result = null
         owned = emptyMap()
         page = CalculatorPage.PLAN
@@ -216,7 +204,7 @@ internal fun EnhancementCalculatorSection(
                                 characterId = entry.id,
                                 gameVersion = BundledCharacterProgressionCandidateRepository.GAME_VERSION,
                                 currentLevel = currentLevel,
-                                currentExperienceWithinLevel = currentExperience,
+                                currentExperienceWithinLevel = 0L,
                                 currentAscensionRank = currentRank,
                                 targetLevel = targetLevel
                             ),
@@ -237,7 +225,7 @@ internal fun EnhancementCalculatorSection(
                         if (fullPlan.status != CharacterUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA) {
                             CalculatorResult(emptyList(), fullPlan.issue ?: "Complete character cost data is unavailable.")
                         } else CalculatorResult(fullPlan.requirements.map {
-                            CalculatorMaterial(it.itemId, it.itemName, it.quantity)
+                            CalculatorMaterial(it.itemId, it.itemName, it.quantity, calculatorMaterialIconUrl(it.itemId))
                         })
                     } else {
                         val rarity = if (entry.rarity == 4) WeaponExperienceRarity.FOUR_STAR
@@ -251,7 +239,7 @@ internal fun EnhancementCalculatorSection(
                                 gameVersion = BundledWeaponAscensionCandidateRepository.GAME_VERSION,
                                 rarity = rarity,
                                 currentLevel = currentLevel,
-                                currentExperienceWithinLevel = currentExperience,
+                                currentExperienceWithinLevel = 0L,
                                 currentAscensionRank = currentRank,
                                 targetLevel = targetLevel
                             ),
@@ -261,7 +249,7 @@ internal fun EnhancementCalculatorSection(
                         if (plan.status != WeaponUpgradePlanCandidateStatus.COMPLETE_CANDIDATE_DATA) {
                             CalculatorResult(emptyList(), plan.issue ?: "Complete weapon cost data is unavailable.")
                         } else CalculatorResult(plan.requirements.map {
-                            CalculatorMaterial(it.itemId, it.itemName, it.quantity)
+                            CalculatorMaterial(it.itemId, it.itemName, it.quantity, calculatorMaterialIconUrl(it.itemId))
                         })
                     }
                 }
@@ -286,13 +274,11 @@ internal fun EnhancementCalculatorSection(
                 )
                 CalculatorTypeCard("Character", "Character level, ascension, and talent materials") {
                     subjectType = EnhancementSubjectType.CHARACTER
-                    search = ""
-                    page = CalculatorPage.CHOOSE_ITEM
+                                page = CalculatorPage.CHOOSE_ITEM
                 }
                 CalculatorTypeCard("Weapon", "Weapon level and ascension materials") {
                     subjectType = EnhancementSubjectType.WEAPON
-                    search = ""
-                    page = CalculatorPage.CHOOSE_ITEM
+                                page = CalculatorPage.CHOOSE_ITEM
                 }
             }
             CalculatorPage.CHOOSE_ITEM -> {
@@ -300,12 +286,20 @@ internal fun EnhancementCalculatorSection(
                     TextButton(onClick = { page = CalculatorPage.CHOOSE_TYPE }) { Text("‹ Back") }
                     Text(if (subjectType == EnhancementSubjectType.CHARACTER) "Choose Character" else "Choose Weapon", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
+                CalculatorRarityFilters(selectedRarityFilter) { selectedRarityFilter = it }
+                if (subjectType == EnhancementSubjectType.CHARACTER) {
+                    CalculatorIconFilterRow("Element", calculatorElementFilterOptions, selectedElementFilter) {
+                        selectedElementFilter = it
+                    }
+                }
+                CalculatorIconFilterRow("Weapon type", calculatorWeaponTypeFilterOptions, selectedWeaponTypeFilter) {
+                    selectedWeaponTypeFilter = it
+                }
                 Text(choices.size.toString() + " available · 4-star and 5-star", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                OutlinedTextField(value = search, onValueChange = { search = it }, label = { Text("Search") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 when {
                     loading -> CircularProgressIndicator()
                     catalogueError != null -> Text(catalogueError ?: "Catalogue unavailable", color = MaterialTheme.colorScheme.error)
-                    choices.isEmpty() -> Text("No matching items.")
+                    choices.isEmpty() -> Text("No items match these filters.")
                     else -> LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
                         modifier = Modifier.fillMaxWidth().heightIn(min = 180.dp, max = 560.dp),
@@ -329,8 +323,7 @@ internal fun EnhancementCalculatorSection(
                     }
                 }
                 Text(
-                    "Source: Genshin-DB " + BundledEnhancementCatalogueRepository.GAME_VERSION +
-                        ". The bundled selection data does not include a complete portrait/icon mapping.",
+                    "Portraits and item icons use source-attributed game asset metadata. Missing assets use a neutral placeholder.",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -348,67 +341,33 @@ internal fun EnhancementCalculatorSection(
                             Text(entry.rarity.toString() + "★ · " + if (entry.subjectType == EnhancementSubjectType.CHARACTER) "Character" else (entry.detail ?: "Weapon"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                    Text("Level range", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                    CalculatorNumberControl("Current level", currentLevel, 1, 90) {
-                        currentLevel = it
-                        if (targetLevel < it) targetLevel = it
-                        val floor = calculatorLevelCaps.indexOfFirst { cap -> it <= cap }.coerceAtLeast(0)
-                        val ceiling = if (it == calculatorLevelCaps[floor]) (floor + 1).coerceAtMost(6) else floor
-                        val nextRank = currentRank.coerceIn(floor, ceiling)
-                        currentRank = nextRank
-                        val curve = calculatorExperienceCurve(entry)
-                        currentExperience = currentExperience.coerceAtMost(
-                            calculatorCurrentExperienceMaximum(it, nextRank, curve)
-                        )
+                    CalculatorInputSection(if (entry.subjectType == EnhancementSubjectType.CHARACTER) "Character level" else "Weapon level") {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                            WheelNumberPicker("Current", currentLevel, 1, 90, Modifier.weight(1f)) {
+                                currentLevel = it
+                                if (targetLevel < it) targetLevel = it
+                                val floor = calculatorLevelCaps.indexOfFirst { cap -> it <= cap }.coerceAtLeast(0)
+                                val ceiling = if (it == calculatorLevelCaps[floor]) (floor + 1).coerceAtMost(6) else floor
+                                currentRank = currentRank.coerceIn(floor, ceiling)
+                            }
+                            WheelNumberPicker("Target", targetLevel, currentLevel, 90, Modifier.weight(1f)) { targetLevel = it }
+                        }
                     }
-                    CalculatorNumberControl("Desired level", targetLevel, currentLevel, 90) { targetLevel = it }
-                    val experienceCurve = calculatorExperienceCurve(entry)
-                    val currentExperienceMaximum = calculatorCurrentExperienceMaximum(
-                        currentLevel, currentRank, experienceCurve
-                    )
-                    CalculatorLongNumberControl(
-                        "EXP already earned within current level",
-                        currentExperience,
-                        0L,
-                        currentExperienceMaximum,
-                        1L
-                    ) { currentExperience = it }
-                    val rankFloor = calculatorLevelCaps.indexOfFirst { currentLevel <= it }.coerceAtLeast(0)
-                    val rankCeiling = if (currentLevel == calculatorLevelCaps[rankFloor]) {
-                        (rankFloor + 1).coerceAtMost(6)
-                    } else rankFloor
-                    CalculatorNumberControl("Current ascension rank", currentRank, rankFloor, rankCeiling) {
-                        currentRank = it
-                        currentExperience = currentExperience.coerceAtMost(
-                            calculatorCurrentExperienceMaximum(
-                                currentLevel, it, calculatorExperienceCurve(entry)
-                            )
-                        )
-                    }
-
                     if (entry.subjectType == EnhancementSubjectType.CHARACTER) {
-                        Text("Talent levels", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                        CalculatorNumberControl("Normal Attack · current", normalCurrent, 1, 10) {
-                            normalCurrent = it
-                            if (normalTarget < it) normalTarget = it
+                        CalculatorInputSection("Talent levels") {
+                            CalculatorTalentWheelRow("Normal Attack", normalCurrent, normalTarget,
+                                { normalCurrent = it; if (normalTarget < it) normalTarget = it }, { normalTarget = it })
+                            CalculatorTalentWheelRow("Elemental Skill", skillCurrent, skillTarget,
+                                { skillCurrent = it; if (skillTarget < it) skillTarget = it }, { skillTarget = it })
+                            CalculatorTalentWheelRow("Elemental Burst", burstCurrent, burstTarget,
+                                { burstCurrent = it; if (burstTarget < it) burstTarget = it }, { burstTarget = it })
                         }
-                        CalculatorNumberControl("Normal Attack · desired", normalTarget, normalCurrent, 10) { normalTarget = it }
-                        CalculatorNumberControl("Elemental Skill · current", skillCurrent, 1, 10) {
-                            skillCurrent = it
-                            if (skillTarget < it) skillTarget = it
-                        }
-                        CalculatorNumberControl("Elemental Skill · desired", skillTarget, skillCurrent, 10) { skillTarget = it }
-                        CalculatorNumberControl("Elemental Burst · current", burstCurrent, 1, 10) {
-                            burstCurrent = it
-                            if (burstTarget < it) burstTarget = it
-                        }
-                        CalculatorNumberControl("Elemental Burst · desired", burstTarget, burstCurrent, 10) { burstTarget = it }
                     }
                     Button(onClick = { calculate() }, enabled = !calculating, modifier = Modifier.fillMaxWidth()) {
                         if (calculating) CircularProgressIndicator(modifier = Modifier.size(18.dp)) else Text("Calculate")
                     }
                     Text(
-                        "Upgrade costs and EXP curves are source-attributed candidate data. Incomplete totals are withheld.",
+                        "Current EXP within the selected level is assumed to be 0. Ascension rank is retained from account data when available, otherwise inferred from the selected level. Upgrade costs remain candidate data; incomplete totals are withheld.",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -439,49 +398,28 @@ internal fun EnhancementCalculatorSection(
                     Text("No additional materials are required for these levels.")
                 } else {
                     Text("Change your owned quantities. Remaining requirements update immediately.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    plan.materials.forEach { material ->
+                    plan.materials.forEachIndexed { index, material ->
                         val legacyStorageKey = "enhancement_owned_" +
                             selected?.subjectType?.name + ":" + selected?.id + ":" + material.id
-                        // Material inventory belongs to the account, not to an individual plan.
-                        // Read the old plan-scoped value as a compatibility fallback.
                         val storageKey = "enhancement_owned_material_" + material.id
                         val storedQuantity = owned[material.id]
                             ?: preferences.getString(storageKey, null)?.toLongOrNull()?.coerceAtLeast(0L)
                             ?: preferences.getString(legacyStorageKey, null)?.toLongOrNull()?.coerceAtLeast(0L)
-                        val quantity = storedQuantity ?: 0L
-                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(14.dp)) {
-                            Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(material.name, fontWeight = FontWeight.SemiBold)
-                                Text("Required: " + material.required, style = MaterialTheme.typography.bodySmall)
-                                CalculatorQuantityControl("Owned", quantity) { next ->
-                                    val safe = next.coerceAtLeast(0L)
-                                    owned = owned + (material.id to safe)
-                                    preferences.edit().putString(storageKey, safe.toString()).apply()
-                                }
-                                if (storedQuantity == null) {
-                                    Text(
-                                        "Owned quantity not entered. Confirm 0 if you own none.",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    TextButton(
-                                        onClick = {
-                                            owned = owned + (material.id to 0L)
-                                            preferences.edit().putString(storageKey, "0").apply()
-                                        }
-                                    ) { Text("Confirm 0 owned") }
-                                }
-                                val remaining = com.irminsul.codex.data.catalogue.EnhancementMaterialInventoryCalculator
-                                    .remainingQuantity(material.required, storedQuantity)
-                                Text(
-                                    remaining?.let { "Remaining: $it" }
-                                        ?: "Remaining: enter owned quantity",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                        val remaining = com.irminsul.codex.data.catalogue.EnhancementMaterialInventoryCalculator
+                            .remainingQuantity(material.required, storedQuantity)
+                        CalculatorMaterialRow(
+                            material, storedQuantity ?: 0L, remaining, storedQuantity != null,
+                            { next ->
+                                val safe = next.coerceAtLeast(0L)
+                                owned = owned + (material.id to safe)
+                                preferences.edit().putString(storageKey, safe.toString()).apply()
+                            },
+                            {
+                                owned = owned + (material.id to 0L)
+                                preferences.edit().putString(storageKey, "0").apply()
                             }
-                        }
+                        )
+                        if (index != plan.materials.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
                     }
                 }
                 Spacer(Modifier.size(4.dp))
@@ -510,85 +448,115 @@ private fun CalculatorTypeCard(title: String, subtitle: String, onClick: () -> U
     }
 }
 
+private data class CalculatorFilterOption(val key: String, val label: String, val iconUrl: String)
+private val calculatorElementFilterOptions = listOf(
+    CalculatorFilterOption("Anemo", "Anemo", "https://enka.network/ui/UI_Buff_Element_Wind.png"),
+    CalculatorFilterOption("Geo", "Geo", "https://enka.network/ui/UI_Buff_Element_Rock.png"),
+    CalculatorFilterOption("Electro", "Electro", "https://enka.network/ui/UI_Buff_Element_Electric.png"),
+    CalculatorFilterOption("Dendro", "Dendro", "https://enka.network/ui/UI_Buff_Element_Grass.png"),
+    CalculatorFilterOption("Hydro", "Hydro", "https://enka.network/ui/UI_Buff_Element_Water.png"),
+    CalculatorFilterOption("Pyro", "Pyro", "https://enka.network/ui/UI_Buff_Element_Fire.png"),
+    CalculatorFilterOption("Cryo", "Cryo", "https://enka.network/ui/UI_Buff_Element_Ice.png")
+)
+private val calculatorWeaponTypeFilterOptions = listOf(
+    CalculatorFilterOption("SWORD", "Sword", "https://enka.network/ui/UI_EquipIcon_Sword_Blunt.png"),
+    CalculatorFilterOption("CLAYMORE", "Claymore", "https://enka.network/ui/UI_EquipIcon_Claymore_Aniki.png"),
+    CalculatorFilterOption("BOW", "Bow", "https://enka.network/ui/UI_EquipIcon_Bow_Hunters.png"),
+    CalculatorFilterOption("POLEARM", "Polearm", "https://enka.network/ui/UI_EquipIcon_Pole_Gewalt.png"),
+    CalculatorFilterOption("CATALYST", "Catalyst", "https://enka.network/ui/UI_EquipIcon_Catalyst_Apprentice.png")
+)
+private fun calculatorMaterialIconUrl(id: String): String = "https://enka.network/ui/UI_ItemIcon_$id.png"
+
+@Composable
+private fun CalculatorIconFilterRow(title: String, options: List<CalculatorFilterOption>, selected: String?, onSelected: (String?) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            CalculatorIconFilter("All", null, selected == null, onSelected)
+            options.forEach { option ->
+                CalculatorIconFilter(option.label, option.iconUrl, selected == option.key) { onSelected(if (selected == option.key) null else option.key) }
+            }
+        }
+    }
+}
+@Composable
+private fun CalculatorIconFilter(label: String, iconUrl: String?, selected: Boolean, onClick: () -> Unit) {
+    Surface(onClick = onClick, shape = RoundedCornerShape(11.dp),
+        color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        border = if (selected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)) else null) {
+        Column(Modifier.width(58.dp).padding(horizontal = 5.dp, vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            if (iconUrl == null) Text("✦", style = MaterialTheme.typography.titleMedium)
+            else SubcomposeAsyncImage(model = iconUrl, contentDescription = "$label filter icon", modifier = Modifier.size(25.dp), contentScale = ContentScale.Fit, loading = { Text("·") }, error = { Text("·") })
+            Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+        }
+    }
+}
+@Composable
+private fun CalculatorRarityFilters(selected: Int?, onSelected: (Int?) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("Rarity", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+        FilterChip(selected == null, onClick = { onSelected(null) }, label = { Text("All") })
+        FilterChip(selected == 5, onClick = { onSelected(if (selected == 5) null else 5) }, label = { Text("5★") })
+        FilterChip(selected == 4, onClick = { onSelected(if (selected == 4) null else 4) }, label = { Text("4★") })
+    }
+}
 @Composable
 private fun CalculatorChoiceCard(entry: EnhancementCatalogueEntry, owned: Boolean, onClick: () -> Unit) {
-    val background = if (entry.rarity == 5) Color(0xFFFFC857).copy(alpha = 0.22f)
-        else Color(0xFFB388FF).copy(alpha = 0.22f)
-    Card(
-        Modifier.fillMaxWidth().clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = background),
-        shape = RoundedCornerShape(14.dp)
-    ) {
-        Column(Modifier.fillMaxWidth().padding(9.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            Text(if (entry.subjectType == EnhancementSubjectType.CHARACTER) "✦" else "⚔", style = MaterialTheme.typography.headlineMedium)
+    val background = if (entry.rarity == 5) Color(0xFFFFC857).copy(alpha = 0.22f) else Color(0xFFB388FF).copy(alpha = 0.22f)
+    Card(Modifier.fillMaxWidth().clickable(onClick = onClick), colors = CardDefaults.cardColors(containerColor = background), shape = RoundedCornerShape(14.dp)) {
+        Column(Modifier.fillMaxWidth().padding(7.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (!entry.iconUrl.isNullOrBlank()) SubcomposeAsyncImage(
+                model = entry.iconUrl, contentDescription = "${entry.name} game icon",
+                modifier = Modifier.size(76.dp).clip(RoundedCornerShape(10.dp)),
+                contentScale = if (entry.subjectType == EnhancementSubjectType.CHARACTER) ContentScale.Crop else ContentScale.Fit,
+                loading = { Text("✦", style = MaterialTheme.typography.headlineMedium) },
+                error = { Text("✦", style = MaterialTheme.typography.headlineMedium) }
+            ) else Text(if (entry.subjectType == EnhancementSubjectType.CHARACTER) "✦" else "⚔", style = MaterialTheme.typography.headlineMedium)
             Text(entry.name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, minLines = 2)
             Text(entry.rarity.toString() + "★", style = MaterialTheme.typography.labelSmall)
-            Text(
-                if (entry.subjectType == EnhancementSubjectType.CHARACTER) {
-                    if (owned) "On account" else "Not owned"
-                } else {
-                    if (owned) "Equipped" else "Not seen equipped"
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(if (entry.subjectType == EnhancementSubjectType.CHARACTER) { if (owned) "On account" else "Not owned" } else { if (owned) "Equipped" else "Not seen equipped" }, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
-
 @Composable
-private fun CalculatorNumberControl(label: String, value: Int, minimum: Int, maximum: Int, onChange: (Int) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            TextButton(onClick = { onChange((value - 1).coerceAtLeast(minimum)) }, enabled = value > minimum) { Text("−") }
-            Text(value.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            TextButton(onClick = { onChange((value + 1).coerceAtMost(maximum)) }, enabled = value < maximum) { Text("+") }
-        }
-        if (maximum > minimum) {
-            Slider(
-                value = value.toFloat(),
-                onValueChange = { onChange(it.toInt().coerceIn(minimum, maximum)) },
-                valueRange = minimum.toFloat()..maximum.toFloat(),
-                steps = (maximum - minimum - 1).coerceAtLeast(0)
-            )
+private fun CalculatorInputSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f)), shape = RoundedCornerShape(16.dp)) {
+        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+    }
+}
+@Composable
+private fun CalculatorTalentWheelRow(title: String, current: Int, target: Int, onCurrentChange: (Int) -> Unit, onTargetChange: (Int) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            WheelNumberPicker("Current", current, 1, 10, Modifier.weight(1f), onCurrentChange)
+            WheelNumberPicker("Target", target, current, 10, Modifier.weight(1f), onTargetChange)
         }
     }
 }
-
 @Composable
-private fun CalculatorLongNumberControl(
-    label: String,
-    value: Long,
-    minimum: Long,
-    maximum: Long,
-    increment: Long,
-    onChange: (Long) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            TextButton(onClick = { onChange((value - increment).coerceAtLeast(minimum)) }, enabled = value > minimum) { Text("−") }
-            Text(value.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            TextButton(onClick = { onChange((value + increment).coerceAtMost(maximum)) }, enabled = value < maximum) { Text("+") }
+private fun CalculatorMaterialRow(material: CalculatorMaterial, ownedQuantity: Long, remaining: Long?, isInventoryKnown: Boolean, onOwnedChange: (Long) -> Unit, onConfirmZero: () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+        SubcomposeAsyncImage(model = material.iconUrl, contentDescription = "${material.name} icon", modifier = Modifier.size(43.dp).clip(RoundedCornerShape(9.dp)), contentScale = ContentScale.Fit, loading = { Text("✦") }, error = { Text("✦") })
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(material.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 2)
+            Text("Required  ${material.required}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(remaining?.let { "Still needed  $it" } ?: "Still needed  —", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+            if (!isInventoryKnown) TextButton(onClick = onConfirmZero, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) { Text("Confirm 0 owned", style = MaterialTheme.typography.labelSmall) }
         }
-        if (maximum > minimum) {
-            Slider(
-                value = value.coerceIn(minimum, maximum).toFloat(),
-                onValueChange = { onChange(it.toLong().coerceIn(minimum, maximum)) },
-                valueRange = minimum.toFloat()..maximum.toFloat(),
-                steps = 0
-            )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Owned", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            CalculatorQuantityControl("", ownedQuantity, onOwnedChange)
         }
     }
 }
 
 @Composable
 private fun CalculatorQuantityControl(label: String, value: Long, onChange: (Long) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        TextButton(onClick = { onChange((value - 1L).coerceAtLeast(0L)) }, enabled = value > 0L) { Text("−") }
-        Text(value.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        TextButton(onClick = { onChange((value + 1L).coerceAtMost(Long.MAX_VALUE - 1L)) }) { Text("+") }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+        if (label.isNotBlank()) Text(label, style = MaterialTheme.typography.labelSmall)
+        TextButton(onClick = { onChange((value - 1L).coerceAtLeast(0L)) }, enabled = value > 0L, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 2.dp, vertical = 0.dp)) { Text("−") }
+        Text(value.toString(), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        TextButton(onClick = { onChange((value + 1L).coerceAtMost(Long.MAX_VALUE - 1L)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 2.dp, vertical = 0.dp)) { Text("+") }
     }
 }
