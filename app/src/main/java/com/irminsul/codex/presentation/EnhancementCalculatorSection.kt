@@ -27,6 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -81,6 +82,7 @@ private data class CalculatorMaterial(val id: String, val name: String, val requ
 private data class CalculatorResult(val materials: List<CalculatorMaterial>, val issue: String? = null)
 private val calculatorLevelCaps = listOf(20, 40, 50, 60, 70, 80, 90)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun EnhancementCalculatorSection(
     characters: List<CharacterSnapshot>,
@@ -592,7 +594,6 @@ private fun CalculatorInputSection(title: String, content: @Composable ColumnSco
             Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
             content()
         }
-    }
 }
 @Composable
 private fun CalculatorTalentValueRow(title: String, current: Int, target: Int, onCurrent: () -> Unit, onTarget: () -> Unit) {
