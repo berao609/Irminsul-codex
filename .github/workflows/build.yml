@@ -235,6 +235,11 @@ jobs:
             echo "::error::Room schema snapshot was not generated at $schema"
             exit 1
           fi
+          if ! git diff --quiet -- "$schema"; then
+            echo "::error::Generated Room schema differs from the checked-in version-3 snapshot."
+            git --no-pager diff -- "$schema"
+            exit 1
+          fi
 
       - name: Upload Room schema snapshot
         uses: actions/upload-artifact@v7
