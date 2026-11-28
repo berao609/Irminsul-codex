@@ -6201,3 +6201,12 @@ Implement the four-page Enhancement Calculator visual redesign and the app-wide 
 - CI #1169 passed unit tests, Debug APK build, schema-v3 snapshot verification, APK signature verification, and artifact upload for workflow head `8f53593c14ee2ddfb03e133dbfc6f4137fac00a0`. Room instrumentation was skipped because that workflow commit changed documentation only. APK #1169: artifact `15263680332`, version `1.0.0-dev.1169`, SHA-256 `4f66f201c27722c0c276a1fcffcb8f9da4aab1c2bea210c165fac4ad3faf2d1d`.
 - The earlier CI #1155 instrumentation attempt exposed obsolete visual-metadata assertions. Current source uses JVM asset-coverage tests for character/weapon metadata and filter-icon maps; CI #1169 passed those unit tests. Room migration instrumentation independently passed in CI #1119/#1121.
 - CI #1177 is running against the latest UI refinement commit. Physical-device acceptance remains pending; do not merge.
+
+
+### Milestone 117 latest verification - 2026-11-28
+
+- CI #1177 passed for code head `2d33b9c0f2dab6e8d126a4400be45f84a1d5fddd`.
+- CI #1179 passed for documentation head `2558e32ba0629d846e7192eb4e39a27d1a815fcc`.
+- CI #1181 passed for latest UI code head `4ce56a4a6788dfff2d96d0f43f6bfd2e081cadb9`: unit tests, Debug APK build, Room schema-v3 snapshot verification, APK signature verification, and artifact upload succeeded. Room instrumentation was skipped because no Room persistence/schema files changed; migration instrumentation remains covered by #1119/#1121.
+- APK #1181: `1.0.0-dev.1181`, version code `1183`, artifact ID `15263442218`, SHA-256 `546e56534b1bc32d76d06563438a919507e4762d67b5c1fa47a2bdd6ef8e9c00`.
+- The latest visual refinements are code-tested. Physical-device acceptance remains pending for the four screenshot pages, narrow-screen material rows, both themes, and saved-analysis restoration from the existing installation. Do not merge before the user retests.

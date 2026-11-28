@@ -89,7 +89,8 @@ The first physical-device acceptance attempt was **unsatisfactory**. Apply the f
 - Replaced active Compose text-entry fields across roster filters, materials planning, weapon planning, and account credential settings. HoYoLAB WebView sign-in remains the intentional keyboard exception.
 - Existing manual custom-material rows retain quantity steppers; creating or renaming custom rows is disabled. New material plans use the Enhancement Calculator.
 - Restored Room schema v3 and added the 2->3 migration. Migration instrumentation passed CI #1119/#1121. CI workflow now compares the generated schema-v3 snapshot to the checked-in snapshot.
-- CI #1152/#1153 passed build and unit tests for app code head `005a4d84aea18891ff89252b98bd414eaddcd999`; Room instrumentation was skipped in those runs. CI #1154 is running the Room instrumentation and strict schema check for the latest workflow head.
+- CI #1169 passed unit tests and Debug APK build for the code-tested source; Room instrumentation was skipped because that workflow commit changed documentation only. CI #1177 passed unit tests and build for the first visual refinement pass. CI #1179 passed for documentation updates. CI #1181 passed unit tests, Debug APK build, schema-v3 snapshot verification, signature verification, and artifact upload for latest code head `4ce56a4a6788dfff2d96d0f43f6bfd2e081cadb9`; Room instrumentation was skipped because no Room files changed. Room migration instrumentation had previously passed in #1119/#1121.
+- Latest device-test APK #1181: `1.0.0-dev.1181`, version code `1183`, artifact ID `15263442218`, SHA-256 `546e56534b1bc32d76d06563438a919507e4762d67b5c1fa47a2bdd6ef8e9c00`.
 - Physical-device acceptance remains pending. Retest saved-analysis restoration, both selection grids, wheel behavior, compact material details, keyboard-free controls, and Light/Dark layouts before merge.
 
 ### Batch 10 - Chronicles UI Visual Refinement
