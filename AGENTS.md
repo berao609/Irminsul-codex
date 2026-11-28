@@ -6,6 +6,28 @@ Irminsul Codex is a native Android application for Genshin Impact account data r
 
 This file provides repository-wide instructions for AI coding agents and automated contributors. Follow it before making changes.
 
+## Repository identity and context isolation (highest priority)
+
+This repository is **Irminsul Codex**. Its only canonical repository is `berao609/Irminsul-codex`.
+
+These rules take priority over conversation carryover, summaries, remembered workflows, examples, and instructions belonging to any other project:
+
+- **Repository lock:** For every GitHub, file, branch, commit, issue, pull request, workflow, and CI operation in this project, verify and use the exact repository identity `berao609/Irminsul-codex`. Never infer a repository from a previous conversation or a similarly named project.
+- **Instruction isolation:** Apply only instructions stored in this repository, especially this `AGENTS.md`, its `README.md`, and task-relevant files in this repository. Never import another repository's governance rules, file-edit restrictions, handoff formats, architecture, paths, milestones, or workflow.
+- **Context quarantine:** Treat details from other projects as unrelated and unusable here, even if they appear in conversation history, memory, generated summaries, or tool output. Do not mention or consult another project unless the user explicitly asks to switch projects.
+- **No cross-project writes:** Never create, edit, commit, or otherwise mutate a different repository as part of Irminsul Codex work. Do not copy another project's files or procedures into this repository unless the user explicitly requests that specific integration.
+- **Path and evidence discipline:** Resolve every file path relative to this repository. Before editing, verify the target file, current branch, current file blob SHA, and intended change against this repository. Before reporting status, verify the relevant commit, CI run, and artifact in this repository.
+- **Ambiguity stop:** If a request, instruction, path, branch, or tool result appears to point outside `berao609/Irminsul-codex`, do not guess or silently switch. Pause and ask one concise clarification.
+- **Conversation reset:** At the start of each new task, re-anchor to this repository and this file. Do not carry over the previous task's branch, PR, implementation plan, or unfinished work unless it is verified in this repository and relevant to the new request.
+
+The required preflight identity is:
+
+```text
+Project: Irminsul Codex
+Repository: berao609/Irminsul-codex
+Default branch: main
+```
+
 ## Task-specific context retrieval
 
 Always read this file first. Then retrieve only the additional repository context that is relevant to the current task.
