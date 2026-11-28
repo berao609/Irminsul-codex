@@ -101,8 +101,14 @@ fun sortEnhancementCatalogueByRelease(entries: List<EnhancementCatalogueEntry>):
     entries.sortedWith(
         compareBy<EnhancementCatalogueEntry> { entry ->
             when (entry.subjectType) {
-                EnhancementSubjectType.CHARACTER -> characterReleaseIndex(entry.name) ?: Int.MAX_VALUE
-                EnhancementSubjectType.WEAPON -> weaponReleaseDateByName[entry.name.trim().lowercase()]?.replace("-", "")?.toIntOrNull() ?: Int.MAX_VALUE
+                EnhancementSubjectType.CHARACTER -> characterReleaseIndex(entry.name) == null
+                EnhancementSubjectType.WEAPON -> weaponReleaseDateByName[entry.name.trim().lowercase()] == null
+            }
+        }.thenByDescending { entry ->
+            when (entry.subjectType) {
+                EnhancementSubjectType.CHARACTER -> characterReleaseIndex(entry.name) ?: Int.MIN_VALUE
+                EnhancementSubjectType.WEAPON -> weaponReleaseDateByName[entry.name.trim().lowercase()]
+                    ?.replace("-", "")?.toIntOrNull() ?: Int.MIN_VALUE
             }
         }.thenBy { it.name.lowercase() }.thenBy { it.id }
     )
