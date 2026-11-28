@@ -54,6 +54,86 @@ class ChroniclePresentationMapperTest {
         assertEquals(1f, regions[2].progress, 0.001f)
     }
 
+    @Test fun explorationGroupsParentRegionsAndNestedAreasWithoutCombiningProgress() {
+        val data = DataValue.Available(obj(
+            "world_explorations" to StructuredData.ArrayValue(listOf(
+                obj(
+                    "id" to StructuredData.NumberValue("2"),
+                    "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Liyue"),
+                    "exploration_percentage" to StructuredData.NumberValue("1000"),
+                    "area_exploration_list" to StructuredData.ArrayValue(listOf(
+                        obj("name" to StructuredData.StringValue("Bishui Plain"),
+                            "exploration_percentage" to StructuredData.NumberValue("1042")),
+                        obj("name" to StructuredData.StringValue("Minlin"),
+                            "exploration_percentage" to StructuredData.NumberValue("1080"))
+                    ))
+                ),
+                obj(
+                    "id" to StructuredData.NumberValue("10"),
+                    "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Chenyu Vale"),
+                    "exploration_percentage" to StructuredData.NumberValue("0")
+                ),
+                obj(
+                    "id" to StructuredData.NumberValue("13"),
+                    "parent_id" to StructuredData.NumberValue("10"),
+                    "name" to StructuredData.StringValue("Chenyu Vale: Upper Vale"),
+                    "exploration_percentage" to StructuredData.NumberValue("1000")
+                )
+            ))
+        ), null)
+
+        val regions = ChroniclePresentationMapper.explorationRegions(data)
+
+        assertEquals(listOf("Liyue", "Chenyu Vale"), regions.map { it.name })
+        assertEquals(listOf("Bishui Plain", "Minlin"), regions[0].subareas.map { it.name })
+        assertEquals("104.2%", regions[0].subareas[0].percentageLabel)
+        assertEquals(0f, regions[1].progress, 0.001f)
+        assertEquals(1, regions[1].childRegions.size)
+        assertEquals("Chenyu Vale: Upper Vale", regions[1].childRegions.single().name)
+        assertEquals("100%", regions[1].childRegions.single().percentageLabel)
+        assertEquals(0f, regions[1].progress, 0.001f)
+    }
+
+    @Test fun explorationMapsSourceBackedProgressionAndTribalLevels() {
+        val data = DataValue.Available(obj(
+            "world_explorations" to StructuredData.ArrayValue(listOf(
+                obj(
+                    "id" to StructuredData.NumberValue("15"),
+                    "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Natlan"),
+                    "type" to StructuredData.StringValue("Reputation"),
+                    "level" to StructuredData.NumberValue("0"),
+                    "seven_statue_level" to StructuredData.NumberValue("1"),
+                    "exploration_percentage" to StructuredData.NumberValue("280"),
+                    "offerings" to StructuredData.ArrayValue(listOf(
+                        obj("name" to StructuredData.StringValue("Tona's Flame"),
+                            "level" to StructuredData.NumberValue("11"),
+                            "open_state" to StructuredData.StringValue("OfferingOpenStateUnknow"))
+                    )),
+                    "natan_reputation" to obj(
+                        "tribal_list" to StructuredData.ArrayValue(listOf(
+                            obj("name" to StructuredData.StringValue("\"People of the Springs\""),
+                                "level" to StructuredData.NumberValue("4"),
+                                "icon" to StructuredData.StringValue("https://example.invalid/tribe.png"))
+                        ))
+                    )
+                )
+            ))
+        ), null)
+
+        val natlan = ChroniclePresentationMapper.explorationRegions(data).single()
+
+        assertEquals(0, natlan.reputationLevel)
+        assertEquals(1, natlan.statueLevel)
+        assertEquals("Tona's Flame", natlan.offerings.single().name)
+        assertEquals(11, natlan.offerings.single().level)
+        assertEquals("\"People of the Springs\"", natlan.tribalReputations.single().name)
+        assertEquals(4, natlan.tribalReputations.single().level)
+        assertEquals("https://example.invalid/tribe.png", natlan.tribalReputations.single().iconUrl)
+    }
+
     @Test fun explorationSupportsLegacyFlatShapeAndHidesTechnicalValues() {
         val data = DataValue.Available(obj(
             "exploration" to StructuredData.ArrayValue(listOf(
