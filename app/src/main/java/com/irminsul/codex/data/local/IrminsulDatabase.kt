@@ -7,21 +7,25 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.irminsul.codex.data.local.dao.AccountSnapshotDao
+import com.irminsul.codex.data.local.dao.PrivateAccountDataDao
 import com.irminsul.codex.data.local.entity.AccountEntity
 import com.irminsul.codex.data.local.entity.AccountSnapshotEntity
 import com.irminsul.codex.data.local.entity.AccountSnapshotJsonChunkEntity
+import com.irminsul.codex.data.local.entity.PrivateAccountDataEntity
 
 @Database(
     entities = [
         AccountEntity::class,
         AccountSnapshotEntity::class,
-        AccountSnapshotJsonChunkEntity::class
+        AccountSnapshotJsonChunkEntity::class,
+        PrivateAccountDataEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class IrminsulDatabase : RoomDatabase() {
     abstract fun accountSnapshotDao(): AccountSnapshotDao
+    abstract fun privateAccountDataDao(): PrivateAccountDataDao
 
     companion object {
         private const val JSON_CHUNK_SIZE = SnapshotJsonChunks.CHUNK_SIZE
@@ -81,6 +85,23 @@ abstract class IrminsulDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS private_account_data (
+                        uid TEXT NOT NULL,
+                        dailyNoteJson TEXT,
+                        dailyNoteRetrievedAt TEXT,
+                        accountProfileJson TEXT,
+                        accountProfileRetrievedAt TEXT,
+                        PRIMARY KEY(uid)
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         @Volatile private var instance: IrminsulDatabase? = null
 
         fun getInstance(context: Context): IrminsulDatabase =
@@ -90,7 +111,7 @@ abstract class IrminsulDatabase : RoomDatabase() {
                     IrminsulDatabase::class.java,
                     "irminsul_codex.db"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build()
                     .also { instance = it }
             }

@@ -54,6 +54,7 @@ import com.irminsul.codex.domain.model.RetrievalChannelState
 import com.irminsul.codex.data.export.JsonDocumentWriter
 import com.irminsul.codex.data.local.IrminsulDatabase
 import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
+import com.irminsul.codex.data.local.repository.RoomPrivateAccountDataStore
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import com.irminsul.codex.integration.security.HoYoLabCredentialStore
 import kotlinx.coroutines.launch
@@ -91,10 +92,16 @@ internal fun CodexScreen(
     var showAllRecommendations by remember { mutableStateOf(false) }
     var selectedCharacterId by remember { mutableStateOf<Int?>(null) }
 
-    val privateDataCoordinator = remember { HoYoLabPrivateDataCoordinator() }
+    val privateDataCoordinator = remember(context) {
+        HoYoLabPrivateDataCoordinator(
+            privateDataStore = RoomPrivateAccountDataStore(
+                IrminsulDatabase.getInstance(context.applicationContext)
+            )
+        )
+    }
     var dailyNoteChannel by remember { mutableStateOf(RetrievalChannelState<DailyNote>()) }
     var accountProfileChannel by remember { mutableStateOf(RetrievalChannelState<AccountProfile>()) }
-    var privateDataUid by remember { mutableStateOf(uid.trim()) }
+    var privateDataUid by remember { mutableStateOf("") }
     val dailyNote = dailyNoteChannel.value
     val accountProfile = accountProfileChannel.value
     var isLoading by remember { mutableStateOf(false) }
@@ -144,22 +151,62 @@ internal fun CodexScreen(
         }
         prefs.edit().putString("uid", targetUid.trim()).apply()
         credentialLoadError = false
-        if (privateDataUid != targetUid.trim()) {
-            privateDataUid = targetUid.trim()
-            dailyNoteChannel = RetrievalChannelState()
-            accountProfileChannel = RetrievalChannelState()
-        }
-
         scope.launch {
-            dailyNoteChannel = dailyNoteChannel.loading()
-            accountProfileChannel = accountProfileChannel.loading()
             isLoading = true
             errorMessage = null
 
+            if (privateDataUid != targetUid.trim()) {
+                privateDataUid = targetUid.trim()
+                dailyNoteChannel = RetrievalChannelState()
+                accountProfileChannel = RetrievalChannelState()
+                try {
+                    val cached = privateDataCoordinator.restore(targetUid.trim())
+                    if (cached != null) {
+                        dailyNoteChannel = cached.dailyNote?.let {
+                            RetrievalChannelState(
+                                value = it.value,
+                                status = RetrievalChannelState.Status.STALE,
+                                retrievedAt = it.retrievedAt,
+                                lastSuccessfulRetrievedAt = it.retrievedAt,
+                                message = "Showing saved Daily Note while refreshing."
+                            )
+                        } ?: cached.dailyNoteError?.let {
+                            RetrievalChannelState(status = RetrievalChannelState.Status.FAILED, message = it)
+                        } ?: RetrievalChannelState()
+                        accountProfileChannel = cached.accountProfile?.let {
+                            RetrievalChannelState(
+                                value = it.value,
+                                status = RetrievalChannelState.Status.STALE,
+                                retrievedAt = it.retrievedAt,
+                                lastSuccessfulRetrievedAt = it.retrievedAt,
+                                message = "Showing saved profile while refreshing."
+                            )
+                        } ?: cached.accountProfileError?.let {
+                            RetrievalChannelState(status = RetrievalChannelState.Status.FAILED, message = it)
+                        } ?: RetrievalChannelState()
+                    }
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
+                } catch (error: Exception) {
+                    dailyNoteChannel = RetrievalChannelState(
+                        status = RetrievalChannelState.Status.FAILED,
+                        message = "Could not restore saved Daily Note: ${error.message ?: "local storage error"}"
+                    )
+                    accountProfileChannel = RetrievalChannelState(
+                        status = RetrievalChannelState.Status.FAILED,
+                        message = "Could not restore saved profile: ${error.message ?: "local storage error"}"
+                    )
+                }
+            }
+
+            dailyNoteChannel = dailyNoteChannel.loading()
+            accountProfileChannel = accountProfileChannel.loading()
             val refreshed = privateDataCoordinator.refresh(targetUid.trim(), targetCookie.trim())
             dailyNoteChannel = refreshed.dailyNote.result.fold(
                 onSuccess = { value ->
-                    dailyNoteChannel.success(value, refreshed.dailyNote.retrievedAt)
+                    dailyNoteChannel.success(value, refreshed.dailyNote.retrievedAt).copy(
+                        message = refreshed.dailyNote.persistenceError
+                    )
                 },
                 onFailure = { error ->
                     dailyNoteChannel.failure(
@@ -170,7 +217,9 @@ internal fun CodexScreen(
             )
             accountProfileChannel = refreshed.accountProfile.result.fold(
                 onSuccess = { value ->
-                    accountProfileChannel.success(value, refreshed.accountProfile.retrievedAt)
+                    accountProfileChannel.success(value, refreshed.accountProfile.retrievedAt).copy(
+                        message = refreshed.accountProfile.persistenceError
+                    )
                 },
                 onFailure = { error ->
                     accountProfileChannel.failure(
@@ -182,10 +231,12 @@ internal fun CodexScreen(
 
             val channelFailures = buildList {
                 if (dailyNoteChannel.status == RetrievalChannelState.Status.FAILED ||
-                    dailyNoteChannel.status == RetrievalChannelState.Status.STALE
+                    dailyNoteChannel.status == RetrievalChannelState.Status.STALE ||
+                    dailyNoteChannel.message != null
                 ) add("Daily Note: ${dailyNoteChannel.message}")
                 if (accountProfileChannel.status == RetrievalChannelState.Status.FAILED ||
-                    accountProfileChannel.status == RetrievalChannelState.Status.STALE
+                    accountProfileChannel.status == RetrievalChannelState.Status.STALE ||
+                    accountProfileChannel.message != null
                 ) add("Profile: ${accountProfileChannel.message}")
             }
             errorMessage = channelFailures.joinToString("\n").takeIf { it.isNotBlank() }
@@ -436,11 +487,13 @@ internal fun CodexScreen(
                         dailyNoteStatusMessage = when (dailyNoteChannel.status) {
                             RetrievalChannelState.Status.STALE -> "Refresh failed. Showing the last successful Daily Note."
                             RetrievalChannelState.Status.FAILED -> dailyNoteChannel.message ?: "Daily Note is unavailable."
+                            RetrievalChannelState.Status.SUCCESS -> dailyNoteChannel.message
                             else -> null
                         },
                         accountProfileStatusMessage = when (accountProfileChannel.status) {
                             RetrievalChannelState.Status.STALE -> "Profile refresh failed. Showing the last successful profile."
                             RetrievalChannelState.Status.FAILED -> accountProfileChannel.message ?: "Profile is unavailable."
+                            RetrievalChannelState.Status.SUCCESS -> accountProfileChannel.message
                             else -> null
                         },
                         isLoading = isLoading,
