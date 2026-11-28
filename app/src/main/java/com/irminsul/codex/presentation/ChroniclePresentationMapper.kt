@@ -36,6 +36,7 @@ data class ChronicleAbyssCycle(
 )
 data class ChronicleTheaterRound(
     val roundNumber: String,
+    val completedAt: String?,
     val medalEarned: Boolean?,
     val characters: List<ChronicleRecordCharacter>,
     val buffs: List<String>
@@ -75,6 +76,7 @@ object ChroniclePresentationMapper {
     )
     private val abyssFields = linkedMapOf(
         "total_battle_times" to "Battles",
+        "total_win_times" to "Wins",
         "total_star" to "Stars",
         "max_floor" to "Best Floor"
     )
@@ -259,11 +261,18 @@ object ChroniclePresentationMapper {
                 }
                 val buffs = (round["buffs"] as? StructuredData.ArrayValue)?.items.orEmpty()
                     .mapNotNull { it.objectFields()["name"].displayScalar()?.takeIf(String::isNotBlank) }
+                val splendourBuffs = round["splendour_buff"].objectFields()["buffs"] as? StructuredData.ArrayValue
+                val allBuffs = (buffs + splendourBuffs?.items.orEmpty().mapNotNull { it.objectFields()["name"].displayScalar()?.takeIf(String::isNotBlank) }).distinct()
+                val finishDate = round["finish_date_time"].objectFields()
+                val completedAt = listOf("year", "month", "day").map { finishDate[it].displayScalar() }
+                    .takeIf { values -> values.all { it != null } }
+                    ?.joinToString("-")
                 ChronicleTheaterRound(
                     roundNumber = roundId,
+                    completedAt = completedAt,
                     medalEarned = (round["is_get_medal"] as? StructuredData.BooleanValue)?.value,
                     characters = avatars,
-                    buffs = buffs
+                    buffs = allBuffs
                 )
             }
             val fightStats = detail["fight_statisic"].objectFields()
