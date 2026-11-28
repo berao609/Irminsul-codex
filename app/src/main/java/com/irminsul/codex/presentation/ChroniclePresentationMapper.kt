@@ -1,10 +1,45 @@
 package com.irminsul.codex.presentation
 
+import com.irminsul.codex.domain.model.CharacterSnapshot
 import com.irminsul.codex.domain.model.DataValue
 import com.irminsul.codex.domain.model.StructuredData
 
 data class ChronicleMetric(val label: String, val value: String)
-data class ChronicleTheaterRound(val roundNumber: String, val medalEarned: Boolean?, val characters: List<String>)
+data class ChronicleRecordCharacter(
+    val id: Int?,
+    val name: String?,
+    val element: String?,
+    val level: Int?,
+    val rarity: Int?,
+    val iconUrl: String?
+)
+data class ChronicleAbyssBattle(val half: String, val completedAt: String?, val characters: List<ChronicleRecordCharacter>)
+data class ChronicleAbyssChamber(
+    val chamberNumber: String,
+    val stars: String?,
+    val maxStars: String?,
+    val battles: List<ChronicleAbyssBattle>
+)
+data class ChronicleAbyssFloor(
+    val floorNumber: String,
+    val stars: String?,
+    val maxStars: String?,
+    val leyLineDisorders: List<String>,
+    val chambers: List<ChronicleAbyssChamber>
+)
+data class ChronicleAbyssCycle(
+    val battles: String?,
+    val wins: String?,
+    val stars: String?,
+    val bestFloor: String?,
+    val floors: List<ChronicleAbyssFloor>
+)
+data class ChronicleTheaterRound(
+    val roundNumber: String,
+    val medalEarned: Boolean?,
+    val characters: List<ChronicleRecordCharacter>,
+    val buffs: List<String>
+)
 data class ChronicleTheaterCycle(
     val title: String,
     val difficulty: String?,
@@ -13,7 +48,8 @@ data class ChronicleTheaterCycle(
     val coins: String?,
     val bonusCharacters: String?,
     val rentedCharacters: String?,
-    val rounds: List<ChronicleTheaterRound>
+    val rounds: List<ChronicleTheaterRound>,
+    val performanceMetrics: List<ChronicleMetric>
 )
 data class ChronicleRegion(val name: String, val progress: Float, val percentageLabel: String, val iconUrl: String? = null)
 enum class ChronicleRecordMode { SPIRAL_ABYSS, IMAGINARIUM_THEATER }
@@ -65,7 +101,6 @@ object ChroniclePresentationMapper {
         val accountFields = availableObject(accountCard).orEmpty()
         val profileFields = availableObject(profileAndExploration).orEmpty()
         if (accountFields.isEmpty() && profileFields.isEmpty()) return emptyList()
-        // HoYoLAB separates identity/rank (account_card) from statistics (profile_and_exploration.stats).
         val role = (profileFields["role"] ?: accountFields["role"]).objectFields()
         val stats = (profileFields["stats"] ?: accountFields["stats"]).objectFields()
         val result = mutableListOf<ChronicleMetric>()
@@ -93,8 +128,6 @@ object ChroniclePresentationMapper {
                 ?: region.fields["exploration_percent"])?.displayScalar()?.toDoubleOrNull()
                 ?: return@mapNotNull null
             if (rawProgress < 0.0 || rawProgress > 10000.0) return@mapNotNull null
-            // HoYoLAB's profile payload uses tenths of a percent (1000 = 100%).
-            // Retain the displayed over-exploration value while capping the visual bar.
             val percent = when {
                 rawProgress <= 100.0 -> rawProgress
                 rawProgress <= 2000.0 -> rawProgress / 10.0
@@ -103,29 +136,93 @@ object ChroniclePresentationMapper {
             ChronicleRegion(
                 name = name,
                 progress = (percent / 100.0).coerceIn(0.0, 1.0).toFloat(),
-                percentageLabel = if (percent % 1.0 == 0.0) "${percent.toInt()}%" else "${"%.1f".format(java.util.Locale.ROOT, percent)}%",
+                percentageLabel = if (percent % 1.0 == 0.0) "\${percent.toInt()}%" else "\${"%.1f".format(java.util.Locale.ROOT, percent)}%",
                 iconUrl = sequenceOf(region.fields["icon"], region.fields["image"])
                     .filterIsInstance<StructuredData.StringValue>()
                     .map { it.value.trim() }
-                    .firstOrNull { it.startsWith("https://", ignoreCase = true) || it.startsWith("http://", ignoreCase = true) }
+                    .firstOrNull { it.isHttpUrl() }
             )
         }
     }
 
-    private fun StructuredData?.objectFields(): Map<String, StructuredData> =
-        (this as? StructuredData.ObjectValue)?.fields.orEmpty()
-
-    @kotlin.jvm.JvmName("displayNullableScalar")
-    private fun StructuredData?.displayScalar(): String? = when (this) {
-        is StructuredData.StringValue -> value.takeIf { it.isNotBlank() }
-        is StructuredData.NumberValue -> value
-        is StructuredData.BooleanValue -> if (value) "Yes" else "No"
-        else -> null
+    fun spiralAbyss(
+        value: DataValue<StructuredData>,
+        roster: List<CharacterSnapshot> = emptyList()
+    ): ChronicleAbyssCycle? {
+        val root = availableObject(value) ?: return null
+        val rosterById = roster.associateBy { it.id }
+        val floors = (root["floors"] as? StructuredData.ArrayValue)?.items.orEmpty().mapNotNull { floorValue ->
+            val floor = floorValue.objectFields()
+            val floorNumber = floor["index"].displayScalar()?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            val chambers = (floor["levels"] as? StructuredData.ArrayValue)?.items.orEmpty().mapNotNull { chamberValue ->
+                val chamber = chamberValue.objectFields()
+                val chamberNumber = chamber["index"].displayScalar()?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                val battles = (chamber["battles"] as? StructuredData.ArrayValue)?.items.orEmpty().mapNotNull { battleValue ->
+                    val battle = battleValue.objectFields()
+                    val halfNumber = battle["index"].displayScalar()?.toIntOrNull() ?: return@mapNotNull null
+                    val team = (battle["avatars"] as? StructuredData.ArrayValue)?.items.orEmpty().mapNotNull { avatarValue ->
+                        val avatar = avatarValue.objectFields()
+                        val id = avatar["id"].displayScalar()?.toIntOrNull()
+                        val owned = id?.let(rosterById::get)
+                        val icon = avatar["icon"].httpUrl() ?: owned?.avatarIcon?.takeIf { it.isHttpUrl() }
+                        if (id == null && icon == null) return@mapNotNull null
+                        ChronicleRecordCharacter(
+                            id = id,
+                            name = owned?.name,
+                            element = owned?.element,
+                            level = avatar["level"].displayScalar()?.toIntOrNull() ?: owned?.level,
+                            rarity = avatar["rarity"].displayScalar()?.toIntOrNull() ?: owned?.rarity,
+                            iconUrl = icon
+                        )
+                    }
+                    ChronicleAbyssBattle(
+                        half = if (halfNumber == 1) "First Half" else "Second Half",
+                        completedAt = battle["settle_date_time"].objectFields().let { date ->
+                            val year = date["year"].displayScalar()
+                            val month = date["month"].displayScalar()
+                            val day = date["day"].displayScalar()
+                            val hour = date["hour"].displayScalar()
+                            val minute = date["minute"].displayScalar()
+                            if (year != null && month != null && day != null) {
+                                "$year-$month-$day" + (if (hour != null && minute != null) " · $hour:\${minute.padStart(2, '0')}" else "")
+                            } else null
+                        },
+                        characters = team
+                    )
+                }
+                ChronicleAbyssChamber(
+                    chamberNumber = chamberNumber,
+                    stars = chamber["star"].displayScalar(),
+                    maxStars = chamber["max_star"].displayScalar(),
+                    battles = battles
+                )
+            }
+            val disorders = (floor["ley_line_disorder"] as? StructuredData.ArrayValue)?.items.orEmpty()
+                .mapNotNull { it.displayScalar()?.takeIf(String::isNotBlank) }
+            ChronicleAbyssFloor(
+                floorNumber = floorNumber,
+                stars = floor["star"].displayScalar(),
+                maxStars = floor["max_star"].displayScalar(),
+                leyLineDisorders = disorders,
+                chambers = chambers
+            )
+        }
+        return ChronicleAbyssCycle(
+            battles = root["total_battle_times"].displayScalar(),
+            wins = root["total_win_times"].displayScalar(),
+            stars = root["total_star"].displayScalar(),
+            bestFloor = root["max_floor"].displayScalar(),
+            floors = floors
+        )
     }
 
-    fun theaterCycles(value: DataValue<StructuredData>): List<ChronicleTheaterCycle> {
+    fun theaterCycles(
+        value: DataValue<StructuredData>,
+        roster: List<CharacterSnapshot> = emptyList()
+    ): List<ChronicleTheaterCycle> {
         val root = availableObject(value) ?: return emptyList()
         val records = root["data"] as? StructuredData.ArrayValue ?: return emptyList()
+        val rosterById = roster.associateBy { it.id }
         return records.items.mapNotNull { item ->
             val record = item.objectFields()
             if (record["has_data"] == StructuredData.BooleanValue(false)) return@mapNotNull null
@@ -135,7 +232,7 @@ object ChroniclePresentationMapper {
             val month = start["month"].displayScalar()?.toIntOrNull()
             val year = start["year"].displayScalar()
             val title = if (month != null && year != null) {
-                "${monthName(month)} $year"
+                "\${monthName(month)} $year"
             } else {
                 schedule["schedule_id"].displayScalar()?.let { "Cycle $it" } ?: "Theater cycle"
             }
@@ -143,14 +240,39 @@ object ChroniclePresentationMapper {
             val rounds = (detail["rounds_data"] as? StructuredData.ArrayValue)?.items.orEmpty().mapNotNull { roundValue ->
                 val round = roundValue.objectFields()
                 val roundId = round["round_id"].displayScalar() ?: return@mapNotNull null
-                val avatars = (round["avatars"] as? StructuredData.ArrayValue)?.items.orEmpty()
-                    .mapNotNull { avatar -> avatar.objectFields()["name"].displayScalar()?.takeIf { it.isNotBlank() } }
+                val avatars = (round["avatars"] as? StructuredData.ArrayValue)?.items.orEmpty().mapNotNull { avatarValue ->
+                    val avatar = avatarValue.objectFields()
+                    val id = (avatar["avatar_id"] ?: avatar["id"]).displayScalar()?.toIntOrNull()
+                    val owned = id?.let(rosterById::get)
+                    val name = avatar["name"].displayScalar() ?: owned?.name
+                    val icon = avatar["image"].httpUrl() ?: avatar["icon"].httpUrl()
+                        ?: owned?.avatarIcon?.takeIf { it.isHttpUrl() }
+                    if (name.isNullOrBlank() && icon == null) return@mapNotNull null
+                    ChronicleRecordCharacter(
+                        id = id,
+                        name = name,
+                        element = avatar["element"].displayScalar() ?: owned?.element,
+                        level = avatar["level"].displayScalar()?.toIntOrNull() ?: owned?.level,
+                        rarity = avatar["rarity"].displayScalar()?.toIntOrNull() ?: owned?.rarity,
+                        iconUrl = icon
+                    )
+                }
+                val buffs = (round["buffs"] as? StructuredData.ArrayValue)?.items.orEmpty()
+                    .mapNotNull { it.objectFields()["name"].displayScalar()?.takeIf(String::isNotBlank) }
                 ChronicleTheaterRound(
                     roundNumber = roundId,
                     medalEarned = (round["is_get_medal"] as? StructuredData.BooleanValue)?.value,
-                    characters = avatars
+                    characters = avatars,
+                    buffs = buffs
                 )
             }
+            val fightStats = detail["fight_statisic"].objectFields()
+            val performance = listOfNotNull(
+                fightStats["max_damage_avatar"].performanceMetric("Highest Damage", rosterById),
+                fightStats["max_defeat_avatar"].performanceMetric("Most Defeats", rosterById),
+                fightStats["max_take_damage_avatar"].performanceMetric("Most Damage Taken", rosterById),
+                fightStats["total_use_time"].displayScalar()?.let { ChronicleMetric("Total Battle Time", "$it seconds") }
+            )
             ChronicleTheaterCycle(
                 title = title,
                 difficulty = stat["difficulty_id"].displayScalar(),
@@ -159,9 +281,21 @@ object ChroniclePresentationMapper {
                 coins = stat["coin_num"].displayScalar(),
                 bonusCharacters = stat["avatar_bonus_num"].displayScalar(),
                 rentedCharacters = stat["rent_cnt"].displayScalar(),
-                rounds = rounds
+                rounds = rounds,
+                performanceMetrics = performance
             )
         }
+    }
+
+    private fun StructuredData?.performanceMetric(
+        label: String,
+        roster: Map<Int, CharacterSnapshot>
+    ): ChronicleMetric? {
+        val fields = objectFields()
+        val value = fields["value"].displayScalar()?.takeIf { it.isNotBlank() } ?: return null
+        val id = fields["avatar_id"].displayScalar()?.toIntOrNull()
+        val name = id?.let(roster::get)?.name
+        return ChronicleMetric(label, if (name == null) value else "$value · $name")
     }
 
     private fun monthName(month: Int): String = when (month) {
@@ -188,12 +322,21 @@ object ChroniclePresentationMapper {
         else -> null
     }
 
-    private fun StructuredData.displayScalar(): String? = when (this) {
+    private fun StructuredData?.objectFields(): Map<String, StructuredData> =
+        (this as? StructuredData.ObjectValue)?.fields.orEmpty()
+
+    private fun StructuredData?.displayScalar(): String? = when (this) {
         is StructuredData.StringValue -> value.takeIf { it.isNotBlank() && !it.looksTechnical() }
         is StructuredData.NumberValue -> value
         is StructuredData.BooleanValue -> if (value) "Yes" else "No"
-        StructuredData.NullValue, is StructuredData.ObjectValue, is StructuredData.ArrayValue -> null
+        else -> null
     }
+
+    private fun StructuredData?.httpUrl(): String? =
+        (this as? StructuredData.StringValue)?.value?.trim()?.takeIf { it.isHttpUrl() }
+
+    private fun String.isHttpUrl(): Boolean =
+        startsWith("https://", ignoreCase = true) || startsWith("http://", ignoreCase = true)
 
     private fun String.looksTechnical(): Boolean {
         val text = trim()
