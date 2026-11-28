@@ -50,9 +50,9 @@ fun ToolsSection(
             ) {
                 AppIcon(AppIconName.TOOLS, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("Materials Calculator", fontWeight = FontWeight.SemiBold)
+                    Text("Enhancement Calculator", fontWeight = FontWeight.SemiBold)
                     Text(
-                        "Automatically plan character and weapon upgrade materials",
+                        "Choose any 4-star or 5-star character or weapon and calculate upgrade materials",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
