@@ -51,7 +51,6 @@ fun CharacterShowcaseSection(
         selectedWeaponType
     ) {
         sortCharactersByRelease(characters.filter { character ->
-            val level = character.level
             val weaponType = character.rosterWeaponType() ?: "Unknown"
             val element = character.element?.takeIf(String::isNotBlank) ?: "Unknown"
             (selectedElement == "All" || element.equals(selectedElement, ignoreCase = true)) &&
@@ -182,17 +181,14 @@ fun CharacterShowcaseSection(
                             onClick = { onCharacterSelected(character.id) },
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
-                                containerColor = when (character.rarity) {
-                                    5 -> Color(0xFFFFC857).copy(alpha = 0.24f)
-                                    4 -> Color(0xFFB388FF).copy(alpha = 0.24f)
-                                    else -> MaterialTheme.colorScheme.surface
+                                containerColor = when {
+                                    isSelected -> MaterialTheme.colorScheme.secondaryContainer
+                                    character.rarity == 5 -> Color(0xFFFFC857).copy(alpha = 0.24f)
+                                    character.rarity == 4 -> Color(0xFFB388FF).copy(alpha = 0.24f)
+                                    else -> MaterialTheme.colorScheme.surfaceContainerLow
                                 }
                             ),
-                            border = if (isSelected) androidx.compose.foundation.BorderStroke(
-                                1.5.dp,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.85f)
-                            ) else null,
-                            elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 2.dp else 0.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                             shape = RoundedCornerShape(13.dp)
                         ) {
                             Column(
@@ -236,9 +232,7 @@ private fun RosterChoiceMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
-        OutlinedButton(onClick = { expanded = true }) {
-            Text(label, maxLines = 1)
-        }
+        FilterChip(selected = selected != "All", onClick = { expanded = true }, label = { Text(label, maxLines = 1) })
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->
                 DropdownMenuItem(
