@@ -38,19 +38,19 @@ The user tested the calculator UI on device and found the current implementation
 - Remove search bars from selection pages.
 - Make expand/collapse affordances tiny, subdued, and centered; keep their touch target and accessibility semantics usable.
 
-## Blocking persistence error observed on device
+## Saved-account restoration error
 
-On restoration of saved account analysis, the app showed:
+On restoration of saved account analysis, the user observed:
 
 `Could not restore the saved account analysis: A migration from 3 to 2 was required but not found. Please provide the necessary Migration path via RoomDatabase.Builder.addMigration(...) or allow for destructive migrations via one of the RoomDatabase.Builder.fallbackToDestructiveMigration* functions.`
 
-**Required fix:** resolve Room schema/version regression correctly. Preserve schema v3 and existing entities/migrations, provide valid forward migrations as needed, and never use destructive migration as a workaround. Verify restore from a database created by the previous build and add regression coverage.
+Source inspection of the current PR branch's `IrminsulDatabase.kt` confirms schema **version 3**, entity `private_account_data`, and registered migrations `1->2` and `2->3`. The exact APK tested has not been identified, so the observed error may come from an older APK/schema state. **Do not change or downgrade the current schema based only on the error message.** Verify the installed APK/version and database state; test restoration using the latest CI artifact and a database created by the prior build. Keep non-destructive migrations and add regression coverage for supported upgrade paths.
 
 ## Acceptance status
 
 - The previous calculator refinement is **not accepted** by physical-device testing.
-- The Room migration error is a blocking regression.
-- Implement corrections, run relevant unit/instrumentation/CI checks, publish a fresh APK, and request a focused retest.
+- The saved-account restoration error is a blocking device-retest issue until its source is identified and resolved.
+- Implement UI corrections, run relevant unit/instrumentation/CI checks, publish a fresh APK, and request a focused retest.
 - CI success alone does not constitute physical-device acceptance.
 
 ## Source reference
