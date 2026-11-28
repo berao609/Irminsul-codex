@@ -472,7 +472,7 @@ private fun CalculatorIconFilterRow(title: String, options: List<CalculatorFilte
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            CalculatorIconFilter("All", null, selected == null, onSelected)
+            CalculatorIconFilter("All", null, selected == null) { onSelected(null) }
             options.forEach { option ->
                 CalculatorIconFilter(option.label, option.iconUrl, selected == option.key) { onSelected(if (selected == option.key) null else option.key) }
             }
