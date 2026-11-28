@@ -35,8 +35,6 @@ fun CharacterShowcaseSection(
 ) {
     var rosterExpanded by remember(characters) { mutableStateOf(initialRosterExpanded) }
     var filtersExpanded by remember { mutableStateOf(false) }
-    var minimumLevel by remember { mutableIntStateOf(1) }
-    var maximumLevel by remember { mutableIntStateOf(90) }
     var selectedElement by remember { mutableStateOf("All") }
     var selectedWeaponType by remember { mutableStateOf("All") }
 
@@ -49,8 +47,6 @@ fun CharacterShowcaseSection(
     }
     val filteredCharacters = remember(
         characters,
-        minimumLevel,
-        maximumLevel,
         selectedElement,
         selectedWeaponType
     ) {
@@ -59,13 +55,11 @@ fun CharacterShowcaseSection(
             val weaponType = character.rosterWeaponType() ?: "Unknown"
             val element = character.element?.takeIf(String::isNotBlank) ?: "Unknown"
             (selectedElement == "All" || element.equals(selectedElement, ignoreCase = true)) &&
-                (selectedWeaponType == "All" || weaponType == selectedWeaponType) &&
-                (level == null || level >= minimumLevel && level <= maximumLevel)
+                (selectedWeaponType == "All" || weaponType == selectedWeaponType)
         })
     }
 
-    val hasActiveFilters = minimumLevel != 1 || maximumLevel != 90 ||
-        selectedElement != "All" || selectedWeaponType != "All"
+    val hasActiveFilters = selectedElement != "All" || selectedWeaponType != "All"
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -150,16 +144,9 @@ fun CharacterShowcaseSection(
                         RosterChoiceMenu("Element: $selectedElement", elements, selectedElement) { selectedElement = it }
                         RosterChoiceMenu("Weapon: $selectedWeaponType", weaponTypes, selectedWeaponType) { selectedWeaponType = it }
                     }
-                    Text("Character level", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        WheelNumberPicker("Minimum", minimumLevel, 1, maximumLevel, Modifier.weight(1f)) { minimumLevel = it }
-                        WheelNumberPicker("Maximum", maximumLevel, minimumLevel, 90, Modifier.weight(1f)) { maximumLevel = it }
-                    }
                     if (hasActiveFilters) {
                         TextButton(
                             onClick = {
-                                minimumLevel = 1
-                                maximumLevel = 90
                                 selectedElement = "All"
                                 selectedWeaponType = "All"
                             },
