@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -554,7 +555,7 @@ private fun CalculatorIconFilter(label: String, iconUrl: String?, selected: Bool
         modifier = Modifier.size(42.dp)) {
         Column(Modifier.fillMaxWidth().padding(7.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             if (iconUrl == null) Text("✦", style = MaterialTheme.typography.titleMedium)
-            else SubcomposeAsyncImage(model = iconUrl, contentDescription = "$label filter icon", modifier = Modifier.size(25.dp), contentScale = ContentScale.Fit, loading = { Text(if (label == "Cryo") "❄" else "·", color = if (label == "Cryo") Color(0xFF8AD7F5) else MaterialTheme.colorScheme.onSurfaceVariant) }, error = { Text(if (label == "Cryo") "❄" else "·", color = if (label == "Cryo") Color(0xFF8AD7F5) else MaterialTheme.colorScheme.onSurfaceVariant) })
+            else SubcomposeAsyncImage(model = iconUrl, contentDescription = "$label filter icon", modifier = Modifier.size(25.dp), contentScale = ContentScale.Fit, colorFilter = if (label == "Cryo") ColorFilter.tint(Color(0xFF8AD7F5)) else null, loading = { Text(if (label == "Cryo") "❄" else "·", color = if (label == "Cryo") Color(0xFF8AD7F5) else MaterialTheme.colorScheme.onSurfaceVariant) }, error = { Text(if (label == "Cryo") "❄" else "·", color = if (label == "Cryo") Color(0xFF8AD7F5) else MaterialTheme.colorScheme.onSurfaceVariant) })
         }
     }
 }
