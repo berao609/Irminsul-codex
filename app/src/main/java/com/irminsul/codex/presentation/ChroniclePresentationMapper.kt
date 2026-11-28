@@ -192,8 +192,8 @@ object ChroniclePresentationMapper {
                 name = name,
                 progress = progress.first,
                 percentageLabel = progress.second,
-                iconUrl = listOfNotNull(regionFields["icon"].httpUrl(), regionFields["inner_icon"].httpUrl(), regionFields["cover"].httpUrl(), regionFields["image"].httpUrl(), offerings.firstNotNullOfOrNull { it.iconUrl }).firstOrNull(),
-                iconUrlCandidates = listOfNotNull(regionFields["icon"].httpUrl(), regionFields["inner_icon"].httpUrl(), regionFields["cover"].httpUrl(), regionFields["image"].httpUrl(), offerings.firstNotNullOfOrNull { it.iconUrl }).distinct(),
+                iconUrl = regionEmblemCandidates(name, regionFields, offerings).firstOrNull(),
+                iconUrlCandidates = regionEmblemCandidates(name, regionFields, offerings),
                 backgroundImageUrl = regionFields["background_image"].httpUrl(),
                 reputationLevel = if (progressionType == "Reputation") regionFields["level"].displayScalar()?.toIntOrNull() else null,
                 statueLevel = regionFields["seven_statue_level"].displayScalar()?.toIntOrNull()?.takeIf { it > 0 },
@@ -211,7 +211,9 @@ object ChroniclePresentationMapper {
             "the chasm" to "liyue",
             "chasm" to "liyue",
             "chenyu vale" to "liyue",
-            "ancient sacred mountain" to "natlan"
+            "ancient sacred mountain" to "natlan",
+            "sea of bygone eras" to "fontaine",
+            "sea of the bygone era" to "fontaine"
         )
         val grouped = parsed.map { region ->
             val parentName = requestedParents[region.name.trim().lowercase(java.util.Locale.ROOT)]
@@ -229,6 +231,42 @@ object ChroniclePresentationMapper {
         return grouped.filter { region ->
             region.parentId == null || region.parentId == 0 || region.parentId !in regionsById
         }.map { attachChildren(it) }
+    }
+
+    private fun regionEmblemCandidates(
+        name: String,
+        fields: Map<String, StructuredData>,
+        offerings: List<ChronicleExplorationOffering>
+    ): List<String> {
+        val normalizedName = name.trim().lowercase(java.util.Locale.ROOT)
+        val offeringIcon = offerings.firstNotNullOfOrNull { it.iconUrl }
+        val sourceCandidates = when (normalizedName) {
+            // HoYoLAB's inner_icon is the intended compact regional crest.
+            "natlan", "nod-krai" -> listOfNotNull(
+                fields["inner_icon"].httpUrl(),
+                fields["icon"].httpUrl()
+            )
+            "temple of space" -> listOfNotNull(offeringIcon)
+            else -> listOfNotNull(
+                fields["icon"].httpUrl(),
+                fields["inner_icon"].httpUrl()
+            )
+        }
+        val verifiedFallbacks = when (normalizedName) {
+            "natlan" -> listOf(
+                "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterInnerIcon_Nata.png",
+                "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterIcon_Nata.png"
+            )
+            "nod-krai" -> listOf(
+                "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterInnerIcon_Nordkalei.png",
+                "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterIcon_Nordkalei.png"
+            )
+            "temple of space" -> listOf(
+                "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterOffering_SkyTempleMemoryCore.png"
+            )
+            else -> emptyList()
+        }
+        return (sourceCandidates + verifiedFallbacks + listOfNotNull(offeringIcon)).distinct()
     }
 
     private fun explorationProgress(value: StructuredData?): Pair<Float, String>? {
