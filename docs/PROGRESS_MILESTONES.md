@@ -6038,3 +6038,30 @@ Run the full Debug CI for the latest branch head. If successful, verify Natlan, 
 ### Closure
 
 Batch 7 is complete. Continue with the next planned UI Revamp task without reopening this scope unless a new regression is reported.
+
+
+---
+
+## Milestone 115 - UI Revamp Roadmap: Multi-Channel Data Fetching Inserted as Batch 8
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp planning  
+**Status:** Roadmap updated; Batch 8 implementation has not started.
+
+### Decision
+
+- Inserted **Batch 8 - Multi-Channel Data Fetching** after completed Batch 7.
+- Defined three logical channels: portable account-data JSON, private app-specific/HoYoLAB data, and separately managed visual assets.
+- Established shared authenticated-session coordination with independent retrieval, validation, freshness, and failure states.
+- Required partial-success isolation, cached-data preservation, accurate missing/stale/error distinctions, and explicit user-controlled export of the portable JSON.
+- Renumbered the former **Batch 8 - Character and Weapon Fidelity** to **Batch 9**, preserving its existing scope.
+- No later numbered UI batch is currently defined; future batches require explicit agreement.
+
+### Documentation
+
+- Added `docs/UI_IMPLEMENTATION_BATCHES.md` as the active UI batch sequence.
+- Batch 8 is planned only. No retrieval implementation, endpoint, persistence change, or UI behavior is claimed as completed.
+
+### Next action
+
+Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account repository, data models, snapshot persistence, JSON export contract, and asset cache. Design the smallest compatible channel boundaries before implementation; preserve existing behavior and add independent partial-failure tests.
