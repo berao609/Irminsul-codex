@@ -139,6 +139,9 @@ internal fun EnhancementCalculatorSection(
         targetLevel = 90
         currentExperience = 0L
         val rankFloor = calculatorLevelCaps.indexOfFirst { currentLevel <= it }.coerceAtLeast(0)
+        val rankCeiling = if (currentLevel == calculatorLevelCaps[rankFloor]) {
+            (rankFloor + 1).coerceAtMost(6)
+        } else rankFloor
         val accountAscensionRank = when (entry.subjectType) {
             EnhancementSubjectType.CHARACTER ->
                 characters.firstOrNull { it.id.toString() == entry.id }?.ascensionLevel
@@ -151,7 +154,7 @@ internal fun EnhancementCalculatorSection(
                     }
                 }
         }
-        currentRank = (accountAscensionRank ?: rankFloor).coerceIn(rankFloor, (rankFloor + 1).coerceAtMost(6))
+        currentRank = (accountAscensionRank ?: rankFloor).coerceIn(rankFloor, rankCeiling)
         val skills = characters.firstOrNull { it.id.toString() == entry.id }?.skills.orEmpty()
         normalCurrent = skills.firstOrNull { it.type == 1 }?.level?.coerceIn(1, 10) ?: 1
         skillCurrent = skills.firstOrNull { it.type == 2 }?.level?.coerceIn(1, 10) ?: 1
@@ -317,7 +320,8 @@ internal fun EnhancementCalculatorSection(
                         currentLevel = it
                         if (targetLevel < it) targetLevel = it
                         val floor = calculatorLevelCaps.indexOfFirst { cap -> it <= cap }.coerceAtLeast(0)
-                        currentRank = currentRank.coerceIn(floor, (floor + 1).coerceAtMost(6))
+                        val ceiling = if (it == calculatorLevelCaps[floor]) (floor + 1).coerceAtMost(6) else floor
+                        currentRank = currentRank.coerceIn(floor, ceiling)
                     }
                     CalculatorNumberControl("Desired level", targetLevel, currentLevel, 90) { targetLevel = it }
                     CalculatorLongNumberControl(
@@ -328,7 +332,9 @@ internal fun EnhancementCalculatorSection(
                         1_000L
                     ) { currentExperience = it }
                     val rankFloor = calculatorLevelCaps.indexOfFirst { currentLevel <= it }.coerceAtLeast(0)
-                    val rankCeiling = (rankFloor + 1).coerceAtMost(6)
+                    val rankCeiling = if (currentLevel == calculatorLevelCaps[rankFloor]) {
+                        (rankFloor + 1).coerceAtMost(6)
+                    } else rankFloor
                     CalculatorNumberControl("Current ascension rank", currentRank, rankFloor, rankCeiling) { currentRank = it }
 
                     if (entry.subjectType == EnhancementSubjectType.CHARACTER) {
