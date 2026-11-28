@@ -118,7 +118,7 @@ internal object HoYoLabIconSize {
 internal object HoYoLabSurface {
     val brandGold = Color(0xFFD3BC8E) // body[data-game-id="2"] .title; tw-ys-l-brand-yellow-3
     val parchmentText = Color(0xFFF0EAE0) // tw-text-ys-l-grey-white-2
-    val mutedParchment = Color(0xFFCB BDA7) // tw-text-ys-l-grey-white-5
+    val mutedParchment = Color(0xFFCBBDA7) // tw-text-ys-l-grey-white-5
     val white90 = Color(0xE6FFFFFF) // tw-text-gt-l-text-white-2
     val white65 = Color(0xA6FFFFFF) // tw-text-gt-l-text-white-3
     val white64 = Color(0xA3FFFFFF) // tw-bg-gt-g-grey-white-9
