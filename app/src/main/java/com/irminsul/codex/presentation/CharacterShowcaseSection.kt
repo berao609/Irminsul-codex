@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +17,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
@@ -37,9 +35,8 @@ fun CharacterShowcaseSection(
 ) {
     var rosterExpanded by remember(characters) { mutableStateOf(initialRosterExpanded) }
     var filtersExpanded by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
-    var minimumLevel by remember { mutableStateOf("") }
-    var maximumLevel by remember { mutableStateOf("") }
+    var minimumLevel by remember { mutableIntStateOf(1) }
+    var maximumLevel by remember { mutableIntStateOf(90) }
     var selectedElement by remember { mutableStateOf("All") }
     var selectedWeaponType by remember { mutableStateOf("All") }
 
@@ -52,28 +49,22 @@ fun CharacterShowcaseSection(
     }
     val filteredCharacters = remember(
         characters,
-        searchQuery,
         minimumLevel,
         maximumLevel,
         selectedElement,
         selectedWeaponType
     ) {
         sortCharactersByRelease(characters.filter { character ->
-            val name = character.name ?: "Character #${character.id}"
             val level = character.level
             val weaponType = character.rosterWeaponType() ?: "Unknown"
             val element = character.element?.takeIf(String::isNotBlank) ?: "Unknown"
-            val minLevel = minimumLevel.toIntOrNull()
-            val maxLevel = maximumLevel.toIntOrNull()
-            name.contains(searchQuery.trim(), ignoreCase = true) &&
-                (selectedElement == "All" || element.equals(selectedElement, ignoreCase = true)) &&
+            (selectedElement == "All" || element.equals(selectedElement, ignoreCase = true)) &&
                 (selectedWeaponType == "All" || weaponType == selectedWeaponType) &&
-                (minLevel == null || level != null && level >= minLevel) &&
-                (maxLevel == null || level != null && level <= maxLevel)
+                (level == null || level >= minimumLevel && level <= maximumLevel)
         })
     }
 
-    val hasActiveFilters = searchQuery.isNotBlank() || minimumLevel.isNotBlank() || maximumLevel.isNotBlank() ||
+    val hasActiveFilters = minimumLevel != 1 || maximumLevel != 90 ||
         selectedElement != "All" || selectedWeaponType != "All"
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -106,49 +97,44 @@ fun CharacterShowcaseSection(
         if (showSelectedDetail) CharacterShowcaseDetail(character = selected)
 
         Card(
-            onClick = { rosterExpanded = !rosterExpanded },
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(14.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp, horizontal = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text("Character Roster", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        if (rosterExpanded) "${filteredCharacters.size} of ${characters.size} characters shown"
-                        else "${characters.size} characters • Selected: ${selected.name ?: "Character #${selected.id}"}",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                Text("Character Roster", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    if (rosterExpanded) "${filteredCharacters.size} of ${characters.size} characters shown"
+                    else "${characters.size} characters • Selected: ${selected.name ?: "Character #${selected.id}"}",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                IconButton(onClick = { rosterExpanded = !rosterExpanded }, modifier = Modifier.size(26.dp)) {
+                    AppIcon(
+                        if (rosterExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
+                        contentDescription = if (rosterExpanded) "Collapse character roster" else "Expand character roster",
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                AppIcon(
-                    if (rosterExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
-                    contentDescription = if (rosterExpanded) "Collapse character roster" else "Expand character roster"
-                )
             }
         }
 
         if (rosterExpanded) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = { filtersExpanded = !filtersExpanded },
+                modifier = Modifier.align(Alignment.CenterHorizontally).size(26.dp)
             ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    label = { Text("Search characters") },
-                    textStyle = MaterialTheme.typography.bodyMedium
+                AppIcon(
+                    if (filtersExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
+                    contentDescription = if (filtersExpanded) "Hide roster filters" else "Show roster filters",
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                TextButton(onClick = { filtersExpanded = !filtersExpanded }) {
-                    Text(if (filtersExpanded) "Hide filters" else "Filters")
-                }
             }
 
             if (filtersExpanded) {
@@ -165,30 +151,15 @@ fun CharacterShowcaseSection(
                         RosterChoiceMenu("Weapon: $selectedWeaponType", weaponTypes, selectedWeaponType) { selectedWeaponType = it }
                     }
                     Text("Character level", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
-                            value = minimumLevel,
-                            onValueChange = { minimumLevel = it.filter(Char::isDigit).take(2) },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            label = { Text("Minimum") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
-                        OutlinedTextField(
-                            value = maximumLevel,
-                            onValueChange = { maximumLevel = it.filter(Char::isDigit).take(2) },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            label = { Text("Maximum") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        WheelNumberPicker("Minimum", minimumLevel, 1, maximumLevel, Modifier.weight(1f)) { minimumLevel = it }
+                        WheelNumberPicker("Maximum", maximumLevel, minimumLevel, 90, Modifier.weight(1f)) { maximumLevel = it }
                     }
                     if (hasActiveFilters) {
                         TextButton(
                             onClick = {
-                                searchQuery = ""
-                                minimumLevel = ""
-                                maximumLevel = ""
+                                minimumLevel = 1
+                                maximumLevel = 90
                                 selectedElement = "All"
                                 selectedWeaponType = "All"
                             },
