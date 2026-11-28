@@ -8,9 +8,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.ContentScale
@@ -197,11 +200,39 @@ fun ChronicleRecordSection(
 ) {
     if (mode == ChronicleRecordMode.IMAGINARIUM_THEATER) {
         ChronicleTheaterSection(title, value, roster)
-        return
+    } else {
+        ChronicleAbyssCycleContent(value, roster)
     }
+}
+
+@Composable
+fun ChronicleSpiralAbyssSection(
+    current: DataValue<StructuredData>,
+    previous: DataValue<StructuredData>,
+    roster: List<CharacterSnapshot>
+) {
+    var selectedCycle by rememberSaveable { mutableIntStateOf(0) }
+    ChronicleSection("Spiral Abyss", "Floor and chamber records") {
+        ChronicleCycleSelector(
+            selectedIndex = selectedCycle,
+            labels = listOf("Current Cycle", "Previous Cycle"),
+            onSelected = { selectedCycle = it }
+        )
+        ChronicleAbyssCycleContent(
+            value = if (selectedCycle == 0) current else previous,
+            roster = roster
+        )
+    }
+}
+
+@Composable
+private fun ChronicleAbyssCycleContent(
+    value: DataValue<StructuredData>,
+    roster: List<CharacterSnapshot>
+) {
     val metrics = ChroniclePresentationMapper.recordMetrics(value, mode)
     val cycle = ChroniclePresentationMapper.spiralAbyss(value, roster)
-    ChronicleSection(title, "Spiral Abyss · floor and chamber records") {
+    ChronicleSection("Spiral Abyss", "Floor and chamber records") {
         if (metrics.isEmpty() && cycle == null) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
@@ -253,6 +284,40 @@ fun ChronicleRecordSection(
 }
 
 @Composable
+private fun ChronicleCycleSelector(
+    selectedIndex: Int,
+    labels: List<String>,
+    onSelected: (Int) -> Unit
+) {
+    Row(
+        Modifier.fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        labels.forEachIndexed { index, label ->
+            val isSelected = index == selectedIndex
+            Box(
+                Modifier.weight(1f)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable(role = Role.Tab) { onSelected(index) }
+                    .semantics { selected = isSelected }
+                    .padding(horizontal = 8.dp, vertical = 11.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun ChronicleRecordCharacterLineup(characters: List<ChronicleRecordCharacter>) {
     if (characters.isEmpty()) {
         Text("Character lineup was not included.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -295,13 +360,32 @@ private fun ChronicleTheaterSection(
     roster: List<CharacterSnapshot>
 ) {
     val cycles = ChroniclePresentationMapper.theaterCycles(value, roster)
+    var selectedCycle by rememberSaveable { mutableIntStateOf(0) }
     ChronicleSection(title, "Imaginarium Theater · recorded cycles and round lineups") {
         if (cycles.isEmpty()) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             if (value is DataValue.Stale) Text("Showing previously retrieved data.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            cycles.forEachIndexed { index, cycle ->
-                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            ChronicleCycleSelector(
+                selectedIndex = selectedCycle,
+                labels = listOf("Current Cycle", "Previous Cycle"),
+                onSelected = { selectedCycle = it }
+            )
+            val cycle = cycles.getOrNull(selectedCycle)
+            if (cycle == null) {
+                Text(
+                    if (selectedCycle == 0) "No current Theater cycle record was included."
+                    else "No previous Theater cycle record was included.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (!cycle.hasData) {
+                Text(
+                    "No recorded performance is available for this cycle.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(cycle.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     val metrics = listOfNotNull(
