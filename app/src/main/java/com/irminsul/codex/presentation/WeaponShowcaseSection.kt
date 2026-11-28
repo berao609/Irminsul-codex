@@ -30,34 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.irminsul.codex.domain.model.CharacterSnapshot
-import com.irminsul.codex.domain.model.DataValue
-import com.irminsul.codex.domain.model.WeaponSnapshot
-
-private data class WeaponRosterEntry(
-    val weapon: WeaponSnapshot,
-    val equippedBy: List<String>
-)
 
 @Composable
 internal fun WeaponShowcaseSection(characters: List<CharacterSnapshot>) {
-    val weapons = remember(characters) {
-        characters.mapNotNull { character ->
-            val weapon = when (val value = character.weapon) {
-                is DataValue.Available -> value.value
-                is DataValue.Stale -> value.value
-                else -> null
-            } ?: return@mapNotNull null
-            weapon to (character.name ?: "Character #${character.id}")
-        }.groupBy({ it.first.id }, { it })
-            .values
-            .map { equippedEntries ->
-                val first = equippedEntries.first()
-                WeaponRosterEntry(
-                    weapon = first.first,
-                    equippedBy = equippedEntries.map { it.second }.distinct()
-                )
-            }
-    }
+    val weapons = remember(characters) { WeaponRosterRules.entries(characters) }
     var selectedRarity by remember { mutableStateOf("All") }
     var selectedType by remember { mutableStateOf("All") }
 
@@ -70,12 +46,11 @@ internal fun WeaponShowcaseSection(characters: List<CharacterSnapshot>) {
             .distinct().sorted()
     }
     val filtered = remember(weapons, selectedRarity, selectedType) {
-        weapons.filter { entry ->
-            val rarityMatches = selectedRarity == "All" ||
-                entry.weapon.rarity?.let { "${it}★" == selectedRarity } == true
-            val type = entry.weapon.typeName?.takeIf(String::isNotBlank) ?: "Unknown"
-            rarityMatches && (selectedType == "All" || type == selectedType)
-        }
+        WeaponRosterRules.filter(
+            entries = weapons,
+            rarity = selectedRarity.removeSuffix("★").toIntOrNull(),
+            weaponType = selectedType.takeIf { it != "All" }
+        )
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
