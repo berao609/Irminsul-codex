@@ -121,7 +121,7 @@ internal fun EnhancementCalculatorSection(
     var result by remember { mutableStateOf<CalculatorResult?>(null) }
     var owned by remember { mutableStateOf<Map<String, Long>>(emptyMap()) }
 
-    BackHandler(enabled = page != CalculatorPage.CHOOSE_TYPE) {
+    BackHandler(enabled = page != CalculatorPage.CHOOSE_TYPE && result == null) {
         when (page) {
             CalculatorPage.PLAN -> {
                 page = CalculatorPage.CHOOSE_ITEM
@@ -460,10 +460,16 @@ internal fun EnhancementCalculatorSection(
                                 }
                                 if (storedQuantity == null) {
                                     Text(
-                                        "Owned quantity not entered. Set it to 0 if you own none.",
+                                        "Owned quantity not entered. Confirm 0 if you own none.",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
+                                    TextButton(
+                                        onClick = {
+                                            owned = owned + (material.id to 0L)
+                                            preferences.edit().putString(storageKey, "0").apply()
+                                        }
+                                    ) { Text("Confirm 0 owned") }
                                 }
                                 val remaining = com.irminsul.codex.data.catalogue.EnhancementMaterialInventoryCalculator
                                     .remainingQuantity(material.required, storedQuantity)
