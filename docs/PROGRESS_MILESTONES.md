@@ -6117,3 +6117,30 @@ Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account 
 ### Next action
 
 Verify CI #1046 and the generated Room schema v3 artifact, then continue the remaining channel-boundary work. Do not merge until final CI and user device verification are successful.
+
+
+---
+
+## Milestone 117 - Batch 8 implementation review and CI build ready
+
+**Date recorded:** 2026-11-28  
+**Status:** Implementation complete and CI-verified; physical-device acceptance pending.
+
+### Architecture decisions
+- No additional umbrella coordinator is needed. Portable account retrieval/snapshot/export, private Daily Note/profile retrieval, and Coil asset loading have distinct owners and already meet the intended channel separation.
+- Battle Chronicle remains within the portable account export contract. Do not duplicate it in private cache without a concrete app-private consumer.
+- Existing Coil asset-loading/cache path remains the asset channel; no new pipeline is warranted.
+
+### Verification
+- PR #16 head: `cfcef7066525568f473e20cbc3aac287fa097005`.
+- GitHub Actions run #1050: **Success**. Unit tests, Android Room instrumentation, Debug APK assembly, Room schema verification, signature verification, and artifact upload completed successfully.
+- Room schema v3 generated and uploaded by CI; schema snapshot is now committed under `app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/3.json`.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.1050-vc1052` (artifact ID `15252538431`; 16,794,986 bytes; ZIP SHA-256 `348cc9af8f7c7cca647cc5effb342d70e9f43636c4602b42b47dc73319b57586`). Extracted APK SHA-256: `76de1383296e439e5342f1878ef54e9fe6b0575f815fdadb3b24b3c38b55e501`.
+
+### Remaining acceptance
+- Install the build and verify cache restoration, Daily Note/profile refresh, independent failure/stale behavior, portable JSON preview/copy/save, and existing image rendering.
+- Batch 8 implementation is complete; keep PR #16 open/draft until device acceptance. No physical-device result is claimed.
+
+### Next action
+
+User tests the generated APK. After confirmation, mark PR #16 ready, verify the latest head CI, and merge; then start Batch 9.
