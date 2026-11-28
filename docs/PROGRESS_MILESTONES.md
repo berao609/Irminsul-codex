@@ -5997,3 +5997,12 @@ No further work is pending for Milestone 113.
 ### Next action
 
 Run the full Debug CI for the latest branch head. If successful, verify Natlan, Nod-Krai, and Temple of Space emblems plus Ancient Sacred Mountain under Natlan on-device. Recheck independent region percentages and the already-approved card layout.
+### Follow-up correction - Fontaine hierarchy and official regional emblems
+
+- Verified the replacement account export `docs/genshin_865157206.json` (exported `2026-11-28T05:09:19Z`, blob SHA `5978275553db2ceaa2ea7e4c65f60f9a6ae4b98f`). The previous export is retained as `docs/genshin_865157206.2.json`.
+- The replacement export identifies Sea of Bygone Eras as region ID 14 and Fontaine as region ID 9. Sea of Bygone Eras is therefore attached beneath Fontaine in the presentation hierarchy while retaining its independent source progress.
+- Natlan and Nod-Krai use their source `inner_icon` first for the compact regional emblem, then their source `icon`. The wide `cover` and `image` fields are not used as emblem candidates.
+- Temple of Space has no regional `icon`, `inner_icon`, or `cover` in either export. Its Memory Core offering icon is used as the regional emblem, with a verified source-URL fallback so the emblem remains available when the offering list is absent.
+- Mapper tests cover Fontaine/Sea of Bygone Eras nesting, independent percentages, the Natlan/Nod-Krai inner-icon priority, and Temple of Space fallback.
+- Implementation and test commits: `4a823c396cb8165c6b894eb5a00194deec6d12d6` and `f05456711c269319cad0101a1057019c2bb7971b`.
+- CI and physical-device verification for this follow-up remain pending.
