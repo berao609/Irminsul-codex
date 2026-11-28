@@ -5823,7 +5823,7 @@ Check the next CI run after integrating the latest `main` head and the JVM 11 co
 
 **Date recorded:** 2026-11-28  
 **Development phase:** UI Revamp - Batch 6  
-**Status:** Implemented and CI-verified on the feature branch; physical-device verification pending.
+**Status:** Complete; CI-verified, merged to `main`, and physical-device tested.
 
 ### Objective
 
@@ -5866,19 +5866,18 @@ Replace summary-only Spiral Abyss and Imaginarium Theater detail pages with sour
 - Debug APK signature verification: passed.
 - Debug APK artifact: irminsul-codex-debug-v1.0.0-dev.943-vc945 (artifact ID 15239923231; 15,879,814 bytes).
 - Room instrumentation tests were skipped by the workflow because the changed files do not affect Room persistence or schema.
-- Draft PR #14: https://github.com/berao609/Irminsul-codex/pull/14.
-- Physical-device verification is pending. No on-device behavior is claimed.
+- PR #14 was marked ready for review and merged to `main`.
+- Latest integrated branch CI: run #968 succeeded, including unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact upload.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.968-vc970` (artifact ID 15244045907; SHA-256 `34a839872cdf2fbcd7dbfa1f6776512ef926692da8d65b92fabe249f923794df`).
+- Physical-device verification: user confirmed Batch 6 was successful and tested.
 
 ### Remaining
 
-- Download the Debug APK from run #943 and inspect current/previous Abyss plus Theater on the Redmi Turbo 4 Pro.
-- Review visual density, portrait loading, date presentation, and long blessing text on-device.
-- Check the latest PR checks after the milestone documentation update.
-- Keep Stygian Onslaught unchanged beyond its existing source-backed summary until a real record payload is captured and validated.
+- Detailed Stygian Onslaught history and team data remain out of scope until a real source record payload is captured and validated.
 
 ### Next action
 
-Install the run #943 Debug APK and report the current/previous Abyss and Theater results, including any visual or runtime defects. Do not merge PR #14 until device review and the latest PR checks are complete.
+Batch 6 is complete. Continue with the next planned UI Revamp task.
 
 
 
@@ -5888,7 +5887,7 @@ Install the run #943 Debug APK and report the current/previous Abyss and Theater
 
 **Date recorded:** 2026-11-28  
 **Development phase:** UI Revamp - Batch 6  
-**Status:** Implemented; CI and APK verification pending.
+**Status:** Complete; CI-verified, merged to `main`, and physical-device tested.
 
 ### Change
 
@@ -5905,9 +5904,12 @@ Install the run #943 Debug APK and report the current/previous Abyss and Theater
 
 ### Verification
 
-- Source changes are committed on `ui-revamp/batch-6-chronicle-details`.
-- CI, Debug APK artifact, and physical-device verification for this commit are pending. No successful build or device result is claimed.
+- Implementation commit: `a03425bdc888d2c35aba9f586edddd5173e0bc7e`.
+- Latest branch-head CI run #968: success; unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact upload passed.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.968-vc970` (artifact ID 15244045907; SHA-256 `34a839872cdf2fbcd7dbfa1f6776512ef926692da8d65b92fabe249f923794df`).
+- Physical-device verification: user confirmed the three endgame cards remain expanded and the Abyss cycle selector works.
+- PR #14 merged to `main` in commit `2e5e2a016135f52a9487d41e48d7aee645ee44fc`. No successful build or device result is claimed.
 
 ### Next action
 
-Check the CI run for the implementation commit. If successful, install its Debug APK and verify that all three endgame cards (Spiral Abyss, Imaginarium Theater, and Stygian Onslaught) stay expanded and that the Abyss cycle selector still works.
+No further work is pending for Milestone 113.
