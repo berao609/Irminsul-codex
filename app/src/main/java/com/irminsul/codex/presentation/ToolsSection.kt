@@ -38,30 +38,25 @@ fun ToolsSection(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    AppIcon(AppIconName.TOOLS, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("Enhancement Calculator", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            "Choose any 4-star or 5-star character or weapon and calculate upgrade materials",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                IconButton(onClick = onToggleMaterialsPlanner, modifier = Modifier.align(Alignment.CenterHorizontally).size(24.dp)) {
-                    AppIcon(
-                        if (showMaterialsPlanner) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
-                        contentDescription = if (showMaterialsPlanner) "Collapse Materials Calculator" else "Expand Materials Calculator",
-                        modifier = Modifier.size(12.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                AppIcon(AppIconName.TOOLS, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("Enhancement Calculator", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Choose any 4-star or 5-star character or weapon and calculate upgrade materials",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+            IconButton(onClick = onToggleMaterialsPlanner, modifier = Modifier.align(Alignment.CenterHorizontally).size(24.dp)) {
+                AppIcon(
+                    if (showMaterialsPlanner) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
+                    contentDescription = if (showMaterialsPlanner) "Collapse Materials Calculator" else "Expand Materials Calculator",
+                    modifier = Modifier.size(12.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                )
             }
         }
         if (showMaterialsPlanner) {
