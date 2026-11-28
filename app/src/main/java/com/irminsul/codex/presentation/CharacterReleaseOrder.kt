@@ -66,6 +66,9 @@ private val releaseRankByName = releaseGroups
     .flatMapIndexed { releaseIndex, names -> names.map { it.lowercase() to releaseIndex } }
     .toMap()
 
+internal fun characterReleaseIndex(name: String): Int? =
+    releaseRankByName[name.trim().lowercase()]
+
 fun sortCharactersByRelease(characters: List<CharacterSnapshot>): List<CharacterSnapshot> =
     characters.sortedWith(
         compareBy<CharacterSnapshot> { character ->
