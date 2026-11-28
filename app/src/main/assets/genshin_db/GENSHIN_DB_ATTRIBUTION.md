@@ -13,4 +13,4 @@ The application retains the upstream copyright and permission notice. The bundle
 
 These records are still candidate game data. MIT permission to redistribute the upstream dataset does not establish that every game fact has been independently verified. The application therefore preserves the candidate-data boundary and does not promote these records into trusted production costs automatically.
 
-No Genshin Impact artwork or character icons are included in these data files.
+No image binaries are included in these data files. The app also bundles `enhancement_visual_metadata.json`, a small ID-to-asset metadata map derived from EnkaNetwork/API-docs commit `26b4ddcd045a1264d0a8ef3ef5a3a3e33cbe16ce` (`store/gi/avatars.json` and `store/gi/weapons.json`). It maps character/weapon IDs to element, weapon type, and Enka CDN asset URLs. Image files are requested from the Enka CDN at runtime; this metadata attribution does not claim ownership or grant a license to HoYoverse artwork.

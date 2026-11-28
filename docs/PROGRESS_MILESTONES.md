@@ -6178,3 +6178,15 @@ Complete source-level catalogue and calculation edge-case review, then perform p
 ### Next action
 
 Implement the four-page Enhancement Calculator visual redesign and the app-wide non-keyboard input policy, then run CI. Provide a new Debug APK and ask the user to retest saved-analysis restoration and all four calculator pages. Preserve the user's existing Room database; never ask them to clear app data as a workaround.
+
+
+### Milestone 117 implementation update
+
+- Room migration code commit: `f56ce67d408c55b62b226b1a234304de6ef2b12b`; migration instrumentation test commit: `d4caaaddc86658c9d16f6ed6adcc2bdb15a21806`.
+- CI #1119 and #1121 passed Room instrumentation, including v1->2->3 migration and v2->3 snapshot-chunk preservation.
+- Selector and wheel-picker implementation: `e3d7f54aa654778870793f31b88e51a3ecc2ef15`; follow-up callback fix: `100bf293b156e753487e287acfb9a7231de0d4df`.
+- Global keyboard-free control and compact expand/collapse refinements are included in the current app source. The current code-tested source head is `005a4d84aea18891ff89252b98bd414eaddcd999`; latest PR head `51985f1ab77f4186ef7b106fecc240e738462804` adds strict Room schema-v3 comparison in CI.
+- CI #1152/#1153 passed unit tests, Debug APK build, schema-v3 snapshot existence, APK signature, and artifact upload. Their Room instrumentation steps were skipped. CI #1154 is running Room instrumentation and strict generated-schema comparison.
+- APK #1153: `1.0.0-dev.1153`, version code `1155`, artifact ID `15259978932`, SHA-256 `b9cc0147c91214a82eb3392e9b863dcb7659d98003cd6367e66d07566695ce4d`.
+- Physical-device acceptance is still pending. Preserve the user's existing installation and verify the saved-analysis upgrade without clearing app data.
+

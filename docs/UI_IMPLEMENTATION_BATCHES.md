@@ -83,6 +83,15 @@ The first physical-device acceptance attempt was **unsatisfactory**. Apply the f
 
 **Room regression:** PR #16's Batch 8 persistence added schema v3 (`private_account_data`); the Batch 9 branch had schema v2. Retain schema v3 and migrate v2->3. Do not use destructive fallback. User reported saved-analysis restoration failure; physical retest is required after the migration fix.
 
+#### Implementation progress - 2026-11-28
+
+- Implemented the selector grids, full game-asset portraits, element/weapon icon filters, no-search selection flow, wheel pickers, subtle planning sections, compact material rows, and centered expand/collapse controls.
+- Replaced active Compose text-entry fields across roster filters, materials planning, weapon planning, and account credential settings. HoYoLAB WebView sign-in remains the intentional keyboard exception.
+- Existing manual custom-material rows retain quantity steppers; creating or renaming custom rows is disabled. New material plans use the Enhancement Calculator.
+- Restored Room schema v3 and added the 2->3 migration. Migration instrumentation passed CI #1119/#1121. CI workflow now compares the generated schema-v3 snapshot to the checked-in snapshot.
+- CI #1152/#1153 passed build and unit tests for app code head `005a4d84aea18891ff89252b98bd414eaddcd999`; Room instrumentation was skipped in those runs. CI #1154 is running the Room instrumentation and strict schema check for the latest workflow head.
+- Physical-device acceptance remains pending. Retest saved-analysis restoration, both selection grids, wheel behavior, compact material details, keyboard-free controls, and Light/Dark layouts before merge.
+
 ### Batch 10 - Chronicles UI Visual Refinement
 
 **Status:** Planned; approved by the user for work after Batch 9.
