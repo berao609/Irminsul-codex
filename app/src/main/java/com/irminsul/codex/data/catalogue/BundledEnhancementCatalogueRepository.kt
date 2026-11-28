@@ -134,12 +134,15 @@ object BundledEnhancementCatalogueRepository {
         return entries.map { entry ->
             val visual = byId[entry.id] ?: return@map entry
             entry.copy(
-                element = visual.optString("element").takeIf(String::isNotBlank),
-                weaponType = visual.optString("weaponType").takeIf(String::isNotBlank),
-                iconUrl = visual.optString("iconUrl").takeIf(String::isNotBlank)
+                element = visual.nullableMetadataString("element"),
+                weaponType = visual.nullableMetadataString("weaponType"),
+                iconUrl = visual.nullableMetadataString("iconUrl")
             )
         }
     }
+
+    private fun JSONObject.nullableMetadataString(key: String): String? =
+        if (isNull(key)) null else optString(key).takeIf(String::isNotBlank)
 
     fun loadAll(context: Context): List<EnhancementCatalogueEntry> =
         loadCharacters(context) + loadWeapons(context)

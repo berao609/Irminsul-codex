@@ -16,8 +16,10 @@ class BundledEnhancementVisualMetadataTest {
         val characters = BundledEnhancementCatalogueRepository.loadCharacters(context)
 
         assertEquals(126, characters.size)
-        assertTrue(characters.all { it.iconUrl?.startsWith("https://enka.network/ui/") == true })
-        assertTrue(characters.all { it.weaponType?.let { type -> type in setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST") } == true })
+        val missingCharacterIcons = characters.filter { it.iconUrl?.startsWith("https://enka.network/ui/") != true }
+        assertTrue("Missing character portrait mappings: " + missingCharacterIcons.joinToString { "${it.id}:${it.name}" }, missingCharacterIcons.isEmpty())
+        val missingCharacterWeaponTypes = characters.filter { it.weaponType?.let { type -> type in setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST") } != true }
+        assertTrue("Missing character weapon types: " + missingCharacterWeaponTypes.joinToString { "${it.id}:${it.name}" }, missingCharacterWeaponTypes.isEmpty())
         assertEquals(4, characters.count { it.element == null })
         assertTrue(characters.filter { it.element == null }.all { it.weaponType == "SWORD" })
     }
@@ -28,7 +30,9 @@ class BundledEnhancementVisualMetadataTest {
         val weapons = BundledEnhancementCatalogueRepository.loadWeapons(context)
 
         assertTrue("The 4-star/5-star weapon catalogue must not be empty.", weapons.isNotEmpty())
-        assertTrue(weapons.all { it.iconUrl?.startsWith("https://enka.network/ui/") == true })
-        assertTrue(weapons.all { it.weaponType?.let { type -> type in setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST") } == true })
+        val missingWeaponIcons = weapons.filter { it.iconUrl?.startsWith("https://enka.network/ui/") != true }
+        assertTrue("Missing weapon icon mappings: " + missingWeaponIcons.joinToString { "${it.id}:${it.name}" }, missingWeaponIcons.isEmpty())
+        val missingWeaponTypes = weapons.filter { it.weaponType?.let { type -> type in setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST") } != true }
+        assertTrue("Missing weapon type mappings: " + missingWeaponTypes.joinToString { "${it.id}:${it.name}" }, missingWeaponTypes.isEmpty())
     }
 }
