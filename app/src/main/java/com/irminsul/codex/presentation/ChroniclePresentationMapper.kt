@@ -241,10 +241,11 @@ object ChroniclePresentationMapper {
         val normalizedName = name.trim().lowercase(java.util.Locale.ROOT)
         val offeringIcon = offerings.firstNotNullOfOrNull { it.iconUrl }
         val sourceCandidates = when (normalizedName) {
-            // HoYoLAB's inner_icon is the intended compact regional crest.
+            // The export's icon field is the full regional emblem. inner_icon is a
+            // separate compact inner mark and must not replace the regional emblem.
             "natlan", "nod-krai" -> listOfNotNull(
-                fields["inner_icon"].httpUrl(),
-                fields["icon"].httpUrl()
+                fields["icon"].httpUrl(),
+                fields["inner_icon"].httpUrl()
             )
             "temple of space" -> listOfNotNull(offeringIcon)
             else -> listOfNotNull(
