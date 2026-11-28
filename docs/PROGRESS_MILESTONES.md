@@ -6261,6 +6261,6 @@ Check CI for the latest branch head, correct any build/test failures, publish a 
 - PR #17 remains open, draft, and unmerged.
 - Compact material requirements dialog and inline owned controls implemented in EnhancementCalculatorSection.kt.
 - Nested Enhancement Calculator and Visuals destinations hide the app bottom navigation; root tabs retain it.
-- Character release order changed to oldest-first. Calculator catalogue sorts characters and weapons by first release date; weapon dates are bundled from GachaTracker. Unknown dates sort last.
+- Character release order changed to newest-first. Calculator catalogue sorts characters and weapons by first release date, newest first; weapon dates are bundled from GachaTracker. Unknown dates sort last.
 - Added/updated release-order tests.
 - CI and physical-device retest pending. Do not mark accepted until the user verifies the latest APK.
