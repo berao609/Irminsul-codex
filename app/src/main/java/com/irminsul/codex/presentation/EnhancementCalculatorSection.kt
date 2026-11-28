@@ -87,6 +87,7 @@ internal fun EnhancementCalculatorSection(
     var selected by remember { mutableStateOf<EnhancementCatalogueEntry?>(null) }
     var currentLevel by remember { mutableIntStateOf(1) }
     var targetLevel by remember { mutableIntStateOf(90) }
+    var currentExperience by remember { mutableStateOf(0L) }
     var currentRank by remember { mutableIntStateOf(0) }
     var normalCurrent by remember { mutableIntStateOf(1) }
     var normalTarget by remember { mutableIntStateOf(1) }
@@ -136,8 +137,21 @@ internal fun EnhancementCalculatorSection(
         }
         currentLevel = (ownedLevel ?: 1).coerceIn(1, 90)
         targetLevel = 90
+        currentExperience = 0L
         val rankFloor = calculatorLevelCaps.indexOfFirst { currentLevel <= it }.coerceAtLeast(0)
-        currentRank = rankFloor
+        val accountAscensionRank = when (entry.subjectType) {
+            EnhancementSubjectType.CHARACTER ->
+                characters.firstOrNull { it.id.toString() == entry.id }?.ascensionLevel
+            EnhancementSubjectType.WEAPON ->
+                characters.firstNotNullOfOrNull { character ->
+                    when (val weapon = character.weapon) {
+                        is DataValue.Available -> weapon.value.takeIf { it.id.toString() == entry.id }?.ascensionLevel
+                        is DataValue.Stale -> weapon.value.takeIf { it.id.toString() == entry.id }?.ascensionLevel
+                        else -> null
+                    }
+                }
+        }
+        currentRank = (accountAscensionRank ?: rankFloor).coerceIn(rankFloor, (rankFloor + 1).coerceAtMost(6))
         val skills = characters.firstOrNull { it.id.toString() == entry.id }?.skills.orEmpty()
         normalCurrent = skills.firstOrNull { it.type == 1 }?.level?.coerceIn(1, 10) ?: 1
         skillCurrent = skills.firstOrNull { it.type == 2 }?.level?.coerceIn(1, 10) ?: 1
@@ -166,7 +180,7 @@ internal fun EnhancementCalculatorSection(
                                 characterId = entry.id,
                                 gameVersion = BundledCharacterProgressionCandidateRepository.GAME_VERSION,
                                 currentLevel = currentLevel,
-                                currentExperienceWithinLevel = 0L,
+                                currentExperienceWithinLevel = currentExperience,
                                 currentAscensionRank = currentRank,
                                 targetLevel = targetLevel
                             ),
@@ -201,7 +215,7 @@ internal fun EnhancementCalculatorSection(
                                 gameVersion = BundledWeaponAscensionCandidateRepository.GAME_VERSION,
                                 rarity = rarity,
                                 currentLevel = currentLevel,
-                                currentExperienceWithinLevel = 0L,
+                                currentExperienceWithinLevel = currentExperience,
                                 currentAscensionRank = currentRank,
                                 targetLevel = targetLevel
                             ),
@@ -306,6 +320,13 @@ internal fun EnhancementCalculatorSection(
                         currentRank = currentRank.coerceIn(floor, (floor + 1).coerceAtMost(6))
                     }
                     CalculatorNumberControl("Desired level", targetLevel, currentLevel, 90) { targetLevel = it }
+                    CalculatorLongNumberControl(
+                        "EXP already earned within current level",
+                        currentExperience,
+                        0L,
+                        9_999_999L,
+                        1_000L
+                    ) { currentExperience = it }
                     val rankFloor = calculatorLevelCaps.indexOfFirst { currentLevel <= it }.coerceAtLeast(0)
                     val rankCeiling = (rankFloor + 1).coerceAtMost(6)
                     CalculatorNumberControl("Current ascension rank", currentRank, rankFloor, rankCeiling) { currentRank = it }
@@ -456,6 +477,23 @@ private fun CalculatorNumberControl(label: String, value: Int, minimum: Int, max
                 steps = (maximum - minimum - 1).coerceAtLeast(0)
             )
         }
+    }
+}
+
+@Composable
+private fun CalculatorLongNumberControl(
+    label: String,
+    value: Long,
+    minimum: Long,
+    maximum: Long,
+    increment: Long,
+    onChange: (Long) -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        TextButton(onClick = { onChange((value - increment).coerceAtLeast(minimum)) }, enabled = value > minimum) { Text("−") }
+        Text(value.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        TextButton(onClick = { onChange((value + increment).coerceAtMost(maximum)) }, enabled = value < maximum) { Text("+") }
     }
 }
 
