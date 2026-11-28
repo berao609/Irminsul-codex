@@ -41,6 +41,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -109,6 +111,8 @@ internal fun CodexScreen(
 
     var exportedJson by remember { mutableStateOf<String?>(null) }
     var exportStatus by remember { mutableStateOf<String?>(null) }
+    var showJsonPreview by remember { mutableStateOf(false) }
+    val clipboardManager = LocalClipboardManager.current
 
     val saveFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -254,6 +258,8 @@ internal fun CodexScreen(
         }
         errorMessage = null
         exportStatus = null
+        exportedJson = null
+        showJsonPreview = false
         accountViewModel.exportAccount(uid, cookie)
     }
 
@@ -269,8 +275,8 @@ internal fun CodexScreen(
             "FAILED" -> "Export contains no successfully retrieved account sections."
             else -> "Export status unavailable. Check export_status in the JSON."
         }
-        exportStatus = "$exportLabel ($kb KB). Choose where to save."
-        saveFileLauncher.launch("genshin_${uid.trim()}.json")
+        exportStatus = "$exportLabel ($kb KB). Ready to preview or save."
+        showJsonPreview = false
         accountViewModel.acknowledgeExport()
     }
 
@@ -316,6 +322,9 @@ internal fun CodexScreen(
         dailyNoteChannel = RetrievalChannelState()
         accountProfileChannel = RetrievalChannelState()
         privateDataUid = ""
+        exportedJson = null
+        exportStatus = null
+        showJsonPreview = false
         showCredentials = true
         showWebLogin = false
         credentialLoadError = false
@@ -427,8 +436,15 @@ internal fun CodexScreen(
                     showExportPanel = selectedTab == CodexTab.ACCOUNT && uid.isNotBlank() && cookie.isNotBlank(),
                     exportProgress = accountExportState.progress,
                     exportStatus = exportStatus,
+                    hasExport = exportedJson != null,
                     isRestoringSnapshot = accountExportState.isRestoringSnapshot,
                     onExport = { extractAccountJson() },
+                    onPreview = { showJsonPreview = true },
+                    onSave = {
+                        if (exportedJson != null) {
+                            saveFileLauncher.launch("genshin_${uid.trim()}.json")
+                        }
+                    },
                     showSettings = selectedTab == CodexTab.ACCOUNT,
                     themeMode = themeMode,
                     onThemeModeChange = onThemeModeChange,
@@ -511,6 +527,16 @@ internal fun CodexScreen(
                     )
                 }
             }
+        }
+        if (showJsonPreview && exportedJson != null) {
+            AccountDataJsonPreviewDialog(
+                json = exportedJson.orEmpty(),
+                onDismiss = { showJsonPreview = false },
+                onCopy = {
+                    clipboardManager.setText(AnnotatedString(exportedJson.orEmpty()))
+                    exportStatus = "Copied full account JSON to clipboard."
+                }
+            )
         }
         if (showAiSheet) {
             AiAssistantSheet(

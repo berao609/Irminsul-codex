@@ -21,8 +21,11 @@ fun AccountSection(
     showExportPanel: Boolean,
     exportProgress: String?,
     exportStatus: String?,
+    hasExport: Boolean,
     isRestoringSnapshot: Boolean,
     onExport: () -> Unit,
+    onPreview: () -> Unit,
+    onSave: () -> Unit,
     showSettings: Boolean,
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
@@ -49,9 +52,12 @@ fun AccountSection(
         AccountDataExportSection(
             progress = exportProgress,
             exportStatus = exportStatus,
+            hasExport = hasExport,
             isExporting = isExporting,
             isRestoringSnapshot = isRestoringSnapshot,
-            onExport = onExport
+            onExport = onExport,
+            onPreview = onPreview,
+            onSave = onSave
         )
     }
 
