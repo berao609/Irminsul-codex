@@ -183,6 +183,7 @@ private fun RegionOverviewCard(region: ChronicleRegion) {
 
 @Composable
 private fun RegionDetailCard(region: ChronicleRegion, nested: Boolean = false) {
+    var expanded by rememberSaveable(region.id, region.name) { mutableStateOf(false) }
     val cardColor = if (nested) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
     Box(
         Modifier.fillMaxWidth()
@@ -203,7 +204,7 @@ private fun RegionDetailCard(region: ChronicleRegion, nested: Boolean = false) {
         }
         Column(
             Modifier.fillMaxWidth().padding(if (nested) 12.dp else 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(9.dp)
         ) {
             Row(
                 Modifier.fillMaxWidth(),
@@ -223,49 +224,80 @@ private fun RegionDetailCard(region: ChronicleRegion, nested: Boolean = false) {
                 Text(region.percentageLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
-            val progression = buildList {
-                region.reputationLevel?.let { add("Reputation · Lv. $it") }
-                region.statueLevel?.let { add("Statue of The Seven · Lv. $it") }
-            }
-            progression.forEach { label ->
-                Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-
-            if (region.offerings.isNotEmpty()) {
-                Text("Offerings", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                region.offerings.forEach { offering ->
-                    RegionProgressionRow(offering.name, offering.level, offering.iconUrl)
+            if (expanded) {
+                val progression = buildList {
+                    region.reputationLevel?.let { add("Reputation · Lv. $it") }
+                    region.statueLevel?.let { add("Statue of The Seven · Lv. $it") }
                 }
-            }
-
-            if (region.tribalReputations.isNotEmpty()) {
-                Text("Tribal Reputation", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                region.tribalReputations.forEach { tribe ->
-                    RegionProgressionRow(tribe.name, tribe.level, tribe.iconUrl)
+                progression.forEach { label ->
+                    Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-            }
 
-            if (region.subareas.isNotEmpty()) {
-                Text("Subareas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                region.subareas.forEach { area ->
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text(area.name, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                            Text(area.percentageLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-                        }
-                        LinearProgressIndicator(
-                            area.progress,
-                            Modifier.fillMaxWidth().height(4.dp),
-                            color = MaterialTheme.colorScheme.secondary,
-                            trackColor = MaterialTheme.colorScheme.outlineVariant
-                        )
+                if (region.offerings.isNotEmpty()) {
+                    Text("Offerings", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    region.offerings.forEach { offering ->
+                        RegionProgressionRow(offering.name, offering.level, offering.iconUrl)
                     }
                 }
+
+                if (region.tribalReputations.isNotEmpty()) {
+                    Text("Tribal Reputation", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    region.tribalReputations.forEach { tribe ->
+                        RegionProgressionRow(tribe.name, tribe.level, tribe.iconUrl)
+                    }
+                }
+
+                if (region.subareas.isNotEmpty()) {
+                    Text("Subareas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    region.subareas.chunked(2).forEach { areaRow ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            areaRow.forEach { area ->
+                                Column(
+                                    Modifier.weight(1f)
+                                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.72f), RoundedCornerShape(9.dp))
+                                        .padding(horizontal = 9.dp, vertical = 8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    Text(area.name, style = MaterialTheme.typography.labelSmall, maxLines = 2, minLines = 2)
+                                    Text(area.percentageLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                                    LinearProgressIndicator(
+                                        area.progress,
+                                        Modifier.fillMaxWidth().height(3.dp),
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        trackColor = MaterialTheme.colorScheme.outlineVariant
+                                    )
+                                }
+                            }
+                            if (areaRow.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
+
+                if (region.childRegions.isNotEmpty()) {
+                    Text("Subregions", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    region.childRegions.forEach { child -> RegionDetailCard(child, nested = true) }
+                }
             }
 
-            if (region.childRegions.isNotEmpty()) {
-                Text("Subregions", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                region.childRegions.forEach { child -> RegionDetailCard(child, nested = true) }
+            Row(
+                Modifier.fillMaxWidth()
+                    .clickable(role = Role.Button) { expanded = !expanded }
+                    .semantics { this.selected = expanded }
+                    .padding(top = 1.dp, bottom = 0.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    if (expanded) "Show less" else "Show details",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(3.dp))
+                AppIcon(
+                    if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
