@@ -6065,3 +6065,55 @@ Batch 7 is complete. Continue with the next planned UI Revamp task without reope
 ### Next action
 
 Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account repository, data models, snapshot persistence, JSON export contract, and asset cache. Design the smallest compatible channel boundaries before implementation; preserve existing behavior and add independent partial-failure tests.
+
+
+
+---
+
+## Milestone 116 - UI Revamp Batch 8: Multi-Channel Data Fetching (Initial Implementation)
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 8  
+**Status:** In progress; initial implementation CI-verified. Physical-device verification and remaining channel integration are pending.
+
+### Implemented
+
+- Added `RetrievalChannelState<T>` with independent loading, success, stale, and failure states; retrieval and last-success timestamps; and stale-value retention after refresh failures.
+- Added `HoYoLabPrivateDataCoordinator` to retrieve Daily Note and HoYoLAB profile concurrently using the same UID/session cookie. Each request returns an independent result; ordinary failures are isolated and cancellation propagates.
+- Added app-private Room storage for Daily Note and profile presentation data:
+  - `PrivateAccountDataEntity`, `PrivateAccountDataDao`, and `RoomPrivateAccountDataStore`.
+  - Room migration 2 -> 3 creates `private_account_data`.
+  - Each channel has its own payload and retrieval timestamp. Updating or failing one channel does not erase its sibling.
+  - Malformed cached channel data is reported independently; a valid sibling cache remains readable.
+  - HoYoLAB cookies are not stored in this table; credential storage remains in `HoYoLabCredentialStore`.
+- The Home screen restores cached private data before refreshing and retains stale values when a channel refresh fails.
+- The portable account JSON now has a read-only, scrollable preview and full-JSON copy action. External file saving is a separate, explicit user action; retrieval no longer opens the file picker automatically.
+- Preserved the existing portable export/snapshot pipeline and Coil `SubcomposeAsyncImage` asset-loading path. No asset pipeline or image bytes were added to the portable JSON.
+
+### Implementation commits
+
+- `862ba41fb857e11034c8786f970f7a388123b738` - independent private-channel coordinator and state model.
+- `6ba8ae988fcc516fa53f9cfde4636c71575da05f` - correct profile state reset after login.
+- `3b103e441747e336127ea815e987028ea6511dc4` - app-private Room channel persistence and migration 2 -> 3.
+- `0240162a6b2386ed1dd4296f667deb12164d9a23` - malformed-cache isolation test and login cache restoration.
+- `0f8724831724a032ab6ecb5366adf3690b52e21c` - portable JSON preview/copy and Room schema v3 CI check.
+
+### Verification
+
+- CI run #1043: success - unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact upload. Room instrumentation tests were skipped for that first non-database slice.
+- CI run #1044: success - unit tests, Android 17 Room instrumentation tests (including v1 -> v2 -> v3 migration and private-store round-trip/independent-update tests), Debug APK build, schema verification, signature verification, and artifact upload.
+- CI run #1045: success - includes malformed-cache isolation test and login cache restoration.
+- CI run #1046: pending at time of this record; latest implementation includes the portable JSON preview and checks Room schema version 3.
+- Physical-device verification: pending. No device behavior is claimed as confirmed.
+
+### Remaining
+
+- Verify the final branch-head CI and commit the generated Room schema v3 snapshot.
+- Review whether portable account retrieval, private module retrieval, and asset loading need one higher-level orchestration boundary; the current coordinator directly coordinates the private Daily Note/profile requests, while the existing account repository continues to own portable export retrieval.
+- Confirm the intended ownership/cache treatment for supported Battle Chronicle modules. Existing Abyss/Theater sections remain in the established portable export contract; do not duplicate them without a clear app-private consumer.
+- Keep the Coil image-loading/cache path separate from account persistence and verify image loading/fallback behavior on-device.
+- Physical-device test private cache restoration, independent channel failure behavior, JSON preview/copy/save, and existing image rendering before marking Batch 8 complete.
+
+### Next action
+
+Verify CI #1046 and the generated Room schema v3 artifact, then continue the remaining channel-boundary work. Do not merge until final CI and user device verification are successful.

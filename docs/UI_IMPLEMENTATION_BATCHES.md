@@ -2,7 +2,7 @@
 
 **Repository:** `berao609/Irminsul-codex`  
 **Current completed batch:** Batch 7 - World Exploration  
-**Roadmap status:** Batch 8 inserted; later approved work renumbered.
+**Roadmap status:** Batch 8 implementation in progress; later approved work renumbered.
 
 This document is the active sequence for the UI Revamp implementation. Completed batches retain their historical numbers. The new data-retrieval work is inserted after Batch 7; later planned work moves forward by one number without changing its approved scope.
 
@@ -10,11 +10,13 @@ This document is the active sequence for the UI Revamp implementation. Completed
 
 - **Batches 1-7:** Completed. See the corresponding UI Revamp entries in `docs/PROGRESS_MILESTONES.md`. Batch 7 (World Exploration) was merged in PR #15, merge commit `c699d3c3636eda2cb50fbfbb73d7d00a7af70360`, and user-tested.
 
-## Upcoming
+## In progress and upcoming
 
 ### Batch 8 - Multi-Channel Data Fetching
 
 **Objective:** Separate retrieved account information by purpose and lifecycle, instead of treating one JSON export as the only durable output.
+
+**Implementation status:** In progress. Initial private-channel retrieval/persistence and portable JSON preview are implemented on `ui-revamp/batch-8-multi-channel-fetching`. Shared cross-channel orchestration, remaining module/asset lifecycle decisions, and physical-device verification are still pending. See Milestone 116.
 
 **Logical channels**
 
