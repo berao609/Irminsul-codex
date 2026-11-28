@@ -5531,7 +5531,7 @@ This milestone adds typed Stygian summary mapping, Visuals presentation, and a d
 
 # Active UI Revamp Continuation Plan
 **Updated:** 2026-11-28  
-**Plan status:** Active; Batch 5 implementation in progress  
+**Plan status:** Active; Batch 7 implementation in progress  
 **Reference authority:** `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md`, especially its updated Section 10, plus `docs/Irminsul Codex UI Design Instructions.md`.
 
 This is the continuation of the existing UI revamp. It does not create a separate product task or supersede completed milestones 107-109.
@@ -5541,7 +5541,9 @@ This is the continuation of the existing UI revamp. It does not create a separat
 - Milestones 107-109 established the Visuals overview, reference-aligned account/exploration/character presentation, and typed Chronicle coverage.
 - PRs #7 and #8 delivered the initial Stygian summary and Theater mapping; the latest relevant implementation merge is `2272910489dbf672466f165e19d4a4ec6e88a621`. The latest reference-document commit on `main` is `3dc6ad9610843b1e566ef8851b61365d4e801121`.
 - User device check (2026-11-28): Spiral Abyss, Imaginarium Theater, and Stygian Onslaught all appear in Visuals and are expanded on entry.
-- Current source still renders Visuals as one long vertical composition (`VisualsSection.kt`). Shared `ChronicleSection()` starts expanded (`remember(title) { mutableStateOf(true) }`). This matches the observed device behavior but is not the intended final navigation model.
+- Batch 5's compact Visuals overview, nested destinations, Lucide registry, and Android 17 platform modernization are merged on `main`; PR #13 and CI #929 succeeded, and the user confirmed device testing.
+- Batch 6's detailed Chronicle pages and expanded endgame cards are merged on `main` in PR #14 / `2e5e2a016135f52a9487d41e48d7aee645ee44fc`; CI #968 succeeded and the user confirmed device testing.
+- `WORLD_EXPLORATION` already exists as a nested destination. Before Batch 7, its mapper returned a flat region list and the detail UI rendered only simple region progress rows; parent-child relationships, subareas, and source-backed progression systems were not mapped.
 - No standalone UI revamp implementation-plan file was found in the repository. This active continuation plan is recorded here beside the milestone history to avoid creating a duplicate plan document.
 
 ## Batch 5 prerequisite - Android platform modernization
@@ -5562,7 +5564,7 @@ This is the continuation of the existing UI revamp. It does not create a separat
 - Lucide Android 2.2.1.
 
 ### Implemented stable upgrade baseline
-This matrix is implemented on PR #13. CI verification and physical-device testing remain pending.
+This matrix was merged in PR #13 (`0f63e6811700c2c246d5c8c18d104100167ea8ba`). CI run #929 succeeded and the user confirmed physical-device testing.
 
 | Component | Implemented version | Compatibility basis |
 |---|---:|---|
@@ -5630,7 +5632,7 @@ Official compatibility references reviewed:
 
 ## Batch 5 - Visuals Navigation and Overview Hierarchy
 
-**Status:** Implemented and merged on `main` in `237eb2393230c694c0e6eecc4611f005d9c58f15`. Build #895 failed before tests/APK assembly due to the Lucide/Compose/AGP/compileSdk incompatibility. Complete the integrated platform-modernization prerequisite above, then perform CI and device verification.
+**Status:** Complete. Visuals navigation/overview and Lucide integration are merged on `main`; the integrated Android 17 modernization was merged in PR #13, CI #929 succeeded, and device testing was confirmed.
 
 ### 5.1 Rebuild the Visuals landing page
 - Reproduce the top-most Battle Chronicles overview hierarchy from the updated reference.
@@ -5675,6 +5677,8 @@ Official compatibility references reviewed:
 
 ## Batch 7 - World Exploration Detail and Data Hierarchy
 
+**Status:** Implementation in progress on `ui-revamp/batch-7-world-exploration`; CI and physical-device verification pending.
+
 - Build the dedicated vertically stacked exploration page.
 - Extend the model/mapper to represent parent regions and nested subareas (for example, subareas belonging to Liyue) only where the source export provides reliable grouping.
 - Add region progression systems (Statues, offerings, and similar levels) only when source-backed.
@@ -5699,7 +5703,7 @@ Official compatibility references reviewed:
 
 ## Immediate next action
 
-Continue Batch 5 by compiling and validating the new Visuals navigation and Lucide resource pilot. Fix any dependency/resource or Compose issues before visual refinement. Then inspect the overview and each destination on-device in Light and Dark themes. Do not begin detailed Chronicle endpoint expansion until the new navigation structure is verified.
+Complete Batch 7's source-backed hierarchy mapping and detail presentation. Run mapper tests and the full Debug CI workflow, inspect the APK, then verify the World Exploration page on the user's Android device in Light and Dark themes. Preserve parent totals independently from child percentages; do not calculate parent progress by summing subareas.
 
 
 ---
@@ -5913,3 +5917,55 @@ Batch 6 is complete. Continue with the next planned UI Revamp task.
 ### Next action
 
 No further work is pending for Milestone 113.
+
+
+---
+
+## Milestone 114 - UI Revamp Batch 7: World Exploration Hierarchy
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 7  
+**Status:** Implementation in progress; CI, APK, and physical-device verification pending.
+
+### Source evidence
+
+- Account export: `docs/genshin_865157206.json`
+- Exported: `2026-11-27T20:42:56Z`
+- Export blob SHA: `0c9dc9967c37cd58744495eaeddb4ead780e93bb`
+- `profile_and_exploration.world_explorations[]` provides `id`, `parent_id`, `name`, `exploration_percentage`, `type`, `level`, `world_type`, `seven_statue_level`, `offerings[]`, `natan_reputation.tribal_list[]`, and `area_exploration_list[]`.
+- `parent_id` identifies nested region records, including Chenyu Vale subregions and The Chasm: Underground Mines.
+- `area_exploration_list[]` provides region-specific subarea names and exploration percentages.
+- Parent and child percentages are separate source values. Do not derive or sum parent progress from child values.
+
+### Implemented on `ui-revamp/batch-7-world-exploration`
+
+- Extended the presentation model with parent IDs, nested region records, subareas, offering levels/icons, reputation levels, Statue of The Seven levels, and Natlan tribal reputation entries.
+- Updated the mapper to attach child regions by source `parent_id`, keep root regions in the overview, and preserve orphan records as standalone entries rather than inventing a parent.
+- Added source-backed percentage mapping for subareas while retaining the existing bonus-progress display and clamped progress bars.
+- Reworked the dedicated World Exploration destination into a vertically stacked region detail page without a duplicate inner page heading.
+- Added detail rows for subareas, offerings, reputation, Statue of The Seven, tribal reputation, and nested child regions where supplied by the export.
+- Kept parent progress independent from child/subarea progress; no aggregation or double-counting is performed.
+- Added mapper tests for parent/child grouping, independent percentages, progression levels, and tribal data.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationMapper.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationMapperTest.kt`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- `bce2c951ac2e48614fb66590652baff6869f3a5d` - map hierarchical world exploration data.
+- `b6e8b956be91bb84eb279f928f0c71392c9578c8` - render hierarchical world exploration details.
+- `8621c4884ade94d354743c544ed74826defb5542` - add exploration hierarchy and progression mapper tests.
+
+### Verification
+
+- Raw account export fields were inspected directly from the repository blob before mapping changes.
+- Automated tests, CI, Debug APK artifact, and physical-device verification are pending.
+- No successful build or on-device behavior is claimed.
+
+### Next action
+
+Verify mapper tests and the full Debug build. Inspect the World Exploration detail page on-device, including parent regions, Chenyu Vale and Chasm child regions, subareas, offerings, statue levels, and Natlan tribal reputation. Confirm parent percentages remain unchanged and no child data is double-counted.
