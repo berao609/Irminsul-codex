@@ -424,10 +424,14 @@ internal fun EnhancementCalculatorSection(
 
     pickerRequest?.let { request ->
         ModalBottomSheet(onDismissRequest = { pickerRequest = null }) {
+            var pendingValue by remember(request) { mutableIntStateOf(request.value) }
             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(request.title, style = MaterialTheme.typography.titleMedium)
-                WheelNumberPicker("Select value", request.value, request.minimum, request.maximum, onValueChange = { request.onConfirm(it); pickerRequest = null })
-                TextButton(onClick = { pickerRequest = null }) { Text("Cancel") }
+                WheelNumberPicker("Select value", pendingValue, request.minimum, request.maximum, onValueChange = { pendingValue = it })
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    TextButton(onClick = { pickerRequest = null }, modifier = Modifier.weight(1f)) { Text("Cancel") }
+                    Button(onClick = { request.onConfirm(pendingValue); pickerRequest = null }, modifier = Modifier.weight(1f)) { Text("Confirm") }
+                }
             }
         }
     }
