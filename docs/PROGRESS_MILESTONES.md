@@ -5823,7 +5823,7 @@ Check the next CI run after integrating the latest `main` head and the JVM 11 co
 
 **Date recorded:** 2026-11-28  
 **Development phase:** UI Revamp - Batch 6  
-**Status:** Initial implementation committed on the feature branch; CI, APK, and device verification pending.
+**Status:** Implemented and CI-verified on the feature branch; physical-device verification pending.
 
 ### Objective
 
@@ -5859,9 +5859,15 @@ Replace summary-only Spiral Abyss and Imaginarium Theater detail pages with sour
 ### Verification
 
 - Repository source and export schema were retrieved from GitHub before implementation.
-- Focused unit tests were added but have not yet been observed passing in CI.
-- No successful Gradle build, APK artifact, or physical-device verification is claimed.
-- No Batch 6 PR has been opened yet.
+- GitHub Actions run #943: https://github.com/berao609/Irminsul-codex/actions/runs/46089004111 - Success.
+- Unit tests: passed.
+- Debug APK assembly: passed.
+- Room schema snapshot verification and upload: passed.
+- Debug APK signature verification: passed.
+- Debug APK artifact: irminsul-codex-debug-v1.0.0-dev.943-vc945 (artifact ID 15239923231; 15,879,814 bytes).
+- Room instrumentation tests were skipped by the workflow because the changed files do not affect Room persistence or schema.
+- Draft PR #14: https://github.com/berao609/Irminsul-codex/pull/14.
+- Physical-device verification is pending. No on-device behavior is claimed.
 
 ### Remaining
 
