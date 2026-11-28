@@ -103,6 +103,7 @@ class ChroniclePresentationMapperTest {
                     "id" to StructuredData.NumberValue("15"),
                     "parent_id" to StructuredData.NumberValue("0"),
                     "name" to StructuredData.StringValue("Natlan"),
+                    "background_image" to StructuredData.StringValue("https://example.invalid/natlan-bg.png"),
                     "type" to StructuredData.StringValue("Reputation"),
                     "level" to StructuredData.NumberValue("0"),
                     "seven_statue_level" to StructuredData.NumberValue("1"),
@@ -127,6 +128,7 @@ class ChroniclePresentationMapperTest {
 
         assertEquals(0, natlan.reputationLevel)
         assertEquals(1, natlan.statueLevel)
+        assertEquals("https://example.invalid/natlan-bg.png", natlan.backgroundImageUrl)
         assertEquals("Tona's Flame", natlan.offerings.single().name)
         assertEquals(11, natlan.offerings.single().level)
         assertEquals("\"People of the Springs\"", natlan.tribalReputations.single().name)
