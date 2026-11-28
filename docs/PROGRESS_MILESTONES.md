@@ -5963,8 +5963,14 @@ No further work is pending for Milestone 113.
 ### Verification
 
 - Raw account export fields were inspected directly from the repository blob before mapping changes.
-- Automated tests, CI, Debug APK artifact, and physical-device verification are pending.
-- No successful build or on-device behavior is claimed.
+- GitHub Actions run #976: https://github.com/berao609/Irminsul-codex/actions/runs/46099013415 - Success.
+- Unit tests: passed.
+- Debug APK build: passed.
+- Room schema snapshot verification and upload: passed.
+- Debug APK signature verification: passed.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.976-vc978` (artifact ID 15245105257; 15,900,801 bytes; SHA-256 `4385c7c3da1f981fb609c7412fd4b1bea577105921a676fa2bae9237bb421f28`).
+- Room instrumentation tests were skipped because this change does not affect Room persistence or schema.
+- Physical-device verification is pending. No on-device behavior is claimed.
 
 ### Next action
 
