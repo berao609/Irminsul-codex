@@ -67,7 +67,7 @@ This is the former Batch 8. Its scope and acceptance intent remain unchanged; on
 - Use source-backed data and existing approved game assets; do not invent missing values, passive descriptions, or artwork.
 - **Enhancement Calculator flow:** choose Character or Weapon, then navigate to a searchable grid containing the complete bundled 4-star/5-star catalogue regardless of account ownership; select an entry to open its dedicated planning page.
 - Character planning includes current/target character level, ascension rank, and independent Normal Attack/Skill/Burst talent levels. Weapon planning includes current/target level and ascension rank.
-- Replace numeric keyboard fields with sliders and/or plus/minus steppers. Calculate opens a large material-requirements dialog; each material has an owned-quantity stepper and a live remaining-quantity calculation. Persist owned quantities locally.
+- Replace numeric keyboard fields with sliders and/or plus/minus steppers. Calculate opens a large material-requirements dialog; each material has an owned-quantity stepper and a live remaining-quantity calculation. Persist owned quantities account-wide by material ID, distinguish unknown inventory from explicit zero, and do not display a remaining total until inventory is entered.
 - Keep the catalogue version-pinned and source-attributed. The current bundled selection data has no complete portrait/icon mapping for all unowned items; do not fabricate artwork. Candidate cost/EXP data must remain clearly labelled and incomplete totals must be withheld.
 - Preserve the existing app architecture and verify the result with deterministic tests, CI, and physical-device testing.
 

@@ -6103,13 +6103,16 @@ Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account 
 
 ### Verification
 
-- PR #17 is open as a draft and mergeable.
-- Initial CI runs #1096-#1103 failed because the first catalogue tests expected ID order rather than the repository's alphabetical ordering. The test expectations were corrected in commit `6e7eac54ae792849e79e1676062d75bf48e434b9`.
-- GitHub Actions run #1105: https://github.com/berao609/Irminsul-codex/actions/runs/46129891082 - **Success** for code head `6e7eac54ae792849e79e1676062d75bf48e434b9`.
-- Unit tests, Debug APK build, Room schema snapshot verification/upload, APK signature verification, and APK artifact upload passed. Room instrumentation tests were skipped because this change does not affect Room persistence/schema.
-- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.1105-vc1107` (artifact ID `15256314648`; 15,991,443 bytes; SHA-256 `0875b7e69b6255efa9eac2d24efd5f8ce49f65e6e5176e7605fa6651554cba94`).
-- The successful CI run verifies commit `6e7eac5`; subsequent commits `cc5ab17`, `424a20d`, and `6e7eac5` contain the ascension-rank constraint, unused-import cleanup, and corrected test ordering. The latest tested source includes the rank constraint and corrected tests; the current branch head is `6e7eac5`.
-- Physical-device verification remains pending. Test the full calculator flow, especially the complete catalogue grid, level/talent controls, ascension rank, large result dialog, persistent owned-material steppers, and live remaining quantities in both themes.
+- PR #17 remains open as a draft and mergeable.
+- Initial CI runs #1096-#1103 failed because the first catalogue tests expected ID order rather than alphabetical ordering; corrected before the successful baseline.
+- CI #1105 passed for code head `6e7eac54ae792849e79e1676062d75bf48e434b9`.
+- CI #1109 passed for `708991667925d91f91f10fa4d8d84d4791199171` (account-wide inventory and unknown-vs-zero handling).
+- CI #1111 passed for `170d05f4c50af6274259b5be4173df3fe262dfd2` (empty talent-stage rejection).
+- CI #1113 passed for `50ce2e570775bf7b1625b83a7d7a5a3dcf0723d5` (bounded EXP slider and internal back navigation).
+- CI #1115 passed for latest code head `33d190a56db99ba54315fefec5c058c49b942aa3`. Unit tests, Debug APK build, Room schema verification, APK signature verification, and artifact upload succeeded. Room instrumentation tests were skipped because no Room schema/persistence changes were included.
+- Latest Debug APK: `irminsul-codex-debug-v1.0.0-dev.1115-vc1117` (artifact ID `15259360765`; 15,995,993 bytes; SHA-256 `80a33636931b4ea9eb7101d28264b127e9c726679806bf628ea68fdbce9d1ed0`).
+- Physical-device verification remains pending. Test the full calculator flow, catalogue completeness, level/talent and EXP controls, ascension boundaries, system back navigation, narrow-screen dialog, inventory persistence across different plans, explicit zero, and Light/Dark themes.
+- Candidate upgrade costs and EXP curves remain unverified production data; a green build does not certify game-data accuracy.
 - Batch 8 PR #16 remains open pending physical-device acceptance; CI #1070 passed.
 
 ### Enhancement Calculator implementation added
@@ -6118,7 +6121,7 @@ Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account 
 - Added `EnhancementCalculatorSection.kt` and connected it through `ToolsSection.kt`.
 - Replaced the Tools calculator entry point with a three-stage flow: choose Character/Weapon; search and select from a grid; configure upgrade levels and calculate.
 - Character planning includes current/target character level, current ascension rank, and independent Normal Attack, Skill, and Burst current/target levels. Weapon planning includes current/target level and ascension rank.
-- Numeric controls use sliders and plus/minus steppers. Current EXP is adjustable in 1,000-EXP steps. The large material dialog supports per-material owned-quantity steppers, persists values locally, and recalculates remaining amounts immediately.
+- Numeric controls use sliders and plus/minus steppers. Current EXP uses a curve-bounded slider and ±1 steppers, constrained by the current level and ascension cap. The large material dialog stores account-wide owned quantities by material ID, distinguishes unknown inventory from explicit zero, and recalculates remaining amounts immediately.
 - Added `BundledEnhancementCatalogueRepositoryTest.kt` for 4-star/5-star filtering, cross-chunk duplicate rejection, and weapon type metadata.
 - The current catalogue assets do not include a complete portrait/icon mapping for every unowned character/weapon. The grid uses neutral placeholders and source-backed names/rarity rather than invented images.
 - Upgrade costs and EXP curves remain candidate data. The UI discloses this and withholds totals when required candidate data is incomplete.
@@ -6134,6 +6137,14 @@ Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account 
 - `b5987cccecbf58dc1a05cb788d9790ca8589ffa8` - rename the Tools entry point.
 - `a73185135c9fe729bbb0ad3bf15d72f8b85a2f3e` - document calculator scope.
 
+### Calculator correctness follow-up
+
+- `708991667925d91f91f10fa4d8d84d4791199171` - store owned materials account-wide by material ID; preserve a legacy per-plan fallback; distinguish unknown inventory from explicit zero.
+- `170d05f4c50af6274259b5be4173df3fe262dfd2` - reject empty talent-cost stages and invalid candidate provenance; add a regression test that withholds totals.
+- `50ce2e570775bf7b1625b83a7d7a5a3dcf0723d5` - constrain current EXP to the selected level/ascension cap with a slider and exact steppers; support system back navigation between calculator pages.
+- `33d190a56db99ba54315fefec5c058c49b942aa3` - add explicit confirmation when the user owns zero materials and keep dialog dismissal separate from page navigation.
+- Added deterministic tests for unknown, zero, partial, excess, and invalid inventory quantities. All newly added tests passed in CI #1115.
+
 ### Next action
 
-Run CI on the latest PR #17 head, fix any compile/test failures, and inspect the complete material result path before APK/device acceptance. Do not close or merge Batch 9 before all scope and physical-device checks pass.
+Complete source-level catalogue and calculation edge-case review, then perform physical-device acceptance of the latest APK. Keep candidate costs labelled unverified until their game-data accuracy and provenance have been independently reviewed. Do not close or merge Batch 9 before all scope and physical-device checks pass.
