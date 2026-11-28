@@ -28,7 +28,7 @@ internal object HoYoLabSpacing {
     val md: Dp = 8.dp // tw-gap-2, tw-px-2, tw-space-y-2
     val mdPlus: Dp = 10.dp // tw-py-2.5; navigation vertical inset
     val lg: Dp = 12.dp // tw-px-3, tw-gap-x-3
-    val lgPlus: Dp = 14.dp // tw-text-sm-m font size coefficient
+    val lgPlus: Dp = 14.dp // tw-mr-3.5
     val pageInset: Dp = 16.dp // tw-px-4; navigation horizontal inset
     val xl: Dp = 20.dp // tw-pl-5
     val xxl: Dp = 24.dp // tw-pb-6
