@@ -5908,7 +5908,7 @@ Batch 6 is complete. Continue with the next planned UI Revamp task.
 - Latest branch-head CI run #968: success; unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and artifact upload passed.
 - Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.968-vc970` (artifact ID 15244045907; SHA-256 `34a839872cdf2fbcd7dbfa1f6776512ef926692da8d65b92fabe249f923794df`).
 - Physical-device verification: user confirmed the three endgame cards remain expanded and the Abyss cycle selector works.
-- PR #14 merged to `main` in commit `2e5e2a016135f52a9487d41e48d7aee645ee44fc`. No successful build or device result is claimed.
+- PR #14 merged to `main` in commit `2e5e2a016135f52a9487d41e48d7aee645ee44fc`.
 
 ### Next action
 
