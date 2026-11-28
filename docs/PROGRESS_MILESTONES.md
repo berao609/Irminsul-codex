@@ -5944,6 +5944,7 @@ No further work is pending for Milestone 113.
 - Added source-backed percentage mapping for subareas while retaining the existing bonus-progress display and clamped progress bars.
 - Reworked the dedicated World Exploration destination into a vertically stacked region detail page without a duplicate inner page heading.
 - Added detail rows for subareas, offerings, reputation, Statue of The Seven, tribal reputation, and nested child regions where supplied by the export.
+- Mapped and displayed source-backed region background artwork in the dedicated detail cards with a readable surface overlay.
 - Kept parent progress independent from child/subarea progress; no aggregation or double-counting is performed.
 - Added mapper tests for parent/child grouping, independent percentages, progression levels, and tribal data.
 
@@ -5959,17 +5960,15 @@ No further work is pending for Milestone 113.
 - `bce2c951ac2e48614fb66590652baff6869f3a5d` - map hierarchical world exploration data.
 - `b6e8b956be91bb84eb279f928f0c71392c9578c8` - render hierarchical world exploration details.
 - `8621c4884ade94d354743c544ed74826defb5542` - add exploration hierarchy and progression mapper tests.
+- `21e85f39de81cc0160be984002a0677ed148384f` - map source-backed exploration region artwork.
+- `0017b268807e445e1f21da3486f7ae7ea6fef19e` - render region background artwork.
+- `a7365223a5a33643f77d4242246b5040a6ab86ba` - test region background mapping.
 
 ### Verification
 
 - Raw account export fields were inspected directly from the repository blob before mapping changes.
-- GitHub Actions run #976: https://github.com/berao609/Irminsul-codex/actions/runs/46099013415 - Success.
-- Unit tests: passed.
-- Debug APK build: passed.
-- Room schema snapshot verification and upload: passed.
-- Debug APK signature verification: passed.
-- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.976-vc978` (artifact ID 15245105257; 15,900,801 bytes; SHA-256 `4385c7c3da1f981fb609c7412fd4b1bea577105921a676fa2bae9237bb421f28`).
-- Room instrumentation tests were skipped because this change does not affect Room persistence or schema.
+- GitHub Actions run #976 succeeded for the initial hierarchy/progression implementation. Its Debug APK was `irminsul-codex-debug-v1.0.0-dev.976-vc978` (artifact ID 15245105257; SHA-256 `4385c7c3da1f981fb609c7412fd4b1bea577105921a676fa2bae9237bb421f28`).
+- Source-backed region background artwork was added after run #976; CI for the final source revision is pending.
 - Physical-device verification is pending. No on-device behavior is claimed.
 
 ### Next action
