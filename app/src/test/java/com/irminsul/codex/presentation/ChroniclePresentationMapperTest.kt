@@ -189,6 +189,10 @@ class ChroniclePresentationMapperTest {
                     "name" to StructuredData.StringValue("Mondstadt"), "exploration_percentage" to StructuredData.NumberValue("500")),
                 obj("id" to StructuredData.NumberValue("2"), "parent_id" to StructuredData.NumberValue("0"),
                     "name" to StructuredData.StringValue("Liyue"), "exploration_percentage" to StructuredData.NumberValue("600")),
+                obj("id" to StructuredData.NumberValue("7"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Inazuma"), "exploration_percentage" to StructuredData.NumberValue("680")),
+                obj("id" to StructuredData.NumberValue("8"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Enkanomiya"), "exploration_percentage" to StructuredData.NumberValue("420")),
                 obj("id" to StructuredData.NumberValue("9"), "parent_id" to StructuredData.NumberValue("0"),
                     "name" to StructuredData.StringValue("Fontaine"), "exploration_percentage" to StructuredData.NumberValue("650")),
                 obj("id" to StructuredData.NumberValue("14"), "parent_id" to StructuredData.NumberValue("0"),
@@ -214,6 +218,10 @@ class ChroniclePresentationMapperTest {
 
         assertEquals(listOf("Windrest Peak", "Dragonspine"), mondstadt.childRegions.map { it.name })
         assertEquals(listOf("The Chasm", "Chenyu Vale"), liyue.childRegions.map { it.name })
+        val inazuma = regions.single { it.name == "Inazuma" }
+        assertEquals(listOf("Enkanomiya"), inazuma.childRegions.map { it.name })
+        assertEquals(68f, inazuma.progress * 100f, 0.001f)
+        assertEquals(42f, inazuma.childRegions.single().progress * 100f, 0.001f)
         val fontaine = regions.single { it.name == "Fontaine" }
         assertEquals(listOf("Sea of Bygone Eras"), fontaine.childRegions.map { it.name })
         assertEquals(65f, fontaine.progress * 100f, 0.001f)
