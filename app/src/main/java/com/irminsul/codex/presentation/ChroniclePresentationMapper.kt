@@ -136,7 +136,7 @@ object ChroniclePresentationMapper {
             ChronicleRegion(
                 name = name,
                 progress = (percent / 100.0).coerceIn(0.0, 1.0).toFloat(),
-                percentageLabel = if (percent % 1.0 == 0.0) "\${percent.toInt()}%" else "\${"%.1f".format(java.util.Locale.ROOT, percent)}%",
+                percentageLabel = if (percent % 1.0 == 0.0) "${percent.toInt()}%" else "${"%.1f".format(java.util.Locale.ROOT, percent)}%",
                 iconUrl = sequenceOf(region.fields["icon"], region.fields["image"])
                     .filterIsInstance<StructuredData.StringValue>()
                     .map { it.value.trim() }
@@ -184,7 +184,7 @@ object ChroniclePresentationMapper {
                             val hour = date["hour"].displayScalar()
                             val minute = date["minute"].displayScalar()
                             if (year != null && month != null && day != null) {
-                                "$year-$month-$day" + (if (hour != null && minute != null) " · $hour:\${minute.padStart(2, '0')}" else "")
+                                "$year-$month-$day" + (if (hour != null && minute != null) " · $hour:${minute.padStart(2, '0')}" else "")
                             } else null
                         },
                         characters = team
@@ -232,7 +232,7 @@ object ChroniclePresentationMapper {
             val month = start["month"].displayScalar()?.toIntOrNull()
             val year = start["year"].displayScalar()
             val title = if (month != null && year != null) {
-                "\${monthName(month)} $year"
+                "${monthName(month)} $year"
             } else {
                 schedule["schedule_id"].displayScalar()?.let { "Cycle $it" } ?: "Theater cycle"
             }
