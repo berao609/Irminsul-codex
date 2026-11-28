@@ -1,6 +1,7 @@
 package com.irminsul.codex.presentation
 
 import android.content.SharedPreferences
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -71,6 +72,27 @@ private data class CalculatorMaterial(val id: String, val name: String, val requ
 private data class CalculatorResult(val materials: List<CalculatorMaterial>, val issue: String? = null)
 private val calculatorLevelCaps = listOf(20, 40, 50, 60, 70, 80, 90)
 
+private fun calculatorExperienceCurve(entry: EnhancementCatalogueEntry): List<Long> =
+    when (entry.subjectType) {
+        EnhancementSubjectType.CHARACTER ->
+            GenshinCharacterExperienceCurveCandidate.current.cumulativeExperienceByLevel
+        EnhancementSubjectType.WEAPON ->
+            if (entry.rarity == 4) GenshinWeaponExperienceCurveCandidate.fourStar.cumulativeExperienceByLevel
+            else GenshinWeaponExperienceCurveCandidate.fiveStar.cumulativeExperienceByLevel
+    }
+
+private fun calculatorCurrentExperienceMaximum(
+    currentLevel: Int,
+    currentAscensionRank: Int,
+    cumulativeExperienceByLevel: List<Long>
+): Long {
+    val unlockedCap = calculatorLevelCaps.getOrNull(currentAscensionRank) ?: return 0L
+    if (currentLevel !in 1 until unlockedCap) return 0L
+    val currentTotal = cumulativeExperienceByLevel.getOrNull(currentLevel - 1) ?: return 0L
+    val nextTotal = cumulativeExperienceByLevel.getOrNull(currentLevel) ?: return 0L
+    return (nextTotal - currentTotal - 1L).coerceAtLeast(0L)
+}
+
 @Composable
 internal fun EnhancementCalculatorSection(
     characters: List<CharacterSnapshot>,
@@ -98,6 +120,17 @@ internal fun EnhancementCalculatorSection(
     var calculating by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<CalculatorResult?>(null) }
     var owned by remember { mutableStateOf<Map<String, Long>>(emptyMap()) }
+
+    BackHandler(enabled = page != CalculatorPage.CHOOSE_TYPE) {
+        when (page) {
+            CalculatorPage.PLAN -> {
+                page = CalculatorPage.CHOOSE_ITEM
+                result = null
+            }
+            CalculatorPage.CHOOSE_ITEM -> page = CalculatorPage.CHOOSE_TYPE
+            CalculatorPage.CHOOSE_TYPE -> Unit
+        }
+    }
 
     LaunchedEffect(Unit) {
         loading = true
@@ -321,21 +354,37 @@ internal fun EnhancementCalculatorSection(
                         if (targetLevel < it) targetLevel = it
                         val floor = calculatorLevelCaps.indexOfFirst { cap -> it <= cap }.coerceAtLeast(0)
                         val ceiling = if (it == calculatorLevelCaps[floor]) (floor + 1).coerceAtMost(6) else floor
-                        currentRank = currentRank.coerceIn(floor, ceiling)
+                        val nextRank = currentRank.coerceIn(floor, ceiling)
+                        currentRank = nextRank
+                        val curve = calculatorExperienceCurve(entry)
+                        currentExperience = currentExperience.coerceAtMost(
+                            calculatorCurrentExperienceMaximum(it, nextRank, curve)
+                        )
                     }
                     CalculatorNumberControl("Desired level", targetLevel, currentLevel, 90) { targetLevel = it }
+                    val experienceCurve = calculatorExperienceCurve(entry)
+                    val currentExperienceMaximum = calculatorCurrentExperienceMaximum(
+                        currentLevel, currentRank, experienceCurve
+                    )
                     CalculatorLongNumberControl(
                         "EXP already earned within current level",
                         currentExperience,
                         0L,
-                        9_999_999L,
-                        1_000L
+                        currentExperienceMaximum,
+                        1L
                     ) { currentExperience = it }
                     val rankFloor = calculatorLevelCaps.indexOfFirst { currentLevel <= it }.coerceAtLeast(0)
                     val rankCeiling = if (currentLevel == calculatorLevelCaps[rankFloor]) {
                         (rankFloor + 1).coerceAtMost(6)
                     } else rankFloor
-                    CalculatorNumberControl("Current ascension rank", currentRank, rankFloor, rankCeiling) { currentRank = it }
+                    CalculatorNumberControl("Current ascension rank", currentRank, rankFloor, rankCeiling) {
+                        currentRank = it
+                        currentExperience = currentExperience.coerceAtMost(
+                            calculatorCurrentExperienceMaximum(
+                                currentLevel, it, calculatorExperienceCurve(entry)
+                            )
+                        )
+                    }
 
                     if (entry.subjectType == EnhancementSubjectType.CHARACTER) {
                         Text("Talent levels", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
@@ -510,11 +559,21 @@ private fun CalculatorLongNumberControl(
     increment: Long,
     onChange: (Long) -> Unit
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        TextButton(onClick = { onChange((value - increment).coerceAtLeast(minimum)) }, enabled = value > minimum) { Text("−") }
-        Text(value.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        TextButton(onClick = { onChange((value + increment).coerceAtMost(maximum)) }, enabled = value < maximum) { Text("+") }
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            TextButton(onClick = { onChange((value - increment).coerceAtLeast(minimum)) }, enabled = value > minimum) { Text("−") }
+            Text(value.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            TextButton(onClick = { onChange((value + increment).coerceAtMost(maximum)) }, enabled = value < maximum) { Text("+") }
+        }
+        if (maximum > minimum) {
+            Slider(
+                value = value.coerceIn(minimum, maximum).toFloat(),
+                onValueChange = { onChange(it.toLong().coerceIn(minimum, maximum)) },
+                valueRange = minimum.toFloat()..maximum.toFloat(),
+                steps = 0
+            )
+        }
     }
 }
 
