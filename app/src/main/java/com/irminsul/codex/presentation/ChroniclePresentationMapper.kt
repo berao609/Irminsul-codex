@@ -53,7 +53,29 @@ data class ChronicleTheaterCycle(
     val performanceMetrics: List<ChronicleMetric>,
     val hasData: Boolean = true
 )
-data class ChronicleRegion(val name: String, val progress: Float, val percentageLabel: String, val iconUrl: String? = null)
+data class ChronicleExplorationSubarea(
+    val name: String,
+    val progress: Float,
+    val percentageLabel: String
+)
+data class ChronicleExplorationOffering(val name: String, val level: Int?, val iconUrl: String?)
+data class ChronicleTribalReputation(val name: String, val level: Int?, val iconUrl: String?)
+data class ChronicleRegion(
+    val id: Int?,
+    val parentId: Int?,
+    val name: String,
+    val progress: Float,
+    val percentageLabel: String,
+    val iconUrl: String? = null,
+    val iconUrlCandidates: List<String> = listOfNotNull(iconUrl),
+    val backgroundImageUrl: String? = null,
+    val reputationLevel: Int? = null,
+    val statueLevel: Int? = null,
+    val offerings: List<ChronicleExplorationOffering> = emptyList(),
+    val tribalReputations: List<ChronicleTribalReputation> = emptyList(),
+    val subareas: List<ChronicleExplorationSubarea> = emptyList(),
+    val childRegions: List<ChronicleRegion> = emptyList()
+)
 enum class ChronicleRecordMode { SPIRAL_ABYSS, IMAGINARIUM_THEATER }
 
 object ChroniclePresentationMapper {
@@ -123,29 +145,146 @@ object ChroniclePresentationMapper {
         val fields = availableObject(value) ?: return emptyList()
         val entries = (fields["world_explorations"] ?: fields["exploration"]
             ?: fields["exploration_list"]) as? StructuredData.ArrayValue ?: return emptyList()
-        return entries.items.mapNotNull { item ->
+        val parsed = entries.items.mapNotNull { item ->
             val region = item as? StructuredData.ObjectValue ?: return@mapNotNull null
-            val name = (region.fields["name"] ?: region.fields["area_name"])?.displayScalar()
+            val regionFields = region.fields
+            val name = (regionFields["name"] ?: regionFields["area_name"])?.displayScalar()
                 ?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
-            val rawProgress = (region.fields["exploration_percentage"]
-                ?: region.fields["exploration_percent"])?.displayScalar()?.toDoubleOrNull()
-                ?: return@mapNotNull null
-            if (rawProgress < 0.0 || rawProgress > 10000.0) return@mapNotNull null
-            val percent = when {
-                rawProgress <= 100.0 -> rawProgress
-                rawProgress <= 2000.0 -> rawProgress / 10.0
-                else -> rawProgress / 100.0
+            val progress = explorationProgress(
+                regionFields["exploration_percentage"] ?: regionFields["exploration_percent"]
+            ) ?: return@mapNotNull null
+            val progressionType = regionFields["type"].displayScalar()
+            val offerings = (regionFields["offerings"] as? StructuredData.ArrayValue)?.items.orEmpty()
+                .mapNotNull { offeringValue ->
+                    val offering = offeringValue.objectFields()
+                    val offeringName = offering["name"].displayScalar()?.takeIf { it.isNotBlank() }
+                        ?: return@mapNotNull null
+                    ChronicleExplorationOffering(
+                        name = offeringName,
+                        level = offering["level"].displayScalar()?.toIntOrNull(),
+                        iconUrl = offering["icon"].httpUrl() ?: offering["image"].httpUrl()
+                    )
+                }
+            val tribalReputations = (regionFields["natan_reputation"].objectFields()["tribal_list"]
+                as? StructuredData.ArrayValue)?.items.orEmpty().mapNotNull { tribeValue ->
+                val tribe = tribeValue.objectFields()
+                val tribeName = tribe["name"].displayScalar()?.takeIf { it.isNotBlank() }
+                    ?: return@mapNotNull null
+                ChronicleTribalReputation(
+                    name = tribeName,
+                    level = tribe["level"].displayScalar()?.toIntOrNull(),
+                    iconUrl = tribe["icon"].httpUrl() ?: tribe["image"].httpUrl()
+                )
             }
+            val subareas = (regionFields["area_exploration_list"] as? StructuredData.ArrayValue)?.items.orEmpty()
+                .mapNotNull { areaValue ->
+                    val area = areaValue.objectFields()
+                    val areaName = (area["name"] ?: area["area_name"]).displayScalar()
+                        ?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                    val areaProgress = explorationProgress(
+                        area["exploration_percentage"] ?: area["exploration_percent"]
+                    ) ?: return@mapNotNull null
+                    ChronicleExplorationSubarea(areaName, areaProgress.first, areaProgress.second)
+                }
             ChronicleRegion(
+                id = regionFields["id"].displayScalar()?.toIntOrNull(),
+                parentId = regionFields["parent_id"].displayScalar()?.toIntOrNull(),
                 name = name,
-                progress = (percent / 100.0).coerceIn(0.0, 1.0).toFloat(),
-                percentageLabel = if (percent % 1.0 == 0.0) "${percent.toInt()}%" else "${"%.1f".format(java.util.Locale.ROOT, percent)}%",
-                iconUrl = sequenceOf(region.fields["icon"], region.fields["image"])
-                    .filterIsInstance<StructuredData.StringValue>()
-                    .map { it.value.trim() }
-                    .firstOrNull { it.isHttpUrl() }
+                progress = progress.first,
+                percentageLabel = progress.second,
+                iconUrl = regionEmblemCandidates(name, regionFields, offerings).firstOrNull(),
+                iconUrlCandidates = regionEmblemCandidates(name, regionFields, offerings),
+                backgroundImageUrl = regionFields["background_image"].httpUrl(),
+                reputationLevel = if (progressionType == "Reputation") regionFields["level"].displayScalar()?.toIntOrNull() else null,
+                statueLevel = regionFields["seven_statue_level"].displayScalar()?.toIntOrNull()?.takeIf { it > 0 },
+                offerings = offerings,
+                tribalReputations = tribalReputations,
+                subareas = subareas
             )
         }
+        val regionIdsByName = parsed.mapNotNull { region ->
+            region.id?.let { region.name.trim().lowercase(java.util.Locale.ROOT) to it }
+        }.toMap()
+        val requestedParents = mapOf(
+            "windrest peak" to "mondstadt",
+            "dragonspine" to "mondstadt",
+            "the chasm" to "liyue",
+            "chasm" to "liyue",
+            "chenyu vale" to "liyue",
+            "enkanomiya" to "inazuma",
+            "ancient sacred mountain" to "natlan",
+            "sea of bygone eras" to "fontaine",
+            "sea of the bygone era" to "fontaine"
+        )
+        val grouped = parsed.map { region ->
+            val parentName = requestedParents[region.name.trim().lowercase(java.util.Locale.ROOT)]
+            val requestedParentId = parentName?.let(regionIdsByName::get)
+            if (requestedParentId != null) region.copy(parentId = requestedParentId) else region
+        }
+        val regionsById = grouped.mapNotNull { region -> region.id?.let { it to region } }.toMap()
+        fun attachChildren(region: ChronicleRegion, ancestors: Set<Int> = emptySet()): ChronicleRegion {
+            val id = region.id ?: return region
+            if (id in ancestors) return region
+            val children = grouped.filter { it.parentId == id }
+                .map { attachChildren(it, ancestors + id) }
+            return region.copy(childRegions = children)
+        }
+        return grouped.filter { region ->
+            region.parentId == null || region.parentId == 0 || region.parentId !in regionsById
+        }.map { attachChildren(it) }
+    }
+
+    private fun regionEmblemCandidates(
+        name: String,
+        fields: Map<String, StructuredData>,
+        offerings: List<ChronicleExplorationOffering>
+    ): List<String> {
+        val normalizedName = name.trim().lowercase(java.util.Locale.ROOT)
+        val offeringIcon = offerings.firstNotNullOfOrNull { it.iconUrl }
+        val sourceCandidates = when (normalizedName) {
+            // The export's icon field is the full regional emblem. inner_icon is a
+            // separate compact inner mark and must not replace the regional emblem.
+            "natlan", "nod-krai" -> listOfNotNull(
+                fields["icon"].httpUrl(),
+                fields["inner_icon"].httpUrl()
+            )
+            "temple of space" -> listOfNotNull(offeringIcon)
+            else -> listOfNotNull(
+                fields["icon"].httpUrl(),
+                fields["inner_icon"].httpUrl()
+            )
+        }
+        val verifiedFallbacks = when (normalizedName) {
+            "natlan" -> listOf(
+                "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterInnerIcon_Nata.png",
+                "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterIcon_Nata.png"
+            )
+            "nod-krai" -> listOf(
+                "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterInnerIcon_Nordkalei.png",
+                "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterIcon_Nordkalei.png"
+            )
+            "temple of space" -> listOf(
+                "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterOffering_SkyTempleMemoryCore.png"
+            )
+            else -> emptyList()
+        }
+        return (sourceCandidates + verifiedFallbacks + listOfNotNull(offeringIcon)).distinct()
+    }
+
+    private fun explorationProgress(value: StructuredData?): Pair<Float, String>? {
+        val rawProgress = value.displayScalar()?.toDoubleOrNull() ?: return null
+        if (rawProgress < 0.0 || rawProgress > 10000.0) return null
+        val percent = when {
+            rawProgress <= 100.0 -> rawProgress
+            rawProgress <= 2000.0 -> rawProgress / 10.0
+            else -> rawProgress / 100.0
+        }
+        val label = if (percent % 1.0 == 0.0) {
+            "${percent.toInt()}%"
+        } else {
+            "${"%.1f".format(java.util.Locale.ROOT, percent)}%"
+        }
+        return (percent / 100.0).coerceIn(0.0, 1.0).toFloat() to label
     }
 
     fun spiralAbyss(

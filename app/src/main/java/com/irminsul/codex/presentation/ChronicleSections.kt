@@ -141,22 +141,26 @@ fun ChronicleExplorationSection(
     onViewMore: (() -> Unit)? = null
 ) {
     val regions = ChroniclePresentationMapper.explorationRegions(value)
-    ChronicleSection("World Exploration", "Regional completion") {
-        if (regions.isEmpty()) {
-            Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        } else if (compact) {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                regions.forEach { region -> RegionOverviewCard(region) }
-            }
-            onViewMore?.let {
-                TextButton(onClick = it, modifier = Modifier.fillMaxWidth()) {
-                    Text("View more regions")
+    if (compact) {
+        ChronicleSection("World Exploration", "Regional completion") {
+            if (regions.isEmpty()) {
+                Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    regions.forEach { region -> RegionOverviewCard(region) }
+                }
+                onViewMore?.let {
+                    TextButton(onClick = it, modifier = Modifier.fillMaxWidth()) {
+                        Text("View more regions")
+                    }
                 }
             }
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                regions.forEach { region -> RegionDetailCard(region) }
-            }
+        }
+    } else if (regions.isEmpty()) {
+        Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            regions.forEach { region -> RegionDetailCard(region) }
         }
     }
 }
@@ -178,29 +182,158 @@ private fun RegionOverviewCard(region: ChronicleRegion) {
 }
 
 @Composable
-private fun RegionDetailCard(region: ChronicleRegion) {
-    Row(
-        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp)).padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+private fun RegionDetailCard(region: ChronicleRegion, nested: Boolean = false) {
+    var expanded by rememberSaveable(region.id, region.name) { mutableStateOf(false) }
+    val cardColor = if (nested) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
+    Box(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(cardColor)
     ) {
-        RegionEmblem(region, Modifier.size(56.dp))
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(region.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            LinearProgressIndicator(region.progress, Modifier.fillMaxWidth().height(6.dp), color = MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.outlineVariant)
+        if (!region.backgroundImageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = region.backgroundImageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+            Box(
+                Modifier.matchParentSize()
+                    .background(cardColor.copy(alpha = 0.88f))
+            )
         }
-        Text(region.percentageLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Column(
+            Modifier.fillMaxWidth().padding(if (nested) 12.dp else 16.dp),
+            verticalArrangement = Arrangement.spacedBy(9.dp)
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                RegionEmblem(region, Modifier.size(if (nested) 42.dp else 56.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text(region.name, style = if (nested) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    LinearProgressIndicator(
+                        region.progress,
+                        Modifier.fillMaxWidth().height(6.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.outlineVariant
+                    )
+                }
+                Text(region.percentageLabel, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
+
+            if (expanded) {
+                val progression = buildList {
+                    region.reputationLevel?.let { add("Reputation · Lv. $it") }
+                    region.statueLevel?.let { add("Statue of The Seven · Lv. $it") }
+                }
+                progression.forEach { label ->
+                    Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+
+                if (region.offerings.isNotEmpty()) {
+                    Text("Offerings", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    region.offerings.forEach { offering ->
+                        RegionProgressionRow(offering.name, offering.level, offering.iconUrl)
+                    }
+                }
+
+                if (region.tribalReputations.isNotEmpty()) {
+                    Text("Tribal Reputation", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    region.tribalReputations.forEach { tribe ->
+                        RegionProgressionRow(tribe.name, tribe.level, tribe.iconUrl)
+                    }
+                }
+
+                if (region.subareas.isNotEmpty()) {
+                    Text("Subareas", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    region.subareas.chunked(2).forEach { areaRow ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            areaRow.forEach { area ->
+                                Column(
+                                    Modifier.weight(1f)
+                                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.72f), RoundedCornerShape(9.dp))
+                                        .padding(horizontal = 9.dp, vertical = 8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    Text(area.name, style = MaterialTheme.typography.labelSmall, maxLines = 2, minLines = 2)
+                                    Text(area.percentageLabel, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+                                    LinearProgressIndicator(
+                                        area.progress,
+                                        Modifier.fillMaxWidth().height(3.dp),
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        trackColor = MaterialTheme.colorScheme.outlineVariant
+                                    )
+                                }
+                            }
+                            if (areaRow.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
+                }
+
+                if (region.childRegions.isNotEmpty()) {
+                    Text("Subregions", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    region.childRegions.forEach { child -> RegionDetailCard(child, nested = true) }
+                }
+            }
+
+            Row(
+                Modifier.fillMaxWidth()
+                    .clickable(role = Role.Button) { expanded = !expanded }
+                    .semantics { this.selected = expanded }
+                    .padding(top = 1.dp, bottom = 0.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    if (expanded) "Show less" else "Show details",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.width(3.dp))
+                AppIcon(
+                    if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RegionProgressionRow(name: String, level: Int?, iconUrl: String?) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+        if (!iconUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = iconUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(30.dp)
+            )
+        }
+        Text(name, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+        level?.let { Text("Lv. $it", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold) }
     }
 }
 
 @Composable
 private fun RegionEmblem(region: ChronicleRegion, modifier: Modifier = Modifier) {
-    if (!region.iconUrl.isNullOrBlank()) {
+    val candidates = region.iconUrlCandidates.ifEmpty { listOfNotNull(region.iconUrl) }
+    var candidateIndex by remember(region.name, candidates) { mutableIntStateOf(0) }
+    val candidate = candidates.getOrNull(candidateIndex)
+    if (candidate != null) {
         AsyncImage(
-            model = region.iconUrl,
+            model = candidate,
             contentDescription = "${region.name} emblem",
             contentScale = ContentScale.Fit,
-            modifier = modifier
+            modifier = modifier,
+            onError = {
+                if (candidateIndex < candidates.lastIndex) candidateIndex += 1
+            }
         )
     }
 }

@@ -5531,7 +5531,7 @@ This milestone adds typed Stygian summary mapping, Visuals presentation, and a d
 
 # Active UI Revamp Continuation Plan
 **Updated:** 2026-11-28  
-**Plan status:** Active; Batch 5 implementation in progress  
+**Plan status:** Active; Batch 7 implementation in progress  
 **Reference authority:** `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md`, especially its updated Section 10, plus `docs/Irminsul Codex UI Design Instructions.md`.
 
 This is the continuation of the existing UI revamp. It does not create a separate product task or supersede completed milestones 107-109.
@@ -5541,7 +5541,9 @@ This is the continuation of the existing UI revamp. It does not create a separat
 - Milestones 107-109 established the Visuals overview, reference-aligned account/exploration/character presentation, and typed Chronicle coverage.
 - PRs #7 and #8 delivered the initial Stygian summary and Theater mapping; the latest relevant implementation merge is `2272910489dbf672466f165e19d4a4ec6e88a621`. The latest reference-document commit on `main` is `3dc6ad9610843b1e566ef8851b61365d4e801121`.
 - User device check (2026-11-28): Spiral Abyss, Imaginarium Theater, and Stygian Onslaught all appear in Visuals and are expanded on entry.
-- Current source still renders Visuals as one long vertical composition (`VisualsSection.kt`). Shared `ChronicleSection()` starts expanded (`remember(title) { mutableStateOf(true) }`). This matches the observed device behavior but is not the intended final navigation model.
+- Batch 5's compact Visuals overview, nested destinations, Lucide registry, and Android 17 platform modernization are merged on `main`; PR #13 and CI #929 succeeded, and the user confirmed device testing.
+- Batch 6's detailed Chronicle pages and expanded endgame cards are merged on `main` in PR #14 / `2e5e2a016135f52a9487d41e48d7aee645ee44fc`; CI #968 succeeded and the user confirmed device testing.
+- `WORLD_EXPLORATION` already exists as a nested destination. Before Batch 7, its mapper returned a flat region list and the detail UI rendered only simple region progress rows; parent-child relationships, subareas, and source-backed progression systems were not mapped.
 - No standalone UI revamp implementation-plan file was found in the repository. This active continuation plan is recorded here beside the milestone history to avoid creating a duplicate plan document.
 
 ## Batch 5 prerequisite - Android platform modernization
@@ -5562,7 +5564,7 @@ This is the continuation of the existing UI revamp. It does not create a separat
 - Lucide Android 2.2.1.
 
 ### Implemented stable upgrade baseline
-This matrix is implemented on PR #13. CI verification and physical-device testing remain pending.
+This matrix was merged in PR #13 (`0f63e6811700c2c246d5c8c18d104100167ea8ba`). CI run #929 succeeded and the user confirmed physical-device testing.
 
 | Component | Implemented version | Compatibility basis |
 |---|---:|---|
@@ -5630,7 +5632,7 @@ Official compatibility references reviewed:
 
 ## Batch 5 - Visuals Navigation and Overview Hierarchy
 
-**Status:** Implemented and merged on `main` in `237eb2393230c694c0e6eecc4611f005d9c58f15`. Build #895 failed before tests/APK assembly due to the Lucide/Compose/AGP/compileSdk incompatibility. Complete the integrated platform-modernization prerequisite above, then perform CI and device verification.
+**Status:** Complete. Visuals navigation/overview and Lucide integration are merged on `main`; the integrated Android 17 modernization was merged in PR #13, CI #929 succeeded, and device testing was confirmed.
 
 ### 5.1 Rebuild the Visuals landing page
 - Reproduce the top-most Battle Chronicles overview hierarchy from the updated reference.
@@ -5675,6 +5677,8 @@ Official compatibility references reviewed:
 
 ## Batch 7 - World Exploration Detail and Data Hierarchy
 
+**Status:** Implementation in progress on `ui-revamp/batch-7-world-exploration`; CI and physical-device verification pending.
+
 - Build the dedicated vertically stacked exploration page.
 - Extend the model/mapper to represent parent regions and nested subareas (for example, subareas belonging to Liyue) only where the source export provides reliable grouping.
 - Add region progression systems (Statues, offerings, and similar levels) only when source-backed.
@@ -5699,7 +5703,7 @@ Official compatibility references reviewed:
 
 ## Immediate next action
 
-Continue Batch 5 by compiling and validating the new Visuals navigation and Lucide resource pilot. Fix any dependency/resource or Compose issues before visual refinement. Then inspect the overview and each destination on-device in Light and Dark themes. Do not begin detailed Chronicle endpoint expansion until the new navigation structure is verified.
+Complete Batch 7's source-backed hierarchy mapping and detail presentation. Run mapper tests and the full Debug CI workflow, inspect the APK, then verify the World Exploration page on the user's Android device in Light and Dark themes. Preserve parent totals independently from child percentages; do not calculate parent progress by summing subareas.
 
 
 ---
@@ -5913,3 +5917,124 @@ Batch 6 is complete. Continue with the next planned UI Revamp task.
 ### Next action
 
 No further work is pending for Milestone 113.
+
+
+---
+
+## Milestone 114 - UI Revamp Batch 7: World Exploration Hierarchy
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 7  
+**Status:** Complete; final implementation CI-verified, merged to `main`, and physical-device tested.
+
+### Source evidence
+
+- Account export: `docs/genshin_865157206.json`
+- Exported: `2026-11-27T20:42:56Z`
+- Export blob SHA: `0c9dc9967c37cd58744495eaeddb4ead780e93bb`
+- `profile_and_exploration.world_explorations[]` provides `id`, `parent_id`, `name`, `exploration_percentage`, `type`, `level`, `world_type`, `seven_statue_level`, `offerings[]`, `natan_reputation.tribal_list[]`, and `area_exploration_list[]`.
+- `parent_id` identifies nested region records, including Chenyu Vale subregions and The Chasm: Underground Mines.
+- `area_exploration_list[]` provides region-specific subarea names and exploration percentages.
+- Parent and child percentages are separate source values. Do not derive or sum parent progress from child values.
+
+### Implemented on `ui-revamp/batch-7-world-exploration`
+
+- Extended the presentation model with parent IDs, nested region records, subareas, offering levels/icons, reputation levels, Statue of The Seven levels, and Natlan tribal reputation entries.
+- Updated the mapper to attach child regions by source `parent_id`, keep root regions in the overview, and preserve orphan records as standalone entries rather than inventing a parent.
+- Added source-backed percentage mapping for subareas while retaining the existing bonus-progress display and clamped progress bars.
+- Reworked the dedicated World Exploration destination into a vertically stacked region detail page without a duplicate inner page heading.
+- Added detail rows for subareas, offerings, reputation, Statue of The Seven, tribal reputation, and nested child regions where supplied by the export.
+- Mapped and displayed source-backed region background artwork in the dedicated detail cards with a readable surface overlay.
+- Kept parent progress independent from child/subarea progress; no aggregation or double-counting is performed.
+- Added mapper tests for parent/child grouping, independent percentages, progression levels, and tribal data.
+
+### Files changed
+
+- `app/src/main/java/com/irminsul/codex/presentation/ChroniclePresentationMapper.kt`
+- `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+- `app/src/test/java/com/irminsul/codex/presentation/ChroniclePresentationMapperTest.kt`
+- `docs/PROGRESS_MILESTONES.md`
+
+### Implementation commits
+
+- `bce2c951ac2e48614fb66590652baff6869f3a5d` - map hierarchical world exploration data.
+- `b6e8b956be91bb84eb279f928f0c71392c9578c8` - render hierarchical world exploration details.
+- `8621c4884ade94d354743c544ed74826defb5542` - add exploration hierarchy and progression mapper tests.
+- `21e85f39de81cc0160be984002a0677ed148384f` - map source-backed exploration region artwork.
+- `0017b268807e445e1f21da3486f7ae7ea6fef19e` - render region background artwork.
+- `a7365223a5a33643f77d4242246b5040a6ab86ba` - test region background mapping.
+
+### Verification
+
+- Raw account export fields were inspected directly from the repository blob before mapping changes.
+- GitHub Actions run #985 succeeded for the final source-code revision: https://github.com/berao609/Irminsul-codex/actions/runs/46099310591.
+- The PR-head verification run #987 also succeeded: https://github.com/berao609/Irminsul-codex/actions/runs/46099331462.
+- Unit tests: passed.
+- Debug APK build: passed.
+- Room schema snapshot verification and upload: passed.
+- Debug APK signature verification: passed.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.987-vc989` (artifact ID 15244723457; 15,902,059 bytes; SHA-256 `9c449ef6ed653a93e61845e92cc4843b0b8c4ad3a92f5caf885557bb11c3594a`).
+- Room instrumentation tests were skipped because this change does not affect Room persistence or schema.
+- Physical-device verification is pending. No on-device behavior is claimed.
+
+### User-verified baseline and requested refinements
+
+- User confirmed the initial Batch 7 implementation was successful on-device.
+- Follow-up refinements requested: place Windrest Peak and Dragonspine under Mondstadt; place The Chasm and Chenyu Vale under Liyue; make each regional card independently expandable with a subtle, tiny control centered at its bottom; render subareas in a compact two-column grid.
+- Natlan and Nod-Krai have official `icon`, `inner_icon`, and `cover` URLs in the export (`UI_ChapterIcon_Nata.png`, `UI_ChapterIcon_Nordkalei.png`, and corresponding inner/cover assets). `RegionEmblem` now retries the ordered source-backed candidates when an image load fails.
+- Temple of Space has empty regional `icon`, `inner_icon`, and `cover` fields, but its `Temple of Space: Memory Core` offering supplies an official icon. The mapper uses the first offering icon as the final regional emblem fallback.
+- Ancient Sacred Mountain (source ID 16) is explicitly grouped under Natlan (source ID 15); its own 40.6% exploration value remains independent.
+- These refinements supersede the original flat detail presentation but do not change source progress values or aggregation rules.
+
+### Latest refinement implementation
+
+- Mapper and source grouping: `68a531e07db3c21fd48924d2a44cd86a55713591`.
+- Emblem image-load retry UI: `2daa4bd7a78c65b6c5c534cddc28cd4266899e1c`.
+- Tests for official emblem candidates and Ancient Sacred Mountain grouping: `af5c2dacf9d1129cba7672927d204dbbe1873cc9`.
+- User confirmed CI #1004 passed and tested successfully; the three emblem display gaps and Ancient Sacred Mountain grouping were still outstanding at that point.
+- Latest refinement CI and physical-device verification are pending.
+
+### Next action
+
+Run the full Debug CI for the latest branch head. If successful, verify Natlan, Nod-Krai, and Temple of Space emblems plus Ancient Sacred Mountain under Natlan on-device. Recheck independent region percentages and the already-approved card layout.
+### Follow-up correction - Fontaine hierarchy and official regional emblems
+
+- Verified the replacement account export `docs/genshin_865157206.json` (exported `2026-11-28T05:09:19Z`, blob SHA `5978275553db2ceaa2ea7e4c65f60f9a6ae4b98f`). The previous export is retained as `docs/genshin_865157206.2.json`.
+- The replacement export identifies Sea of Bygone Eras as region ID 14 and Fontaine as region ID 9. Sea of Bygone Eras is therefore attached beneath Fontaine in the presentation hierarchy while retaining its independent source progress.
+- Natlan and Nod-Krai use their source `inner_icon` first for the compact regional emblem, then their source `icon`. The wide `cover` and `image` fields are not used as emblem candidates.
+- Temple of Space has no regional `icon`, `inner_icon`, or `cover` in either export. Its Memory Core offering icon is used as the regional emblem, with a verified source-URL fallback so the emblem remains available when the offering list is absent.
+- Mapper tests cover Fontaine/Sea of Bygone Eras nesting, independent percentages, the Natlan/Nod-Krai inner-icon priority, and Temple of Space fallback.
+- Implementation and test commits: `4a823c396cb8165c6b894eb5a00194deec6d12d6` and `f05456711c269319cad0101a1057019c2bb7971b`.
+- GitHub Actions run #1020 succeeded for code head `fb42676d7774f01fb28651db35dacf96f737a9ed`: unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and APK upload passed. Room instrumentation tests were skipped because this change does not affect Room persistence or schema.
+- Debug APK: `irminsul-codex-debug-v1.0.0-dev.1020-vc1022` (artifact ID `15250137616`; 15,909,754 bytes; SHA-256 `aa07b68d49ae2b3730fe45379068a7dd141672070be1a8b4ab4c6d70def18cb7`). Run: https://github.com/berao609/Irminsul-codex/actions/runs/46113459072.
+- Physical-device verification of the Fontaine grouping and corrected emblems remains pending.
+### Emblem correction follow-up
+
+- User device testing confirmed the previous APK fixed only Sea of Bygone Eras nesting; Natlan and Nod-Krai still displayed the wrong emblems, and Temple of Space remained blank. The earlier claim that the emblem changes were fixed was incorrect.
+- Corrected the selection priority: Natlan and Nod-Krai now use the export's regional `icon` first, with `inner_icon` only as fallback. The previous implementation incorrectly prioritized `inner_icon`.
+- Temple of Space has no regional image fields in the replacement export. Its only source-backed candidate remains the `Temple of Space: Memory Core` offering icon. The mapper produces this candidate in tests, but its actual image rendering failure is not yet explained and must not be marked fixed.
+- Code/test commits: `f86c18e1439794ec44928283205bdb5c34187f38`, `25b1771bf1e97fb9c2da9ccb8d621e370aa06c50`.
+- CI and physical-device verification for this follow-up are pending.
+
+### Final hierarchy adjustment - Enkanomiya
+
+- Added an explicit presentation-parent override placing Enkanomiya beneath Inazuma, consistent with the other requested named-area groupings.
+- Added mapper coverage asserting Enkanomiya appears under Inazuma and that both source exploration percentages remain independent.
+- Implementation commit: `21d3f8a497769ffaf13e5e284c1cafa403834b7a`.
+- Test commit: `348abb8ed4e826458d641eb5dedaa7c820dcaa17`.
+- CI and physical-device verification for this final adjustment are pending.
+
+
+### Final verification and closure
+
+- Final implementation/test head: `348abb8ed4e826458d641eb5dedaa7c820dcaa17`; PR documentation head before this closure record: `5909685fdd7038ca7ccec462b58c0f86a085ae32`.
+- GitHub Actions run #1032: https://github.com/berao609/Irminsul-codex/actions/runs/46115368528 - **Success**.
+- Unit tests, Debug APK build, Room schema verification/upload, APK signature verification, and APK artifact upload passed. Room instrumentation tests were skipped because the change does not affect Room persistence or schema.
+- Debug APK artifact: `irminsul-codex-debug-v1.0.0-dev.1032-vc1034` (artifact ID `15251815121`; 15,909,720 bytes; SHA-256 `b6557ad05e9261c009b2bdf94b3be19509961b24819016b4dba97744817222fe`).
+- Physical-device verification: user confirmed the final Batch 7 build was verified and tested, including the Enkanomiya hierarchy adjustment and final regional presentation refinements.
+- This final confirmation supersedes the earlier pending device-verification notes and the previously recorded Temple of Space rendering concern.
+- PR #15 was merged to `main`; merge commit and integrated main state are recorded after merge.
+
+### Closure
+
+Batch 7 is complete. Continue with the next planned UI Revamp task without reopening this scope unless a new regression is reported.
