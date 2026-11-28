@@ -21,6 +21,27 @@ class EnhancementCatalogueReleaseOrderTest {
         )
     }
 
+    @Test
+    fun sortsCharactersByReleaseNewestFirst() {
+        val entries = listOf(
+            character("amber", "Amber"),
+            character("vesna", "Vesna"),
+            character("xiao", "Xiao")
+        )
+
+        assertEquals(
+            listOf("Vesna", "Xiao", "Amber"),
+            sortEnhancementCatalogueByRelease(entries).map { it.name }
+        )
+    }
+
+    private fun character(id: String, name: String) = EnhancementCatalogueEntry(
+        id = id,
+        name = name,
+        rarity = 5,
+        subjectType = EnhancementSubjectType.CHARACTER
+    )
+
     private fun weapon(id: String, name: String) = EnhancementCatalogueEntry(
         id = id,
         name = name,
