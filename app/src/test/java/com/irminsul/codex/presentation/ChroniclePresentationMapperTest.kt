@@ -96,6 +96,35 @@ class ChroniclePresentationMapperTest {
         assertEquals(0f, regions[1].progress, 0.001f)
     }
 
+    @Test fun explorationPlacesNamedAreasUnderTheirRequestedRegions() {
+        val data = DataValue.Available(obj(
+            "world_explorations" to StructuredData.ArrayValue(listOf(
+                obj("id" to StructuredData.NumberValue("1"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Mondstadt"), "exploration_percentage" to StructuredData.NumberValue("500")),
+                obj("id" to StructuredData.NumberValue("2"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Liyue"), "exploration_percentage" to StructuredData.NumberValue("600")),
+                obj("id" to StructuredData.NumberValue("3"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Windrest Peak"), "exploration_percentage" to StructuredData.NumberValue("700")),
+                obj("id" to StructuredData.NumberValue("4"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Dragonspine"), "exploration_percentage" to StructuredData.NumberValue("800")),
+                obj("id" to StructuredData.NumberValue("5"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("The Chasm"), "exploration_percentage" to StructuredData.NumberValue("900")),
+                obj("id" to StructuredData.NumberValue("6"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Chenyu Vale"), "exploration_percentage" to StructuredData.NumberValue("1000"))
+            ))
+        ), null)
+
+        val regions = ChroniclePresentationMapper.explorationRegions(data)
+        val mondstadt = regions.single { it.name == "Mondstadt" }
+        val liyue = regions.single { it.name == "Liyue" }
+
+        assertEquals(listOf("Windrest Peak", "Dragonspine"), mondstadt.childRegions.map { it.name })
+        assertEquals(listOf("The Chasm", "Chenyu Vale"), liyue.childRegions.map { it.name })
+        assertEquals(50f, mondstadt.progress * 100f, 0.001f)
+        assertEquals(60f, liyue.progress * 100f, 0.001f)
+        assertEquals(70f, mondstadt.childRegions[0].progress * 100f, 0.001f)
+    }
+
     @Test fun explorationMapsSourceBackedProgressionAndTribalLevels() {
         val data = DataValue.Available(obj(
             "world_explorations" to StructuredData.ArrayValue(listOf(
