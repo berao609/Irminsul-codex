@@ -86,14 +86,40 @@ class ChroniclePresentationMapperTest {
 
         val regions = ChroniclePresentationMapper.explorationRegions(data)
 
-        assertEquals(listOf("Liyue", "Chenyu Vale"), regions.map { it.name })
-        assertEquals(listOf("Bishui Plain", "Minlin"), regions[0].subareas.map { it.name })
-        assertEquals("104.2%", regions[0].subareas[0].percentageLabel)
-        assertEquals(0f, regions[1].progress, 0.001f)
-        assertEquals(1, regions[1].childRegions.size)
-        assertEquals("Chenyu Vale: Upper Vale", regions[1].childRegions.single().name)
-        assertEquals("100%", regions[1].childRegions.single().percentageLabel)
-        assertEquals(0f, regions[1].progress, 0.001f)
+        assertEquals(listOf("Liyue"), regions.map { it.name })
+        val liyue = regions.single()
+        assertEquals(listOf("Bishui Plain", "Minlin"), liyue.subareas.map { it.name })
+        assertEquals("104.2%", liyue.subareas[0].percentageLabel)
+        assertEquals(0.0f, liyue.progress, 0.001f)
+        assertEquals(listOf("Chenyu Vale"), liyue.childRegions.map { it.name })
+        val chenyuVale = liyue.childRegions.single()
+        assertEquals(0f, chenyuVale.progress, 0.001f)
+        assertEquals(1, chenyuVale.childRegions.size)
+        assertEquals("Chenyu Vale: Upper Vale", chenyuVale.childRegions.single().name)
+        assertEquals("100%", chenyuVale.childRegions.single().percentageLabel)
+        assertEquals(0f, chenyuVale.progress, 0.001f)
+    }
+
+    @Test fun explorationMapsOfficialNatlanAndNodKraiEmblemsFromSourceIcons() {
+        val natlanIcon = "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterIcon_Nata.png"
+        val nodKraiIcon = "https://act-webstatic.hoyoverse.com/game_record/genshin/city_icon/UI_ChapterIcon_Nordkalei.png"
+        val data = DataValue.Available(obj(
+            "world_explorations" to StructuredData.ArrayValue(listOf(
+                obj("id" to StructuredData.NumberValue("15"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Natlan"),
+                    "exploration_percentage" to StructuredData.NumberValue("280"),
+                    "icon" to StructuredData.StringValue(natlanIcon)),
+                obj("id" to StructuredData.NumberValue("17"), "parent_id" to StructuredData.NumberValue("0"),
+                    "name" to StructuredData.StringValue("Nod-Krai"),
+                    "exploration_percentage" to StructuredData.NumberValue("1000"),
+                    "icon" to StructuredData.StringValue(nodKraiIcon))
+            ))
+        ), null)
+
+        val regions = ChroniclePresentationMapper.explorationRegions(data)
+
+        assertEquals(natlanIcon, regions.single { it.name == "Natlan" }.iconUrl)
+        assertEquals(nodKraiIcon, regions.single { it.name == "Nod-Krai" }.iconUrl)
     }
 
     @Test fun explorationPlacesNamedAreasUnderTheirRequestedRegions() {
