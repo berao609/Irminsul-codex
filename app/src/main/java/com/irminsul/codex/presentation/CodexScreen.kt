@@ -286,7 +286,7 @@ internal fun CodexScreen(
             return
         }
         cookie = capturedCookie.trim()
-        accountProfileChannel = RetrievalChannelState()
+        privateDataUid = ""
         credentialLoadError = false
 
         scope.launch {

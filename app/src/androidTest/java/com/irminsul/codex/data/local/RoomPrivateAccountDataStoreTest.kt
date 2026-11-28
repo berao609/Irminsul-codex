@@ -6,6 +6,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.irminsul.codex.api.AccountProfile
 import com.irminsul.codex.api.DailyNote
 import com.irminsul.codex.data.local.repository.RoomPrivateAccountDataStore
+import com.irminsul.codex.data.local.entity.PrivateAccountDataEntity
+import org.json.JSONObject
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.*
@@ -76,6 +78,28 @@ class RoomPrivateAccountDataStoreTest {
         val restored = store.get("800000001")!!
         assertEquals(101, restored.dailyNote?.value?.currentResin)
         assertEquals(profile, restored.accountProfile?.value)
+    }
+
+    @Test
+    fun malformedDailyNoteCacheDoesNotHideValidProfileCache() = runBlocking {
+        val uid = "800000001"
+        val timestamp = Instant.parse("2026-11-28T01:00:00Z").toString()
+        val dao = database.privateAccountDataDao()
+        dao.insertIfMissing(PrivateAccountDataEntity(uid = uid))
+        dao.updateDailyNote(uid, "{malformed", timestamp)
+        val profileJson = JSONObject()
+            .put("nickname", "Traveler")
+            .put("uid", uid)
+            .put("serverName", "os_asia")
+            .put("avatarUrl", JSONObject.NULL)
+            .toString()
+        dao.updateAccountProfile(uid, profileJson, timestamp)
+
+        val restored = store.get(uid)!!
+        assertNull(restored.dailyNote)
+        assertNotNull(restored.dailyNoteError)
+        assertEquals("Traveler", restored.accountProfile?.value?.nickname)
+        assertNull(restored.accountProfileError)
     }
 
     @Test
