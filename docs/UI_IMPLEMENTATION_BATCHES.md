@@ -48,7 +48,7 @@ This document is the active sequence for the UI Revamp implementation. Completed
 
 **Scope boundary:** This batch establishes the retrieval, ownership, persistence, and export boundaries needed by the UI. It does not authorize speculative endpoints, invented data, a new backend, or a wholesale rewrite of the existing account model. Inspect current retrieval and persistence code before deciding the smallest compatible implementation.
 
-**Verification:** Deterministic tests cover independent channel success/failure, cancellation, stale/cache preservation, malformed cache isolation, Room migration/storage, and export UI. CI run #1050 succeeded with the Room schema check and Debug APK. Physical-device verification remains the final acceptance step.
+**Verification:** Deterministic tests cover independent channel success/failure, cancellation, stale/cache preservation, malformed cache isolation, Room migration/storage, and export UI. CI run #1050 succeeded with the Room schema check and Debug APK. The checked-in Room schema v3 snapshot is based on that generated CI artifact; its JSON structure/version/table list was validated, but a new workflow run was not triggered by the documentation/schema-only commits. Physical-device verification remains the final acceptance step.
 
 ### Batch 9 - Character and Weapon Fidelity
 
