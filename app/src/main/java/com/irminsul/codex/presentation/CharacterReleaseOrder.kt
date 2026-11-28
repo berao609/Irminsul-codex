@@ -7,7 +7,7 @@ import com.irminsul.codex.domain.model.CharacterSnapshot
  * Characters released in the same update are alphabetized; unknown names remain at the end.
  */
 private val releaseGroups = listOf(
-    listOf("Aether", "Amber", "Barbara", "Beidou", "Bennett", "Chongyun", "Diluc", "Fischl", "Jean", "Kaeya", "Keqing", "Klee", "Lisa", "Mona", "Ningguang", "Noelle", "Qiqi", "Razor", "Sucrose", "Traveler", "Lumine", "Manekin", "Manekina", "Venti", "Xiangling", "Xingqiu"),
+    listOf("Aether", "Amber", "Barbara", "Beidou", "Bennett", "Chongyun", "Diluc", "Fischl", "Jean", "Kaeya", "Keqing", "Klee", "Lisa", "Mona", "Ningguang", "Noelle", "Qiqi", "Razor", "Sucrose", "Traveler", "Lumine", "Venti", "Xiangling", "Xingqiu"),
     listOf("Diona", "Tartaglia", "Xinyan", "Zhongli"),
     listOf("Albedo", "Ganyu"),
     listOf("Hu Tao", "Xiao"),
@@ -59,7 +59,7 @@ private val releaseGroups = listOf(
     listOf("Sandrone"),
     listOf("Alyosha", "Odette"),
     listOf("Vesna", "Vodyanitsa"),
-    listOf("Mitya", "Valeriy")
+    listOf("Mitya", "Valeriy", "Manekin", "Manekina")
 )
 
 private val releaseRankByName = releaseGroups
