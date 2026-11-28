@@ -7,7 +7,7 @@ import org.junit.Test
 
 class EnhancementCatalogueReleaseOrderTest {
     @Test
-    fun sortsWeaponsByFirstReleaseDateOldestFirstAndUnknownDatesLast() {
+    fun sortsWeaponsByFirstReleaseDateNewestFirstAndUnknownDatesLast() {
         val entries = listOf(
             weapon("new", "A Teaspoon of Transcendence"),
             weapon("middle", "Aqua Simulacra"),
@@ -16,7 +16,7 @@ class EnhancementCatalogueReleaseOrderTest {
         )
 
         assertEquals(
-            listOf("Amos' Bow", "Aqua Simulacra", "A Teaspoon of Transcendence", "Unknown Weapon"),
+            listOf("A Teaspoon of Transcendence", "Aqua Simulacra", "Amos' Bow", "Unknown Weapon"),
             sortEnhancementCatalogueByRelease(entries).map { it.name }
         )
     }
