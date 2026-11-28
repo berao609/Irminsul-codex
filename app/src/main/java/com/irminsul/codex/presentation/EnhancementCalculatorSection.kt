@@ -391,10 +391,15 @@ internal fun EnhancementCalculatorSection(
                 } else {
                     Text("Change your owned quantities. Remaining requirements update immediately.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     plan.materials.forEach { material ->
-                        val storageKey = selected?.subjectType?.name + ":" + selected?.id + ":" + material.id
-                        val quantity = owned[material.id]
-                            ?: preferences.getString("enhancement_owned_" + storageKey, "0")?.toLongOrNull()?.coerceAtLeast(0L)
-                            ?: 0L
+                        val legacyStorageKey = "enhancement_owned_" +
+                            selected?.subjectType?.name + ":" + selected?.id + ":" + material.id
+                        // Material inventory belongs to the account, not to an individual plan.
+                        // Read the old plan-scoped value as a compatibility fallback.
+                        val storageKey = "enhancement_owned_material_" + material.id
+                        val storedQuantity = owned[material.id]
+                            ?: preferences.getString(storageKey, null)?.toLongOrNull()?.coerceAtLeast(0L)
+                            ?: preferences.getString(legacyStorageKey, null)?.toLongOrNull()?.coerceAtLeast(0L)
+                        val quantity = storedQuantity ?: 0L
                         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant), shape = RoundedCornerShape(14.dp)) {
                             Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(material.name, fontWeight = FontWeight.SemiBold)
@@ -402,10 +407,20 @@ internal fun EnhancementCalculatorSection(
                                 CalculatorQuantityControl("Owned", quantity) { next ->
                                     val safe = next.coerceAtLeast(0L)
                                     owned = owned + (material.id to safe)
-                                    preferences.edit().putString("enhancement_owned_" + storageKey, safe.toString()).apply()
+                                    preferences.edit().putString(storageKey, safe.toString()).apply()
                                 }
+                                if (storedQuantity == null) {
+                                    Text(
+                                        "Owned quantity not entered. Set it to 0 if you own none.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                val remaining = com.irminsul.codex.data.catalogue.EnhancementMaterialInventoryCalculator
+                                    .remainingQuantity(material.required, storedQuantity)
                                 Text(
-                                    "Remaining: " + (material.required - quantity).coerceAtLeast(0L),
+                                    remaining?.let { "Remaining: $it" }
+                                        ?: "Remaining: enter owned quantity",
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
