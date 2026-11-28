@@ -73,3 +73,18 @@ Corrective commits:
 - `c5274d80e993535cec54dce8d02065dc3a9b4ac9` - Applied an ice-blue tint to the Cryo source icon.
 
 Verification pending: new CI run and physical-device retest. The Cryo asset's remote successful-load state is not independently verified; the fallback is implemented to prevent an invisible filter if loading fails. Do not mark device acceptance complete.
+
+
+## Retest follow-up - 2026-11-29
+
+The user requested three immediate refinements:
+
+1. **Compact material requirements:** Replaced spacious material rows and dialog with a near-full-screen dense list. Each row uses a 26dp icon, one-line material name, inline owned stepper, and compact Required / Needed quantities. Inventory-unknown remains distinct from confirmed zero; setting zero remains explicit. Candidate-cost status remains visible.
+2. **Full-screen nested destinations:** CodexScreen suppresses the Home / Visuals / Tools / Account bottom navigation on the dedicated Enhancement Calculator screen and all nested Visuals destinations. Main tab destinations retain the bar; expandable content does not trigger full-screen behavior.
+3. **Chronological default ordering:** Character release groups now sort oldest-first and include Aether/Lumine plus current Manekin/Manekina forms. Calculator character/weapon grids use a release-order sorter. Weapon first-release dates are bundled from GachaTracker's Genshin weapon database; entries without a published date are deliberately placed last rather than guessed from IDs.
+
+Relevant implementation: CodexScreen.kt, EnhancementCalculatorSection.kt, CharacterReleaseOrder.kt, EnhancementCatalogueReleaseOrder.kt.
+
+Tests: Updated CharacterReleaseOrderTest.kt for oldest-first behavior; added EnhancementCatalogueReleaseOrderTest.kt for oldest-first weapon dates and unknown-date fallback.
+
+Verification: CI for the latest branch head is pending. No new APK or physical-device acceptance is claimed. The user must retest the compact materials list, full-screen nested navigation, and both chronological selection grids after CI produces a fresh APK.
