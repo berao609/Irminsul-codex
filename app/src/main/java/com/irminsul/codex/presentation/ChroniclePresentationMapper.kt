@@ -211,6 +211,7 @@ object ChroniclePresentationMapper {
             "the chasm" to "liyue",
             "chasm" to "liyue",
             "chenyu vale" to "liyue",
+            "enkanomiya" to "inazuma",
             "ancient sacred mountain" to "natlan",
             "sea of bygone eras" to "fontaine",
             "sea of the bygone era" to "fontaine"
