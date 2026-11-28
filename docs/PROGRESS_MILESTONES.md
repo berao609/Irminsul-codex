@@ -5880,3 +5880,34 @@ Replace summary-only Spiral Abyss and Imaginarium Theater detail pages with sour
 
 Install the run #943 Debug APK and report the current/previous Abyss and Theater results, including any visual or runtime defects. Do not merge PR #14 until device review and the latest PR checks are complete.
 
+
+
+---
+
+## Milestone 113 - UI Revamp Batch 6: Consistent Expanded Endgame Cards
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 6  
+**Status:** Implemented; CI and APK verification pending.
+
+### Change
+
+- Applied the Theater card's non-collapsible presentation to Spiral Abyss and Stygian Onslaught.
+- Both cards now render their content continuously; their section headers no longer show a collapse icon or respond to collapse clicks.
+- Preserved the Spiral Abyss current/previous cycle selector and all existing record content.
+- Preserved the existing Stygian Onslaught best-record summary and source-data limitations.
+- No data mapping, retrieval, or other Chronicle section behavior was changed.
+
+### Implementation
+
+- Commit: `a03425bdc888d2c35aba9f586edddd5173e0bc7e`
+- File: `app/src/main/java/com/irminsul/codex/presentation/ChronicleSections.kt`
+
+### Verification
+
+- Source changes are committed on `ui-revamp/batch-6-chronicle-details`.
+- CI, Debug APK artifact, and physical-device verification for this commit are pending. No successful build or device result is claimed.
+
+### Next action
+
+Check the CI run for the implementation commit. If successful, install its Debug APK and verify that all three endgame cards (Spiral Abyss, Imaginarium Theater, and Stygian Onslaught) stay expanded and that the Abyss cycle selector still works.
