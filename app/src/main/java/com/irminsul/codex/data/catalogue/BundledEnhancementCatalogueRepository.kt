@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Base64
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
-import java.time.Instant
 import java.util.zip.GZIPInputStream
 
 enum class EnhancementSubjectType { CHARACTER, WEAPON }
