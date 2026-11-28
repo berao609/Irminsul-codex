@@ -296,6 +296,7 @@ private fun RegionDetailCard(region: ChronicleRegion, nested: Boolean = false) {
                 AppIcon(
                     if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = null,
+                    modifier = Modifier.size(14.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
