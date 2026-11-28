@@ -17,6 +17,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -118,7 +119,21 @@ class AccountViewModel(
      * Account intelligence is a first-class in-app action, independent of export.
      */
     fun analyzeAccount(uid: String, cookie: String) {
-        retrieveAccount(uid, cookie, prepareJsonExport = false)
+        val normalizedUid = uid.trim()
+        val normalizedCookie = cookie.trim()
+        if (normalizedUid.isBlank() || normalizedCookie.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Sign in with HoYoLAB first.") }
+            return
+        }
+
+        // A screen refresh can race the initial UID-scoped cache restoration.
+        // Queue the network retrieval behind that restore instead of silently
+        // dropping the account channel because isRestoringSnapshot is true.
+        restoreLatestSnapshot(normalizedUid)
+        viewModelScope.launch {
+            uiState.first { !it.isRestoringSnapshot }
+            retrieveAccount(normalizedUid, normalizedCookie, prepareJsonExport = false)
+        }
     }
 
     private fun retrieveAccount(uid: String, cookie: String, prepareJsonExport: Boolean) {
