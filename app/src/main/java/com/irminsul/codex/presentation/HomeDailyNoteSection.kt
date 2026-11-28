@@ -31,6 +31,7 @@ import com.irminsul.codex.api.DailyNote
 @Composable
 fun HomeDailyNoteSection(
     note: DailyNote?,
+    statusMessage: String?,
     isLoading: Boolean,
     canSync: Boolean,
     isExporting: Boolean,
@@ -54,7 +55,7 @@ fun HomeDailyNoteSection(
                     ) {
                         Text("Daily activity not loaded", style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Sync to view Resin, commissions, expeditions, and Realm Currency.",
+                            statusMessage ?: "Sync to view Resin, commissions, expeditions, and Realm Currency.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -85,6 +86,14 @@ fun HomeDailyNoteSection(
             TextButton(onClick = onRefresh, enabled = !isLoading && !isExporting) {
                 Text(if (isLoading) "Refreshing…" else "Refresh")
             }
+        }
+
+        statusMessage?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         Surface(

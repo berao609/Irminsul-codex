@@ -49,6 +49,8 @@ import com.irminsul.codex.api.AccountProfile
 import com.irminsul.codex.api.DailyNote
 import com.irminsul.codex.api.HoYoLabClient
 import com.irminsul.codex.data.repository.HoYoLabAccountRepository
+import com.irminsul.codex.data.repository.HoYoLabPrivateDataCoordinator
+import com.irminsul.codex.domain.model.RetrievalChannelState
 import com.irminsul.codex.data.export.JsonDocumentWriter
 import com.irminsul.codex.data.local.IrminsulDatabase
 import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
@@ -89,8 +91,12 @@ internal fun CodexScreen(
     var showAllRecommendations by remember { mutableStateOf(false) }
     var selectedCharacterId by remember { mutableStateOf<Int?>(null) }
 
-    var dailyNote by remember { mutableStateOf<DailyNote?>(null) }
-    var accountProfile by remember { mutableStateOf<AccountProfile?>(null) }
+    val privateDataCoordinator = remember { HoYoLabPrivateDataCoordinator() }
+    var dailyNoteChannel by remember { mutableStateOf(RetrievalChannelState<DailyNote>()) }
+    var accountProfileChannel by remember { mutableStateOf(RetrievalChannelState<AccountProfile>()) }
+    var privateDataUid by remember { mutableStateOf(uid.trim()) }
+    val dailyNote = dailyNoteChannel.value
+    val accountProfile = accountProfileChannel.value
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -138,21 +144,54 @@ internal fun CodexScreen(
         }
         prefs.edit().putString("uid", targetUid.trim()).apply()
         credentialLoadError = false
-        if (accountProfile?.uid != targetUid.trim()) accountProfile = null
+        if (privateDataUid != targetUid.trim()) {
+            privateDataUid = targetUid.trim()
+            dailyNoteChannel = RetrievalChannelState()
+            accountProfileChannel = RetrievalChannelState()
+        }
 
         scope.launch {
+            dailyNoteChannel = dailyNoteChannel.loading()
+            accountProfileChannel = accountProfileChannel.loading()
             isLoading = true
             errorMessage = null
-            HoYoLabClient.fetchDailyNote(targetUid, targetCookie)
-                .onSuccess { note ->
-                    dailyNote = note
-                    showCredentials = false
+
+            val refreshed = privateDataCoordinator.refresh(targetUid.trim(), targetCookie.trim())
+            dailyNoteChannel = refreshed.dailyNote.result.fold(
+                onSuccess = { value ->
+                    dailyNoteChannel.success(value, refreshed.dailyNote.retrievedAt)
+                },
+                onFailure = { error ->
+                    dailyNoteChannel.failure(
+                        error.message ?: "Daily Note retrieval failed.",
+                        refreshed.dailyNote.retrievedAt
+                    )
                 }
-                .onFailure { err ->
-                    errorMessage = err.message ?: "Request failed."
+            )
+            accountProfileChannel = refreshed.accountProfile.result.fold(
+                onSuccess = { value ->
+                    accountProfileChannel.success(value, refreshed.accountProfile.retrievedAt)
+                },
+                onFailure = { error ->
+                    accountProfileChannel.failure(
+                        error.message ?: "HoYoLAB profile retrieval failed.",
+                        refreshed.accountProfile.retrievedAt
+                    )
                 }
-            HoYoLabClient.fetchAccountProfile(targetUid, targetCookie)
-                .onSuccess { profile -> accountProfile = profile }
+            )
+
+            val channelFailures = buildList {
+                if (dailyNoteChannel.status == RetrievalChannelState.Status.FAILED ||
+                    dailyNoteChannel.status == RetrievalChannelState.Status.STALE
+                ) add("Daily Note: ${dailyNoteChannel.message}")
+                if (accountProfileChannel.status == RetrievalChannelState.Status.FAILED ||
+                    accountProfileChannel.status == RetrievalChannelState.Status.STALE
+                ) add("Profile: ${accountProfileChannel.message}")
+            }
+            errorMessage = channelFailures.joinToString("\n").takeIf { it.isNotBlank() }
+            if (dailyNoteChannel.status == RetrievalChannelState.Status.SUCCESS) {
+                showCredentials = false
+            }
             isLoading = false
         }
     }
@@ -223,8 +262,9 @@ internal fun CodexScreen(
         prefs.edit().remove("uid").apply()
         uid = ""
         cookie = ""
-        dailyNote = null
-        accountProfile = null
+        dailyNoteChannel = RetrievalChannelState()
+        accountProfileChannel = RetrievalChannelState()
+        privateDataUid = ""
         showCredentials = true
         showWebLogin = false
         credentialLoadError = false
@@ -393,6 +433,16 @@ internal fun CodexScreen(
                         exportedAt = homeSnapshot?.metadata?.exportedAt?.toString(),
                         hasSnapshot = homeSnapshot != null,
                         dailyNote = dailyNote,
+                        dailyNoteStatusMessage = when (dailyNoteChannel.status) {
+                            RetrievalChannelState.Status.STALE -> "Refresh failed. Showing the last successful Daily Note."
+                            RetrievalChannelState.Status.FAILED -> dailyNoteChannel.message ?: "Daily Note is unavailable."
+                            else -> null
+                        },
+                        accountProfileStatusMessage = when (accountProfileChannel.status) {
+                            RetrievalChannelState.Status.STALE -> "Profile refresh failed. Showing the last successful profile."
+                            RetrievalChannelState.Status.FAILED -> accountProfileChannel.message ?: "Profile is unavailable."
+                            else -> null
+                        },
                         isLoading = isLoading,
                         canSync = uid.isNotBlank() && cookie.isNotBlank(),
                         isExporting = accountExportState.isExporting,

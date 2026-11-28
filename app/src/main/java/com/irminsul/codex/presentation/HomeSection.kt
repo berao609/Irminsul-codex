@@ -18,6 +18,8 @@ fun HomeSection(
     exportedAt: String?,
     hasSnapshot: Boolean,
     dailyNote: DailyNote?,
+    dailyNoteStatusMessage: String?,
+    accountProfileStatusMessage: String?,
     isLoading: Boolean,
     canSync: Boolean,
     isExporting: Boolean,
@@ -33,6 +35,7 @@ fun HomeSection(
             uid = uid,
             serverName = serverName,
             accountProfile = accountProfile,
+            statusMessage = accountProfileStatusMessage,
             rosterCount = rosterCount,
             exportedAt = exportedAt,
             hasSnapshot = hasSnapshot,
@@ -40,6 +43,7 @@ fun HomeSection(
         )
         HomeDailyNoteSection(
             note = dailyNote,
+            statusMessage = dailyNoteStatusMessage,
             isLoading = isLoading,
             canSync = canSync,
             isExporting = isExporting,

@@ -29,6 +29,7 @@ fun HomeAccountOverviewSection(
     uid: String,
     serverName: String,
     accountProfile: AccountProfile?,
+    statusMessage: String?,
     rosterCount: Int?,
     exportedAt: String?,
     hasSnapshot: Boolean,
@@ -100,6 +101,14 @@ fun HomeAccountOverviewSection(
                     }
                 }
             }
+        }
+
+        statusMessage?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         if (hasSnapshot) {
