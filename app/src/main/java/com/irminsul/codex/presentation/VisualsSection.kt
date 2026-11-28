@@ -101,15 +101,9 @@ internal fun VisualsSection(
                             )
                             ChronicleModePreview(
                                 title = "Spiral Abyss",
-                                subtitle = "Current cycle",
+                                subtitle = "Current and previous cycle records",
                                 summary = abyssPreview(account.spiralAbyssCurrent),
-                                onClick = { onNavigate(VisualsDestination.SPIRAL_ABYSS_CURRENT) }
-                            )
-                            ChronicleModePreview(
-                                title = "Spiral Abyss",
-                                subtitle = "Previous cycle",
-                                summary = abyssPreview(account.spiralAbyssPrevious),
-                                onClick = { onNavigate(VisualsDestination.SPIRAL_ABYSS_PREVIOUS) }
+                                onClick = { onNavigate(VisualsDestination.SPIRAL_ABYSS) }
                             )
                             ChronicleModePreview(
                                 title = "Imaginarium Theater",
@@ -192,15 +186,13 @@ internal fun VisualsSection(
                         } ?: Text("Analyze your account to load World Exploration.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
 
-                    VisualsDestination.SPIRAL_ABYSS_CURRENT -> {
+                    VisualsDestination.SPIRAL_ABYSS -> {
                         snapshot?.let {
-                            ChronicleRecordSection("Current Cycle", it.spiralAbyssCurrent, ChronicleRecordMode.SPIRAL_ABYSS, roster = it.characters.charactersOrEmpty())
-                        } ?: Text("Analyze your account to load Spiral Abyss records.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-
-                    VisualsDestination.SPIRAL_ABYSS_PREVIOUS -> {
-                        snapshot?.let {
-                            ChronicleRecordSection("Previous Cycle", it.spiralAbyssPrevious, ChronicleRecordMode.SPIRAL_ABYSS, roster = it.characters.charactersOrEmpty())
+                            ChronicleSpiralAbyssSection(
+                                current = it.spiralAbyssCurrent,
+                                previous = it.spiralAbyssPrevious,
+                                roster = it.characters.charactersOrEmpty()
+                            )
                         } ?: Text("Analyze your account to load Spiral Abyss records.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
 
