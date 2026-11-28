@@ -1,5 +1,7 @@
 package com.irminsul.codex.data.catalogue
 
+import java.net.URI
+
 /**
  * Combines character level/ascension costs with three independent talent tracks.
  * All inputs remain version-pinned candidate data; this does not promote trust.
@@ -74,7 +76,19 @@ object CharacterFullUpgradePlanCandidateCalculator {
                         issue = "Talent cost data overlaps for ${range.slot} level $toLevel."
                     )
                 }
-                matching.single().costs.forEach { item ->
+                val stageCandidate = matching.single()
+                if (stageCandidate.candidateId.isBlank() ||
+                    stageCandidate.sourceReference.sourceId.isBlank() ||
+                    !isHttps(stageCandidate.sourceReference.canonicalUrl) ||
+                    stageCandidate.costs.isEmpty()
+                ) {
+                    return levelPlan.copy(
+                        status = CharacterUpgradePlanCandidateStatus.INVALID,
+                        requirements = emptyList(),
+                        issue = "Talent cost candidate has missing provenance or an empty material stage."
+                    )
+                }
+                stageCandidate.costs.forEach { item ->
                     if (!add(item.itemId, item.itemName, item.quantity)) {
                         return levelPlan.copy(
                             status = CharacterUpgradePlanCandidateStatus.INVALID,
@@ -93,4 +107,9 @@ object CharacterFullUpgradePlanCandidateCalculator {
             issue = null
         )
     }
+
+    private fun isHttps(value: String): Boolean = runCatching {
+        val uri = URI(value)
+        uri.scheme.equals("https", ignoreCase = true) && !uri.host.isNullOrBlank()
+    }.getOrDefault(false)
 }
