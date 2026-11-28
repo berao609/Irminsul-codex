@@ -2,6 +2,8 @@ name: Build Debug APK
 
 on:
   push:
+    branches: [ "main", "ui-revamp/**" ]
+  pull_request:
     branches: [ "main" ]
   workflow_dispatch:
 
@@ -26,7 +28,22 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: '8.14.8'
+          gradle-version: '9.7.0'
+
+      - name: Install Android compile SDK platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk_root="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          sdkmanager_path="$(find "$sdk_root/cmdline-tools" -type f -name sdkmanager -print | sort -V | tail -n 1)"
+          if [[ -z "$sdkmanager_path" ]]; then
+            echo "::error::Android SDK command-line tools were not found under $sdk_root."
+            exit 1
+          fi
+          set +o pipefail
+          yes | "$sdkmanager_path" --licenses
+          set -o pipefail
+          "$sdkmanager_path" --install "platforms;android-37.1" "build-tools;37.0.0" "platform-tools"
 
       - name: Configure persistent Debug signing
         shell: bash
@@ -190,16 +207,21 @@ jobs:
             echo "available=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run Room instrumentation tests
+      - name: Run Room instrumentation tests on Android 17 API 37.2
         if: steps.room_tests.outputs.run == 'true'
         uses: reactivecircus/android-emulator-runner@v2
         env:
           ANDROID_I_WANT_MY_TCG: ${{ steps.kvm.outputs.available != 'true' && 'yes' || '' }}
         with:
-          api-level: 34
+          # Compile against stable API 37.1 and test against the newer stable
+          # Android 17 API 37.2 QPR2 16 KB page-size emulator image.
+          api-level: "37.1"
+          system-image-api-level: "37.2"
+          channel: stable
           arch: x86_64
-          target: google_apis
+          target: google_apis_ps16k
           profile: pixel_2
+          ram-size: 4096M
           disable-linux-hw-accel: ${{ steps.kvm.outputs.available != 'true' }}
           script: gradle connectedDebugAndroidTest --no-daemon
 

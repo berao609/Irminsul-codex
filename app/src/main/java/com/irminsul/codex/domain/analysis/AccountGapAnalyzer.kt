@@ -87,7 +87,7 @@ object AccountGapAnalyzer {
                                     title = "Artifact slots are unoccupied",
                                     explanation = "The mapped equipment data identifies artifact slots without an equipped artifact. This is an equipment observation, not a recommendation to invest in this character.",
                                     evidence = listOf("Unoccupied artifact slot positions: ${slots.joinToString()}"),
-                                    basedOnStaleData = stale || artifacts is DataValue.Stale
+                                    basedOnStaleData = stale
                                 )
                             )
                         }

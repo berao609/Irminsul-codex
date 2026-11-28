@@ -68,7 +68,7 @@ abstract class IrminsulDatabase : RoomDatabase() {
                             FROM account_snapshots
                             WHERE snapshotId = ?
                             """.trimIndent(),
-                            arrayOf(chunkIndex, start, count, snapshotId)
+                            arrayOf<Any>(chunkIndex, start, count, snapshotId)
                         )
                         start += count
                         chunkIndex++
