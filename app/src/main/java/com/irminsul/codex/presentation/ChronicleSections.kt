@@ -322,12 +322,18 @@ private fun RegionProgressionRow(name: String, level: Int?, iconUrl: String?) {
 
 @Composable
 private fun RegionEmblem(region: ChronicleRegion, modifier: Modifier = Modifier) {
-    if (!region.iconUrl.isNullOrBlank()) {
+    val candidates = region.iconUrlCandidates.ifEmpty { listOfNotNull(region.iconUrl) }
+    var candidateIndex by remember(region.name, candidates) { mutableIntStateOf(0) }
+    val candidate = candidates.getOrNull(candidateIndex)
+    if (candidate != null) {
         AsyncImage(
-            model = region.iconUrl,
+            model = candidate,
             contentDescription = "${region.name} emblem",
             contentScale = ContentScale.Fit,
-            modifier = modifier
+            modifier = modifier,
+            onError = {
+                if (candidateIndex < candidates.lastIndex) candidateIndex += 1
+            }
         )
     }
 }
