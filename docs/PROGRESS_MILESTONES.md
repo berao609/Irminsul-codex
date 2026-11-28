@@ -5544,8 +5544,6 @@ This is the continuation of the existing UI revamp. It does not create a separat
 - Current source still renders Visuals as one long vertical composition (`VisualsSection.kt`). Shared `ChronicleSection()` starts expanded (`remember(title) { mutableStateOf(true) }`). This matches the observed device behavior but is not the intended final navigation model.
 - No standalone UI revamp implementation-plan file was found in the repository. This active continuation plan is recorded here beside the milestone history to avoid creating a duplicate plan document.
 
-
-- PR #13 is open and unmerged on `ui-revamp/batch-5-platform-modernization`. The Android 17 API 37.1 modernization is implemented there; corrected stable SDK package IDs are awaiting CI verification.
 ## Batch 5 prerequisite - Android platform modernization
 
 **Status:** Integrated prerequisite within the existing UI Revamp. This is not a separate product task or a new UI batch.
@@ -5701,7 +5699,8 @@ Official compatibility references reviewed:
 
 ## Immediate next action
 
-Verify the next PR #13 CI run using stable compileSdk 37.1, Compose BOM 2026.11.01, and the Android 17 API 37.2 QPR2 emulator image. Confirm SDK installation, emulator boot, unit tests, Room migration instrumentation tests, APK assembly, schema verification, signing, and artifact upload. Then inspect Batch 5 on the user's Android device in Light and Dark themes. Do not merge PR #13 without explicit approval.
+Continue Batch 5 by compiling and validating the new Visuals navigation and Lucide resource pilot. Fix any dependency/resource or Compose issues before visual refinement. Then inspect the overview and each destination on-device in Light and Dark themes. Do not begin detailed Chronicle endpoint expansion until the new navigation structure is verified.
+
 
 ---
 
@@ -5769,7 +5768,7 @@ Run the Debug build and unit tests for this branch. Resolve any Lucide dependenc
 
 **Date recorded:** 2026-11-28  
 **Development phase:** UI Revamp - Batch 5 integrated platform modernization  
-**Status:** Implemented on PR #13; stable SDK package IDs corrected; CI rerun pending; APK and physical-device verification pending.
+**Status:** JVM target correction committed; main branch integration commit prepared; CI rerun pending; APK and physical-device verification pending.
 
 ### Objective
 
@@ -5803,14 +5802,17 @@ Move the existing Batch 5 modernization from the API 36.1 dependency baseline to
 - `785474a5dd13f3b865c5697b39d5efd7c01d7173` - correct stable API 37.1 platform and API 37.2 emulator image package IDs.
 - `7ef063d33dd48b398bcfba169c239a79089e8a3d` - trigger CI on UI Revamp branch pushes as well as PR updates.
 - `5759e15f9f9f4d306c95f1cefa030e181110d0cf` - label the Android 17 API 37.2 runtime test.
+- `dade60c8ecf96c1803dd58b50996606d03e7ae55` - align Java and Kotlin bytecode targets to JVM 11.
 - `20697379d817c63007c1b27596a3c361c46be869` - reconcile the milestone plan with the latest main documentation.
 
 ### Verification
 
 - Run #915 failed at the Room migration instrumentation test with `AbstractMethodError` from `androidx.room.migration.bundle.FieldBundle$$serializer`. Unit tests passed; APK assembly and upload were skipped.
-- Run #918 failed because the emulator action requested the obsolete package ID `system-images;android-37;google_apis;x86_64`; the current image package uses `android-37.2` and `google_apis_ps16k`. Run #920 failed because CI requested `platforms;android-37`; the stable platform package uses `platforms;android-37.1`. Both failures occurred before instrumentation tests. The latest workflow commit corrects both package IDs; its CI run is pending.
+- Run #918 failed because the emulator action requested the obsolete package ID `system-images;android-37;google_apis;x86_64`; the current image package uses `android-37.2` and `google_apis_ps16k`. Run #920 failed because CI requested `platforms;android-37`; the stable platform package uses `platforms;android-37.1`. Both failures occurred before instrumentation tests. The corrected package IDs were verified to install successfully in run #926.
+- Run #926: stable API 37.1 SDK installation succeeded. Unit-test compilation then failed because Java source/target remained 1.8 while Kotlin inline dependencies were JVM 11. The Android emulator and APK steps were skipped.
+- The branch now explicitly aligns Java compatibility and Kotlin `jvmTarget` to JVM 11. This correction is not yet CI-verified.
 - No successful API 37.1 build, instrumentation test run, APK artifact, or physical-device verification is claimed.
 
 ### Next action
 
-Check the next CI run for the current PR #13 head. Confirm stable API 37.1 installation, API 37.2 emulator boot, Room migration tests, APK assembly, schema verification, signing, and artifact upload. Correct any remaining failure within PR #13. Do not merge without the user's explicit approval.
+Check the next CI run after integrating the latest `main` head and the JVM 11 correction. Confirm stable API 37.1 installation, API 37.2 emulator boot, Room migration tests, APK assembly, schema verification, signing, and artifact upload. Correct any remaining failure within PR #13. Do not merge without the user's explicit approval.
