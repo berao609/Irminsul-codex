@@ -83,6 +83,17 @@ The first physical-device acceptance attempt was **unsatisfactory**. Apply the f
 
 **Room regression:** PR #16's Batch 8 persistence added schema v3 (`private_account_data`); the Batch 9 branch had schema v2. Retain schema v3 and migrate v2->3. Do not use destructive fallback. User reported saved-analysis restoration failure; physical retest is required after the migration fix.
 
+
+
+#### Corrective implementation pass - 2026-11-28
+
+- Added the permanent project UI standard at `docs/NATIVE_UI_STANDARD.md` and recorded the four-page PDF observations in `docs/BATTLE_CHRONICLE_REFERENCE_ANALYSIS.md` §6.7.
+- Calculator selection now uses a 4-column grid, All / Already Owned tabs, icon-only element and weapon-type chips, and rarity filters for weapons. Character and weapon catalogue selection share the same flow.
+- Calculator numeric values now render as compact triggers and open a `ModalBottomSheet` wheel picker with explicit Confirm / Cancel. The wheel is no longer in the resting planning layout.
+- Flattened the Tools calculator entry. Removed the inline min/max level wheel controls from Character Roster and removed the selected-card stroke in favor of tonal selection.
+- Flattened top-level World Exploration region containers and Spiral Abyss floor containers; child subregions retain one tonal surface level.
+- **Still pending in this corrective pass:** full selection footer/multi-selection interaction parity; material owned-quantity input redesign and narrow-width validation; full app-wide modified-file audit for borders, nested surfaces, inline wheels, and keyboard-opening fields; source/compile verification and CI. These changes are not yet device-accepted.
+
 #### Implementation progress - 2026-11-28
 
 - Implemented the selector grids, full game-asset portraits, element/weapon icon filters, no-search selection flow, wheel pickers, subtle planning sections, compact material rows, and centered expand/collapse controls.
