@@ -93,7 +93,10 @@ class IrminsulDatabaseMigrationTest {
             IrminsulDatabase::class.java,
             databaseName
         )
-            .addMigrations(IrminsulDatabase.MIGRATION_1_2)
+            .addMigrations(
+                IrminsulDatabase.MIGRATION_1_2,
+                IrminsulDatabase.MIGRATION_2_3
+            )
             .build()
 
         try {
@@ -143,6 +146,13 @@ class IrminsulDatabaseMigrationTest {
                         assertTrue(chunks.size > 1)
                     }
                 }
+            }
+
+            val privateDataTable = database.query(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'private_account_data'"
+            )
+            privateDataTable.use { cursor ->
+                assertTrue("The v2-to-v3 private-data table was not created.", cursor.moveToFirst())
             }
 
             val accountCursor = database.query(

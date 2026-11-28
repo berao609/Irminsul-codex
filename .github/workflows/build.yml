@@ -127,7 +127,12 @@ jobs:
             exit 0
           fi
 
-          changed_files="$(git diff --name-only "$BEFORE_SHA" "$GITHUB_SHA")"
+          # Evaluate the complete branch delta against main, not only the
+          # latest push. This keeps database tests enabled for a PR whose
+          # migration landed in an earlier commit of the same branch.
+          git fetch origin main --quiet
+          merge_base="$(git merge-base origin/main "$GITHUB_SHA")"
+          changed_files="$(git diff --name-only "$merge_base" "$GITHUB_SHA")"
           run_room_tests=false
 
           while IFS= read -r path; do
@@ -230,7 +235,7 @@ jobs:
 
       - name: Verify Room schema snapshot
         run: |
-          schema="app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/2.json"
+          schema="app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/3.json"
           if [[ ! -s "$schema" ]]; then
             echo "::error::Room schema snapshot was not generated at $schema"
             exit 1
@@ -239,8 +244,8 @@ jobs:
       - name: Upload Room schema snapshot
         uses: actions/upload-artifact@v7
         with:
-          name: irminsul-room-schema-v2-run-${{ github.run_number }}
-          path: app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/2.json
+          name: irminsul-room-schema-v3-run-${{ github.run_number }}
+          path: app/schemas/com.irminsul.codex.data.local.IrminsulDatabase/3.json
           if-no-files-found: error
           retention-days: 14
 

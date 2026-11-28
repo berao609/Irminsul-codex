@@ -21,9 +21,12 @@ import androidx.compose.ui.unit.sp
 fun AccountDataExportSection(
     progress: String?,
     exportStatus: String?,
+    hasExport: Boolean,
     isExporting: Boolean,
     isRestoringSnapshot: Boolean,
-    onExport: () -> Unit
+    onExport: () -> Unit,
+    onPreview: () -> Unit,
+    onSave: () -> Unit
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -41,7 +44,7 @@ fun AccountDataExportSection(
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = "Extracts profile, exploration, all character builds (weapons, artifacts, talents), Spiral Abyss, and Imaginarium Theater.",
+                text = "Retrieve a portable account snapshot, inspect its JSON, and save it to a location you choose. Private profile and Daily Note cache data, plus downloaded images, are stored separately inside the app.",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -74,7 +77,34 @@ fun AccountDataExportSection(
                 modifier = Modifier.fillMaxWidth(),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)
             ) {
-                Text(if (isExporting) "Extracting..." else "Save JSON")
+                Text(
+                    when {
+                        isExporting -> "Extracting..."
+                        hasExport -> "Refresh JSON"
+                        else -> "Retrieve JSON"
+                    }
+                )
+            }
+
+            if (hasExport) {
+                androidx.compose.foundation.layout.Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    androidx.compose.material3.TextButton(
+                        onClick = onPreview,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Preview JSON")
+                    }
+                    Button(
+                        onClick = onSave,
+                        modifier = Modifier.weight(1f),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Save JSON")
+                    }
+                }
             }
         }
     }

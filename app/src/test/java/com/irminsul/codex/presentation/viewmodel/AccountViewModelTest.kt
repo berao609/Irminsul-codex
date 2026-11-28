@@ -9,6 +9,7 @@ import com.irminsul.codex.domain.model.CharacterDevelopmentGoal
 import com.irminsul.codex.domain.repository.AccountRepository
 import com.irminsul.codex.domain.repository.AccountSnapshotStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -325,6 +326,52 @@ class AccountViewModelTest {
         } finally {
             store.clear()
             dispatcher.close()
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun sharedRefreshQueuesPortableRetrievalBehindInitialSnapshotRestore() = runBlocking {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+        val store = ViewModelStore()
+        val restoreGate = CompletableDeferred<AccountExport?>()
+        var repositoryCalls = 0
+        try {
+            val export = AccountExport(
+                snapshot = AccountExportMapper.map(JSONObject(rawJson)),
+                rawJson = rawJson
+            )
+            val snapshotStore = object : AccountSnapshotStore {
+                override suspend fun save(export: AccountExport) = Unit
+                override suspend fun getLatest(uid: String): AccountExport? = restoreGate.await()
+                override suspend fun getHistory(uid: String, server: String): List<AccountExport> = emptyList()
+            }
+            val repository = object : AccountRepository {
+                override suspend fun fetchAccountExport(
+                    uid: String,
+                    cookie: String,
+                    onProgress: (String) -> Unit
+                ): Result<AccountExport> {
+                    repositoryCalls++
+                    return Result.success(export)
+                }
+            }
+            val viewModel = AccountViewModel(repository, snapshotStore, UnconfinedTestDispatcher())
+            store.put("account", viewModel)
+
+            viewModel.restoreLatestSnapshot("800000001")
+            assertTrue(viewModel.uiState.value.isRestoringSnapshot)
+
+            viewModel.analyzeAccount("800000001", "test-cookie")
+            assertEquals("Portable retrieval must wait for cache restoration.", 0, repositoryCalls)
+
+            restoreGate.complete(null)
+            assertEquals(1, repositoryCalls)
+            assertFalse(viewModel.uiState.value.isExporting)
+            assertNotNull(viewModel.uiState.value.snapshot)
+            assertNull("Shared refresh must not create an export document.", viewModel.uiState.value.pendingExport)
+        } finally {
+            store.clear()
             Dispatchers.resetMain()
         }
     }

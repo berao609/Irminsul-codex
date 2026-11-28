@@ -2,7 +2,7 @@
 
 **Repository:** `berao609/Irminsul-codex`  
 **Current completed batch:** Batch 7 - World Exploration  
-**Roadmap status:** Batch 8 inserted; later approved work renumbered.
+**Roadmap status:** Batch 8 implementation complete and CI-verified; physical-device acceptance pending. Later approved work renumbered.
 
 This document is the active sequence for the UI Revamp implementation. Completed batches retain their historical numbers. The new data-retrieval work is inserted after Batch 7; later planned work moves forward by one number without changing its approved scope.
 
@@ -10,11 +10,13 @@ This document is the active sequence for the UI Revamp implementation. Completed
 
 - **Batches 1-7:** Completed. See the corresponding UI Revamp entries in `docs/PROGRESS_MILESTONES.md`. Batch 7 (World Exploration) was merged in PR #15, merge commit `c699d3c3636eda2cb50fbfbb73d7d00a7af70360`, and user-tested.
 
-## Upcoming
+## Completed and upcoming
 
 ### Batch 8 - Multi-Channel Data Fetching
 
 **Objective:** Separate retrieved account information by purpose and lifecycle, instead of treating one JSON export as the only durable output.
+
+**Implementation status:** Implemented and CI-verified on `ui-revamp/batch-8-multi-channel-fetching`. The three channel boundaries are resolved without adding a redundant umbrella coordinator: portable account retrieval/snapshot/export remains in the established pipeline; app-private Daily Note/profile retrieval and Room cache are independently coordinated; visual assets remain in the existing Coil pipeline. Battle Chronicle remains in the portable export contract, with no duplicate cache. Physical-device acceptance is pending. See Milestones 116-117.
 
 **Logical channels**
 
@@ -46,7 +48,7 @@ This document is the active sequence for the UI Revamp implementation. Completed
 
 **Scope boundary:** This batch establishes the retrieval, ownership, persistence, and export boundaries needed by the UI. It does not authorize speculative endpoints, invented data, a new backend, or a wholesale rewrite of the existing account model. Inspect current retrieval and persistence code before deciding the smallest compatible implementation.
 
-**Verification:** Add deterministic tests for independent channel success/failure, partial retrieval, stale/cached data preservation, malformed or missing source values, and export boundaries. CI and physical-device verification remain required before marking the batch complete.
+**Verification:** Deterministic tests cover independent channel success/failure, cancellation, stale/cache preservation, malformed cache isolation, Room migration/storage, and export UI. CI run #1050 succeeded with the Room schema check and Debug APK. The checked-in Room schema v3 snapshot is based on that generated CI artifact; its JSON structure/version/table list was validated, but a new workflow run was not triggered by the documentation/schema-only commits. Physical-device verification remains the final acceptance step.
 
 ### Batch 9 - Character and Weapon Fidelity
 

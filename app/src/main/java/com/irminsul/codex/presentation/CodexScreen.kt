@@ -41,6 +41,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -49,9 +51,12 @@ import com.irminsul.codex.api.AccountProfile
 import com.irminsul.codex.api.DailyNote
 import com.irminsul.codex.api.HoYoLabClient
 import com.irminsul.codex.data.repository.HoYoLabAccountRepository
+import com.irminsul.codex.data.repository.HoYoLabPrivateDataCoordinator
+import com.irminsul.codex.domain.model.RetrievalChannelState
 import com.irminsul.codex.data.export.JsonDocumentWriter
 import com.irminsul.codex.data.local.IrminsulDatabase
 import com.irminsul.codex.data.local.repository.RoomAccountSnapshotStore
+import com.irminsul.codex.data.local.repository.RoomPrivateAccountDataStore
 import com.irminsul.codex.ui.HoYoLabLoginDialog
 import com.irminsul.codex.integration.security.HoYoLabCredentialStore
 import kotlinx.coroutines.launch
@@ -89,13 +94,25 @@ internal fun CodexScreen(
     var showAllRecommendations by remember { mutableStateOf(false) }
     var selectedCharacterId by remember { mutableStateOf<Int?>(null) }
 
-    var dailyNote by remember { mutableStateOf<DailyNote?>(null) }
-    var accountProfile by remember { mutableStateOf<AccountProfile?>(null) }
+    val privateDataCoordinator = remember(context) {
+        HoYoLabPrivateDataCoordinator(
+            privateDataStore = RoomPrivateAccountDataStore(
+                IrminsulDatabase.getInstance(context.applicationContext)
+            )
+        )
+    }
+    var dailyNoteChannel by remember { mutableStateOf(RetrievalChannelState<DailyNote>()) }
+    var accountProfileChannel by remember { mutableStateOf(RetrievalChannelState<AccountProfile>()) }
+    var privateDataUid by remember { mutableStateOf("") }
+    val dailyNote = dailyNoteChannel.value
+    val accountProfile = accountProfileChannel.value
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     var exportedJson by remember { mutableStateOf<String?>(null) }
     var exportStatus by remember { mutableStateOf<String?>(null) }
+    var showJsonPreview by remember { mutableStateOf(false) }
+    val clipboardManager = LocalClipboardManager.current
 
     val saveFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -138,21 +155,103 @@ internal fun CodexScreen(
         }
         prefs.edit().putString("uid", targetUid.trim()).apply()
         credentialLoadError = false
-        if (accountProfile?.uid != targetUid.trim()) accountProfile = null
-
         scope.launch {
             isLoading = true
             errorMessage = null
-            HoYoLabClient.fetchDailyNote(targetUid, targetCookie)
-                .onSuccess { note ->
-                    dailyNote = note
-                    showCredentials = false
+
+            // One refresh starts the portable account/Battle Chronicle retrieval
+            // alongside the independent Daily Note and profile channels.
+            // This path updates the in-app snapshot only; JSON export remains explicit.
+            accountViewModel.analyzeAccount(targetUid.trim(), targetCookie.trim())
+
+            if (privateDataUid != targetUid.trim()) {
+                privateDataUid = targetUid.trim()
+                dailyNoteChannel = RetrievalChannelState()
+                accountProfileChannel = RetrievalChannelState()
+                try {
+                    val cached = privateDataCoordinator.restore(targetUid.trim())
+                    if (cached != null) {
+                        dailyNoteChannel = cached.dailyNote?.let {
+                            RetrievalChannelState(
+                                value = it.value,
+                                status = RetrievalChannelState.Status.STALE,
+                                retrievedAt = it.retrievedAt,
+                                lastSuccessfulRetrievedAt = it.retrievedAt,
+                                message = "Showing saved Daily Note while refreshing."
+                            )
+                        } ?: cached.dailyNoteError?.let {
+                            RetrievalChannelState(status = RetrievalChannelState.Status.FAILED, message = it)
+                        } ?: RetrievalChannelState()
+                        accountProfileChannel = cached.accountProfile?.let {
+                            RetrievalChannelState(
+                                value = it.value,
+                                status = RetrievalChannelState.Status.STALE,
+                                retrievedAt = it.retrievedAt,
+                                lastSuccessfulRetrievedAt = it.retrievedAt,
+                                message = "Showing saved profile while refreshing."
+                            )
+                        } ?: cached.accountProfileError?.let {
+                            RetrievalChannelState(status = RetrievalChannelState.Status.FAILED, message = it)
+                        } ?: RetrievalChannelState()
+                    }
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    throw cancelled
+                } catch (error: Exception) {
+                    dailyNoteChannel = RetrievalChannelState(
+                        status = RetrievalChannelState.Status.FAILED,
+                        message = "Could not restore saved Daily Note: ${error.message ?: "local storage error"}"
+                    )
+                    accountProfileChannel = RetrievalChannelState(
+                        status = RetrievalChannelState.Status.FAILED,
+                        message = "Could not restore saved profile: ${error.message ?: "local storage error"}"
+                    )
                 }
-                .onFailure { err ->
-                    errorMessage = err.message ?: "Request failed."
+            }
+
+            dailyNoteChannel = dailyNoteChannel.loading()
+            accountProfileChannel = accountProfileChannel.loading()
+            val refreshed = privateDataCoordinator.refresh(targetUid.trim(), targetCookie.trim())
+            dailyNoteChannel = refreshed.dailyNote.result.fold(
+                onSuccess = { value ->
+                    dailyNoteChannel.success(value, refreshed.dailyNote.retrievedAt).copy(
+                        message = refreshed.dailyNote.persistenceError
+                    )
+                },
+                onFailure = { error ->
+                    dailyNoteChannel.failure(
+                        error.message ?: "Daily Note retrieval failed.",
+                        refreshed.dailyNote.retrievedAt
+                    )
                 }
-            HoYoLabClient.fetchAccountProfile(targetUid, targetCookie)
-                .onSuccess { profile -> accountProfile = profile }
+            )
+            accountProfileChannel = refreshed.accountProfile.result.fold(
+                onSuccess = { value ->
+                    accountProfileChannel.success(value, refreshed.accountProfile.retrievedAt).copy(
+                        message = refreshed.accountProfile.persistenceError
+                    )
+                },
+                onFailure = { error ->
+                    accountProfileChannel.failure(
+                        error.message ?: "HoYoLAB profile retrieval failed.",
+                        refreshed.accountProfile.retrievedAt
+                    )
+                }
+            )
+
+            val channelFailures = buildList {
+                if (dailyNoteChannel.status == RetrievalChannelState.Status.FAILED ||
+                    dailyNoteChannel.status == RetrievalChannelState.Status.STALE ||
+                    dailyNoteChannel.message != null
+                ) add("Daily Note: ${dailyNoteChannel.message}")
+                if (accountProfileChannel.status == RetrievalChannelState.Status.FAILED ||
+                    accountProfileChannel.status == RetrievalChannelState.Status.STALE ||
+                    accountProfileChannel.message != null
+                ) add("Profile: ${accountProfileChannel.message}")
+            }
+            errorMessage = channelFailures.joinToString("\n").takeIf { it.isNotBlank() }
+            if (dailyNoteChannel.status == RetrievalChannelState.Status.SUCCESS) {
+                showCredentials = false
+            }
             isLoading = false
         }
     }
@@ -164,6 +263,8 @@ internal fun CodexScreen(
         }
         errorMessage = null
         exportStatus = null
+        exportedJson = null
+        showJsonPreview = false
         accountViewModel.exportAccount(uid, cookie)
     }
 
@@ -179,8 +280,8 @@ internal fun CodexScreen(
             "FAILED" -> "Export contains no successfully retrieved account sections."
             else -> "Export status unavailable. Check export_status in the JSON."
         }
-        exportStatus = "$exportLabel ($kb KB). Choose where to save."
-        saveFileLauncher.launch("genshin_${uid.trim()}.json")
+        exportStatus = "$exportLabel ($kb KB). Ready to preview or save."
+        showJsonPreview = false
         accountViewModel.acknowledgeExport()
     }
 
@@ -196,7 +297,7 @@ internal fun CodexScreen(
             return
         }
         cookie = capturedCookie.trim()
-        accountProfile = null
+        privateDataUid = ""
         credentialLoadError = false
 
         scope.launch {
@@ -223,8 +324,12 @@ internal fun CodexScreen(
         prefs.edit().remove("uid").apply()
         uid = ""
         cookie = ""
-        dailyNote = null
-        accountProfile = null
+        dailyNoteChannel = RetrievalChannelState()
+        accountProfileChannel = RetrievalChannelState()
+        privateDataUid = ""
+        exportedJson = null
+        exportStatus = null
+        showJsonPreview = false
         showCredentials = true
         showWebLogin = false
         credentialLoadError = false
@@ -336,8 +441,15 @@ internal fun CodexScreen(
                     showExportPanel = selectedTab == CodexTab.ACCOUNT && uid.isNotBlank() && cookie.isNotBlank(),
                     exportProgress = accountExportState.progress,
                     exportStatus = exportStatus,
+                    hasExport = exportedJson != null,
                     isRestoringSnapshot = accountExportState.isRestoringSnapshot,
                     onExport = { extractAccountJson() },
+                    onPreview = { showJsonPreview = true },
+                    onSave = {
+                        if (exportedJson != null) {
+                            saveFileLauncher.launch("genshin_${uid.trim()}.json")
+                        }
+                    },
                     showSettings = selectedTab == CodexTab.ACCOUNT,
                     themeMode = themeMode,
                     onThemeModeChange = onThemeModeChange,
@@ -393,6 +505,18 @@ internal fun CodexScreen(
                         exportedAt = homeSnapshot?.metadata?.exportedAt?.toString(),
                         hasSnapshot = homeSnapshot != null,
                         dailyNote = dailyNote,
+                        dailyNoteStatusMessage = when (dailyNoteChannel.status) {
+                            RetrievalChannelState.Status.STALE -> "Refresh failed. Showing the last successful Daily Note."
+                            RetrievalChannelState.Status.FAILED -> dailyNoteChannel.message ?: "Daily Note is unavailable."
+                            RetrievalChannelState.Status.SUCCESS -> dailyNoteChannel.message
+                            else -> null
+                        },
+                        accountProfileStatusMessage = when (accountProfileChannel.status) {
+                            RetrievalChannelState.Status.STALE -> "Profile refresh failed. Showing the last successful profile."
+                            RetrievalChannelState.Status.FAILED -> accountProfileChannel.message ?: "Profile is unavailable."
+                            RetrievalChannelState.Status.SUCCESS -> accountProfileChannel.message
+                            else -> null
+                        },
                         isLoading = isLoading,
                         canSync = uid.isNotBlank() && cookie.isNotBlank(),
                         isExporting = accountExportState.isExporting,
@@ -408,6 +532,16 @@ internal fun CodexScreen(
                     )
                 }
             }
+        }
+        if (showJsonPreview && exportedJson != null) {
+            AccountDataJsonPreviewDialog(
+                json = exportedJson.orEmpty(),
+                onDismiss = { showJsonPreview = false },
+                onCopy = {
+                    clipboardManager.setText(AnnotatedString(exportedJson.orEmpty()))
+                    exportStatus = "Copied full account JSON to clipboard."
+                }
+            )
         }
         if (showAiSheet) {
             AiAssistantSheet(
