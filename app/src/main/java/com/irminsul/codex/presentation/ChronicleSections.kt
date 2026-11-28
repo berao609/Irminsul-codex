@@ -205,6 +205,7 @@ fun ChronicleRecordSection(
         if (metrics.isEmpty() && cycle == null) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
+            if (value is DataValue.Stale) Text("Showing previously retrieved data.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             metrics.forEach { metric ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(metric.label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -298,6 +299,7 @@ private fun ChronicleTheaterSection(
         if (cycles.isEmpty()) {
             Text(chronicleAvailabilityText(value), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
+            if (value is DataValue.Stale) Text("Showing previously retrieved data.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             cycles.forEachIndexed { index, cycle ->
                 if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -331,6 +333,7 @@ private fun ChronicleTheaterSection(
                             Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                     Text("Round ${round.roundNumber}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                    round.completedAt?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                                     round.medalEarned?.let {
                                         Text(if (it) "Medal earned" else "No medal", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
