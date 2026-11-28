@@ -6065,3 +6065,49 @@ Batch 7 is complete. Continue with the next planned UI Revamp task without reope
 ### Next action
 
 Start Batch 8 by inspecting the existing HoYoLAB retrieval coordinator, account repository, data models, snapshot persistence, JSON export contract, and asset cache. Design the smallest compatible channel boundaries before implementation; preserve existing behavior and add independent partial-failure tests.
+
+---
+
+## Milestone 116 - UI Revamp Batch 9: Character and Weapon Fidelity Started
+
+**Date recorded:** 2026-11-28  
+**Development phase:** UI Revamp - Batch 9  
+**Status:** Initial implementation committed; CI and physical-device verification pending.
+
+### Scope and decisions
+
+- Continue the character-first Battle Chronicles experience and preserve the existing Character Roster and Character Details destinations.
+- Add a dedicated Weapon Roster destination with weapon rarity and weapon-type filters plus clear/reset behavior.
+- Use source-backed weapon records attached to retrieved character entries. The current model does not establish a complete inventory of unequipped weapons; the UI discloses this limitation.
+- Do not reintroduce the rejected character rarity filter or redundant sorting controls.
+- Batch 10 is separately approved for Chronicles foreground-surface transparency and visual consistency after Batch 9.
+
+### Initial implementation
+
+- Branch: `ui-revamp/batch-9-character-weapon-fidelity`
+- PR: #17 - https://github.com/berao609/Irminsul-codex/pull/17
+- Added `VisualsDestination.WEAPON_ROSTER` and connected it to the Battle Chronicles overview.
+- Added `WeaponShowcaseSection.kt` for a deduplicated equipped-weapon grid, weapon rarity/type filters, reset behavior, source-backed artwork, and equipped-character attribution.
+- Added `WeaponRosterRules.kt` and `WeaponRosterRulesTest.kt` for deterministic deduplication and filter coverage.
+- Existing character release ordering, rarity backgrounds, selected highlight, roster filters, and character detail presentation remain in place.
+
+### Implementation commits
+
+- `c23ff1aa032ac6cfcae5cb0b6707bb9e1355a0fc` - add Weapon Roster section.
+- `0447592acb479735bcc8c468d28c59639320bcd0` - add Weapon Roster navigation destination.
+- `eab75c5926d223561ec9654fbf76d655cdaa4ecf` - connect overview and destination.
+- `603dfbf25f4afbb890bad3a2a732e3368e6b1fd8` - extract deterministic weapon roster rules.
+- `fc8a2f91f993f4db80771a96cb877dbc481cc32b` - add roster rules tests.
+- `287a14b53157885db7934732040a6521e73f2a34` - use tested roster rules in the UI.
+- `80b0cf42311428d78f6f806b0b06c5e674b72d62` - activate Batch 9 and schedule Batch 10 in the roadmap.
+
+### Verification
+
+- PR #17 is open as a draft and mergeable.
+- GitHub Actions run #1079 was triggered for the initial implementation; its result is pending.
+- No successful CI result, APK artifact, or physical-device verification is claimed yet.
+- Batch 8 PR #16 remains open pending physical-device acceptance; CI #1070 passed.
+
+### Next action
+
+Check CI #1079, confirm the new roster rules tests compile and pass, then continue the remaining Batch 9 character/weapon fidelity work. Do not close or merge Batch 9 before the full scope and physical-device checklist pass.
