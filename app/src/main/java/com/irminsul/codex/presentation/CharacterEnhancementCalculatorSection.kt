@@ -3,14 +3,14 @@ package com.irminsul.codex.presentation
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -18,10 +18,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.irminsul.codex.data.catalogue.BundledCharacterProgressionCandidateRepository
 import com.irminsul.codex.data.catalogue.CharacterUpgradePlanCandidateCalculator
@@ -44,15 +44,6 @@ internal fun CharacterEnhancementCalculatorSection(
     preferences: SharedPreferences
 ) {
     val context = LocalContext.current.applicationContext
-    var currentExperience by remember(character.id) {
-        mutableStateOf(preferences.getString("character_plan_current_exp_${character.id}", "0") ?: "0")
-    }
-    LaunchedEffect(character.id, currentExperience) {
-        preferences.edit()
-            .putString("character_plan_current_exp_${character.id}", currentExperience)
-            .apply()
-    }
-
     var candidateLoadFailed by remember(character.id) { mutableStateOf(false) }
     var loadedCandidates by remember(character.id) {
         mutableStateOf<List<com.irminsul.codex.data.catalogue.GenshinDbUpgradeCostCandidate>?>(null)
@@ -71,7 +62,7 @@ internal fun CharacterEnhancementCalculatorSection(
 
     val current = currentLevel.toIntOrNull()
     val target = targetLevel.toIntOrNull()
-    val currentExp = currentExperience.toLongOrNull() ?: 0L
+    val currentExp = 0L
     val rank = character.ascensionLevel ?: current?.let { level ->
         when {
             level <= 20 -> 0
@@ -84,7 +75,7 @@ internal fun CharacterEnhancementCalculatorSection(
         }
     }
     val levelPlan = if (
-        current != null && target != null && currentExp != null &&
+        current != null && target != null &&
         rank != null && loadedCandidates != null
     ) {
         CharacterUpgradePlanCandidateCalculator.calculate(
@@ -126,15 +117,6 @@ internal fun CharacterEnhancementCalculatorSection(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            OutlinedTextField(
-                value = currentExperience,
-                onValueChange = { currentExperience = it.filter(Char::isDigit).take(9) },
-                label = { Text("EXP already earned at current level (optional)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            )
             when {
                 current == null || target == null -> Text(
                     "Enter valid current and target character levels.",
@@ -172,11 +154,13 @@ internal fun CharacterEnhancementCalculatorSection(
                     } else {
                         combinedPlan.requirements.forEach { requirement ->
                             val ownedKey = "character_plan_owned_${character.id}_${requirement.itemId}"
-                            var owned by remember(character.id, requirement.itemId) {
-                                mutableStateOf(preferences.getString(ownedKey, "") ?: "")
+                            var ownedQuantity by remember(character.id, requirement.itemId) {
+                                mutableStateOf(preferences.getString(ownedKey, null)?.toLongOrNull()?.coerceAtLeast(0L))
                             }
-                            LaunchedEffect(ownedKey, owned) {
-                                preferences.edit().putString(ownedKey, owned).apply()
+                            LaunchedEffect(ownedKey, ownedQuantity) {
+                                ownedQuantity?.let { quantity ->
+                                    preferences.edit().putString(ownedKey, quantity.toString()).apply()
+                                }
                             }
                             val materialName = when (requirement.itemId) {
                                 CharacterExperienceCalculator.HEROS_WIT_ITEM_ID -> "Hero's Wit"
@@ -191,17 +175,22 @@ internal fun CharacterEnhancementCalculatorSection(
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Medium
                                 )
-                                OutlinedTextField(
-                                    value = owned,
-                                    onValueChange = { owned = it.filter(Char::isDigit).take(12) },
-                                    label = { Text("Owned (optional)") },
-                                    placeholder = { Text("Unknown") },
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                owned.toLongOrNull()?.let { quantity ->
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Owned", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    if (ownedQuantity == null) {
+                                        TextButton(onClick = { ownedQuantity = 0L }) { Text("Set 0") }
+                                    } else {
+                                        TextButton(
+                                            onClick = { ownedQuantity = ((ownedQuantity ?: 0L) - 1L).coerceAtLeast(0L) },
+                                            enabled = ownedQuantity!! > 0L
+                                        ) { Text("−") }
+                                        Text(ownedQuantity.toString(), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                                        TextButton(
+                                            onClick = { ownedQuantity = ((ownedQuantity ?: 0L) + 1L).coerceAtMost(Long.MAX_VALUE - 1L) }
+                                        ) { Text("+") }
+                                    }
+                                }
+                                ownedQuantity?.let { quantity ->
                                     Text(
                                         "Remaining: ${(requirement.quantity - quantity).coerceAtLeast(0L)}",
                                         style = MaterialTheme.typography.bodySmall,

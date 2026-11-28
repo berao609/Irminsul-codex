@@ -40,13 +40,13 @@ private fun ChronicleSection(
         if (collapsible) {
             IconButton(
                 onClick = { expanded = !expanded },
-                modifier = Modifier.align(Alignment.CenterHorizontally).size(24.dp)
+                modifier = Modifier.align(Alignment.CenterHorizontally).size(20.dp)
             ) {
                 AppIcon(
                     if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                     contentDescription = if (expanded) "Collapse $title" else "Expand $title",
-                    modifier = Modifier.size(12.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                    modifier = Modifier.size(10.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             }
         }
@@ -101,12 +101,12 @@ fun ChronicleOverviewSection(accountCard: DataValue<StructuredData>, profileAndE
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
-                    IconButton(onClick = { secondaryExpanded = !secondaryExpanded }, modifier = Modifier.size(22.dp)) {
+                    IconButton(onClick = { secondaryExpanded = !secondaryExpanded }, modifier = Modifier.size(20.dp)) {
                         AppIcon(
                             if (secondaryExpanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
                             contentDescription = if (secondaryExpanded) "Collapse additional statistics" else "Expand additional statistics",
-                            modifier = Modifier.size(11.dp),
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            modifier = Modifier.size(10.dp),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
                         )
                     }
                 }
@@ -276,25 +276,15 @@ private fun RegionDetailCard(region: ChronicleRegion, nested: Boolean = false) {
                 }
             }
 
-            Row(
-                Modifier.fillMaxWidth()
-                    .clickable(role = Role.Button) { expanded = !expanded }
-                    .semantics { this.selected = expanded }
-                    .padding(top = 1.dp, bottom = 0.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+            IconButton(
+                onClick = { expanded = !expanded },
+                modifier = Modifier.align(Alignment.CenterHorizontally).size(20.dp)
             ) {
-                Text(
-                    if (expanded) "Show less" else "Show details",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.width(3.dp))
                 AppIcon(
                     if (expanded) AppIconName.EXPAND_LESS else AppIconName.EXPAND_MORE,
-                    contentDescription = null,
-                    modifier = Modifier.size(11.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    contentDescription = if (expanded) "Collapse ${region.name} details" else "Expand ${region.name} details",
+                    modifier = Modifier.size(10.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             }
         }
