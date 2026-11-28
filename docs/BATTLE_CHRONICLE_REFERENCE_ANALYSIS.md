@@ -870,3 +870,15 @@ The next implementation pass keeps the four screenshot pages in §6.6 as the vis
 - Expand/collapse controls across Chronicle and character-detail sections use centered, subdued icons with accessible descriptions. The visible glyph is small; touch interaction remains available.
 
 These are implementation requirements, not evidence of physical-device acceptance. Recheck all four pages on the target Android device, especially icon loading, material-name wrapping, and the aligned columns on narrow screens.
+
+
+## 6.7 Four-page mobile calculator reference - 2026-11-28
+
+The user supplied a four-page PDF reference for the Enhancement Calculator. The PDF is retained in the conversation, not committed as a repository asset. The following are direct observations from its pages, while the four-column native grid and borderless tonal adaptation are explicit Irminsul requirements:
+
+- **Page 1 - Character selection:** All Characters / Already Owned segmented tabs; separate Elemental Type and Weapon Type rows made of circular image-only icon chips; compact character portrait tiles with rarity-colored backplates, level strip, and name; fixed bottom selection count and OK action. The PDF screenshot visually shows five tiles across at its viewport, but Irminsul's explicit native requirement is four columns.
+- **Page 2 - Weapon selection:** same catalogue/grid and bottom-selection pattern; rarity filter plus weapon-type icon chips; weapon artwork tiles with level strip and truncated name.
+- **Page 3 - Target setup:** selected character artwork/name header; compact current-to-target level trigger; independent Normal Attack, Elemental Skill, and Elemental Burst rows with current-to-target value triggers; optional weapon slot; one prominent calculation CTA. The wheel itself is not part of the resting layout.
+- **Page 4 - All Material Details:** compact list/table with material icon and name, consumed quantity, and still-needed quantity. Irminsul additionally shows account-owned quantity and allows non-keyboard owned-quantity adjustment.
+
+Apply [Native UI Standard](NATIVE_UI_STANDARD.md): borderless tonal surfaces, no card-in-card nesting, flat rows, no keyboard-triggering app inputs, concealed wheel pickers in modal sheets, and tiny centered expansion controls. Do not treat screenshot-specific ornamental parchment textures, gradients, or exact colors as mandatory native styling.
