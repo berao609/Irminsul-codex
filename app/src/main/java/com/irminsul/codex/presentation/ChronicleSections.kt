@@ -181,12 +181,8 @@ private fun RegionOverviewCard(region: ChronicleRegion) {
 @Composable
 private fun RegionDetailCard(region: ChronicleRegion, nested: Boolean = false) {
     var expanded by rememberSaveable(region.id, region.name) { mutableStateOf(false) }
-    val cardColor = if (nested) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant
-    Box(
-        Modifier.fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(cardColor)
-    ) {
+    val cardColor = MaterialTheme.colorScheme.surfaceContainerLow
+    Box(Modifier.fillMaxWidth()) {
         if (!region.backgroundImageUrl.isNullOrBlank()) {
             AsyncImage(
                 model = region.backgroundImageUrl,
@@ -196,11 +192,11 @@ private fun RegionDetailCard(region: ChronicleRegion, nested: Boolean = false) {
             )
             Box(
                 Modifier.matchParentSize()
-                    .background(cardColor.copy(alpha = 0.88f))
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.52f))
             )
         }
         Column(
-            Modifier.fillMaxWidth().padding(if (nested) 12.dp else 16.dp),
+            Modifier.fillMaxWidth().then(if (nested) Modifier.clip(RoundedCornerShape(12.dp)).background(cardColor).padding(12.dp) else Modifier.padding(vertical = 8.dp)),
             verticalArrangement = Arrangement.spacedBy(9.dp)
         ) {
             Row(
@@ -379,11 +375,7 @@ private fun ChronicleAbyssCycleContent(
                 }
             }
             cycle?.floors.orEmpty().forEach { floor ->
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                ) {
-                    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Text("Floor ${floor.floorNumber}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text("${floor.stars ?: "—"}/${floor.maxStars ?: "—"} ★", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
@@ -411,7 +403,6 @@ private fun ChronicleAbyssCycleContent(
                                 }
                             }
                         }
-                    }
                 }
             }
         }
