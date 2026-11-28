@@ -5925,7 +5925,7 @@ No further work is pending for Milestone 113.
 
 **Date recorded:** 2026-11-28  
 **Development phase:** UI Revamp - Batch 7  
-**Status:** Core hierarchy implementation passed initial CI and user device testing; requested grouping and card-layout refinements are in progress and require fresh CI/device verification.
+**Status:** Core hierarchy and first layout refinements passed CI #1004 and user device testing. Follow-up emblem fallback and Natlan grouping fixes are implemented; fresh CI and device verification are pending.
 
 ### Source evidence
 
@@ -5981,9 +5981,19 @@ No further work is pending for Milestone 113.
 
 - User confirmed the initial Batch 7 implementation was successful on-device.
 - Follow-up refinements requested: place Windrest Peak and Dragonspine under Mondstadt; place The Chasm and Chenyu Vale under Liyue; make each regional card independently expandable with a subtle, tiny control centered at its bottom; render subareas in a compact two-column grid.
-- Natlan and Nod-Krai have source-backed regional emblem URLs in the export (`UI_ChapterIcon_Nata.png` and `UI_ChapterIcon_Nordkalei.png`). The earlier omission was incorrect; map the source `icon` field (with `inner_icon` as a fallback) and render these official assets.
+- Natlan and Nod-Krai have official `icon`, `inner_icon`, and `cover` URLs in the export (`UI_ChapterIcon_Nata.png`, `UI_ChapterIcon_Nordkalei.png`, and corresponding inner/cover assets). `RegionEmblem` now retries the ordered source-backed candidates when an image load fails.
+- Temple of Space has empty regional `icon`, `inner_icon`, and `cover` fields, but its `Temple of Space: Memory Core` offering supplies an official icon. The mapper uses the first offering icon as the final regional emblem fallback.
+- Ancient Sacred Mountain (source ID 16) is explicitly grouped under Natlan (source ID 15); its own 40.6% exploration value remains independent.
 - These refinements supersede the original flat detail presentation but do not change source progress values or aggregation rules.
+
+### Latest refinement implementation
+
+- Mapper and source grouping: `68a531e07db3c21fd48924d2a44cd86a55713591`.
+- Emblem image-load retry UI: `2daa4bd7a78c65b6c5c534cddc28cd4266899e1c`.
+- Tests for official emblem candidates and Ancient Sacred Mountain grouping: `af5c2dacf9d1129cba7672927d204dbbe1873cc9`.
+- User confirmed CI #1004 passed and tested successfully; the three emblem display gaps and Ancient Sacred Mountain grouping were still outstanding at that point.
+- Latest refinement CI and physical-device verification are pending.
 
 ### Next action
 
-Run the mapper/unit tests and full Debug CI for the refinement commit. Verify all four requested parent assignments, independent expand/collapse controls, compact subarea grid, and unchanged parent percentages on-device.
+Run the full Debug CI for the latest branch head. If successful, verify Natlan, Nod-Krai, and Temple of Space emblems plus Ancient Sacred Mountain under Natlan on-device. Recheck independent region percentages and the already-approved card layout.
