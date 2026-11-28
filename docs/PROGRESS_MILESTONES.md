@@ -6190,3 +6190,14 @@ Implement the four-page Enhancement Calculator visual redesign and the app-wide 
 - APK #1153: `1.0.0-dev.1153`, version code `1155`, artifact ID `15259978932`, SHA-256 `b9cc0147c91214a82eb3392e9b863dcb7659d98003cd6367e66d07566695ce4d`.
 - Physical-device acceptance is still pending. Preserve the user's existing installation and verify the saved-analysis upgrade without clearing app data.
 
+
+
+### Milestone 117 visual refinement follow-up
+
+- `23d5920ef1a20875f4fd010c2a14e74b51919516` - load the seven element and five weapon-type filter icons from the bundled visual metadata; add completeness/source tests; add selected-item artwork to the planning header; soften input surfaces; align compact material-result columns.
+- `e6e1df9277a665684b7f7e7e2a6b7c40b365c898` - remove remaining legacy calculator numeric text fields and convert owned quantities to steppers; replace the disabled AI text field with static setup text; refine centered Chronicle expand/collapse controls.
+- `85a7c5d45ff6cda7cfb9a9dade8af1c96203e3ea` - center and soften character/weapon detail expand controls and recommendation expansion.
+- `2d33b9c0f2dab6e8d126a4400be45f84a1d5fddd` - add missing Compose imports required by the visual refinements.
+- CI #1169 passed unit tests, Debug APK build, schema-v3 snapshot verification, APK signature verification, and artifact upload for workflow head `8f53593c14ee2ddfb03e133dbfc6f4137fac00a0`. Room instrumentation was skipped because that workflow commit changed documentation only. APK #1169: artifact `15263680332`, version `1.0.0-dev.1169`, SHA-256 `4f66f201c27722c0c276a1fcffcb8f9da4aab1c2bea210c165fac4ad3faf2d1d`.
+- The earlier CI #1155 instrumentation attempt exposed obsolete visual-metadata assertions. Current source uses JVM asset-coverage tests for character/weapon metadata and filter-icon maps; CI #1169 passed those unit tests. Room migration instrumentation independently passed in CI #1119/#1121.
+- CI #1177 is running against the latest UI refinement commit. Physical-device acceptance remains pending; do not merge.

@@ -856,3 +856,17 @@ The first corrective implementation is now committed on Batch 9. Physical-device
 **Room compatibility:** schema version 3 and the `private_account_data` entity/table are restored. The v2->3 migration and snapshot-chunk preservation test passed in CI #1121; the v1->2->3 path passed in #1119. The workflow now verifies the generated version-3 schema snapshot against the checked-in file.
 
 **Current verification:** CI #1152 and #1153 passed unit tests, Debug APK build, schema-v3 existence check, signature verification, and artifact upload. Room instrumentation was skipped in those runs. CI #1154 is running the Room instrumentation suite and strict schema snapshot comparison. Do not mark device acceptance complete until the user retests the new APK.
+
+
+### 6.6.1 Implementation refinements following the device retest
+
+The next implementation pass keeps the four screenshot pages in §6.6 as the visual acceptance target and records these implementation details:
+
+- Element and weapon-type filter icon URLs are read from the bundled `enhancement_visual_metadata.json` maps. The loader requires all seven element icons and all five weapon-type icons to be present and use the Enka asset host; it does not rely on text-only filter labels or duplicate hardcoded URL lists.
+- The planning header shows the selected character/weapon artwork. Level and talent controls remain native vertical wheel pickers. Input surfaces use a lower-opacity, lightly outlined treatment.
+- Material results use a compact aligned layout: actual item icon and name, owned quantity control, consumed quantity, and still-needed quantity. Unknown inventory remains distinct from confirmed zero. Missing artwork uses a neutral placeholder.
+- The legacy character calculator's numeric text fields were removed. Owned quantities use non-keyboard steppers; current within-level EXP is assumed to be zero as documented by the active calculator.
+- The disabled AI composer is presented as static setup information, not a disabled text field. The HoYoLAB sign-in WebView remains the sole intentional keyboard exception because the remote authentication form requires credential entry.
+- Expand/collapse controls across Chronicle and character-detail sections use centered, subdued icons with accessible descriptions. The visible glyph is small; touch interaction remains available.
+
+These are implementation requirements, not evidence of physical-device acceptance. Recheck all four pages on the target Android device, especially icon loading, material-name wrapping, and the aligned columns on narrow screens.
