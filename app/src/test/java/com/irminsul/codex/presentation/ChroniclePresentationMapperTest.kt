@@ -158,10 +158,10 @@ class ChroniclePresentationMapperTest {
         val nodKrai = regions.single { it.name == "Nod-Krai" }
         val temple = regions.single { it.name == "Temple of Space" }
 
-        assertEquals(natlanInner, natlan.iconUrl)
-        assertEquals(listOf(natlanInner, natlanIcon), natlan.iconUrlCandidates)
-        assertEquals(nodKraiInner, nodKrai.iconUrl)
-        assertEquals(listOf(nodKraiInner, nodKraiIcon), nodKrai.iconUrlCandidates)
+        assertEquals(natlanIcon, natlan.iconUrl)
+        assertEquals(listOf(natlanIcon, natlanInner), natlan.iconUrlCandidates)
+        assertEquals(nodKraiIcon, nodKrai.iconUrl)
+        assertEquals(listOf(nodKraiIcon, nodKraiInner), nodKrai.iconUrlCandidates)
         assertEquals(templeOffering, temple.iconUrl)
         assertEquals(listOf(templeOffering), temple.iconUrlCandidates)
     }
