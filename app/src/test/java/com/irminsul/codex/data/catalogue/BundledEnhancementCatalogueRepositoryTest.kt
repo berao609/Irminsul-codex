@@ -14,7 +14,7 @@ class BundledEnhancementCatalogueRepositoryTest {
 
         val result = BundledEnhancementCatalogueRepository.parseCharacters(listOf(chunk))
 
-        assertEquals(listOf("1001", "1002"), result.map { it.id })
+        assertEquals(listOf("1002", "1001"), result.map { it.id })
         assertTrue(result.all { it.rarity == 4 || it.rarity == 5 })
         assertTrue(result.all { it.subjectType == EnhancementSubjectType.CHARACTER })
     }
@@ -40,8 +40,8 @@ class BundledEnhancementCatalogueRepositoryTest {
 
         val result = BundledEnhancementCatalogueRepository.parseWeapons(root)
 
-        assertEquals(listOf("15501", "15502"), result.map { it.id })
-        assertEquals(listOf("Bow", "Sword"), result.map { it.detail })
+        assertEquals(listOf("15502", "15501"), result.map { it.id })
+        assertEquals(listOf("Sword", "Bow"), result.map { it.detail })
         assertTrue(result.all { it.rarity == 4 || it.rarity == 5 })
         assertTrue(result.all { it.subjectType == EnhancementSubjectType.WEAPON })
     }
