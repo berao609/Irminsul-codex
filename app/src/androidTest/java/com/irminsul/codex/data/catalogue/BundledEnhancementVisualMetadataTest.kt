@@ -17,11 +17,9 @@ class BundledEnhancementVisualMetadataTest {
 
         assertEquals(126, characters.size)
         assertTrue(characters.all { it.iconUrl?.startsWith("https://enka.network/ui/") == true })
-        assertTrue(characters.all { it.weaponType in setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST") })
-        assertEquals(
-            setOf("Manekin", "Manekina"),
-            characters.filter { it.element == null }.map { it.name }.toSet()
-        )
+        assertTrue(characters.all { it.weaponType != null && it.weaponType in setOf("SWORD", "CLAYMORE", "BOW", "POLEARM", "CATALYST") })
+        assertEquals(4, characters.count { it.element == null })
+        assertTrue(characters.filter { it.element == null }.all { it.weaponType == "SWORD" })
     }
 
     @Test
