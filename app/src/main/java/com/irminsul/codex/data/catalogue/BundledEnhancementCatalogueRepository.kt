@@ -31,10 +31,17 @@ object BundledEnhancementCatalogueRepository {
     private const val WEAPON_ASSET = "genshin_db/english_weapons_7_2.gzip.b64"
 
     fun loadCharacters(context: Context): List<EnhancementCatalogueEntry> {
-        val entries = mutableListOf<EnhancementCatalogueEntry>()
-        for (index in 1..CHARACTER_CHUNK_COUNT) {
+        val chunks = (1..CHARACTER_CHUNK_COUNT).map { index ->
             val fileName = "genshin_db/characters_7_2_${index.toString().padStart(2, '0')}.json"
-            val root = context.assets.open(fileName).bufferedReader().use { JSONObject(it.readText()) }
+            context.assets.open(fileName).bufferedReader().use { JSONObject(it.readText()) }
+        }
+        return parseCharacters(chunks)
+    }
+
+    internal fun parseCharacters(chunks: List<JSONObject>): List<EnhancementCatalogueEntry> {
+        require(chunks.isNotEmpty()) { "At least one character catalogue chunk is required." }
+        val entries = mutableListOf<EnhancementCatalogueEntry>()
+        chunks.forEach { root ->
             require(root.optInt("schemaVersion", -1) == 1) {
                 "The bundled character catalogue schema is unsupported."
             }
@@ -56,12 +63,7 @@ object BundledEnhancementCatalogueRepository {
                     ?: throw IllegalArgumentException("Character $id has no name.")
                 val rarity = character.optInt("rarity", -1)
                 if (rarity == 4 || rarity == 5) {
-                    entries += EnhancementCatalogueEntry(
-                        id = id,
-                        name = name,
-                        rarity = rarity,
-                        subjectType = EnhancementSubjectType.CHARACTER
-                    )
+                    entries += EnhancementCatalogueEntry(id, name, rarity, EnhancementSubjectType.CHARACTER)
                 }
             }
         }
@@ -75,7 +77,10 @@ object BundledEnhancementCatalogueRepository {
         val encoded = context.assets.open(WEAPON_ASSET).bufferedReader().use { it.readText() }
         val compressed = Base64.decode(encoded.trim(), Base64.DEFAULT)
         val rootText = GZIPInputStream(ByteArrayInputStream(compressed)).bufferedReader().use { it.readText() }
-        val root = JSONObject(rootText)
+        return parseWeapons(JSONObject(rootText))
+    }
+
+    internal fun parseWeapons(root: JSONObject): List<EnhancementCatalogueEntry> {
         val weapons = root.getJSONObject("data").getJSONObject("English").getJSONObject("weapons")
         val entries = weapons.keys().asSequence().sorted().mapNotNull { slug ->
             val weapon = weapons.optJSONObject(slug) ?: return@mapNotNull null
