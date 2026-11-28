@@ -81,10 +81,10 @@ The user requested three immediate refinements:
 
 1. **Compact material requirements:** Replaced spacious material rows and dialog with a near-full-screen dense list. Each row uses a 26dp icon, one-line material name, inline owned stepper, and compact Required / Needed quantities. Inventory-unknown remains distinct from confirmed zero; setting zero remains explicit. Candidate-cost status remains visible.
 2. **Full-screen nested destinations:** CodexScreen suppresses the Home / Visuals / Tools / Account bottom navigation on the dedicated Enhancement Calculator screen and all nested Visuals destinations. Main tab destinations retain the bar; expandable content does not trigger full-screen behavior.
-3. **Chronological default ordering:** Character release groups now sort oldest-first and include Aether/Lumine plus current Manekin/Manekina forms. Calculator character/weapon grids use a release-order sorter. Weapon first-release dates are bundled from GachaTracker's Genshin weapon database; entries without a published date are deliberately placed last rather than guessed from IDs.
+3. **Chronological default ordering:** Character release groups now sort newest-first and include Aether/Lumine plus current Manekin/Manekina forms. Calculator character/weapon grids use a newest-first release-order sorter. Weapon first-release dates are bundled from GachaTracker's Genshin weapon database; entries without a published date are deliberately placed last rather than guessed from IDs.
 
 Relevant implementation: CodexScreen.kt, EnhancementCalculatorSection.kt, CharacterReleaseOrder.kt, EnhancementCatalogueReleaseOrder.kt.
 
-Tests: Updated CharacterReleaseOrderTest.kt for oldest-first behavior; added EnhancementCatalogueReleaseOrderTest.kt for oldest-first weapon dates and unknown-date fallback.
+Tests: Updated CharacterReleaseOrderTest.kt for newest-first behavior; added EnhancementCatalogueReleaseOrderTest.kt for oldest-first weapon dates and unknown-date fallback.
 
 Verification: CI for the latest branch head is pending. No new APK or physical-device acceptance is claimed. The user must retest the compact materials list, full-screen nested navigation, and both chronological selection grids after CI produces a fresh APK.
